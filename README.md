@@ -101,7 +101,7 @@ HustleHub organizes this economy into a structured, trustworthy platform with:
 - **Architecture**: MVVM + Clean Architecture
 - **Navigation**: Compose Navigation
 - **DI**: Hilt (Dagger)
-- **Networking**: Retrofit 2 + OkHttp 4
+- **Networking**: Retrofit 2.9.0 + OkHttp 4.12.0
 - **Local DB**: Room 2.6+
 - **Image Loading**: Coil 2.x
 - **State Management**: Kotlin Flow + StateFlow
