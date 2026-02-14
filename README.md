@@ -96,7 +96,7 @@ HustleHub organizes this economy into a structured, trustworthy platform with:
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Language**: Kotlin 1.9+
+- **Language**: Kotlin 2.1.10
 - **UI Framework**: Jetpack Compose
 - **Architecture**: MVVM + Clean Architecture
 - **Navigation**: Compose Navigation
