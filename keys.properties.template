@@ -1,0 +1,17 @@
+# API Keys Configuration
+# Copy this file to keys.properties and add your actual API keys
+# NEVER commit keys.properties to version control!
+
+# Google Maps API Key
+# Get from: https://console.cloud.google.com
+# Enable: Maps SDK for Android
+MAPS_API_KEY=your_google_maps_api_key_here
+
+# Gemini API Key
+# Get from: https://makersuite.google.com/app/apikey
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Firebase Configuration
+# These are typically in google-services.json, but you can add custom Firebase configs here if needed
+# FIREBASE_PROJECT_ID=your_project_id
+# FIREBASE_APP_ID=your_app_id

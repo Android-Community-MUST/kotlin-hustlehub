@@ -1,15 +1,107 @@
+# Built application files
+*.apk
+*.aab
+*.ap_
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+release/
+
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# API Keys and Secrets - CRITICAL SECURITY
+keys.properties
+*.properties.local
+secrets.properties
+
+# Firebase configuration files - CONTAINS SENSITIVE DATA
+google-services.json
+app/google-services.json
+GoogleService-Info.plist
+
+# Keystore files - NEVER COMMIT THESE
+*.jks
+*.keystore
+*.p12
+*.key
+release.keystore
+debug.keystore
+
+# IntelliJ IDEA
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
+.idea/
+*.ipr
+*.iws
+
+# Android Studio
+.navigation/
+captures/
 .externalNativeBuild
 .cxx
-local.properties
+output.json
+
+# NDK
+obj/
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*~
+*.swp
+*.bak
+*.tmp
+*.orig
+
+# Log Files
+*.log
+
+# Android Profiling
+*.hprof
+
+# Signing files
+signing.properties
+keystore.properties
+
+# Crashlytics
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+
+# Version control
+.svn/
+
+# Gradle caches and daemon
+caches/
+daemon/
+wrapper/dists/
+
+# Kotlin profiling
+kotlin-profile/
+
+# Native build artifacts
+native/
+
+# Android build artifacts
+android/
+

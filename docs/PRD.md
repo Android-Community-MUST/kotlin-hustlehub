@@ -1888,23 +1888,11 @@ analytics.logEvent("provider_contacted") {
 
 ---
 
-### C. Contact & Support
-
-**Project Lead**: [Your Name]  
-**Email**: [your.email@must.ac.ke]  
-**GitHub**: [github.com/yourusername/hustlehub](https://github.com/yourusername/hustlehub)  
-**Discord**: [HustleHub Dev Community](#)
-
-**Beta Tester Sign-Up**: [Google Form Link](#)  
-**Feedback & Bug Reports**: [GitHub Issues](https://github.com/yourusername/hustlehub/issues)
-
----
-
-### D. Version History
+### C. Version History
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
-| 1.0 | Feb 14, 2026 | Initial PRD release | [Your Name] |
+| 1.0 | Feb 14, 2026 | Initial PRD release | HustleHub Team |
 
 ---
 
@@ -1914,7 +1902,7 @@ analytics.logEvent("provider_contacted") {
 
 *HustleHub - Empowering Campus Entrepreneurs*
 
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yourusername/hustlehub)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](#)
 [![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](#)
 
 </div>

@@ -1,4 +1,4 @@
-package meru.kdroiders.hustlehub.ui.theme
+package must.kdroiders.hustlehub.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
