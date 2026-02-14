@@ -259,8 +259,8 @@ val matches = parseMatches(response)
 **Add to build.gradle:**
 ```kotlin
 dependencies {
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
-    implementation("com.google.maps.android:maps-compose:4.3.0")
+    implementation("com.google.android.gms:play-services-maps:20.0.0")
+    implementation("com.google.maps.android:maps-compose:8.1.0")
 }
 ```
 
