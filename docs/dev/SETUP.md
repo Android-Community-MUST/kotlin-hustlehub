@@ -136,7 +136,7 @@ Or in Android Studio: **File → Sync Project with Gradle Files**
 
 ### Maps Not Loading
 
-- Verify `MAPS_API_KEY` in `local.properties`
+- Verify `MAPS_API_KEY` in `keys.properties`
 - Check API key restrictions in Google Cloud Console
 - Enable "Maps SDK for Android" in Google Cloud
 
