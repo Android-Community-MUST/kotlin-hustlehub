@@ -1,66 +1,37 @@
-## 📝 Pull Request Summary
-_What does this PR do? Briefly explain the goal._
+## 📝 What does this PR do?
+<!-- Write 1-2 sentences describing what you changed and why -->
 
-> 
-
----
-
-## 📌 Type of Change
-<!-- Check all that apply -->
-- [ ] ✨ New feature
-- [ ] 🐛 Bug fix
-- [ ] 🎨 UI update
-- [ ] ♻️ Refactor / Code cleanup
-- [ ] 📄 Documentation update
-- [ ] 🔧 Build / CI change
-- [ ] ⚡ Performance improvement
 
 ---
 
-## 📋 Changes Included
-_List the main changes you made:_
-- 
-- 
-- 
+## ✅ Type of change
+<!-- Tick the ones that apply — click the checkbox or type an x inside [ ] -->
+- [ ] New feature
+- [ ] Bug fix
+- [ ] UI update
+- [ ] Refactor / cleanup
+- [ ] Documentation
 
 ---
 
-## 🧪 Testing Checklist
-<!-- Tick each after verifying -->
-- [ ] App builds successfully (`./gradlew assembleDebug`)
-- [ ] All screens load without crashes
-- [ ] Feature works as expected
-- [ ] Edge cases handled (empty states, errors, loading)
-- [ ] No regressions introduced on existing features
+## 🧪 I have tested that...
+- [ ] The app builds without errors
+- [ ] My feature/fix works as expected
+- [ ] I didn't break anything else
 
 ---
 
-## 🔍 Code Quality Checks
-<!-- These are also enforced automatically by CI — but please verify locally first -->
-- [ ] **Ktlint** passed (`./gradlew ktlintCheck`)
-- [ ] **Detekt** passed (`./gradlew detekt`)
-- [ ] Conventional commit message used (`feat:`, `fix:`, `refactor:`, `chore:`, `docs:`, `test:`)
-- [ ] No unused imports or dead code left behind
-- [ ] No hardcoded strings, colors, or magic numbers
+## 🔍 Code quality
+- [ ] Ktlint passed  (`./gradlew ktlintCheck`)
+- [ ] Detekt passed  (`./gradlew detekt`)
+- [ ] My commit message follows convention (`feat:`, `fix:`, `chore:` etc.)
 
 ---
 
-## 📸 Screenshots / Screen Recordings
-<!-- If this PR touches UI, add before/after screenshots. Delete if not applicable. -->
-
-| Before | After |
-|--------|-------|
-| _screenshot_ | _screenshot_ |
+## 📸 Screenshots
+<!-- If you changed the UI, paste before/after screenshots here. Otherwise delete this section. -->
 
 ---
 
-## 📎 Related Issues
-<!-- Link the issue this PR closes -->
-Closes #
-
----
-
-## 🗒️ Additional Notes
-<!-- Anything reviewers should know? Special setup needed? Known limitations? -->
-
-> 
+## Closes #
+<!-- Type the issue number this PR fixes, e.g.  Closes #42 -->
