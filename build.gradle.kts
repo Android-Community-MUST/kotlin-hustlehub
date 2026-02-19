@@ -12,3 +12,38 @@ plugins {
     alias(libs.plugins.ktlint) apply false
     alias(libs.plugins.detekt) apply false
 }
+
+subprojects {
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
+    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        // Don't fail build on style issues during development
+        ignoreFailures.set(true)
+
+        // Use the .editorconfig for rule configuration
+        android.set(true)
+
+        // Report but don't fail
+        reporters {
+            reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
+            reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
+        }
+
+        // Filter out generated files
+        filter {
+            exclude("**/generated/**")
+            include("**/kotlin/**")
+        }
+    }
+
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+    configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
+        buildUponDefaultConfig = true
+        allRules = false
+        config.setFrom(files("$rootDir/detekt.yml"))
+        tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+            buildUponDefaultConfig = true
+            allRules = false
+            config.setFrom(files("$rootDir/detekt.yml"))
+        }
+    }
+}

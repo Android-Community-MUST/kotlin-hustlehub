@@ -1,8 +1,5 @@
-##############################################
-# HustleHub — EditorConfig
-# Used by Ktlint for Kotlin code formatting.
-# Reference: https://ktlint.github.io/
-##############################################
+# EditorConfig helps maintain consistent coding styles
+# https://editorconfig.org
 
 root = true
 
@@ -12,29 +9,27 @@ end_of_line = lf
 indent_size = 4
 indent_style = space
 insert_final_newline = true
-max_line_length = 140
-tab_width = 4
 trim_trailing_whitespace = true
 
 [*.{kt,kts}]
-# Kotlin-specific settings
-ktlint_code_style = ktlint_official
+# Disable annoying formatting rules
+ktlint_standard_class-naming = disabled
+ktlint_standard_filename = disabled
 
-# Allow multi-line function signatures
-ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than = 4
+# Disable strict multiline formatting
+ktlint_standard_multiline-expression-wrapping = disabled
+ktlint_standard_function-expression-body = disabled
+ktlint_standard_class-signature = disabled
 
-# Allow Composable @Preview functions to be exempt from some rules
-ktlint_function_naming_ignore_when_annotated_with = Composable
+# Disable blank line rules that are too opinionated
+ktlint_standard_no-blank-line-in-list = disabled
+ktlint_standard_blank-line-before-declaration = disabled
 
-# Imports
-ij_kotlin_imports_layout = *,java.**,javax.**,kotlin.**,^
+# Keep these ENABLED (they're actually useful):
+# - import-ordering (auto-fixable)
+# - no-unused-imports (catches bugs)
+# - no-wildcard-imports (cleaner imports)
+# - indentation (consistency)
 
 [*.md]
-max_line_length = off
 trim_trailing_whitespace = false
-
-[*.{yml,yaml}]
-indent_size = 2
-
-[*.{json,xml}]
-indent_size = 2

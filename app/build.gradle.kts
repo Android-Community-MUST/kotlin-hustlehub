@@ -8,8 +8,6 @@ plugins {
     alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.firebase.perf)
     alias(libs.plugins.secrets.gradle.plugin)
-    alias(libs.plugins.ktlint)
-    alias(libs.plugins.detekt)
 }
 
 android {
@@ -125,5 +123,5 @@ dependencies {
     implementation(libs.timber)
 
     // Detekt formatting rules
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.8")
+    detektPlugins(libs.detekt.formatting)
 }
