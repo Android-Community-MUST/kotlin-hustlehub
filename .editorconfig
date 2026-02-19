@@ -1,0 +1,40 @@
+##############################################
+# HustleHub — EditorConfig
+# Used by Ktlint for Kotlin code formatting.
+# Reference: https://ktlint.github.io/
+##############################################
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+max_line_length = 140
+tab_width = 4
+trim_trailing_whitespace = true
+
+[*.{kt,kts}]
+# Kotlin-specific settings
+ktlint_code_style = ktlint_official
+
+# Allow multi-line function signatures
+ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than = 4
+
+# Allow Composable @Preview functions to be exempt from some rules
+ktlint_function_naming_ignore_when_annotated_with = Composable
+
+# Imports
+ij_kotlin_imports_layout = *,java.**,javax.**,kotlin.**,^
+
+[*.md]
+max_line_length = off
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.{json,xml}]
+indent_size = 2

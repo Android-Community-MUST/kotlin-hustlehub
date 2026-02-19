@@ -9,4 +9,6 @@ plugins {
     alias(libs.plugins.firebase.perf) apply false
     alias(libs.plugins.secrets.gradle.plugin) apply false
     alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.ktlint) apply false
+    alias(libs.plugins.detekt) apply false
 }

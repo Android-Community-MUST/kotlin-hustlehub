@@ -80,7 +80,12 @@ Thumbs.db
 
 # Signing files
 signing.properties
-keystore.properties
+keystore.propertieskeystore.properties
+
+
+
+
+
 
 # Crashlytics
 com_crashlytics_export_strings.xml
