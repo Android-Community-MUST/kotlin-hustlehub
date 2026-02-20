@@ -29,6 +29,9 @@ jobs:
           cp keys.properties.template keys.properties
           sed -i 's|=.*|=DUMMY_CI_VALUE|g' keys.properties
 
+      - name: Create local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
       - name: Run Ktlint
         run: ./gradlew ktlintCheck --no-daemon
 
@@ -57,6 +60,9 @@ jobs:
         run: |
           cp keys.properties.template keys.properties
           sed -i 's|=.*|=DUMMY_CI_VALUE|g' keys.properties
+
+      - name: Create local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
 
       - name: Build Android Debug APK
         run: ./gradlew assembleDebug --no-daemon
