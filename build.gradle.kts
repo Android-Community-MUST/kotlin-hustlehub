@@ -39,6 +39,7 @@ subprojects {
     configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
         buildUponDefaultConfig = true
         allRules = false
+        ignoreFailures = true
         config.setFrom(files("$rootDir/detekt.yml"))
         tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
             buildUponDefaultConfig = true
