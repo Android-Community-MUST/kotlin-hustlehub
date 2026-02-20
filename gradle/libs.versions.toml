@@ -28,7 +28,7 @@ firebasePerfPlugin = "2.0.2"
 secretsGradlePlugin = "2.0.1"
 timber = "5.0.1"
 materialIcons = "1.7.8"
-ktlint = "12.1.2"
+ktlint = "14.0.1"
 detekt = "1.23.8"
 
 [libraries]

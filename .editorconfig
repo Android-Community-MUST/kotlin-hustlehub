@@ -18,6 +18,7 @@ ktlint_standard_filename = disabled
 
 # Disable strict multiline formatting
 ktlint_standard_multiline-expression-wrapping = disabled
+ktlint_standard_string-template-indent = disabled
 ktlint_standard_function-expression-body = disabled
 ktlint_standard_class-signature = disabled
 
