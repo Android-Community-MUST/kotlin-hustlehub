@@ -41,20 +41,18 @@ fun Page(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-
     ) {
         Text(
             text = "Compose team",
             modifier = modifier
         )
     }
-
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun GreetingPreview() {
-//    HustleHubTheme {
-//        Page("Android")
-//    }
-//}
+// @Preview(showBackground = true)
+// @Composable
+// fun GreetingPreview() {
+//     HustleHubTheme {
+//         Page("Android")
+//     }
+// }

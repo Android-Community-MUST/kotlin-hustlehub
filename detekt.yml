@@ -41,7 +41,7 @@ complexity:
     threshold: 60
   LargeClass:
     threshold: 600
-  ComplexMethod:
+  CyclomaticComplexMethod:
     threshold: 15
   TooManyFunctions:
     thresholdInFiles: 20
@@ -93,8 +93,8 @@ naming:
   TopLevelPropertyNaming:
     active: true
     constantPattern: '[A-Z][_A-Z0-9]*'
-    propertyPattern: '[a-z][A-Za-z0-9]*'
-    privatePropertyPattern: '_?[a-z][A-Za-z0-9]*'
+    propertyPattern: '[A-Za-z][A-Za-z0-9]*'
+    privatePropertyPattern: '_?[A-Za-z][A-Za-z0-9]*'
 
 performance:
   active: true
