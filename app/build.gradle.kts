@@ -122,4 +122,6 @@ dependencies {
     // Timber for logging
     implementation(libs.timber)
 
+    // Detekt formatting rules
+    detektPlugins(libs.detekt.formatting)
 }

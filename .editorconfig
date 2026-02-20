@@ -1,0 +1,36 @@
+# EditorConfig helps maintain consistent coding styles
+# https://editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{kt,kts}]
+# Disable annoying formatting rules
+ktlint_standard_class-naming = disabled
+ktlint_standard_filename = disabled
+
+# Disable strict multiline formatting
+ktlint_standard_multiline-expression-wrapping = disabled
+ktlint_standard_string-template-indent = disabled
+ktlint_standard_function-expression-body = disabled
+ktlint_standard_class-signature = disabled
+
+# Disable blank line rules that are too opinionated
+ktlint_standard_no-blank-line-in-list = disabled
+ktlint_standard_blank-line-before-declaration = disabled
+
+# Keep these ENABLED (they're actually useful):
+# - import-ordering (auto-fixable)
+# - no-unused-imports (catches bugs)
+# - no-wildcard-imports (cleaner imports)
+# - indentation (consistency)
+
+[*.md]
+trim_trailing_whitespace = false

@@ -1,0 +1,71 @@
+name: Build HustleHub
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Create keys.properties
+        run: |
+          cp keys.properties.template keys.properties
+          sed -i 's|=.*|=DUMMY_CI_VALUE|g' keys.properties
+
+      - name: Create local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Run Ktlint
+        run: ./gradlew ktlintCheck --no-daemon
+
+      - name: Run Detekt
+        run: ./gradlew detekt --no-daemon
+
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    needs: code-quality
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Create keys.properties
+        run: |
+          cp keys.properties.template keys.properties
+          sed -i 's|=.*|=DUMMY_CI_VALUE|g' keys.properties
+
+      - name: Create local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Build Android Debug APK
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Run Android Unit Tests
+        run: ./gradlew testDebugUnitTest --no-daemon
