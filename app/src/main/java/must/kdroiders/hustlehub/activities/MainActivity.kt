@@ -37,16 +37,9 @@ class MainActivity : ComponentActivity() {
 fun Page(
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Compose team",
-            modifier = modifier
-        )
-    }
+    must.kdroiders.hustlehub.ui.ComponentShowcasePage(
+        modifier = modifier
+    )
 }
 
 // @Preview(showBackground = true)
