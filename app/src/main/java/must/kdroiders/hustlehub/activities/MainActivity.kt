@@ -7,7 +7,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import must.kdroiders.hustlehub.navigation.HustleHubNavGraph
-import must.kdroiders.hustlehub.splash.SplashScreen
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 
 @AndroidEntryPoint
@@ -18,8 +17,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             HustleHubTheme {
                 val navController = rememberNavController()
-                SplashScreen()
-                //HustleHubNavGraph(navController = navController)
+                //SplashScreen()
+                HustleHubNavGraph(navController = navController)
             }
         }
     }
