@@ -102,8 +102,10 @@ fun OnboardingScreen(
     val tertiary = MaterialTheme.colorScheme.tertiary
 
     val onComplete: () -> Unit = {
-        onboardingViewModel.completeOnboarding()
-        onFinished()
+        scope.launch {
+            onboardingViewModel.completeOnboarding()
+            onFinished()
+        }
     }
 
     Box(

@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,11 +52,13 @@ class SplashViewModel @Inject constructor(
                     val currentUser = firebaseAuth?.currentUser
 
                     Timber.d(
-                        "Splash check — isFirstLaunch: %s, " +
-                            "currentUser: %s",
+                        "Splash — isFirstLaunch: %s, " +
+                            "firebaseAuth: %s, user: %s",
                         isFirstLaunch,
-                        currentUser?.email
-                            ?: "null (Firebase unavailable)"
+                        if (firebaseAuth == null)
+                            "unavailable"
+                        else "ready",
+                        currentUser?.email ?: "logged out"
                     )
 
                     when {
@@ -67,6 +70,9 @@ class SplashViewModel @Inject constructor(
                             SplashDestination.Login
                     }
                 } catch (e: Exception) {
+                    // rethrow cancellation to preserve
+                    // structured concurrency
+                    coroutineContext.ensureActive()
                     // fall back to Login so the app
                     // never gets stuck on splash
                     Timber.e(

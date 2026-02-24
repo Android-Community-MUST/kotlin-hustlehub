@@ -62,8 +62,12 @@ fun HustleHubNavGraph(
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
                 onFinished = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.ONBOARDING) { inclusive = true }
+                    // navigate to splash to re-evaluate
+                    // auth state (Home vs Login)
+                    navController.navigate(Routes.SPLASH) {
+                        popUpTo(Routes.ONBOARDING) {
+                            inclusive = true
+                        }
                     }
                 }
             )
