@@ -23,7 +23,7 @@ object AppModule {
     fun provideFirebaseAuth(): FirebaseAuth? {
         return try {
             FirebaseAuth.getInstance()
-        } catch (e: Exception) {
+        } catch (e: IllegalStateException) {
             Timber.w(
                 e,
                 "Firebase not initialized — running without auth"
