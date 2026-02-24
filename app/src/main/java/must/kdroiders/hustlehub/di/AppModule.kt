@@ -9,8 +9,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import must.kdroiders.hustlehub.sharedPrefs.UserPreferences
-import must.kdroiders.hustlehub.sharedPrefs.dataStore
+import must.kdroiders.hustlehub.datastore.UserPreferences
+import must.kdroiders.hustlehub.datastore.dataStore
 import timber.log.Timber
 import javax.inject.Singleton
 
@@ -24,7 +24,10 @@ object AppModule {
         return try {
             FirebaseAuth.getInstance()
         } catch (e: IllegalStateException) {
-            Timber.w("Firebase not initialized — running without auth")
+            Timber.w(
+                e,
+                "Firebase not initialized — running without auth"
+            )
             null
         }
     }

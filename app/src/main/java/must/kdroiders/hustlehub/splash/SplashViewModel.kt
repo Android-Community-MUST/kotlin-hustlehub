@@ -6,12 +6,13 @@ import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.sharedPrefs.UserPreferences
+import must.kdroiders.hustlehub.datastore.UserPreferences
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -39,30 +40,50 @@ class SplashViewModel @Inject constructor(
 
     private fun determineDestination() {
         viewModelScope.launch {
-            // Run minimum delay and auth check in parallel
-            val minDelayJob = async { delay(MIN_SPLASH_DURATION_MS) }
+            // run minimum delay and auth check in parallel
+            val minDelayJob = async {
+                delay(MIN_SPLASH_DURATION_MS)
+            }
 
             val destinationResult = async {
-                val isFirstLaunch = userPreferences.isFirstLaunch.first()
-                val currentUser = firebaseAuth?.currentUser
+                try {
+                    val isFirstLaunch =
+                        userPreferences.isFirstLaunch.first()
+                    val currentUser = firebaseAuth?.currentUser
 
-                Timber.d(
-                    "Splash check — isFirstLaunch: %s, currentUser: %s",
-                    isFirstLaunch,
-                    currentUser?.email ?: "null (Firebase unavailable or logged out)"
-                )
+                    Timber.d(
+                        "Splash — isFirstLaunch: %s, " +
+                            "firebaseAuth: %s, user: %s",
+                        isFirstLaunch,
+                        if (firebaseAuth == null)
+                            "unavailable"
+                        else "ready",
+                        currentUser?.email ?: "logged out"
+                    )
 
-                when {
-                    isFirstLaunch -> {
-                        userPreferences.setFirstLaunchComplete()
-                        SplashDestination.Onboarding
+                    when {
+                        isFirstLaunch ->
+                            SplashDestination.Onboarding
+                        currentUser != null ->
+                            SplashDestination.Home
+                        else ->
+                            SplashDestination.Login
                     }
-                    currentUser != null -> SplashDestination.Home
-                    else -> SplashDestination.Login
+                } catch (e: Exception) {
+                    // rethrow cancellation to preserve
+                    // structured concurrency
+                    coroutineContext.ensureActive()
+                    // fall back to Login so the app
+                    // never gets stuck on splash
+                    Timber.e(
+                        e,
+                        "Error reading preferences"
+                    )
+                    SplashDestination.Login
                 }
             }
 
-            // Wait for both to complete
+            // wait for both to complete
             minDelayJob.await()
             _destination.value = destinationResult.await()
         }
