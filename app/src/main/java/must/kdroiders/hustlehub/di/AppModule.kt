@@ -9,8 +9,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import must.kdroiders.hustlehub.data.UserPreferences
-import must.kdroiders.hustlehub.data.dataStore
+import must.kdroiders.hustlehub.sharedPrefs.UserPreferences
+import must.kdroiders.hustlehub.sharedPrefs.dataStore
 import timber.log.Timber
 import javax.inject.Singleton
 

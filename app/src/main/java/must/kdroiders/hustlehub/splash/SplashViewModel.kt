@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.data.UserPreferences
+import must.kdroiders.hustlehub.sharedPrefs.UserPreferences
 import timber.log.Timber
 import javax.inject.Inject
 

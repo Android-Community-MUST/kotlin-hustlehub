@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data
+package must.kdroiders.hustlehub.sharedPrefs
 
 import android.content.Context
 import androidx.datastore.core.DataStore
