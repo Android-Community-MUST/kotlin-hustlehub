@@ -122,6 +122,9 @@ dependencies {
     // Timber for logging
     implementation(libs.timber)
 
+    // DataStore Preferences
+    implementation(libs.datastore.preferences)
+
     // Detekt formatting rules
     detektPlugins(libs.detekt.formatting)
 }
