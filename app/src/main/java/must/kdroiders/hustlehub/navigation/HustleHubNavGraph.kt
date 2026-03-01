@@ -15,15 +15,16 @@ import androidx.navigation.compose.composable
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
+import must.kdroiders.hustlehub.ui.features.profile.ProfileScreen
+import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 
-/**
- * Navigation route definitions.
- */
 object Routes {
     const val SPLASH = "splash"
     const val HOME = "home"
     const val LOGIN = "login"
     const val ONBOARDING = "onboarding"
+    const val PROFILE_SETUP = "profile_setup"
+    const val PROFILE = "profile"
 }
 
 @Composable
@@ -43,6 +44,7 @@ fun HustleHubNavGraph(
                         SplashDestination.Home -> Routes.HOME
                         SplashDestination.Login -> Routes.LOGIN
                         SplashDestination.Onboarding -> Routes.ONBOARDING
+                        SplashDestination.ProfileSetup -> Routes.PROFILE_SETUP
                     }
                     navController.navigate(route) {
                         popUpTo(Routes.SPLASH) { inclusive = true }
@@ -62,23 +64,29 @@ fun HustleHubNavGraph(
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
                 onFinished = {
-                    // navigate to splash to re-evaluate
-                    // auth state (Home vs Login)
                     navController.navigate(Routes.SPLASH) {
-                        popUpTo(Routes.ONBOARDING) {
-                            inclusive = true
-                        }
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
                     }
                 }
             )
         }
+
+        composable(Routes.PROFILE_SETUP) {
+            ProfileSetupScreen(
+                onSetupComplete = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.PROFILE_SETUP) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Routes.PROFILE) {
+            ProfileScreen(onEditClick = {})
+        }
     }
 }
 
-/**
- * Temporary placeholder screen — will be replaced
- * when actual feature screens are implemented.
- */
 @Composable
 private fun PlaceholderScreen(title: String) {
     Box(
