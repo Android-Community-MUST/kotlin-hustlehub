@@ -1,76 +1,71 @@
 package must.kdroiders.hustlehub.ui.features.profile
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.data.model.Service
-import must.kdroiders.hustlehub.data.repository.UserRepository
-import timber.log.Timber
+import must.kdroiders.hustlehub.data.model.User
 import javax.inject.Inject
 
 @HiltViewModel
-class ProfileViewModel @Inject constructor(
-    private val firebaseAuth: FirebaseAuth?,
-    private val userRepository: UserRepository
-) : ViewModel() {
+class ProfileViewModel @Inject constructor() : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {
-        loadProfile()
+        loadMockProfile()
     }
 
-    private fun loadProfile() {
-        val userId = firebaseAuth?.currentUser?.uid
-        if (userId == null) {
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    error = "Not signed in"
-                )
-            }
-            return
-        }
-
-        viewModelScope.launch {
-            userRepository.getUserProfile(userId)
-                .onSuccess { user ->
-                    _uiState.update {
-                        it.copy(
-                            user = user,
-                            isLoading = false,
-                            // Demo data — replace with real
-                            // repository calls when backend ready
-                            hustleScore = 4.7f,
-                            reviewCount = 47,
-                            badges = listOf(
-                                Badge("Top Rated", BadgeType.GOLD),
-                                Badge(
-                                    "Fast Responder",
-                                    BadgeType.GREEN
-                                ),
-                                Badge("Verified", BadgeType.BLUE)
-                            ),
-                            services = sampleServices()
-                        )
-                    }
-                }
-                .onFailure { e ->
-                    Timber.e(e, "Failed to load profile")
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = e.message
-                        )
-                    }
-                }
+    // Mock data — swap with real repo calls when backend is ready
+    private fun loadMockProfile() {
+        _uiState.update {
+            it.copy(
+                user = User(
+                    id = "mock_1",
+                    name = "Wanjiku M.",
+                    course = "Computer Sci",
+                    yearOfStudy = 3,
+                    campus = "Nairobi Campus",
+                    profilePhotoUrl = "",
+                    isVerified = true
+                ),
+                hustleScore = 4.7f,
+                reviewCount = 47,
+                badges = listOf(
+                    Badge("Top Rated", BadgeType.GOLD),
+                    Badge("Fast Responder", BadgeType.GREEN),
+                    Badge("Verified", BadgeType.BLUE)
+                ),
+                services = listOf(
+                    Service(
+                        id = "1",
+                        title = "Professional Braiding",
+                        priceRange = "KES 800 - 1500",
+                        isActive = true,
+                        tags = listOf("Beauty", "On-Campus")
+                    ),
+                    Service(
+                        id = "2",
+                        title = "Hostel Laundry Service",
+                        priceRange = "KES 500/load",
+                        isActive = false,
+                        tags = listOf("Cleaning", "Pickup")
+                    ),
+                    Service(
+                        id = "3",
+                        title = "Notes Transcription",
+                        priceRange = "KES 200/page",
+                        isActive = true,
+                        tags = listOf("Academic", "Remote")
+                    )
+                ),
+                isLoading = false,
+                error = null
+            )
         }
     }
 
@@ -89,36 +84,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun retry() {
-        _uiState.update {
-            it.copy(isLoading = true, error = null)
-        }
-        loadProfile()
+        _uiState.update { it.copy(isLoading = true, error = null) }
+        loadMockProfile()
     }
-
-    /**
-     * Placeholder services until backend is wired up.
-     */
-    private fun sampleServices(): List<Service> = listOf(
-        Service(
-            id = "1",
-            title = "Professional Braiding",
-            priceRange = "KES 800 - 1500",
-            isActive = true,
-            tags = listOf("Beauty", "On-Campus")
-        ),
-        Service(
-            id = "2",
-            title = "Hostel Laundry Service",
-            priceRange = "KES 500/load",
-            isActive = false,
-            tags = listOf("Cleaning", "Pickup")
-        ),
-        Service(
-            id = "3",
-            title = "Notes Transcription",
-            priceRange = "KES 200/page",
-            isActive = true,
-            tags = listOf("Academic", "Remote")
-        )
-    )
 }
