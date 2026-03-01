@@ -1,29 +1,23 @@
 package must.kdroiders.hustlehub.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
+import must.kdroiders.hustlehub.ui.features.profile.ProfileScreen
+import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 
-/**
- * Navigation route definitions.
- */
 object Routes {
     const val SPLASH = "splash"
     const val HOME = "home"
     const val LOGIN = "login"
     const val ONBOARDING = "onboarding"
+    const val PROFILE_SETUP = "profile_setup"
+    const val PROFILE = "profile"
 }
 
 @Composable
@@ -43,6 +37,7 @@ fun HustleHubNavGraph(
                         SplashDestination.Home -> Routes.HOME
                         SplashDestination.Login -> Routes.LOGIN
                         SplashDestination.Onboarding -> Routes.ONBOARDING
+                        SplashDestination.ProfileSetup -> Routes.PROFILE_SETUP
                     }
                     navController.navigate(route) {
                         popUpTo(Routes.SPLASH) { inclusive = true }
@@ -51,45 +46,36 @@ fun HustleHubNavGraph(
             )
         }
 
+        // TODO: Replace with actual Home + bottom nav
         composable(Routes.HOME) {
-            PlaceholderScreen(title = "Home")
+            ProfileScreen(onEditClick = {})
         }
 
-        composable(Routes.LOGIN) {
-            PlaceholderScreen(title = "Login")
-        }
+        // TODO: Add Login screen
+        composable(Routes.LOGIN) {}
 
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
                 onFinished = {
-                    // navigate to splash to re-evaluate
-                    // auth state (Home vs Login)
                     navController.navigate(Routes.SPLASH) {
-                        popUpTo(Routes.ONBOARDING) {
-                            inclusive = true
-                        }
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
                     }
                 }
             )
         }
-    }
-}
 
-/**
- * Temporary placeholder screen — will be replaced
- * when actual feature screens are implemented.
- */
-@Composable
-private fun PlaceholderScreen(title: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = title,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
+        composable(Routes.PROFILE_SETUP) {
+            ProfileSetupScreen(
+                onSetupComplete = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.PROFILE_SETUP) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Routes.PROFILE) {
+            ProfileScreen(onEditClick = {})
+        }
     }
 }

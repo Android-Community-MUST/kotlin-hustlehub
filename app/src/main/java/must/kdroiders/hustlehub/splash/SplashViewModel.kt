@@ -12,27 +12,33 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.data.repository.UserRepository
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Represents the destination the splash screen should navigate to.
+ * Represents the destination the splash screen
+ * should navigate to.
  */
 sealed interface SplashDestination {
     data object Home : SplashDestination
     data object Login : SplashDestination
     data object Onboarding : SplashDestination
+    data object ProfileSetup : SplashDestination
 }
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val firebaseAuth: FirebaseAuth?,
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
-    private val _destination = MutableStateFlow<SplashDestination?>(null)
-    val destination: StateFlow<SplashDestination?> = _destination.asStateFlow()
+    private val _destination =
+        MutableStateFlow<SplashDestination?>(null)
+    val destination: StateFlow<SplashDestination?> =
+        _destination.asStateFlow()
 
     init {
         determineDestination()
@@ -49,7 +55,8 @@ class SplashViewModel @Inject constructor(
                 try {
                     val isFirstLaunch =
                         userPreferences.isFirstLaunch.first()
-                    val currentUser = firebaseAuth?.currentUser
+                    val currentUser =
+                        firebaseAuth?.currentUser
 
                     Timber.d(
                         "Splash — isFirstLaunch: %s, " +
@@ -64,8 +71,23 @@ class SplashViewModel @Inject constructor(
                     when {
                         isFirstLaunch ->
                             SplashDestination.Onboarding
-                        currentUser != null ->
-                            SplashDestination.Home
+
+                        currentUser != null -> {
+                            // Check if user has completed
+                            // profile setup
+                            val hasProfile = userRepository
+                                .hasUserProfile(
+                                    currentUser.uid
+                                )
+                                .getOrDefault(false)
+
+                            if (hasProfile) {
+                                SplashDestination.Home
+                            } else {
+                                SplashDestination.ProfileSetup
+                            }
+                        }
+
                         else ->
                             SplashDestination.Login
                     }
@@ -85,7 +107,8 @@ class SplashViewModel @Inject constructor(
 
             // wait for both to complete
             minDelayJob.await()
-            _destination.value = destinationResult.await()
+            _destination.value =
+                destinationResult.await()
         }
     }
 

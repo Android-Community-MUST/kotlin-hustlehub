@@ -23,7 +23,7 @@ gemini = "0.9.0"
 coroutines = "1.10.2"
 serialization = "1.10.0"
 ksp = "2.3.2"
-# googleServices = "4.4.4"
+googleServices = "4.4.4"
 firebaseCrashlyticsPlugin = "3.0.6"
 firebasePerfPlugin = "2.0.2"
 secretsGradlePlugin = "2.0.1"
@@ -113,7 +113,7 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-# google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
 firebase-perf = { id = "com.google.firebase.firebase-perf", version.ref = "firebasePerfPlugin" }
 secrets-gradle-plugin = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secretsGradlePlugin" }
