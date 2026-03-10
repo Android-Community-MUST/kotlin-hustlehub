@@ -110,7 +110,7 @@ HustleHub organizes this economy into a structured, trustworthy platform with:
 - **Authentication**: Firebase Auth
 - **Database**: Firebase Firestore (users, services, reviews)
 - **Real-time Chat**: Firebase Realtime Database
-- **File Storage**: Firebase Storage
+- **File Storage**: Firebase Storage / Supabase Storage (Alternative)
 - **Notifications**: Firebase Cloud Messaging (FCM)
 - **Serverless**: Cloud Functions for Firebase
 - **Analytics**: Firebase Analytics + Crashlytics
@@ -185,12 +185,30 @@ See [PRD.md](docs/PRD.md) for detailed architecture diagrams and database schema
    - Enable Authentication (Email/Password + Google)
    - Enable Firestore, Realtime Database, Storage, FCM
 
+3. **(Optional) Set up Supabase Storage**
+   - Create a project at [supabase.com](https://supabase.com)
+   - Go to **Storage** and create a new public bucket named `hustlehub-media`
+   - Add the following policy to allow public reads and authenticated uploads:
+     ```sql
+     create policy "Public Access"
+     on storage.objects for select
+     using ( bucket_id = 'hustlehub-media' );
+     
+     create policy "Authenticated Uploads"
+     on storage.objects for insert
+     with check ( bucket_id = 'hustlehub-media' and auth.role() = 'authenticated' );
+     ```
+   - Copy your `SUPABASE_URL` and `SUPABASE_ANON_KEY` from Project Settings > API
+
 3. **Configure API Keys**
    
    Copy `keys.properties.template` to `keys.properties` in the project root and add your API keys:
    ```properties
    MAPS_API_KEY=your_google_maps_api_key
    GEMINI_API_KEY=your_gemini_api_key
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_KEY=your_supabase_anon_key
+
 
 4. **Build and Run**
    ```bash
