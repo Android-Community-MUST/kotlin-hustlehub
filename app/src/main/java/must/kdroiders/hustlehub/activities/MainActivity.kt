@@ -17,7 +17,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             HustleHubTheme {
                 val navController = rememberNavController()
-                //SplashScreen()
                 HustleHubNavGraph(navController = navController)
             }
         }
