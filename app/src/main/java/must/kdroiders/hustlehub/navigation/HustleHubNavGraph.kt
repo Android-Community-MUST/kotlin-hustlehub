@@ -15,6 +15,12 @@ import androidx.navigation.compose.composable
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
+import must.kdroiders.hustlehub.ui.auth.LoginScreen
+import must.kdroiders.hustlehub.ui.auth.SignUpScreen
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import must.kdroiders.hustlehub.ui.auth.EmailVerificationScreen
+
 
 /**
  * Navigation route definitions.
@@ -23,6 +29,10 @@ object Routes {
     const val SPLASH = "splash"
     const val HOME = "home"
     const val LOGIN = "login"
+
+    const val SIGN_UP = "sign_up"
+
+    const val EMAIL_VERIFICATION = "email_verification/{email}"
     const val ONBOARDING = "onboarding"
 }
 
@@ -54,10 +64,45 @@ fun HustleHubNavGraph(
         composable(Routes.HOME) {
             PlaceholderScreen(title = "Home")
         }
-
         composable(Routes.LOGIN) {
-            PlaceholderScreen(title = "Login")
+            LoginScreen(
+                onNavigateToSignUp = {
+                    navController.navigate(Routes.SIGN_UP)
+                },
+                onLoginSuccess = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                }
+            )
         }
+
+        composable(Routes.SIGN_UP) {
+            SignUpScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.SIGN_UP) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Routes.EMAIL_VERIFICATION,
+            arguments = listOf(navArgument("email") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            EmailVerificationScreen(
+                email = email,
+                onNavigateToLogin = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.SIGN_UP) { inclusive = true }
+                    }
+                },
+                onResendEmail = { /* handled inside ViewModel */ }
+            )
+        }
+
 
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
