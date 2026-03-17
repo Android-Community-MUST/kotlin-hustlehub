@@ -22,6 +22,8 @@ googleLocation = "21.3.0"
 gemini = "0.9.0"
 coroutines = "1.10.2"
 serialization = "1.10.0"
+supabase = "3.1.2"
+ktor = "3.0.1"
 ksp = "2.3.2"
 googleServices = "4.4.4"
 firebaseCrashlyticsPlugin = "3.0.6"
@@ -53,6 +55,7 @@ androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-te
 androidx-compose-material-icons-core = { group = "androidx.compose.material", name = "material-icons-core", version.ref = "materialIcons" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIcons" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+
 
 # Navigation
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
@@ -96,7 +99,13 @@ generativeai = { group = "com.google.ai.client.generativeai", name = "generative
 
 # Kotlin Coroutines & Serialization
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
+
+# Supabase
+supabase-bom = { group = "io.github.jan-tennert.supabase", name = "bom", version.ref = "supabase" }
+supabase-storage = { group = "io.github.jan-tennert.supabase", name = "storage-kt" }
+ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
 
 # Logging
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
@@ -106,6 +115,7 @@ datastore-preferences = { group = "androidx.datastore", name = "datastore-prefer
 
 # Detekt formatting rules
 detekt-formatting = { group = "io.gitlab.arturbosch.detekt", name = "detekt-formatting", version.ref = "detekt" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
