@@ -82,18 +82,20 @@ object AppModule {
             return UserRepositoryImpl(firestore, storage)
         }
         // Return a dummy/noop implementation if Firebase is not available
-        return object : UserRepository {
-            override suspend fun uploadProfilePhoto(userId: String, imageUri: Uri): Result<String> =
-                Result.failure(IllegalStateException("Firebase not initialized"))
-
-            override suspend fun saveUserProfile(user: User): Result<Void?> =
-                Result.failure(IllegalStateException("Firebase not initialized"))
-
-            override suspend fun getUserProfile(userId: String): Result<User?> =
-                Result.failure(IllegalStateException("Firebase not initialized"))
-
-            override suspend fun hasUserProfile(userId: String): Result<Boolean> =
-                Result.failure(IllegalStateException("Firebase not initialized"))
-        }
+        return NoopUserRepository()
     }
+}
+
+private class NoopUserRepository : UserRepository {
+    override suspend fun uploadProfilePhoto(userId: String, imageUri: Uri): Result<String> =
+        Result.failure(IllegalStateException("Firebase not initialized"))
+
+    override suspend fun saveUserProfile(user: User): Result<Void?> =
+        Result.failure(IllegalStateException("Firebase not initialized"))
+
+    override suspend fun getUserProfile(userId: String): Result<User?> =
+        Result.failure(IllegalStateException("Firebase not initialized"))
+
+    override suspend fun hasUserProfile(userId: String): Result<Boolean> =
+        Result.failure(IllegalStateException("Firebase not initialized"))
 }

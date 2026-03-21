@@ -18,11 +18,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
-import must.kdroiders.hustlehub.ui.auth.SignUpScreen
-import must.kdroiders.hustlehub.ui.features.profile.ProfileScreen
+import must.kdroiders.hustlehub.ui.auth.presentation.view.SignUpScreen
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 import must.kdroiders.hustlehub.ui.portfolio.PortfolioUploadScreen
 
@@ -70,6 +71,7 @@ fun HustleHubNavGraph(
         composable(Routes.LOGIN) {
             PlaceholderScreen(
                 title = "Login (Teammate Task)",
+                showDeveloperShortcuts = BuildConfig.DEBUG,
                 onDeveloperShortcut = { navController.navigate(it) }
             )
         }
@@ -116,6 +118,7 @@ fun HustleHubNavGraph(
 @Composable
 private fun PlaceholderScreen(
     title: String,
+    showDeveloperShortcuts: Boolean = false,
     onDeveloperShortcut: (String) -> Unit = {}
 ) {
     Box(
@@ -130,23 +133,25 @@ private fun PlaceholderScreen(
                 color = MaterialTheme.colorScheme.onBackground
             )
 
-            Spacer(Modifier.height(32.dp))
+            if (showDeveloperShortcuts) {
+                Spacer(Modifier.height(32.dp))
 
-            Text(
-                text = "Developer Shortcuts",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
+                Text(
+                    text = "Developer Shortcuts",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                androidx.compose.material3.Button(onClick = { onDeveloperShortcut(Routes.SIGN_UP) }) {
-                    Text("Sign Up")
-                }
-                androidx.compose.material3.Button(onClick = { onDeveloperShortcut(Routes.PORTFOLIO_UPLOAD) }) {
-                    Text("Upload")
-                }
-                androidx.compose.material3.Button(onClick = { onDeveloperShortcut(Routes.PROFILE) }) {
-                    Text("Profile")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.Button(onClick = { onDeveloperShortcut(Routes.SIGN_UP) }) {
+                        Text("Sign Up")
+                    }
+                    androidx.compose.material3.Button(onClick = { onDeveloperShortcut(Routes.PORTFOLIO_UPLOAD) }) {
+                        Text("Upload")
+                    }
+                    androidx.compose.material3.Button(onClick = { onDeveloperShortcut(Routes.PROFILE) }) {
+                        Text("Profile")
+                    }
                 }
             }
         }

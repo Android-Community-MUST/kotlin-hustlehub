@@ -11,16 +11,16 @@ class HustleHubApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        // Initialize Timber for logging (optional)
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
+
         // Initialize Firebase
         try {
             FirebaseApp.initializeApp(this)
         } catch (e: Exception) {
             Timber.e(e, "Firebase initialization failed")
-        }
-
-        // Initialize Timber for logging (optional)
-        if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
         }
     }
 }

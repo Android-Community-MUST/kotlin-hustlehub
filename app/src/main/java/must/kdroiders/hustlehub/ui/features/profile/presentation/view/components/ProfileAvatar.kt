@@ -1,6 +1,5 @@
-package must.kdroiders.hustlehub.ui.features.profile.presentation.view
+package must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 
-import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.*
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.Badge
@@ -70,143 +69,47 @@ import must.kdroiders.hustlehub.ui.theme.HustlePrimaryVariant
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 import androidx.compose.material3.*
 
+// ─────────────────────────────────────────────────
+// Avatar — circular photo with gradient border
+// ─────────────────────────────────────────────────
+
 @Composable
-fun ProfileScreen(
-    profileViewModel: ProfileViewModel = hiltViewModel(),
-    onEditClick: () -> Unit = {},
-    onAddNewServiceClick: () -> Unit = {}
-) {
-    val state by profileViewModel.uiState.collectAsState()
+fun ProfileAvatar(photoUrl: String) {
+    val gradientBorder = Brush.linearGradient(
+        listOf(HustlePrimary, HustlePrimaryVariant)
+    )
 
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        when {
-            state.isLoading -> LoadingState()
-            state.error != null -> ErrorState(
-                message = state.error!!,
-                onRetry = profileViewModel::retry
+            .size(110.dp)
+            .border(
+                width = 3.dp,
+                brush = gradientBorder,
+                shape = CircleShape
             )
-            else -> ProfileContent(
-                state = state,
-                onEditClick = onEditClick,
-                onToggleService = profileViewModel::toggleServiceActive,
-                onAddNewServiceClick = onAddNewServiceClick
-            )
-        }
-    }
-}
-
-// ─────────────────────────────────────────────────
-// Main content — LazyColumn for performance
-// ─────────────────────────────────────────────────
-
-@Composable
-private fun ProfileContent(
-    state: ProfileUiState,
-    onEditClick: () -> Unit,
-    onToggleService: (String) -> Unit,
-    onAddNewServiceClick: () -> Unit
-) {
-    val user = state.user ?: return
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding(),
-        contentPadding = PaddingValues(
-            top = 16.dp,
-            bottom = 100.dp
-        )
+            .padding(4.dp)
+            .clip(CircleShape)
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant
+            ),
+        contentAlignment = Alignment.Center
     ) {
-        // Header
-        item(key = "header") {
-            ProfileHeader(onEditClick = onEditClick)
-        }
-
-        // Avatar + info
-        item(key = "avatar") {
-            Column(
+        if (photoUrl.isNotBlank()) {
+            AsyncImage(
+                model = photoUrl,
+                contentDescription = "Profile photo",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                ProfileAvatar(
-                    photoUrl = user.profilePhotoUrl
-                )
-                Spacer(Modifier.height(12.dp))
-                ProfileInfo(
-                    name = user.name,
-                    course = user.course,
-                    yearOfStudy = user.yearOfStudy,
-                    campus = user.campus
-                )
-            }
-        }
-
-        // Stats row
-        item(key = "stats") {
-            Spacer(Modifier.height(20.dp))
-            ProfileStatsRow(
-                hustleScore = state.hustleScore,
-                serviceCount = state.services.size,
-                reviewCount = state.reviewCount,
-                modifier = Modifier.padding(
-                    horizontal = 16.dp
-                )
+                    .fillMaxSize()
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
-        }
-
-        // Badges
-        item(key = "badges") {
-            Spacer(Modifier.height(16.dp))
-            ProfileBadges(
-                badges = state.badges,
-                modifier = Modifier.padding(
-                    horizontal = 16.dp
-                )
-            )
-        }
-
-        // Services header
-        item(key = "services_header") {
-            Spacer(Modifier.height(24.dp))
-            ServicesHeader(
-                onAddNewServiceClick = onAddNewServiceClick,
-                modifier = Modifier.padding(
-                    horizontal = 16.dp
-                )
-            )
-            Spacer(Modifier.height(12.dp))
-        }
-
-        // Service cards
-        items(
-            items = state.services,
-            key = { it.id }
-        ) { service ->
-            ServiceCard(
-                service = service,
-                onToggle = {
-                    onToggleService(service.id)
-                },
-                modifier = Modifier.padding(
-                    horizontal = 16.dp,
-                    vertical = 6.dp
-                )
-            )
-        }
-
-        // Bottom tabs
-        item(key = "bottom_tabs") {
-            Spacer(Modifier.height(20.dp))
-            ProfileBottomTabs(
-                modifier = Modifier.padding(
-                    horizontal = 16.dp
-                )
+        } else {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "No photo",
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme
+                    .onSurfaceVariant
             )
         }
     }
