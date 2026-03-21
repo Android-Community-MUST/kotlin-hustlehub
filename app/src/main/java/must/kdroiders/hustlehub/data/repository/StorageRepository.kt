@@ -28,7 +28,7 @@ class StorageRepository @Inject constructor(
      */
     fun uploadPortfolioImage(serviceId: String, imageBytes: ByteArray): Flow<UploadResult> = flow {
         emit(UploadResult.Progress(0f))
-        
+
         try {
             val bucket = supabaseStorage["hustlehub-media"]
             val imageId = UUID.randomUUID().toString()
@@ -37,7 +37,7 @@ class StorageRepository @Inject constructor(
             bucket.upload(path, imageBytes) {
                 upsert = true
             }
-            
+
             // Generate public URL
             val publicUrl = bucket.publicUrl(path)
             emit(UploadResult.Success(publicUrl))

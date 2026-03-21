@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.ui.features.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,7 +67,8 @@ import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 @Composable
 fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
-    onEditClick: () -> Unit = {}
+    onEditClick: () -> Unit = {},
+    onAddNewServiceClick: () -> Unit = {}
 ) {
     val state by profileViewModel.uiState.collectAsState()
 
@@ -84,7 +86,8 @@ fun ProfileScreen(
             else -> ProfileContent(
                 state = state,
                 onEditClick = onEditClick,
-                onToggleService = profileViewModel::toggleServiceActive
+                onToggleService = profileViewModel::toggleServiceActive,
+                onAddNewServiceClick = onAddNewServiceClick
             )
         }
     }
@@ -98,7 +101,8 @@ fun ProfileScreen(
 private fun ProfileContent(
     state: ProfileUiState,
     onEditClick: () -> Unit,
-    onToggleService: (String) -> Unit
+    onToggleService: (String) -> Unit,
+    onAddNewServiceClick: () -> Unit
 ) {
     val user = state.user ?: return
 
@@ -165,6 +169,7 @@ private fun ProfileContent(
         item(key = "services_header") {
             Spacer(Modifier.height(24.dp))
             ServicesHeader(
+                onAddNewServiceClick = onAddNewServiceClick,
                 modifier = Modifier.padding(
                     horizontal = 16.dp
                 )
@@ -489,7 +494,10 @@ private fun BadgeChip(badge: Badge) {
 // ─────────────────────────────────────────────────
 
 @Composable
-private fun ServicesHeader(modifier: Modifier = Modifier) {
+private fun ServicesHeader(
+    onAddNewServiceClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -505,7 +513,8 @@ private fun ServicesHeader(modifier: Modifier = Modifier) {
             text = "Add New +",
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = HustlePrimary
+            color = HustlePrimary,
+            modifier = Modifier.clickable { onAddNewServiceClick() }
         )
     }
 }
