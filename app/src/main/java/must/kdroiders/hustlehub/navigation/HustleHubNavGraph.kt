@@ -23,10 +23,14 @@ import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
 import must.kdroiders.hustlehub.ui.auth.presentation.view.SignUpScreen
-import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 import must.kdroiders.hustlehub.ui.portfolio.PortfolioUploadScreen
 
+/**
+ * Top-level route strings for the outer (splash/auth) navigation graph.
+ *
+ * Bottom navigation tab routes live in [BottomNavDestination].
+ */
 object Routes {
     const val SPLASH = "splash"
     const val HOME = "home"
@@ -34,19 +38,25 @@ object Routes {
     const val SIGN_UP = "sign_up"
     const val ONBOARDING = "onboarding"
     const val PROFILE_SETUP = "profile_setup"
-    const val PROFILE = "profile"
     const val PORTFOLIO_UPLOAD = "portfolio_upload"
 }
 
+/**
+ * Root navigation graph.
+ *
+ * Handles splash, auth, and onboarding flow. Once a user is authenticated and
+ * their profile is set up, navigation lands on [Routes.HOME] which hosts the
+ * [MainScaffold] (bottom-navigation shell).
+ */
 @Composable
 fun HustleHubNavGraph(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     NavHost(
         navController = navController,
         startDestination = Routes.SPLASH,
-        modifier = modifier
+        modifier = modifier,
     ) {
         composable(Routes.SPLASH) {
             SplashScreen(
@@ -60,35 +70,38 @@ fun HustleHubNavGraph(
                     navController.navigate(route) {
                         popUpTo(Routes.SPLASH) { inclusive = true }
                     }
-                }
+                },
             )
         }
 
+        // ── Main shell (bottom navigation) ──────────────────────────────────
         composable(Routes.HOME) {
-            PlaceholderScreen(title = "Home")
+            MainScaffold(rootNavController = navController)
         }
 
+        // ── Auth screens ─────────────────────────────────────────────────────
         composable(Routes.LOGIN) {
             PlaceholderScreen(
                 title = "Login (Teammate Task)",
                 showDeveloperShortcuts = BuildConfig.DEBUG,
-                onDeveloperShortcut = { navController.navigate(it) }
+                onDeveloperShortcut = { navController.navigate(it) },
             )
         }
 
         composable(Routes.SIGN_UP) {
             SignUpScreen(
-                onNavigateToLogin = { navController.navigate(Routes.LOGIN) }
+                onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
             )
         }
 
+        // ── Onboarding ────────────────────────────────────────────────────────
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
                 onFinished = {
                     navController.navigate(Routes.SPLASH) {
                         popUpTo(Routes.ONBOARDING) { inclusive = true }
                     }
-                }
+                },
             )
         }
 
@@ -98,39 +111,37 @@ fun HustleHubNavGraph(
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.PROFILE_SETUP) { inclusive = true }
                     }
-                }
+                },
             )
         }
 
-        composable(Routes.PROFILE) {
-            ProfileScreen(
-                onEditClick = {},
-                onAddNewServiceClick = { navController.navigate(Routes.PORTFOLIO_UPLOAD) }
-            )
-        }
-
+        // ── Standalone screens reachable from within the shell ────────────────
         composable(Routes.PORTFOLIO_UPLOAD) {
             PortfolioUploadScreen()
         }
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Dev utility – used for auth placeholder until teammate completes Login screen
+// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 private fun PlaceholderScreen(
     title: String,
     showDeveloperShortcuts: Boolean = false,
-    onDeveloperShortcut: (String) -> Unit = {}
+    onDeveloperShortcut: (String) -> Unit = {},
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = title,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground,
             )
 
             if (showDeveloperShortcuts) {
@@ -139,19 +150,19 @@ private fun PlaceholderScreen(
                 Text(
                     text = "Developer Shortcuts",
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    androidx.compose.material3.Button(onClick = { onDeveloperShortcut(Routes.SIGN_UP) }) {
-                        Text("Sign Up")
-                    }
-                    androidx.compose.material3.Button(onClick = { onDeveloperShortcut(Routes.PORTFOLIO_UPLOAD) }) {
-                        Text("Upload")
-                    }
-                    androidx.compose.material3.Button(onClick = { onDeveloperShortcut(Routes.PROFILE) }) {
-                        Text("Profile")
-                    }
+                    androidx.compose.material3.Button(
+                        onClick = { onDeveloperShortcut(Routes.HOME) },
+                    ) { Text("Home") }
+                    androidx.compose.material3.Button(
+                        onClick = { onDeveloperShortcut(Routes.SIGN_UP) },
+                    ) { Text("Sign Up") }
+                    androidx.compose.material3.Button(
+                        onClick = { onDeveloperShortcut(Routes.PORTFOLIO_UPLOAD) },
+                    ) { Text("Upload") }
                 }
             }
         }
