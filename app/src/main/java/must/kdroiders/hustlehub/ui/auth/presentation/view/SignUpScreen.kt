@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.auth
+package must.kdroiders.hustlehub.ui.auth.presentation.view
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -6,23 +6,25 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleTextField
+import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.SignUpViewModel
+import must.kdroiders.hustlehub.ui.auth.presentation.view.components.PasswordStrengthIndicator
 
 @Composable
 fun SignUpScreen(
@@ -31,9 +33,6 @@ fun SignUpScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
-
-    var passwordVisible by remember { mutableStateOf(false) }
-    var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -56,91 +55,63 @@ fun SignUpScreen(
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
-        OutlinedTextField(
+        HustleTextField(
             value = uiState.name,
             onValueChange = viewModel::onNameChanged,
-            label = { Text("Full Name") },
+            label = "Full Name",
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.nameError != null,
-            supportingText = uiState.nameError?.let { { Text(it) } },
-            singleLine = true
+            errorText = uiState.nameError,
+            leadingIcon = Icons.Default.Person
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(
+        HustleTextField(
             value = uiState.email,
             onValueChange = viewModel::onEmailChanged,
-            label = { Text("Must Student Email") },
-            placeholder = { Text("example@must.ac.ke") },
+            label = "Must Student Email",
+            placeholder = "example@must.ac.ke",
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.emailError != null,
-            supportingText = uiState.emailError?.let { { Text(it) } },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            errorText = uiState.emailError,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            leadingIcon = Icons.Default.Email
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(
+        HustleTextField(
             value = uiState.password,
             onValueChange = viewModel::onPasswordChanged,
-            label = { Text("Password") },
+            label = "Password",
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.passwordError != null,
-            supportingText = {
-                Column {
-                    uiState.passwordError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                    PasswordStrengthIndicator(strength = uiState.passwordStrength)
-                }
-            },
-            singleLine = true,
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            errorText = uiState.passwordError,
+            isPassword = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            trailingIcon = {
-                val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                val description = if (passwordVisible) "Hide password" else "Show password"
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(imageVector = image, contentDescription = description)
-                }
-            }
+            leadingIcon = Icons.Default.Lock
         )
+        PasswordStrengthIndicator(strength = uiState.passwordStrength)
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(
+        HustleTextField(
             value = uiState.confirmPassword,
             onValueChange = viewModel::onConfirmPasswordChanged,
-            label = { Text("Confirm Password") },
+            label = "Confirm Password",
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.confirmPasswordError != null,
-            supportingText = uiState.confirmPasswordError?.let { { Text(it) } },
-            singleLine = true,
-            visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            errorText = uiState.confirmPasswordError,
+            isPassword = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            trailingIcon = {
-                val image = if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                val description = if (confirmPasswordVisible) "Hide password" else "Show password"
-                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                    Icon(imageVector = image, contentDescription = description)
-                }
-            }
+            leadingIcon = Icons.Default.Lock
         )
         Spacer(modifier = Modifier.height(32.dp))
 
-        Button(
+        HustleButton(
+            text = "Sign Up",
             onClick = viewModel::signUp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            enabled = !uiState.isLoading
-        ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                Text("Sign Up")
-            }
-        }
+            modifier = Modifier.fillMaxWidth(),
+            loading = uiState.isLoading
+        )
         
         uiState.signUpError?.let {
             Spacer(modifier = Modifier.height(16.dp))
@@ -169,35 +140,6 @@ fun SignUpScreen(
                     onNavigateToLogin()
                 }
             }
-        )
-    }
-}
-
-@Composable
-fun PasswordStrengthIndicator(strength: PasswordStrength) {
-    val color = when (strength) {
-        PasswordStrength.WEAK -> Color.Red
-        PasswordStrength.MEDIUM -> Color(0xFFFFA500) // Orange
-        PasswordStrength.STRONG -> Color(0xFF00C853) // Green
-    }
-    
-    val text = when (strength) {
-        PasswordStrength.WEAK -> "Weak"
-        PasswordStrength.MEDIUM -> "Medium"
-        PasswordStrength.STRONG -> "Strong"
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 4.dp),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Strength: $text",
-            style = MaterialTheme.typography.bodySmall,
-            color = color
         )
     }
 }

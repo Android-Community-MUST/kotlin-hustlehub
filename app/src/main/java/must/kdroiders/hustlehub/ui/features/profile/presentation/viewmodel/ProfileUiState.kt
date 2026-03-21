@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.features.profile
+package must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel
 
 import must.kdroiders.hustlehub.data.model.Service
 import must.kdroiders.hustlehub.data.model.User
