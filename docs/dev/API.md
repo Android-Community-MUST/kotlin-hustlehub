@@ -260,7 +260,7 @@ val matches = parseMatches(response)
 ```kotlin
 dependencies {
     implementation("com.google.android.gms:play-services-maps:20.0.0")
-    implementation("com.google.maps.android:maps-compose:8.1.0")
+    implementation("com.google.maps.android:maps-compose:8.2.2")
 }
 ```
 
@@ -387,9 +387,50 @@ class FakeServiceRepository : ServiceRepository {
 }
 ```
 
+## Supabase Storage
+
+HustleHub uses Supabase Storage as the primary file storage for user photos and portfolios.
+
+### Upload Image
+
+```kotlin
+// StorageRepository.kt
+suspend fun uploadImage(
+    bucketName: String,
+    path: String,
+    imageBytes: ByteArray
+): Result<String> // Returns public URL
+```
+
+**Configuration:**
+```kotlin
+// SupabaseModule.kt
+@Module
+@InstallIn(SingletonComponent::class)
+object SupabaseModule {
+    @Provides
+    @Singleton
+    fun provideSupabaseClient(): SupabaseClient {
+        return createSupabaseClient(
+            supabaseUrl = BuildConfig.SUPABASE_URL,
+            supabaseKey = BuildConfig.SUPABASE_KEY
+        ) {
+            install(Storage)
+        }
+    }
+}
+```
+
+**Required Keys** (in `keys.properties`):
+```properties
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_supabase_anon_key
+```
+
 ---
 
 **See also:**
 - [Firebase Documentation](https://firebase.google.com/docs)
 - [Gemini API Docs](https://ai.google.dev/docs)
 - [Google Maps Platform](https://developers.google.com/maps)
+- [Supabase Storage Docs](https://supabase.com/docs/guides/storage)

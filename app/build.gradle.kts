@@ -65,9 +65,12 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
-    
-    // Navigation
-    implementation(libs.androidx.navigation.compose)
+
+    // Navigation 3
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.adaptive.navigation3)
+    // Hilt ViewModel support for Compose (hiltViewModel() used throughout existing screens)
     implementation(libs.androidx.hilt.navigation.compose)
 
     // Hilt Dependency Injection
@@ -114,6 +117,7 @@ dependencies {
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.storage)
     implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.okhttp)
 
     // Testing
     testImplementation(libs.junit)

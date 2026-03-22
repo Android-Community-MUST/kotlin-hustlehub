@@ -1,5 +1,10 @@
 package must.kdroiders.hustlehub.navigation
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,17 +12,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
@@ -27,110 +36,132 @@ import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.Profi
 import must.kdroiders.hustlehub.ui.portfolio.PortfolioUploadScreen
 
 /**
- * Top-level route strings for the outer (splash/auth) navigation graph.
+ * Root Navigation 3 navigator for HustleHub.
  *
- * Bottom navigation tab routes live in [BottomNavDestination].
- */
-object Routes {
-    const val SPLASH = "splash"
-    const val HOME = "home"
-    const val LOGIN = "login"
-    const val SIGN_UP = "sign_up"
-    const val ONBOARDING = "onboarding"
-    const val PROFILE_SETUP = "profile_setup"
-    const val PORTFOLIO_UPLOAD = "portfolio_upload"
-}
-
-/**
- * Root navigation graph.
+ * Uses a single [NavDisplay] that owns the entire root back-stack. Each destination
+ * is a serializable [NavKey] from [HustleNavKeys], ensuring type-safety and state
+ * restoration across configuration changes and process death.
  *
- * Handles splash, auth, and onboarding flow. Once a user is authenticated and
- * their profile is set up, navigation lands on [Routes.HOME] which hosts the
- * [MainScaffold] (bottom-navigation shell).
+ * Architecture:
+ * ```
+ * HustleHubNav  (root NavDisplay – splash/auth/shell)
+ *   └── MainShellScreen  (inner NavDisplay – bottom-tab destinations)
+ *         ├── HomeScreen
+ *         ├── MapScreen
+ *         ├── ChatScreen
+ *         └── ProfileScreen
+ * ```
+ *
+ * Transitions: horizontal slide + crossfade (applied globally via [transitionSpec]).
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun HustleHubNavGraph(
-    navController: NavHostController,
-    modifier: Modifier = Modifier,
-) {
-    NavHost(
-        navController = navController,
-        startDestination = Routes.SPLASH,
-        modifier = modifier,
-    ) {
-        composable(Routes.SPLASH) {
-            SplashScreen(
-                onNavigate = { destination ->
-                    val route = when (destination) {
-                        SplashDestination.Home -> Routes.HOME
-                        SplashDestination.Login -> Routes.LOGIN
-                        SplashDestination.Onboarding -> Routes.ONBOARDING
-                        SplashDestination.ProfileSetup -> Routes.PROFILE_SETUP
-                    }
-                    navController.navigate(route) {
-                        popUpTo(Routes.SPLASH) { inclusive = true }
-                    }
-                },
-            )
-        }
+fun HustleHubNav() {
+    val backstack = rememberNavBackStack(Splash)
+    val motionScheme = MaterialTheme.motionScheme
+    // IntOffset spec for slide animations, Float spec for fade animations
+    val slideSpec = motionScheme.defaultSpatialSpec<IntOffset>()
+    val fadeSpec = motionScheme.defaultEffectsSpec<Float>()
 
-        // ── Main shell (bottom navigation) ──────────────────────────────────
-        composable(Routes.HOME) {
-            MainScaffold(rootNavController = navController)
-        }
+    NavDisplay(
+        backStack = backstack,
+        onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+        // Global transitions using MotionScheme
+        transitionSpec = {
+            (slideInHorizontally(slideSpec) { it } + fadeIn(fadeSpec)) togetherWith
+                (slideOutHorizontally(slideSpec) { -it } + fadeOut(fadeSpec))
+        },
+        popTransitionSpec = {
+            (slideInHorizontally(slideSpec) { -it } + fadeIn(fadeSpec)) togetherWith
+                (slideOutHorizontally(slideSpec) { it } + fadeOut(fadeSpec))
+        },
+        // Screen routing via entryProvider DSL
+        entryProvider = entryProvider {
 
-        // ── Auth screens ─────────────────────────────────────────────────────
-        composable(Routes.LOGIN) {
-            PlaceholderScreen(
-                title = "Login (Teammate Task)",
-                showDeveloperShortcuts = BuildConfig.DEBUG,
-                onDeveloperShortcut = { navController.navigate(it) },
-            )
-        }
+            // Splash
+            entry<Splash> {
+                SplashScreen(
+                    onNavigate = { destination ->
+                        val key: NavKey = when (destination) {
+                            SplashDestination.Home -> MainShell
+                            SplashDestination.Login -> Login
+                            SplashDestination.Onboarding -> Onboarding
+                            SplashDestination.ProfileSetup -> ProfileSetup
+                        }
+                        backstack.clear()
+                        backstack.add(key)
+                    },
+                )
+            }
 
-        composable(Routes.SIGN_UP) {
-            SignUpScreen(
-                onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
-            )
-        }
+            // Auth
+            entry<Login> {
+                NavPlaceholderScreen(
+                    title = "Login (Teammate Task)",
+                    showDeveloperShortcuts = BuildConfig.DEBUG,
+                    onDeveloperShortcut = { key -> backstack.add(key) },
+                )
+            }
 
-        // ── Onboarding ────────────────────────────────────────────────────────
-        composable(Routes.ONBOARDING) {
-            OnboardingScreen(
-                onFinished = {
-                    navController.navigate(Routes.SPLASH) {
-                        popUpTo(Routes.ONBOARDING) { inclusive = true }
-                    }
-                },
-            )
-        }
+            entry<SignUp> {
+                SignUpScreen(
+                    onNavigateToLogin = {
+                        if (backstack.isNotEmpty()) { backstack.remove(backstack.last()) }
+                        if (backstack.isEmpty()) backstack.add(Login)
+                    },
+                )
+            }
 
-        composable(Routes.PROFILE_SETUP) {
-            ProfileSetupScreen(
-                onSetupComplete = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.PROFILE_SETUP) { inclusive = true }
-                    }
-                },
-            )
-        }
+            //Onboarding
+            entry<Onboarding> {
+                OnboardingScreen(
+                    onFinished = {
+                        backstack.clear()
+                        backstack.add(Login)
+                    },
+                )
+            }
 
-        // ── Standalone screens reachable from within the shell ────────────────
-        composable(Routes.PORTFOLIO_UPLOAD) {
-            PortfolioUploadScreen()
-        }
-    }
+            // Profile setup (post first-login wizard)
+            entry<ProfileSetup> {
+                ProfileSetupScreen(
+                    onSetupComplete = {
+                        backstack.clear()
+                        backstack.add(MainShell)
+                    },
+                )
+            }
+
+            // Main shell (bottom-nav host)
+            entry<MainShell> {
+                MainShellScreen(
+                    onNavigateToPortfolio = { backstack.add(PortfolioUpload) },
+                )
+            }
+
+            // Standalone screens reachable from within the shell
+            entry<PortfolioUpload> {
+                PortfolioUploadScreen()
+            }
+
+            // Chat detail (also used as adaptive detail pane on tablets)
+            entry<ChatDetail> { key ->
+                // TODO: replace with real ChatDetailScreen(key.chatId) in a later sprint
+                NavPlaceholderScreen(title = "Chat – ${key.chatId}")
+            }
+        },
+    )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Dev utility – used for auth placeholder until teammate completes Login screen
+// Dev utility – placeholder until teammates complete their screens
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun PlaceholderScreen(
+private fun NavPlaceholderScreen(
     title: String,
     showDeveloperShortcuts: Boolean = false,
-    onDeveloperShortcut: (String) -> Unit = {},
+    onDeveloperShortcut: (NavKey) -> Unit = {},
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -146,23 +177,15 @@ private fun PlaceholderScreen(
 
             if (showDeveloperShortcuts) {
                 Spacer(Modifier.height(32.dp))
-
                 Text(
                     text = "Developer Shortcuts",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
-
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    androidx.compose.material3.Button(
-                        onClick = { onDeveloperShortcut(Routes.HOME) },
-                    ) { Text("Home") }
-                    androidx.compose.material3.Button(
-                        onClick = { onDeveloperShortcut(Routes.SIGN_UP) },
-                    ) { Text("Sign Up") }
-                    androidx.compose.material3.Button(
-                        onClick = { onDeveloperShortcut(Routes.PORTFOLIO_UPLOAD) },
-                    ) { Text("Upload") }
+                    Button(onClick = { onDeveloperShortcut(MainShell) }) { Text("Home") }
+                    Button(onClick = { onDeveloperShortcut(SignUp) })    { Text("Sign Up") }
+                    Button(onClick = { onDeveloperShortcut(PortfolioUpload) }) { Text("Upload") }
                 }
             }
         }

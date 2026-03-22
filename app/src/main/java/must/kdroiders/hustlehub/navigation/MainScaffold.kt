@@ -1,75 +1,79 @@
 package must.kdroiders.hustlehub.navigation
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+import androidx.compose.animation.togetherWith
 import must.kdroiders.hustlehub.ui.features.chat.ChatScreen
 import must.kdroiders.hustlehub.ui.features.home.HomeScreen
 import must.kdroiders.hustlehub.ui.features.map.MapScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScreen
 
 /**
- * Main application shell.
+ * Main application shell hosting the bottom navigation bar.
  *
- * Hosts its own inner [NavHostController] for the bottom-navigation graph and
- * renders a [Scaffold] whose bottom bar is the shared [BottomNavigationBar].
+ * Owns its own [innerBackstack] (a [rememberNavBackStack] starting on [BottomHome]).
+ * Tab switching **replaces** the first element rather than pushing, keeping the stack
+ * at depth 1 for tabs — this matches how apps like YouTube and Gmail work.
  *
- * The outer [rootNavController] (splash/auth graph) is kept as a parameter for any
- * future cross-graph navigation (e.g., signing out → Login screen).
+ * Navigation into detail screens (e.g. [PortfolioUpload]) is delegated back up to the
+ * root back-stack via [onNavigateToPortfolio].
  *
- * Architecture:
+ * Architecture (within this shell):
  * ```
- * HustleHubNavGraph (outer, splash/auth routes)
- *   └── MainScaffold (inner, bottom-nav routes)
- *         ├── HomeScreen
- *         ├── MapScreen
- *         ├── ChatScreen
- *         └── ProfileScreen
+ *  innerBackstack: [BottomHome | BottomMap | BottomChat | BottomProfile]
+ *       ↓  observed by ↓
+ *  NavDisplay (inner)  →  renders the active tab composable
  * ```
  */
 @Composable
-fun MainScaffold(
-    rootNavController: NavHostController,
+fun MainShellScreen(
+    onNavigateToPortfolio: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val bottomNavController = rememberNavController()
+    val innerBackstack = rememberNavBackStack(BottomHome)
+
+    // The currently active tab key is always the last element.
+    val currentKey = innerBackstack.lastOrNull() ?: BottomHome
 
     Scaffold(
         modifier = modifier,
         bottomBar = {
-            BottomNavigationBar(navController = bottomNavController)
+            HustleBottomBar(
+                currentKey = currentKey,
+                onTabSelected = { destination ->
+                    // Replace entire stack with the selected tab (no accumulation).
+                    innerBackstack.clear()
+                    innerBackstack.add(destination)
+                },
+            )
         },
     ) { innerPadding ->
-        NavHost(
-            navController = bottomNavController,
-            startDestination = BottomNavDestination.Home.route,
+        NavDisplay(
+            backStack = innerBackstack,
             modifier = Modifier.padding(innerPadding),
-        ) {
-            composable(BottomNavDestination.Home.route) {
-                HomeScreen()
-            }
-
-            composable(BottomNavDestination.Map.route) {
-                MapScreen()
-            }
-
-            composable(BottomNavDestination.Chat.route) {
-                ChatScreen()
-            }
-
-            composable(BottomNavDestination.Profile.route) {
-                ProfileScreen(
-                    onEditClick = { /* TODO: deep-link to Edit Profile screen */ },
-                    onAddNewServiceClick = {
-                        rootNavController.navigate(Routes.PORTFOLIO_UPLOAD)
-                    },
-                )
-            }
-        }
+            onBack = { /* tabs don't back-navigate; system back is handled by root */ },
+            // Subtle crossfade between tabs — feels native and doesn't "slide" sideways
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            popTransitionSpec = { fadeIn() togetherWith fadeOut() },
+            entryProvider = entryProvider {
+                entry<BottomHome>    { HomeScreen() }
+                entry<BottomMap>     { MapScreen() }
+                entry<BottomChat>    { ChatScreen() }
+                entry<BottomProfile> {
+                    ProfileScreen(
+                        onEditClick = { /* TODO: deep-link to Edit Profile screen */ },
+                        onAddNewServiceClick = onNavigateToPortfolio,
+                    )
+                }
+            },
+        )
     }
 }

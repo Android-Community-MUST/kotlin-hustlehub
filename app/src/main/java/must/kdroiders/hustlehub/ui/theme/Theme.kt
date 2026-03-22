@@ -55,6 +55,7 @@ fun HustleHubTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = HustleShapes,
         motionScheme = MotionScheme.expressive(),
         content = content
     )

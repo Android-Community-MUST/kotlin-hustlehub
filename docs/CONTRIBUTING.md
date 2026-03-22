@@ -48,3 +48,5 @@ Before closing an issue, ensure:
 - ✅ Acceptance criteria met
 - ✅ Code tested
 - ✅ No errors/warnings
+- ✅ `./gradlew ktlintCheck` passes
+- ✅ `./gradlew detekt` passes

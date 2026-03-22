@@ -1,62 +1,94 @@
 package must.kdroiders.hustlehub.navigation
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.outlined.PersonOutline
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation3.runtime.NavKey
 
 /**
- * Bottom navigation bar composable shared across all main-shell destinations.
+ * Metadata record for a single bottom-navigation tab.
  *
- * It reads the current route from [navController]'s back stack and highlights the
- * matching [BottomNavDestination]. Navigation is performed with `saveState = true` /
- * `restoreState = true` so that each tab preserves its own scroll / state across switches.
+ * Each item carries its corresponding [NavKey], display [label], and
+ * selected / unselected icon pair.
+ */
+private data class BottomTabItem(
+    val key: NavKey,
+    val label: String,
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
+)
+
+private val bottomTabs = listOf(
+    BottomTabItem(
+        key = BottomHome,
+        label = "Home",
+        selectedIcon = Icons.Filled.Home,
+        unselectedIcon = Icons.Outlined.Home,
+    ),
+    BottomTabItem(
+        key = BottomMap,
+        label = "Map",
+        selectedIcon = Icons.Filled.Map,
+        unselectedIcon = Icons.Outlined.Map,
+    ),
+    BottomTabItem(
+        key = BottomChat,
+        label = "Chat",
+        selectedIcon = Icons.AutoMirrored.Filled.Chat,
+        unselectedIcon = Icons.AutoMirrored.Outlined.Chat,
+    ),
+    BottomTabItem(
+        key = BottomProfile,
+        label = "Profile",
+        selectedIcon = Icons.Filled.Person,
+        unselectedIcon = Icons.Outlined.PersonOutline,
+    ),
+)
+
+/**
+ * Navigation 3–aware bottom bar.
  *
- * @param navController the *inner* NavController that drives the bottom-nav graph.
- * @param modifier optional modifier forwarded to [NavigationBar].
+ * Completely decoupled from [NavController]. It receives the active [currentKey]
+ * directly from the inner back-stack and calls [onTabSelected] when a tab is tapped.
+ * The hosting composable ([MainShellScreen]) is responsible for actually mutating
+ * the back-stack.
+ *
+ * @param currentKey  the [NavKey] of the currently displayed tab.
+ * @param onTabSelected  invoked with the [NavKey] of the tapped tab.
+ * @param modifier  optional modifier forwarded to [NavigationBar].
  */
 @Composable
-fun BottomNavigationBar(
-    navController: NavController,
+fun HustleBottomBar(
+    currentKey: NavKey,
+    onTabSelected: (NavKey) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val backStackEntry = navController.currentBackStackEntryAsState()
-    val currentRoute = backStackEntry.value?.destination?.route
-
     NavigationBar(modifier = modifier) {
-        BottomNavDestination.all.forEach { destination ->
-            val selected = currentRoute == destination.route
-
+        bottomTabs.forEach { item ->
+            val selected = currentKey == item.key
             NavigationBarItem(
                 selected = selected,
-                onClick = {
-                    navController.navigate(destination.route) {
-                        // Pop up to the start destination of the graph to avoid
-                        // building up a large stack of the same destination on
-                        // repeated taps of the same item.
-                        popUpTo(
-                            navController.graph.startDestinationId
-                        ) {
-                            saveState = true
-                        }
-                        // Avoid multiple copies of the same destination when
-                        // re-selecting the same item.
-                        launchSingleTop = true
-                        // Restore state when re-selecting a previously selected item.
-                        restoreState = true
-                    }
-                },
+                onClick = { onTabSelected(item.key) },
                 icon = {
                     Icon(
-                        imageVector = if (selected) destination.selectedIcon else destination.unselectedIcon,
-                        contentDescription = destination.label,
+                        imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                        contentDescription = item.label,
                     )
                 },
-                label = { Text(text = destination.label) },
+                label = { Text(text = item.label) },
                 alwaysShowLabel = true,
             )
         }
