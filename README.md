@@ -96,21 +96,21 @@ HustleHub organizes this economy into a structured, trustworthy platform with:
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Language**: Kotlin 2.1.10
-- **UI Framework**: Jetpack Compose
+- **Language**: Kotlin 2.3.20
+- **UI Framework**: Jetpack Compose (Material 3 Expressive)
 - **Architecture**: MVVM + Clean Architecture
-- **Navigation**: Compose Navigation
+- **Navigation**: Navigation 3 (`androidx.navigation3`)
 - **DI**: Hilt (Dagger)
-- **Networking**: Retrofit 2.9.0 + OkHttp 4.12.0
-- **Local DB**: Room 2.8+
-- **Image Loading**: Coil 2.x
+- **Networking**: Retrofit 3.0.0 + OkHttp 5.3.2
+- **Local DB**: Room 2.8.4 + DataStore Preferences
+- **Image Loading**: Coil 2.7.0
 - **State Management**: Kotlin Flow + StateFlow
 
 ### Backend
 - **Authentication**: Firebase Auth
 - **Database**: Firebase Firestore (users, services, reviews)
 - **Real-time Chat**: Firebase Realtime Database
-- **File Storage**: Firebase Storage / Supabase Storage (Alternative)
+- **File Storage**: Supabase Storage (primary) / Firebase Storage (fallback)
 - **Notifications**: Firebase Cloud Messaging (FCM)
 - **Serverless**: Cloud Functions for Firebase
 - **Analytics**: Firebase Analytics + Crashlytics
@@ -146,13 +146,25 @@ HustleHub organizes this economy into a structured, trustworthy platform with:
 
 **Package Structure:**
 ```
-com.hustlehub.app/
-├── data/           # Repositories, DAOs, DTOs
-├── domain/         # Models, Use Cases, Interfaces
-├── presentation/   # Screens, ViewModels, Components
-├── di/             # Hilt Modules
-├── navigation/     # Nav Graph
-└── util/           # Extensions, Constants
+must.kdroiders.hustlehub/
+├── activities/          # MainActivity
+├── appHilt/             # Hilt Application class
+├── data/                # Models, Repositories
+│   ├── model/           # Domain models (User, Service)
+│   └── repository/      # Repository implementations
+├── datastore/           # DataStore Preferences
+├── di/                  # Hilt Modules (AppModule, SupabaseModule)
+├── navigation/          # Navigation 3 NavGraph, NavKeys, BottomBar
+├── onboarding/          # Onboarding carousel
+├── sharedComposables/   # Reusable UI components
+├── splash/              # Splash screen + auth-gate
+├── ui/                  # Feature screens & theme
+│   ├── auth/            # Sign-up / login
+│   ├── components/      # UI-specific components
+│   ├── features/        # Home, Map, Chat, Profile, ProfileSetup
+│   ├── portfolio/       # Portfolio upload
+│   └── theme/           # Color, Type, Shape, Theme
+└── util/                # Extensions, Utilities
 ```
 
 See [PRD.md](docs/PRD.md) for detailed architecture diagrams and database schema.
@@ -165,7 +177,7 @@ See [PRD.md](docs/PRD.md) for detailed architecture diagrams and database schema
 
 - Android Studio Ladybug (or latest stable)
 - JDK 17+
-- Android SDK 34
+- Android SDK 36
 - Firebase account
 - Google Cloud account (for Maps & Gemini APIs)
 
@@ -198,9 +210,9 @@ See [PRD.md](docs/PRD.md) for detailed architecture diagrams and database schema
      on storage.objects for insert
      with check ( bucket_id = 'hustlehub-media' and auth.role() = 'authenticated' );
      ```
-   - Copy your `SUPABASE_URL` and `SUPABASE_ANON_KEY` from Project Settings > API
+   - Copy your `SUPABASE_URL` and `SUPABASE_KEY` from Project Settings > API
 
-3. **Configure API Keys**
+4. **Configure API Keys**
    
    Copy `keys.properties.template` to `keys.properties` in the project root and add your API keys:
    ```properties
@@ -208,15 +220,15 @@ See [PRD.md](docs/PRD.md) for detailed architecture diagrams and database schema
    GEMINI_API_KEY=your_gemini_api_key
    SUPABASE_URL=your_supabase_url
    SUPABASE_KEY=your_supabase_anon_key
+   ```
 
-
-4. **Build and Run**
+5. **Build and Run**
    ```bash
    ./gradlew assembleDebug
    # or open in Android Studio and run
    ```
 
-5. **Run Tests**
+6. **Run Tests**
    ```bash
    # Unit tests
    ./gradlew test
@@ -329,8 +341,8 @@ See [PRD.md](docs/PRD.md) for detailed feature specifications.
 firebase emulators:start --only auth,firestore,database,storage
 ./gradlew connectedAndroidTest
 
-# UI tests
-./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.hustlehub.app.ChatFlowTest
+# UI tests (example — replace with your actual test class)
+./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=must.kdroiders.hustlehub.ui.auth.SignUpViewModelTest
 ```
 
 ### Test Coverage

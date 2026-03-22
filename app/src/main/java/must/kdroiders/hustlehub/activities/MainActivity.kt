@@ -4,9 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import must.kdroiders.hustlehub.navigation.HustleHubNavGraph
+import must.kdroiders.hustlehub.navigation.HustleHubNav
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 
 @AndroidEntryPoint
@@ -16,8 +15,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HustleHubTheme {
-                val navController = rememberNavController()
-                HustleHubNavGraph(navController = navController)
+                // Navigation 3 — no NavController needed at the activity level.
+                HustleHubNav()
             }
         }
     }

@@ -8,18 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial project setup
-- Clean Architecture structure
-- Firebase integration
-- Authentication flow (Email/Password + Google Sign-In)
-- Service creation and management
-- Discovery feed with search
-- AI-powered search using Gemini API
-- Real-time messaging system
-- Voice notes and image sharing
-- Campus map with provider pins
-- Ratings and reviews system
-- Push notifications
+- Initial project setup with `must.kdroiders.hustlehub` package
+- MVVM architecture with Hilt DI (AppModule, SupabaseModule)
+- Firebase integration (Auth, Firestore, Storage, Crashlytics, Perf)
+- Supabase Storage integration for file uploads
+- Navigation 3 infrastructure with serializable NavKeys
+- Bottom navigation bar (Home, Map, Chat, Profile tabs)
+- Splash screen with auth-gate routing
+- Onboarding carousel for first-run experience
+- Sign-up screen with email/password (Firebase Auth)
+- Password strength indicator component
+- Profile setup wizard (post first-login)
+- Profile screen with avatar, badges, stats, and services section
+- Portfolio upload screen
+- Home, Map, and Chat placeholder screens
+- DataStore Preferences for persisting user settings
+- Theme system with dark mode, custom colors, shapes, and typography
+- Shared composable library (HustleButton, HustleCard, HustleTextField, EmptyStateView, ErrorView, LoadingIndicator, RatingBar)
+- Code quality tooling: ktlint + detekt
+- Unit tests (SignUpViewModel, StorageRepository, ImageUtils)
 
 ### Changed
 - N/A

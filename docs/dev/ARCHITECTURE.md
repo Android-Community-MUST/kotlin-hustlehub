@@ -4,79 +4,98 @@ Quick reference for understanding the HustleHub codebase structure.
 
 ## Architecture Pattern
 
-HustleHub follows **Clean Architecture** with **MVVM** pattern.
+HustleHub follows **MVVM** with **Clean Architecture** principles (domain layer planned).
+
+> **Note:** The domain layer (use cases, repository interfaces) is planned but not yet
+> implemented. Currently ViewModels call repositories directly.
 
 ```
 ┌─────────────────────────────────────┐
 │       Presentation Layer            │  ← UI (Compose) + ViewModels
-│   (Jetpack Compose + ViewModels)   │
+│  (Jetpack Compose + ViewModels)    │
 └─────────────┬───────────────────────┘
               │ observes StateFlow
 ┌─────────────▼───────────────────────┐
-│         Domain Layer                │  ← Business Logic
-│  (Use Cases + Repository Interfaces)│
+│    Domain Layer  🚧 (planned)       │  ← Use Cases, Interfaces
 └─────────────┬───────────────────────┘
               │ implements
 ┌─────────────▼───────────────────────┐
 │          Data Layer                 │  ← Data Sources
 │ (Repositories + Data Sources)       │
 │  ┌──────────┐  ┌─────────────┐     │
-│  │   Room   │  │   Firebase  │     │
-│  │ (Cache)  │  │  (Remote)   │     │
+│  │DataStore │  │   Firebase  │     │
+│  │  + Room  │  │ + Supabase  │     │
 │  └──────────┘  └─────────────┘     │
 └─────────────────────────────────────┘
 ```
 
 ## Package Structure
 
+> Items marked with 🚧 are planned but not yet implemented.
+
 ```
-com.hustlehub.app/
+must.kdroiders.hustlehub/
+├── 📁 activities/              # MainActivity
+├── 📁 appHilt/                 # Hilt Application class
 ├── 📁 data/                    # Data Layer
-│   ├── local/                  # Room database
-│   │   ├── dao/               # Data Access Objects
-│   │   ├── entity/            # Room entities
-│   │   └── AppDatabase.kt
-│   ├── remote/                # Remote data sources
-│   │   ├── firebase/          # Firebase services
-│   │   └── api/               # Retrofit APIs
-│   ├── repository/            # Repository implementations
-│   └── dto/                   # Data Transfer Objects
+│   ├── model/                 # Domain models (User, Service)
+│   └── repository/            # Repository implementations
+│       ├── UserRepository.kt
+│       └── StorageRepository.kt
+│   ├── local/    🚧            # Room DAOs, entities
+│   ├── remote/   🚧            # Firebase & API data sources
+│   └── dto/      🚧            # Data transfer objects
 │
-├── 📁 domain/                  # Domain Layer
-│   ├── model/                 # Domain models (pure Kotlin)
+├── 📁 domain/   🚧             # Domain Layer (planned)
+│   ├── model/                 # Pure Kotlin domain models
 │   ├── repository/            # Repository interfaces
 │   └── usecase/               # Business logic
-│       ├── auth/
-│       ├── service/
-│       ├── messaging/
-│       └── discovery/
 │
-├── 📁 presentation/            # Presentation Layer
-│   ├── auth/                  # Auth screens
-│   │   ├── login/
-│   │   │   ├── LoginScreen.kt
-│   │   │   └── LoginViewModel.kt
-│   │   └── signup/
-│   ├── discovery/             # Discovery screens
-│   ├── messaging/             # Chat screens
-│   ├── map/                   # Map screen
-│   ├── profile/               # Profile screens
-│   ├── components/            # Reusable composables
-│   └── theme/                 # Design system
-│
-├── 📁 di/                      # Dependency Injection
+├── 📁 datastore/               # DataStore Preferences
+│   └── UserPreferences.kt
+├── 📁 di/                      # Hilt Modules
 │   ├── AppModule.kt
-│   ├── DataModule.kt
-│   └── RepositoryModule.kt
+│   └── SupabaseModule.kt
 │
-├── 📁 navigation/              # Navigation
-│   ├── NavGraph.kt
-│   └── Routes.kt
+├── 📁 navigation/              # Navigation 3
+│   ├── HustleHubNavGraph.kt
+│   ├── HustleNavKeys.kt
+│   ├── BottomNavigationBar.kt
+│   └── MainScaffold.kt
+│
+├── 📁 onboarding/              # First-run carousel
+├── 📁 splash/                  # Splash screen + auth-gate
+│
+├── 📁 sharedComposables/       # Reusable composables
+│   ├── EmptyStateView.kt
+│   ├── ErrorView.kt
+│   ├── HustleButton.kt
+│   ├── HustleCard.kt
+│   ├── HustleTextField.kt
+│   ├── LoadingIndicator.kt
+│   └── RatingBar.kt
+│
+├── 📁 ui/                      # Presentation Layer
+│   ├── auth/                  # Sign-up / login
+│   │   └── presentation/
+│   │       ├── view/
+│   │       └── viewmodel/
+│   ├── components/            # UI-specific components
+│   ├── features/              # Feature screens
+│   │   ├── home/
+│   │   ├── map/
+│   │   ├── chat/
+│   │   ├── profile/
+│   │   └── profilesetup/
+│   ├── portfolio/             # Portfolio upload
+│   └── theme/                 # Design system
+│       ├── Color.kt
+│       ├── Type.kt
+│       ├── Shape.kt
+│       └── Theme.kt
 │
 └── 📁 util/                    # Utilities
-    ├── Constants.kt
-    ├── Extensions.kt
-    └── ValidationUtils.kt
+    └── ImageUtils.kt
 ```
 
 ## Data Flow
@@ -290,46 +309,66 @@ when (val state = uiState.collectAsState().value) {
 ```kotlin
 @Module
 @InstallIn(SingletonComponent::class)
-object DataModule {
+object AppModule {
     
     @Provides
     @Singleton
-    fun provideFirestore(): FirebaseFirestore {
-        return Firebase.firestore
+    fun provideFirebaseAuth(): FirebaseAuth? {
+        return try {
+            FirebaseAuth.getInstance()
+        } catch (e: IllegalStateException) {
+            Timber.w(e, "Firebase not initialized — running without auth")
+            null
+        }
     }
     
     @Provides
     @Singleton
-    fun provideDatabase(
-        @ApplicationContext context: Context
-    ): AppDatabase {
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "hustlehub_db"
-        ).build()
+    fun provideFirebaseFirestore(): FirebaseFirestore? {
+        return try {
+            FirebaseFirestore.getInstance()
+        } catch (e: IllegalStateException) {
+            null
+        }
     }
-}
 
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class RepositoryModule {
-    
-    @Binds
+    @Provides
     @Singleton
-    abstract fun bindServiceRepository(
-        impl: ServiceRepositoryImpl
-    ): ServiceRepository
+    fun provideDataStore(
+        @ApplicationContext context: Context
+    ): DataStore<Preferences> = context.dataStore
+
+    @Provides
+    @Singleton
+    fun provideUserPreferences(
+        dataStore: DataStore<Preferences>
+    ): UserPreferences = UserPreferences(dataStore)
+
+    @Provides
+    @Singleton
+    fun provideUserRepository(
+        firestore: FirebaseFirestore?,
+        storage: FirebaseStorage?
+    ): UserRepository {
+        if (firestore != null && storage != null) {
+            return UserRepositoryImpl(firestore, storage)
+        }
+        return NoopUserRepository()
+    }
 }
 ```
+
+> **Note:** Firebase instances are provided as nullable (`?`) to allow the app
+> to run without Firebase during development. A `NoopUserRepository` is used as
+> a fallback when Firebase is unavailable.
 
 ### Injection in ViewModels
 
 ```kotlin
 @HiltViewModel
-class LoginViewModel @Inject constructor(
-    private val signInUseCase: SignInUseCase,
-    private val validateEmailUseCase: ValidateEmailUseCase
+class SignUpViewModel @Inject constructor(
+    private val auth: FirebaseAuth?,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
     // ViewModel implementation
 }
@@ -337,49 +376,65 @@ class LoginViewModel @Inject constructor(
 
 ## Navigation
 
+HustleHub uses **Navigation 3** (`androidx.navigation3`) with serializable `NavKey` data objects.
+
 ### Route Definition
 
 ```kotlin
-sealed class Routes(val route: String) {
-    object Home : Routes("home")
-    object Login : Routes("login")
-    object ServiceDetail : Routes("service/{serviceId}") {
-        fun createRoute(serviceId: String) = "service/$serviceId"
-    }
-}
+import androidx.navigation3.runtime.NavKey
+import kotlinx.serialization.Serializable
+
+// Root-flow keys
+@Serializable data object Splash : NavKey
+@Serializable data object Onboarding : NavKey
+@Serializable data object Login : NavKey
+@Serializable data object SignUp : NavKey
+@Serializable data object ProfileSetup : NavKey
+@Serializable data object MainShell : NavKey
+
+// Bottom-tab keys
+@Serializable data object BottomHome : NavKey
+@Serializable data object BottomMap : NavKey
+@Serializable data object BottomChat : NavKey
+@Serializable data object BottomProfile : NavKey
+
+// Detail keys
+@Serializable data object PortfolioUpload : NavKey
+@Serializable data class ChatDetail(val chatId: String) : NavKey
 ```
 
 ### Navigation Graph
 
 ```kotlin
 @Composable
-fun NavGraph(
-    navController: NavHostController,
-    startDestination: String
-) {
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
-    ) {
-        composable(Routes.Home.route) {
-            HomeScreen(
-                onServiceClick = { serviceId ->
-                    navController.navigate(
-                        Routes.ServiceDetail.createRoute(serviceId)
-                    )
-                }
-            )
+fun HustleHubNav() {
+    val backstack = rememberNavBackStack(Splash)
+
+    NavDisplay(
+        backStack = backstack,
+        onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+        entryProvider = entryProvider {
+            entry<Splash> {
+                SplashScreen(
+                    onNavigate = { destination ->
+                        backstack.clear()
+                        backstack.add(/* resolved NavKey */)
+                    }
+                )
+            }
+
+            entry<MainShell> {
+                // Inner NavDisplay for bottom-tab destinations
+                MainShellScreen(
+                    onNavigateToPortfolio = { backstack.add(PortfolioUpload) }
+                )
+            }
+
+            entry<ChatDetail> { key ->
+                ChatDetailScreen(chatId = key.chatId)
+            }
         }
-        
-        composable(
-            route = Routes.ServiceDetail.route,
-            arguments = listOf(
-                navArgument("serviceId") { type = NavType.StringType }
-            )
-        ) {
-            ServiceDetailScreen()
-        }
-    }
+    )
 }
 ```
 

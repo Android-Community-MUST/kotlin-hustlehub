@@ -377,23 +377,25 @@ Feature: In-App Communication
 #### 📱 Frontend (Android)
 | Layer | Technology | Purpose |
 |-------|------------|---------|
-| **Language** | Kotlin 1.9+ | Primary development language |
-| **UI Framework** | Jetpack Compose | Declarative, modern UI toolkit |
+| **Language** | Kotlin 2.3.20 | Primary development language |
+| **UI Framework** | Jetpack Compose (Material 3 Expressive) | Declarative, modern UI toolkit |
 | **Architecture** | MVVM + Clean Architecture | Separation of concerns, testability |
-| **Navigation** | Compose Navigation | Type-safe, single-activity architecture |
+| **Navigation** | Navigation 3 (`androidx.navigation3`) | Type-safe, serializable NavKey-based routing |
 | **Dependency Injection** | Hilt (Dagger) | Compile-time DI with Kotlin support |
-| **Networking** | Retrofit 2 + OkHttp 4 | REST API client with interceptors |
-| **Local Database** | Room 2.6+ | Offline caching, message persistence |
-| **Image Loading** | Coil 2.x | Compose-native, coroutine-based |
+| **Networking** | Retrofit 3.0.0 + OkHttp 5.3.2 | REST API client with interceptors |
+| **Local Database** | Room 2.8.4 + DataStore Preferences | Offline caching, user preferences |
+| **Image Loading** | Coil 2.7.0 | Compose-native, coroutine-based |
 | **State Management** | Kotlin Flow + StateFlow | Reactive, lifecycle-aware streams |
+| **Code Quality** | ktlint + detekt | Linting and static analysis |
 
-#### ☁️ Backend (Firebase)
+#### ☁️ Backend (Firebase + Supabase)
 | Service | Purpose |
 |---------|---------|
 | **Firebase Auth** | Email/password + Google sign-in |
 | **Firestore** | NoSQL database for users, services, reviews |
 | **Realtime Database** | Low-latency chat messages and presence |
-| **Firebase Storage** | Profile photos, portfolios, voice notes |
+| **Supabase Storage** | Primary file storage (photos, portfolios) |
+| **Firebase Storage** | Fallback file storage |
 | **Cloud Messaging (FCM)** | Push notifications |
 | **Cloud Functions** | Server-side logic (rating aggregation, moderation) |
 | **Crashlytics** | Crash reporting and analytics |
@@ -447,102 +449,90 @@ graph TB
 
 ### 4.3 Package Structure
 
+> **Note:** Items marked with 🚧 are planned but not yet implemented.
+
 ```
-com.hustlehub.app/
-├── 📁 data/                          # Data Layer
-│   ├── 📁 local/                     # Local data sources
-│   │   ├── 📁 dao/                   # Room DAOs
-│   │   ├── 📁 entity/                # Room entities
-│   │   └── AppDatabase.kt
-│   ├── 📁 remote/                    # Remote data sources
-│   │   ├── 📁 firebase/
-│   │   │   ├── FirebaseAuthService.kt
-│   │   │   ├── FirestoreService.kt
-│   │   │   ├── RealtimeDatabaseService.kt
-│   │   │   └── StorageService.kt
-│   │   └── 📁 api/
-│   │       └── GeminiApiService.kt
-│   ├── 📁 repository/                # Repository implementations
-│   │   ├── AuthRepositoryImpl.kt
-│   │   ├── ServiceRepositoryImpl.kt
-│   │   ├── MessageRepositoryImpl.kt
-│   │   └── UserRepositoryImpl.kt
-│   └── 📁 dto/                       # Data transfer objects
-│
-├── 📁 domain/                        # Domain Layer
-│   ├── 📁 model/                     # Domain models
+must.kdroiders.hustlehub/
+├── 📁 activities/                       # Entry points
+│   └── MainActivity.kt
+├── 📁 appHilt/                          # Hilt Application
+│   └── HustleHubApp.kt
+├── 📁 data/                             # Data Layer
+│   ├── 📁 model/                        # Domain models
 │   │   ├── User.kt
-│   │   ├── Service.kt
-│   │   ├── Message.kt
-│   │   ├── Review.kt
-│   │   └── Conversation.kt
-│   ├── 📁 repository/                # Repository interfaces
-│   │   ├── AuthRepository.kt
-│   │   ├── ServiceRepository.kt
-│   │   ├── MessageRepository.kt
-│   │   └── UserRepository.kt
-│   └── 📁 usecase/                   # Business logic
-│       ├── 📁 auth/
-│       │   ├── SignUpUseCase.kt
-│       │   ├── SignInUseCase.kt
-│       │   └── VerifyEmailUseCase.kt
-│       ├── 📁 service/
-│       │   ├── CreateServiceUseCase.kt
-│       │   ├── GetServicesUseCase.kt
-│       │   └── SearchServicesUseCase.kt
-│       ├── 📁 messaging/
-│       │   ├── SendMessageUseCase.kt
-│       │   ├── GetConversationsUseCase.kt
-│       │   └── SendVoiceNoteUseCase.kt
-│       └── 📁 discovery/
-│           ├── AISearchUseCase.kt
-│           └── FilterServicesUseCase.kt
+│   │   └── Service.kt
+│   ├── 📁 repository/                   # Repository implementations
+│   │   ├── UserRepository.kt
+│   │   └── StorageRepository.kt
+│   ├── 📁 local/   🚧                    # Room DAOs, entities
+│   ├── 📁 remote/  🚧                    # Firebase & API data sources
+│   └── 📁 dto/     🚧                    # Data transfer objects
 │
-├── 📁 presentation/                  # Presentation Layer
-│   ├── 📁 auth/                      # Authentication screens
-│   │   ├── login/
-│   │   ├── signup/
-│   │   └── verification/
-│   ├── 📁 discovery/                 # Feed, search, categories
-│   │   ├── home/
-│   │   ├── search/
-│   │   └── detail/
-│   ├── 📁 profile/                   # Provider profile, portfolio
-│   │   ├── view/
-│   │   └── edit/
-│   ├── 📁 messaging/                 # Chat list, chat screen
-│   │   ├── list/
-│   │   └── chat/
-│   ├── 📁 map/                       # Campus map
-│   ├── 📁 settings/                  # App settings
-│   ├── 📁 components/                # Shared composables
-│   │   ├── HustleButton.kt
-│   │   ├── HustleTextField.kt
-│   │   ├── ServiceCard.kt
-│   │   ├── MessageBubble.kt
-│   │   └── RatingBar.kt
-│   └── 📁 theme/                     # Design system
+├── 📁 domain/  🚧                        # Domain Layer (planned)
+│   ├── 📁 model/                        # Pure Kotlin domain models
+│   ├── 📁 repository/                   # Repository interfaces
+│   └── 📁 usecase/                      # Business logic
+│       ├── auth/
+│       ├── service/
+│       ├── messaging/
+│       └── discovery/
+│
+├── 📁 datastore/                        # Preferences
+│   └── UserPreferences.kt
+├── 📁 di/                               # Dependency Injection
+│   ├── AppModule.kt
+│   ├── SupabaseModule.kt
+│   ├── DataModule.kt       🚧
+│   ├── RepositoryModule.kt 🚧
+│   └── UseCaseModule.kt    🚧
+│
+├── 📁 navigation/                       # Navigation 3
+│   ├── HustleHubNavGraph.kt
+│   ├── HustleNavKeys.kt
+│   ├── BottomNavigationBar.kt
+│   └── MainScaffold.kt
+│
+├── 📁 onboarding/                       # First-run carousel
+│   ├── OnboardingScreen.kt
+│   └── OnboardingViewModel.kt
+│
+├── 📁 sharedComposables/                # Reusable composables
+│   ├── EmptyStateView.kt
+│   ├── ErrorView.kt
+│   ├── HustleButton.kt
+│   ├── HustleCard.kt
+│   ├── HustleTextField.kt
+│   ├── LoadingIndicator.kt
+│   └── RatingBar.kt
+│
+├── 📁 splash/                           # Splash + auth-gate
+│   ├── SplashScreen.kt
+│   └── SplashViewModel.kt
+│
+├── 📁 ui/                               # Presentation Layer
+│   ├── 📁 auth/                         # Authentication screens
+│   │   └── presentation/
+│   │       ├── view/ (SignUpScreen.kt, ...)
+│   │       └── viewmodel/ (SignUpViewModel.kt)
+│   ├── 📁 components/                   # UI-specific components
+│   │   └── PortfolioImagePicker.kt
+│   ├── 📁 features/                     # Feature screens
+│   │   ├── home/     (HomeScreen.kt)
+│   │   ├── map/      (MapScreen.kt)
+│   │   ├── chat/     (ChatScreen.kt)
+│   │   ├── profile/  (ProfileScreen, components, ViewModel)
+│   │   └── profilesetup/ (ProfileSetupScreen, ViewModel)
+│   ├── 📁 portfolio/                    # Portfolio upload
+│   │   ├── PortfolioUploadScreen.kt
+│   │   └── PortfolioUploadViewModel.kt
+│   └── 📁 theme/                        # Design system
 │       ├── Color.kt
-│       ├── Typography.kt
+│       ├── Type.kt
 │       ├── Shape.kt
 │       └── Theme.kt
 │
-├── 📁 di/                            # Dependency Injection
-│   ├── AppModule.kt
-│   ├── DataModule.kt
-│   ├── RepositoryModule.kt
-│   └── UseCaseModule.kt
-│
-├── 📁 navigation/                    # Navigation
-│   ├── NavGraph.kt
-│   ├── Routes.kt
-│   └── NavigationExtensions.kt
-│
-└── 📁 util/                          # Utilities
-    ├── Constants.kt
-    ├── Extensions.kt
-    ├── DateTimeUtils.kt
-    └── ValidationUtils.kt
+└── 📁 util/                             # Utilities
+    └── ImageUtils.kt
 ```
 
 ---
@@ -1426,7 +1416,7 @@ firebase emulators:start --only auth,firestore,database,storage
 
 ```yaml
 # maestro/signup-to-chat.yaml
-appId: com.hustlehub.app
+appId: must.kdroiders.hustlehub
 ---
 - launchApp
 - tapOn: "Sign Up"

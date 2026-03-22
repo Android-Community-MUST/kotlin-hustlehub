@@ -29,7 +29,7 @@ cd kotlin-hustlehub
 ### Add Android App
 
 1. Click "Add app" → Android icon
-2. **Package name**: `com.hustlehub.app` (must match exactly)
+2. **Package name**: `must.kdroiders.hustlehub` (must match exactly)
 3. Download `google-services.json`
 4. Place it in `app/` directory
 
@@ -67,6 +67,8 @@ In Firebase Console, enable:
    ```properties
    MAPS_API_KEY=AIzaSy...your_actual_maps_key
    GEMINI_API_KEY=AIzaSy...your_actual_gemini_key
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_KEY=your_supabase_anon_key
    ```
 
 ### Get Your API Keys
@@ -75,7 +77,7 @@ In Firebase Console, enable:
 - Go to [Google Cloud Console](https://console.cloud.google.com)
 - Enable "Maps SDK for Android"
 - Create API Key → Restrict to Android apps
-- Package name: `com.hustlehub.app`
+- Package name: `must.kdroiders.hustlehub`
 
 **Gemini API**
 - Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
@@ -132,7 +134,7 @@ Or in Android Studio: **File → Sync Project with Gradle Files**
 ### Google Services Error
 
 - Verify `google-services.json` is in `app/` directory
-- Check package name matches exactly: `com.hustlehub.app`
+- Check package name matches exactly: `must.kdroiders.hustlehub`
 
 ### Maps Not Loading
 
@@ -170,6 +172,9 @@ Or in Android Studio: **File → Sync Project with Gradle Files**
 
 # Format code
 ./gradlew ktlintFormat
+
+# Run static analysis
+./gradlew detekt
 ```
 
 ## Development Environment
