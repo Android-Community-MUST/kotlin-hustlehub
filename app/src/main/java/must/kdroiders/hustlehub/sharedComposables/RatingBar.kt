@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -54,9 +55,17 @@ fun RatingBar(
     val scaleSpec = motionScheme.defaultEffectsSpec<Float>()
 
     Row(
-        modifier = modifier.semantics {
-            contentDescription = "Rating: ${"%.1f".format(rating)} out of $starCount stars"
-        },
+        modifier = modifier.then(
+            if (onRatingChanged == null) {
+                Modifier.clearAndSetSemantics {
+                    contentDescription = "Rating: ${"%.1f".format(rating)} out of $starCount stars"
+                }
+            } else {
+                Modifier.semantics {
+                    contentDescription = "Rating: ${"%.1f".format(rating)} out of $starCount stars"
+                }
+            }
+        ),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -80,7 +89,7 @@ fun RatingBar(
 
             Icon(
                 imageVector = icon,
-                contentDescription = "Star $i",
+                contentDescription = if (onRatingChanged == null) null else "Set rating to $i",
                 tint = tint,
                 modifier = Modifier
                     .size(starSize)

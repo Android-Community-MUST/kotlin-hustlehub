@@ -210,9 +210,9 @@ See [PRD.md](docs/PRD.md) for detailed architecture diagrams and database schema
      on storage.objects for insert
      with check ( bucket_id = 'hustlehub-media' and auth.role() = 'authenticated' );
      ```
-   - Copy your `SUPABASE_URL` and `SUPABASE_ANON_KEY` from Project Settings > API
+   - Copy your `SUPABASE_URL` and `SUPABASE_KEY` from Project Settings > API
 
-3. **Configure API Keys**
+4. **Configure API Keys**
    
    Copy `keys.properties.template` to `keys.properties` in the project root and add your API keys:
    ```properties
@@ -222,13 +222,13 @@ See [PRD.md](docs/PRD.md) for detailed architecture diagrams and database schema
    SUPABASE_KEY=your_supabase_anon_key
    ```
 
-4. **Build and Run**
+5. **Build and Run**
    ```bash
    ./gradlew assembleDebug
    # or open in Android Studio and run
    ```
 
-5. **Run Tests**
+6. **Run Tests**
    ```bash
    # Unit tests
    ./gradlew test
