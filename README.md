@@ -9,6 +9,7 @@
 [![Platform](https://img.shields.io/badge/Platform-Android-brightgreen.svg)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-purple.svg)](https://kotlinlang.org)
 [![Framework](https://img.shields.io/badge/UI-Jetpack%20Compose-blue.svg)](https://developer.android.com/jetpack/compose)
+[![Backend](https://img.shields.io/badge/Backend-Spring%20Boot-green.svg)](https://spring.io/projects/spring-boot)
 [![License](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](docs/CONTRIBUTING.md)
 
@@ -22,16 +23,16 @@
 
 ## 📖 About
 
-**HustleHub** is a native Android marketplace app that transforms the informal peer-to-peer service economy at Meru University. Students offer diverse services—laundry, salon, tutoring, graphic design, food, and more—but currently rely on chaotic WhatsApp groups and word of mouth.
+**HustleHub** is a native Android marketplace app that transforms the informal peer-to-peer service economy at Meru University of Science & Technology. Students offer laundry, salon, tutoring, graphic design, food, and more — but currently rely on chaotic WhatsApp groups and word of mouth.
 
 HustleHub organizes this economy into a structured, trustworthy platform with:
 
-- 🔍 **AI-powered search** - Find services with natural language ("braids near Gate B under 500")
-- 💬 **Safe messaging** - Chat without sharing phone numbers
-- 🗺️ **Campus map** - See available providers in real-time
-- ⭐ **Reputation system** - Ratings, reviews, and trust scores
-- 🎓 **Student-only** - Verified via university email
-- 📸 **Portfolio showcase** - Providers display their work
+- 🔍 **AI-powered search** — "braids near Gate B under 500"
+- 💬 **Safe in-app messaging** — no phone number sharing required
+- 🗺️ **Campus map** — real-time provider locations
+- ⭐ **Reputation system** — ratings, reviews, and trust scores
+- 🎓 **Student-only access** — verified via university email
+- 📸 **Portfolio showcase** — providers display their work
 
 ---
 
@@ -39,135 +40,92 @@ HustleHub organizes this economy into a structured, trustworthy platform with:
 
 ### Core Features (v1.0)
 
-#### 🔐 Authentication
-- Student email signup (@must.ac.ke)
-- Email OTP verification
-- Google Sign-In integration
-- Role selection: Provider / Customer / Both
+**Authentication**: Student email signup (@must.ac.ke), email OTP verification, Google Sign-In, role selection (Provider / Customer / Both)
 
-#### 📋 Service Management
-- Create and edit service listings
-- Portfolio upload (before/after images)
-- Category selection (Salon, Laundry, Tutoring, Food, Tech, etc.)
-- Availability toggle (Available/Busy/Offline)
-- Price range configuration
+**Service Management**: Create and edit listings with portfolio images, category selection, price range, availability toggle (Available / Busy / Offline)
 
-#### 🔍 Discovery
-- Browse by category with filters
-- Text search with instant results
-- **AI-powered natural language search** via Gemini API
-- Sort by relevance, rating, distance
-- Service detail pages with portfolio galleries
+**Discovery**: Browse by category, text search, **AI-powered natural language search** via Gemini, sort by relevance / rating / distance
 
-#### 💬 Messaging
-- Real-time 1-on-1 chat
-- Voice notes with waveform visualization
-- Image sharing
-- Location sharing
-- Service Request Cards
-- Read receipts & typing indicators
-- Push notifications (FCM)
+**Messaging**: Real-time 1-on-1 chat, voice notes with waveform, image sharing, location sharing, Service Request Cards, read receipts, push notifications (FCM)
 
-#### 🗺️ Campus Map
-- Google Maps integration
-- Provider location pins (color-coded by category)
-- Filter pins by service type
-- Distance-based discovery
-- Quick actions: View Profile | Chat
+**Campus Map**: Google Maps with provider pins color-coded by category, distance-based discovery, quick actions from map
 
-#### ⭐ Ratings & Reviews
-- 5-star rating system
-- Written reviews with moderation
-- Auto-prompt after service completion
-- Average rating calculation
+**Ratings & Reviews**: 5-star rating, written reviews, moderation, auto-prompt after service
 
 ### Future Features (Roadmap)
 
 - 📞 Voice/video calls (WebRTC)
 - 💰 M-Pesa payment integration
-- 🏆 Gamified reputation (Hustle Score, badges, leaderboards)
-- 🔄 Service swap/barter system
-- 🚨 Emergency request broadcasts
-- 🏫 Multi-campus support
+- 🏆 Gamified Hustle Score, badges, leaderboards
+- 🏫 Multi-campus support (Kenyatta, UoN, etc.)
 - 📈 Provider analytics dashboard
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- **Language**: Kotlin 2.3.20
-- **UI Framework**: Jetpack Compose (Material 3 Expressive)
-- **Architecture**: MVVM + Clean Architecture
+### Android Client
+- **Language**: Kotlin 2.x
+- **UI**: Jetpack Compose + Material 3 Expressive
+- **Architecture**: MVVM + Clean Architecture (feature-based)
 - **Navigation**: Navigation 3 (`androidx.navigation3`)
 - **DI**: Hilt (Dagger)
-- **Networking**: Retrofit 3.0.0 + OkHttp 5.3.2
-- **Local DB**: Room 2.8.4 + DataStore Preferences
+- **Networking**: Retrofit 3.0.0 + OkHttp 5.x
+- **Real-time Chat**: OkHttp WebSocket client → Spring Boot WebSocket/STOMP
+- **Local Cache**: Room 2.8.4 + DataStore Preferences (offline-first)
 - **Image Loading**: Coil 2.7.0
-- **State Management**: Kotlin Flow + StateFlow
+- **State**: Kotlin Flow + StateFlow
 
-### Backend
-- **Authentication**: Firebase Auth
-- **Database**: Firebase Firestore (users, services, reviews)
-- **Real-time Chat**: Firebase Realtime Database
-- **File Storage**: Supabase Storage (primary) / Firebase Storage (fallback)
-- **Notifications**: Firebase Cloud Messaging (FCM)
-- **Serverless**: Cloud Functions for Firebase
-- **Analytics**: Firebase Analytics + Crashlytics
-
-### External APIs
-- **AI Search**: Gemini API (Google)
+### Backend & Infrastructure
+- **REST API**: Spring Boot (Kotlin) — all data at `/api/v1/`
+- **Real-time**: Spring WebSocket / STOMP — live chat and presence
+- **Authentication**: Firebase Auth (Email/Password + Google Sign-In)
+- **Push Notifications**: Firebase Cloud Messaging (FCM)
+- **AI Search**: Gemini API (invoked server-side)
 - **Maps**: Google Maps SDK for Android
+
+> ⚠️ **No Firestore, no Firebase Realtime Database, no Supabase.** All application data is served by the Spring Boot backend. Firebase is used exclusively for Auth and FCM.
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────┐
-│       Presentation Layer            │
-│   (Jetpack Compose + ViewModels)   │
-└─────────────┬───────────────────────┘
-              │
-┌─────────────▼───────────────────────┐
-│         Domain Layer                │
-│  (Use Cases + Repository Interfaces)│
-└─────────────┬───────────────────────┘
-              │
-┌─────────────▼───────────────────────┐
-│          Data Layer                 │
-│ (Repositories + Data Sources)       │
-│  ┌──────────┐  ┌─────────────┐     │
-│  │   Room   │  │   Firebase  │     │
-│  │ (Cache)  │  │  (Remote)   │     │
-│  └──────────┘  └─────────────┘     │
-└─────────────────────────────────────┘
+Android Client
+├── Presentation (Compose + ViewModels)
+├── Domain (Use Cases + Repository Interfaces)
+└── Data (Retrofit APIs + Room Cache + WebSocket)
+        │
+        ▼ REST /api/v1/ + WebSocket
+Spring Boot Backend
+├── REST API (services, discovery, chat, users, reviews, media)
+├── WebSocket Server (real-time chat)
+├── Gemini AI Service (natural language search)
+└── Database + File Storage
+        │
+Firebase (Auth + FCM only)
 ```
 
-**Package Structure:**
+### Package Structure
 ```
 must.kdroiders.hustlehub/
-├── activities/          # MainActivity
-├── appHilt/             # Hilt Application class
-├── data/                # Models, Repositories
-│   ├── model/           # Domain models (User, Service)
-│   └── repository/      # Repository implementations
-├── datastore/           # DataStore Preferences
-├── di/                  # Hilt Modules (AppModule, SupabaseModule)
-├── navigation/          # Navigation 3 NavGraph, NavKeys, BottomBar
-├── onboarding/          # Onboarding carousel
-├── sharedComposables/   # Reusable UI components
-├── splash/              # Splash screen + auth-gate
-├── ui/                  # Feature screens & theme
-│   ├── auth/            # Sign-up / login
-│   ├── components/      # UI-specific components
-│   ├── features/        # Home, Map, Chat, Profile, ProfileSetup
-│   ├── portfolio/       # Portfolio upload
-│   └── theme/           # Color, Type, Shape, Theme
-└── util/                # Extensions, Utilities
+├── core/                    # Shared: ApiClient, AuthInterceptor, theme, utils
+├── di/                      # Hilt: NetworkModule, FirebaseModule, RepositoryModule
+├── navigation/              # Navigation 3 NavKeys + NavGraph
+├── local/                   # Room: DAOs, entities (offline cache)
+└── feature/
+    ├── auth/                # Firebase Auth → POST /api/v1/auth/register
+    ├── profile/             # GET/PUT /api/v1/users/me
+    ├── services/            # CRUD /api/v1/services
+    ├── discovery/           # /api/v1/discovery/* (browse, search, AI, map pins)
+    ├── chat/                # REST history + WebSocket real-time
+    ├── map/                 # Google Maps + provider pins
+    ├── reviews/             # POST /api/v1/reviews
+    ├── notifications/       # FCM service + notification center
+    └── media/               # POST /api/v1/media/upload
 ```
 
-See [PRD.md](docs/PRD.md) for detailed architecture diagrams and database schema.
+See [ARCHITECTURE.md](docs/dev/ARCHITECTURE.md) for full detail.
 
 ---
 
@@ -177,65 +135,51 @@ See [PRD.md](docs/PRD.md) for detailed architecture diagrams and database schema
 
 - Android Studio Ladybug (or latest stable)
 - JDK 17+
-- Android SDK 36
-- Firebase account
-- Google Cloud account (for Maps & Gemini APIs)
+- Firebase account (Auth + FCM only)
+- Google Cloud account (Maps API key)
+- **HustleHub Spring Boot backend** running locally
 
 ### Installation
 
-1. **Clone the repository**
+1. **Clone the Android repo**
    ```bash
    git clone git@github.com:Android-Community-MUST/kotlin-hustlehub.git
-   cd hustlehub
+   cd kotlin-hustlehub
    ```
 
-2. **Set up Firebase**
-   - Create a new Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
-   - Add an Android app to your project
-   - Download `google-services.json`
-   - Place it in the `app/` directory
-   - Enable Authentication (Email/Password + Google)
-   - Enable Firestore, Realtime Database, Storage, FCM
+2. **Clone and start the Spring Boot backend**
+   ```bash
+   git clone git@github.com:Android-Community-MUST/hustlehub-backend.git
+   cd hustlehub-backend
+   ./gradlew bootRun   # starts on localhost:8080
+   ```
 
-3. **(Optional) Set up Supabase Storage**
-   - Create a project at [supabase.com](https://supabase.com)
-   - Go to **Storage** and create a new public bucket named `hustlehub-media`
-   - Add the following policy to allow public reads and authenticated uploads:
-     ```sql
-     create policy "Public Access"
-     on storage.objects for select
-     using ( bucket_id = 'hustlehub-media' );
-     
-     create policy "Authenticated Uploads"
-     on storage.objects for insert
-     with check ( bucket_id = 'hustlehub-media' and auth.role() = 'authenticated' );
-     ```
-   - Copy your `SUPABASE_URL` and `SUPABASE_KEY` from Project Settings > API
+3. **Set up Firebase (Auth + FCM only)**
+   - Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
+   - Add Android app with package `must.kdroiders.hustlehub`
+   - Download `google-services.json` → place in `app/`
+   - Enable **Authentication** (Email/Password + Google Sign-In)
+   - Enable **Cloud Messaging** (auto-enabled)
+   - ❌ Do NOT enable Firestore, Realtime Database, or Storage
 
-4. **Configure API Keys**
-   
-   Copy `keys.properties.template` to `keys.properties` in the project root and add your API keys:
+4. **Configure API keys**
+   ```bash
+   cp keys.properties.template keys.properties
+   ```
+   Edit `keys.properties`:
    ```properties
-   MAPS_API_KEY=your_google_maps_api_key
-   GEMINI_API_KEY=your_gemini_api_key
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_KEY=your_supabase_anon_key
+   MAPS_API_KEY=AIzaSy...your_maps_key
+   BASE_URL=http://10.0.2.2:8080/api/v1/
+   WS_BASE_URL=ws://10.0.2.2:8080/ws
+   GEMINI_API_KEY=AIzaSy...your_gemini_key
    ```
 
-5. **Build and Run**
+5. **Build and run**
    ```bash
-   ./gradlew assembleDebug
-   # or open in Android Studio and run
+   ./gradlew installDebug
    ```
 
-6. **Run Tests**
-   ```bash
-   # Unit tests
-   ./gradlew test
-   
-   # Instrumented tests (requires emulator/device)
-   ./gradlew connectedAndroidTest
-   ```
+See [SETUP.md](docs/dev/SETUP.md) for full setup instructions.
 
 ---
 
@@ -243,171 +187,112 @@ See [PRD.md](docs/PRD.md) for detailed architecture diagrams and database schema
 
 <div align="center">
 
-| Home / Discovery | Service Detail | Chat |
-|-----------------|----------------|------|
-| ![Home](https://via.placeholder.com/200x400/6C5CE7/FFFFFF?text=Home) | ![Detail](https://via.placeholder.com/200x400/00CEC9/FFFFFF?text=Detail) | ![Chat](https://via.placeholder.com/200x400/00B894/FFFFFF?text=Chat) |
+| Home / Discovery | Chat | Profile |
+|-----------------|------|---------|
+| ![Home](https://via.placeholder.com/200x400/6C5CE7/FFFFFF?text=Home) | ![Chat](https://via.placeholder.com/200x400/00B894/FFFFFF?text=Chat) | ![Profile](https://via.placeholder.com/200x400/E17055/FFFFFF?text=Profile) |
 
-| Campus Map | Profile | Reviews |
-|-----------|---------|---------|
-| ![Map](https://via.placeholder.com/200x400/FDCB6E/000000?text=Map) | ![Profile](https://via.placeholder.com/200x400/E17055/FFFFFF?text=Profile) | ![Reviews](https://via.placeholder.com/200x400/A29BFE/FFFFFF?text=Reviews) |
+*Screenshots coming soon as development progresses*
 
 </div>
-
-*Note: Screenshots coming soon as development progresses*
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Here's how you can help:
+1. Fork the repo and create a feature branch: `git checkout -b feature/amazing-feature`
+2. Follow [Kotlin coding conventions](https://kotlinlang.org/docs/coding-conventions.html)
+3. Run quality checks before committing:
+   ```bash
+   ./gradlew ktlintCheck detekt test
+   ```
+4. Use Conventional Commits: `feat(chat): add typing indicators`
+5. Open a Pull Request against `develop`
 
-### Ways to Contribute
-- 🐛 Report bugs via [GitHub Issues](#)
-- 💡 Suggest features or improvements
-- 📝 Improve documentation
-- 🔧 Submit pull requests
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Follow our coding standards:
-   - Use Kotlin coding conventions
-   - Write meaningful commit messages
-   - Add comments for complex logic
-   - Write unit tests for new features
-4. Commit your changes (`git commit -m 'Add amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
-
-See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for full guidelines.
 
 ---
 
 ## 📅 Roadmap
 
-### ✅ Phase 1: MVP (Months 1-3) - In Progress
+### ✅ Phase 1: MVP (Months 1–3) — In Progress
 - [x] Authentication & profile setup
-- [x] Service creation & management
-- [x] Discovery feed with search
-- [x] AI-powered search (Gemini API)
-- [x] Real-time messaging
-- [x] Voice notes & image sharing
-- [x] Campus map with provider pins
-- [x] Ratings & reviews
+- [x] Design system + shared composables
+- [ ] Service creation & discovery feed
+- [ ] AI-powered search
+- [ ] Real-time messaging (WebSocket)
+- [ ] Campus map with provider pins
+- [ ] Ratings & reviews
 - [ ] Beta launch (500 users)
 
-### 🚧 Phase 2: Growth (Months 4-6)
+### 🚧 Phase 2: Growth (Months 4–6)
 - [ ] In-app voice/video calls
 - [ ] M-Pesa payment integration
 - [ ] Gamification (Hustle Score, badges, leaderboards)
 - [ ] Provider analytics dashboard
-- [ ] Push notification optimization
 
-### 🔮 Phase 3: Scale (Months 7-12)
-- [ ] Multi-campus support (Kenyatta, UoN, etc.)
-- [ ] Service swap/barter matching
+### 🔮 Phase 3: Scale (Months 7–12)
+- [ ] Multi-campus support
+- [ ] Service swap / barter matching
 - [ ] Emergency request broadcasts
 - [ ] Web admin panel
-- [ ] iOS app (Flutter/Swift)
-
-See [PRD.md](docs/PRD.md) for detailed feature specifications.
-
----
-
-## 📊 Project Status
-
-| Metric | Current | Target (3 months) |
-|--------|---------|-------------------|
-| Registered Users | 0 | 500+ |
-| Active Providers | 0 | 100+ |
-| Services Listed | 0 | 200+ |
-| Conversations | 0 | 1,000+ |
-| App Store Rating | N/A | 4.2+ ⭐ |
-
-**Development Progress**: 25% (Sprint 1 of 6 complete)
 
 ---
 
 ## 🧪 Testing
 
-### Running Tests
-
 ```bash
 # Unit tests
 ./gradlew test
 
-# Integration tests with Firebase emulators
-firebase emulators:start --only auth,firestore,database,storage
+# Instrumented tests (requires emulator/device + backend running)
 ./gradlew connectedAndroidTest
 
-# UI tests (example — replace with your actual test class)
-./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=must.kdroiders.hustlehub.ui.auth.SignUpViewModelTest
+# Code quality
+./gradlew ktlintCheck detekt
 ```
 
-### Test Coverage
-- **Unit Tests**: 70%+ (Use Cases, Repositories, ViewModels)
-- **UI Tests**: Critical user flows (Auth, Messaging, Discovery)
-- **Integration Tests**: Firebase operations
+**Test coverage targets**: 70%+ for domain and data layers, critical UI flows covered.
 
 ---
 
 ## 📄 Documentation
 
-### For Developers
-- [Quick Setup Guide](docs/dev/SETUP.md) - Get started in 10 minutes
-- [API Reference](docs/dev/API.md) - Firebase, Gemini, and Maps APIs
-- [Architecture Guide](docs/dev/ARCHITECTURE.md) - Codebase structure and patterns
-- [Troubleshooting](docs/dev/TROUBLESHOOTING.md) - Common issues and solutions
-- [Changelog](docs/dev/CHANGELOG.md) - Version history and changes
-
-### Product Documentation
-- [Product Requirements Document (PRD)](docs/PRD.md) - Detailed product specifications
-- [Contributing Guidelines](docs/CONTRIBUTING.md) - How to contribute
-- [Code of Conduct](CODE_OF_CONDUCT.md) - Community standards
+| Document | Description |
+|----------|-------------|
+| [PRD.md](docs/PRD.md) | Full product requirements |
+| [ARCHITECTURE.md](docs/dev/ARCHITECTURE.md) | Codebase structure and patterns |
+| [API.md](docs/dev/API.md) | Spring Boot REST + WebSocket API reference |
+| [SETUP.md](docs/dev/SETUP.md) | Development environment setup |
+| [TROUBLESHOOTING.md](docs/dev/TROUBLESHOOTING.md) | Common issues and solutions |
+| [CHANGELOG.md](docs/dev/CHANGELOG.md) | Version history |
+| [CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution guidelines |
 
 ---
 
 ## 🔒 Privacy & Security
 
-- **Student Verification**: Only @must.ac.ke emails allowed
-- **Data Encryption**: All Firebase connections use TLS
+- **Student verification**: Only @must.ac.ke emails allowed
+- **Token security**: All API calls use short-lived Firebase ID tokens (auto-refreshed)
+- **No phone number sharing**: In-app messaging only
+- **User safety**: Block/report features, content moderation, in-app safety tips
 - **Privacy Policy**: [View Policy](PRIVACY.md)
-- **User Safety**:
-  - Block/report features
-  - Content moderation
-  - In-app safety tips
 
 ---
 
 ## 📜 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
 ## 🙏 Acknowledgments
 
-- [Meru University](https://must.ac.ke) for the inspiration
-- [Firebase](https://firebase.google.com) for backend infrastructure
-- [Jetpack Compose](https://developer.android.com/jetpack/compose) team for the amazing UI toolkit
-- [Google AI](https://ai.google.dev) for Gemini API access
+- [Meru University of Science & Technology](https://must.ac.ke) for the inspiration
+- [Spring Boot](https://spring.io) + [Kotlin](https://kotlinlang.org) for the backend
+- [Jetpack Compose](https://developer.android.com/jetpack/compose) for the UI toolkit
+- [Firebase](https://firebase.google.com) for Auth and FCM
+- [Google AI](https://ai.google.dev) for Gemini API
 - All beta testers and early adopters
-
----
-
-## 🌟 Get Involved
-
-- ⭐ Star this repo if you find it useful
-- 🐛 Report bugs via [Issues](#)
-- 💬 Join discussions in [Discussions](#)
-- 🧪 Sign up for beta testing: [Google Form](#)
-
----
-
-## 🌟 Star History
-
-
 
 ---
 

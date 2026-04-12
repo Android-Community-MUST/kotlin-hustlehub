@@ -1,436 +1,611 @@
 # 📡 API Reference
 
-Quick reference for all APIs used in HustleHub.
+All data operations go through the **HustleHub Spring Boot backend** at `/api/v1/`.
+Firebase is used **only** for Authentication (ID tokens) and Cloud Messaging (FCM push).
 
-## Firebase APIs
+---
 
-### Authentication
+## Base URLs
 
-#### Email/Password Sign Up
+| Build Variant | Base URL |
+|---------------|----------|
+| `debug` | `http://10.0.2.2:8080/api/v1/` |
+| `release` | `https://api.hustlehub.app/api/v1/` |
 
-```kotlin
-// AuthRepository.kt
-suspend fun signUpWithEmail(email: String, password: String): Result<User>
-```
+> **Emulator note**: `10.0.2.2` maps to `localhost` on the host machine when running on the Android emulator.
 
-**Example:**
-```kotlin
-val result = authRepository.signUpWithEmail(
-    email = "student@must.ac.ke",
-    password = "SecurePass123!"
-)
-```
+---
 
-#### Google Sign-In
+## Authentication
 
-```kotlin
-suspend fun signInWithGoogle(idToken: String): Result<User>
-```
-
-### Firestore
-
-#### Collections Structure
+Every request (except `/auth/**`) must include a Firebase ID Token in the `Authorization` header:
 
 ```
-users/{userId}
-services/{serviceId}
-reviews/{reviewId}
-conversations/{conversationId}
-  └── messages/{messageId}
+Authorization: Bearer <firebase_id_token>
 ```
 
-#### Create Service
+The `AuthInterceptor` fetches this token automatically from `FirebaseAuth.currentUser?.getIdToken(false)`.
+A `401 Unauthorized` response triggers an automatic token refresh via OkHttp's `Authenticator`.
 
-```kotlin
-// ServiceRepository.kt
-suspend fun createService(service: Service): Result<String>
-```
+---
 
-**Firestore Document:**
+## Auth Endpoints
+
+### Register / Sync User Profile
+`POST /api/v1/auth/register`
+
+Called after Firebase sign-up to persist the user on the backend.
+
+**Request:**
 ```json
 {
-  "serviceId": "service_xyz789",
-  "providerId": "user_abc123",
-  "title": "Professional Braiding Services",
-  "category": "salon",
-  "description": "All styles — box braids, cornrows, twists",
-  "priceRange": "300-800",
-  "portfolio": ["gs://path/to/image1.jpg"],
-  "availability": "available",
-  "averageRating": 4.8,
-  "reviewCount": 23,
-  "tags": ["braids", "hair", "salon"],
-  "location": {
-    "lat": 0.0515,
-    "lng": 37.6456
-  },
+  "firebaseUid": "user_abc123",
+  "name": "John Kamau",
+  "email": "john.kamau@must.ac.ke",
+  "studentId": "COM/0234/2023",
+  "campus": "Meru University",
+  "course": "Computer Science",
+  "yearOfStudy": 3,
+  "hostel": "Hostel B, Room 204",
+  "role": "BOTH",
+  "profilePhotoUrl": "https://api.hustlehub.app/media/users/abc123/profile.jpg",
+  "fcmToken": "fcm_token_here"
+}
+```
+
+**Response `201 Created`:**
+```json
+{
+  "userId": "user_abc123",
+  "name": "John Kamau",
+  "email": "john.kamau@must.ac.ke",
+  "role": "BOTH",
+  "isVerified": true,
   "createdAt": "2026-02-14T10:00:00Z"
 }
 ```
 
-#### Query Services
+---
 
-```kotlin
-// Get all services in a category
-suspend fun getServicesByCategory(category: String): Flow<List<Service>>
+### Update FCM Token
+`PUT /api/v1/users/fcm-token`
 
-// Search services
-suspend fun searchServices(query: String): Flow<List<Service>>
-```
-
-**Firestore Query:**
-```kotlin
-firestore.collection("services")
-    .whereEqualTo("category", "salon")
-    .whereEqualTo("availability", "available")
-    .orderBy("averageRating", Query.Direction.DESCENDING)
-    .limit(20)
-```
-
-### Realtime Database
-
-#### Message Structure
-
-```
-conversations/
-  {conversationId}/
-    messages/
-      {messageId}/
-        senderId: "user_abc123"
-        type: "text"
-        content: "Hello!"
-        timestamp: 1707912345000
-        readAt: null
-```
-
-#### Send Message
-
-```kotlin
-// MessageRepository.kt
-suspend fun sendMessage(
-    conversationId: String,
-    message: Message
-): Result<String>
-```
-
-**Example:**
-```kotlin
-val message = Message(
-    senderId = currentUserId,
-    type = MessageType.TEXT,
-    content = "Hello!",
-    timestamp = System.currentTimeMillis()
-)
-messageRepository.sendMessage(conversationId, message)
-```
-
-#### Listen to Messages
-
-```kotlin
-fun observeMessages(conversationId: String): Flow<List<Message>>
-```
-
-**Realtime Database Listener:**
-```kotlin
-database.reference
-    .child("conversations/$conversationId/messages")
-    .orderByChild("timestamp")
-    .limitToLast(50)
-    .addValueEventListener(...)
-```
-
-### Storage
-
-#### Upload Image
-
-```kotlin
-// StorageRepository.kt
-suspend fun uploadImage(
-    uri: Uri,
-    path: String
-): Result<String> // Returns download URL
-```
-
-**Example:**
-```kotlin
-val downloadUrl = storageRepository.uploadImage(
-    uri = imageUri,
-    path = "services/${serviceId}/portfolio/${UUID.randomUUID()}.jpg"
-)
-```
-
-**Storage Paths:**
-```
-users/{userId}/profile.jpg
-services/{serviceId}/portfolio/{imageId}.jpg
-messages/{conversationId}/{messageId}.jpg
-```
-
-### Cloud Messaging (FCM)
-
-#### Send Notification
-
-```kotlin
-// NotificationRepository.kt
-suspend fun sendNotification(
-    userId: String,
-    title: String,
-    body: String,
-    data: Map<String, String>
-): Result<Unit>
-```
-
-**FCM Payload:**
+**Request:**
 ```json
 {
-  "to": "fcm_token_here",
-  "notification": {
-    "title": "New Message",
-    "body": "Jane sent you a message"
+  "fcmToken": "new_fcm_token_here"
+}
+```
+
+**Response `200 OK`:**
+```json
+{ "message": "FCM token updated" }
+```
+
+---
+
+## User / Profile Endpoints
+
+### Get Current User Profile
+`GET /api/v1/users/me`
+
+**Response `200 OK`:**
+```json
+{
+  "userId": "user_abc123",
+  "name": "John Kamau",
+  "email": "john.kamau@must.ac.ke",
+  "studentId": "COM/0234/2023",
+  "campus": "Meru University",
+  "course": "Computer Science",
+  "yearOfStudy": 3,
+  "hostel": "Hostel B, Room 204",
+  "role": "BOTH",
+  "profilePhotoUrl": "https://...",
+  "bio": "Quality laundry services with free pickup",
+  "hustleScore": 4.7,
+  "badges": ["TOP_RATED", "FAST_RESPONDER"],
+  "isVerified": true,
+  "isOnline": true,
+  "createdAt": "2026-02-01T10:00:00Z",
+  "lastSeen": "2026-02-14T14:30:00Z"
+}
+```
+
+---
+
+### Update User Profile
+`PUT /api/v1/users/me`
+
+**Request:**
+```json
+{
+  "name": "John Kamau",
+  "bio": "Updated bio",
+  "hostel": "Hostel C",
+  "yearOfStudy": 4
+}
+```
+
+---
+
+### Get User Profile by ID
+`GET /api/v1/users/{userId}`
+
+---
+
+### Update Online Status
+`PUT /api/v1/users/me/status`
+
+**Request:**
+```json
+{ "isOnline": true }
+```
+
+---
+
+## Services Endpoints
+
+### Create Service
+`POST /api/v1/services`
+
+**Request:**
+```json
+{
+  "title": "Professional Braiding Services",
+  "category": "SALON",
+  "description": "All styles — box braids, cornrows, twists, and more.",
+  "minPrice": 300,
+  "maxPrice": 800,
+  "tags": ["braids", "hair", "salon", "beauty"],
+  "location": {
+    "lat": 0.0515,
+    "lng": 37.6456,
+    "label": "Hostel C"
   },
-  "data": {
-    "type": "message",
-    "conversationId": "conv_123abc",
-    "senderId": "user_xyz789"
+  "openToBarter": true
+}
+```
+
+**Response `201 Created`:** Full service object.
+
+---
+
+### Get Service by ID
+`GET /api/v1/services/{serviceId}`
+
+---
+
+### Update Service
+`PUT /api/v1/services/{serviceId}`
+
+---
+
+### Delete Service
+`DELETE /api/v1/services/{serviceId}`
+
+---
+
+### Toggle Availability
+`PUT /api/v1/services/{serviceId}/availability`
+
+**Request:**
+```json
+{ "availability": "BUSY" }
+```
+Allowed values: `AVAILABLE`, `BUSY`, `OFFLINE`
+
+---
+
+### Get My Services
+`GET /api/v1/services/me`
+
+---
+
+## Discovery Endpoints
+
+### Browse Services (Paginated)
+`GET /api/v1/discovery/services`
+
+**Query Parameters:**
+
+| Param | Type | Example |
+|-------|------|---------|
+| `category` | String | `SALON` |
+| `availability` | String | `AVAILABLE` |
+| `minRating` | Float | `4.0` |
+| `maxPrice` | Int | `800` |
+| `lat` | Double | `0.0515` |
+| `lng` | Double | `37.6456` |
+| `radiusKm` | Double | `1.0` |
+| `sortBy` | String | `RATING` / `DISTANCE` / `NEWEST` |
+| `page` | Int | `0` |
+| `size` | Int | `20` |
+
+**Response `200 OK`:**
+```json
+{
+  "content": [
+    {
+      "serviceId": "service_xyz789",
+      "providerId": "user_abc123",
+      "providerName": "Jane Wanjiku",
+      "providerPhotoUrl": "https://...",
+      "title": "Professional Braiding Services",
+      "category": "SALON",
+      "priceRange": "300 - 800",
+      "portfolioImages": ["https://..."],
+      "averageRating": 4.8,
+      "reviewCount": 23,
+      "availability": "AVAILABLE",
+      "distanceMeters": 180,
+      "location": { "lat": 0.0515, "lng": 37.6456, "label": "Hostel C" }
+    }
+  ],
+  "totalElements": 87,
+  "totalPages": 5,
+  "number": 0,
+  "size": 20
+}
+```
+
+---
+
+### Text Search
+`GET /api/v1/discovery/search?q=braids&page=0&size=20`
+
+---
+
+### AI-Powered Natural Language Search
+`POST /api/v1/discovery/ai-search`
+
+**Request:**
+```json
+{
+  "query": "I need someone to do box braids near Hostel C under 500",
+  "userLocation": {
+    "lat": 0.0515,
+    "lng": 37.6456
+  },
+  "maxResults": 10
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "matches": [
+    {
+      "serviceId": "service_xyz789",
+      "providerId": "user_abc123",
+      "relevanceScore": 0.95,
+      "matchReason": "Offers box braiding, within 200m of Hostel C, price range 300–800 KSh",
+      "distance": 180,
+      "priceRange": "300 - 800"
+    }
+  ],
+  "queryUnderstanding": {
+    "service": "box braids",
+    "location": "Hostel C",
+    "maxPrice": 500,
+    "category": "SALON"
   }
 }
 ```
 
-## External APIs
+---
 
-### Gemini API
+### Get Map Pins (Nearby Providers)
+`GET /api/v1/discovery/map-pins?lat=0.0515&lng=37.6456&radiusKm=2.0&category=SALON`
 
-#### AI-Powered Search
+**Response `200 OK`:**
+```json
+[
+  {
+    "serviceId": "service_xyz789",
+    "providerId": "user_abc123",
+    "providerName": "Jane Wanjiku",
+    "providerPhotoUrl": "https://...",
+    "title": "Professional Braiding",
+    "category": "SALON",
+    "availability": "AVAILABLE",
+    "averageRating": 4.8,
+    "location": { "lat": 0.0515, "lng": 37.6456 }
+  }
+]
+```
 
-**Endpoint:** `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent`
+---
+
+## Messaging Endpoints
+
+### Get Conversation List
+`GET /api/v1/conversations?page=0&size=20`
+
+**Response `200 OK`:**
+```json
+{
+  "content": [
+    {
+      "conversationId": "conv_123abc",
+      "otherParticipant": {
+        "userId": "user_xyz789",
+        "name": "Jane Wanjiku",
+        "photoUrl": "https://..."
+      },
+      "serviceId": "service_xyz789",
+      "serviceTitle": "Professional Braiding",
+      "lastMessage": "I'm available tomorrow at 2pm",
+      "lastMessageType": "TEXT",
+      "lastMessageAt": "2026-02-14T14:30:00Z",
+      "unreadCount": 2
+    }
+  ]
+}
+```
+
+---
+
+### Get or Create Conversation
+`POST /api/v1/conversations`
 
 **Request:**
-```kotlin
-// GeminiApiService.kt
-suspend fun matchServices(
-    query: String,
-    services: List<Service>
-): Result<List<ServiceMatch>>
-```
-
-**Example Request Body:**
 ```json
 {
-  "contents": [{
-    "parts": [{
-      "text": "Match this query to services: 'braids near Gate B under 500'\n\nAvailable services:\n1. Professional Braiding - 300-800 KSh - Hostel C\n2. Quick Laundry - 200-400 KSh - Gate B\n\nReturn JSON with relevance scores."
-    }]
-  }]
+  "otherUserId": "user_xyz789",
+  "serviceId": "service_xyz789"
 }
 ```
 
-**Response:**
+**Response `200 OK` or `201 Created`:** Conversation object.
+
+---
+
+### Get Message History
+`GET /api/v1/conversations/{conversationId}/messages?page=0&size=50`
+
+**Response `200 OK`:** Paginated list of messages (newest first).
+
+---
+
+### Mark Conversation as Read
+`PUT /api/v1/conversations/{conversationId}/read`
+
+---
+
+## Real-Time Chat — WebSocket (STOMP over SockJS)
+
+Connect to: `ws://10.0.2.2:8080/ws` (debug) / `wss://api.hustlehub.app/ws` (release)
+
+Include Firebase token as a query parameter on connect:
+```
+/ws?token=<firebase_id_token>
+```
+
+### Send a Message
+**Destination:** `/app/chat.send`
+
 ```json
 {
-  "candidates": [{
-    "content": {
-      "parts": [{
-        "text": "{\n  \"matches\": [\n    {\n      \"serviceId\": \"service_xyz789\",\n      \"relevanceScore\": 0.95,\n      \"matchReason\": \"Offers braiding, within budget, near location\"\n    }\n  ]\n}"
-      }]
-    }
-  }]
+  "conversationId": "conv_123abc",
+  "type": "TEXT",
+  "content": "I'm available tomorrow at 2pm",
+  "mediaUrl": null,
+  "metadata": null
 }
 ```
 
-**Implementation:**
-```kotlin
-val prompt = buildString {
-    append("Match this query to services: '$query'\n\n")
-    append("Available services:\n")
-    services.forEachIndexed { index, service ->
-        append("${index + 1}. ${service.title} - ${service.priceRange} KSh - ${service.location}\n")
-    }
-    append("\nReturn JSON with relevance scores.")
-}
+**Message Types:** `TEXT`, `VOICE`, `IMAGE`, `LOCATION`, `SERVICE_CARD`
 
-val response = geminiApi.generateContent(prompt)
-val matches = parseMatches(response)
-```
+### Receive Messages
+**Subscribe to:** `/topic/conversation/{conversationId}`
 
-### Google Maps API
-
-#### Maps SDK
-
-**Add to build.gradle:**
-```kotlin
-dependencies {
-    implementation("com.google.android.gms:play-services-maps:20.0.0")
-    implementation("com.google.maps.android:maps-compose:8.2.2")
+**Payload received:**
+```json
+{
+  "messageId": "msg_456def",
+  "conversationId": "conv_123abc",
+  "senderId": "user_abc123",
+  "type": "TEXT",
+  "content": "I'm available tomorrow at 2pm",
+  "mediaUrl": null,
+  "metadata": null,
+  "timestamp": "2026-02-14T14:30:00Z",
+  "deliveredAt": "2026-02-14T14:30:05Z",
+  "readAt": null
 }
 ```
 
-**Display Map:**
-```kotlin
-GoogleMap(
-    modifier = Modifier.fillMaxSize(),
-    cameraPositionState = cameraPositionState,
-    properties = MapProperties(
-        isMyLocationEnabled = true
-    )
-) {
-    // Add markers
-    services.forEach { service ->
-        Marker(
-            state = MarkerState(
-                position = LatLng(
-                    service.location.lat,
-                    service.location.lng
-                )
-            ),
-            title = service.title,
-            snippet = service.category
-        )
-    }
+### Typing Indicators
+**Send:** `/app/chat.typing`
+```json
+{ "conversationId": "conv_123abc", "isTyping": true }
+```
+**Receive:** `/topic/conversation/{conversationId}/typing`
+
+### Presence (Online/Offline)
+**Subscribe to:** `/topic/user/{userId}/presence`
+
+---
+
+## Reviews Endpoints
+
+### Submit Review
+`POST /api/v1/reviews`
+
+**Request:**
+```json
+{
+  "serviceId": "service_xyz789",
+  "rating": 5,
+  "comment": "Amazing braids! Very professional.",
+  "isAnonymous": false
 }
 ```
 
-#### Geocoding API
+---
 
-**Get Location from Address:**
-```kotlin
-// LocationRepository.kt
-suspend fun geocodeAddress(address: String): Result<LatLng>
+### Get Reviews for a Service
+`GET /api/v1/services/{serviceId}/reviews?page=0&size=10`
+
+---
+
+### Report a Review
+`POST /api/v1/reviews/{reviewId}/report`
+
+**Request:**
+```json
+{ "reason": "Inappropriate content" }
 ```
 
-**Example:**
-```kotlin
-val location = locationRepository.geocodeAddress("Meru University, Gate B")
-// Returns: LatLng(0.0515, 37.6456)
+---
+
+## Media Upload Endpoints
+
+### Upload Image
+`POST /api/v1/media/upload`
+
+**Content-Type:** `multipart/form-data`
+
+**Form fields:**
+- `file` — the image file (JPEG, PNG)
+- `type` — `PROFILE_PHOTO` / `PORTFOLIO` / `CHAT_IMAGE`
+- `entityId` — service ID or conversation ID (optional)
+
+**Response `200 OK`:**
+```json
+{
+  "mediaId": "media_abc123",
+  "url": "https://api.hustlehub.app/media/services/xyz789/img1.jpg",
+  "thumbnailUrl": "https://api.hustlehub.app/media/services/xyz789/img1_thumb.jpg",
+  "type": "PORTFOLIO"
+}
 ```
 
-## Rate Limits & Quotas
+---
 
-### Firebase
+### Upload Voice Note
+`POST /api/v1/media/upload/voice`
 
-| Service | Free Tier | Limit |
-|---------|-----------|-------|
-| Firestore Reads | 50K/day | After: $0.06/100K |
-| Firestore Writes | 20K/day | After: $0.18/100K |
-| Realtime DB | 1GB storage | After: $5/GB |
-| Storage | 5GB | After: $0.026/GB |
-| FCM | Unlimited | - |
+**Content-Type:** `multipart/form-data`
 
-### Gemini API
+**Form fields:**
+- `file` — audio file (AAC/M4A)
+- `conversationId` — conversation this voice note belongs to
 
-- **Free Tier**: 60 requests/minute
-- **Paid**: Higher limits available
+**Response `200 OK`:**
+```json
+{
+  "mediaId": "media_voice_123",
+  "url": "https://api.hustlehub.app/media/voice/abc123.m4a",
+  "durationSeconds": 12,
+  "type": "VOICE_NOTE"
+}
+```
 
-### Google Maps
+---
 
-- **Free Tier**: 28,000 map loads/month
-- **After**: $7/1000 loads
+## Notifications Endpoints
+
+### Get Notification History
+`GET /api/v1/notifications?page=0&size=20`
+
+---
+
+### Mark Notification as Read
+`PUT /api/v1/notifications/{notificationId}/read`
+
+---
+
+### Mark All as Read
+`PUT /api/v1/notifications/read-all`
+
+---
 
 ## Error Handling
 
-### Firebase Errors
+All errors follow a consistent structure:
+
+```json
+{
+  "timestamp": "2026-02-14T14:30:00Z",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Email must end with @must.ac.ke",
+  "path": "/api/v1/auth/register"
+}
+```
+
+### Common HTTP Status Codes
+
+| Code | Meaning |
+|------|---------|
+| `200` | OK |
+| `201` | Created |
+| `400` | Bad Request (validation error) |
+| `401` | Unauthorized (invalid/expired Firebase token) |
+| `403` | Forbidden (action not allowed for this user) |
+| `404` | Resource not found |
+| `409` | Conflict (duplicate entry) |
+| `429` | Too Many Requests (rate limited) |
+| `500` | Internal Server Error |
+
+### Kotlin Handling Example
 
 ```kotlin
-try {
-    val result = firestore.collection("services").get().await()
-} catch (e: FirebaseException) {
-    when (e) {
-        is FirebaseNetworkException -> {
-            // No internet connection
-            Result.Error("No internet connection")
+// Repository pattern with sealed Result
+suspend fun getServices(): Result<List<Service>> {
+    return try {
+        val response = apiService.getServices()
+        if (response.isSuccessful) {
+            Result.Success(response.body()!!.content)
+        } else {
+            Result.Error("Server error: ${response.code()}")
         }
-        is FirebaseAuthException -> {
-            // Authentication error
-            Result.Error("Please sign in again")
-        }
-        else -> {
-            // Generic error
-            Result.Error("Something went wrong")
-        }
+    } catch (e: IOException) {
+        Result.Error("No internet connection")
+    } catch (e: HttpException) {
+        Result.Error("HTTP ${e.code()}: ${e.message()}")
     }
 }
 ```
 
-### API Errors
+---
 
-```kotlin
-sealed class ApiError : Exception() {
-    object NetworkError : ApiError()
-    object Unauthorized : ApiError()
-    data class ServerError(val code: Int) : ApiError()
-    data class Unknown(val message: String) : ApiError()
-}
-```
+## Rate Limits
 
-## Testing
+| Endpoint group | Limit |
+|----------------|-------|
+| Auth endpoints | 10 req/min per IP |
+| Discovery / Search | 60 req/min per user |
+| AI Search | 20 req/min per user |
+| Media upload | 30 uploads/hour per user |
+| Chat messages | 120 messages/min per conversation |
+| General API | 300 req/min per user |
 
-### Firebase Emulators
+---
+
+## Testing Against Local Backend
 
 ```bash
-# Start emulators
-firebase emulators:start --only auth,firestore,database,storage
+# Start Spring Boot backend locally
+./gradlew bootRun   # in backend repo
 
-# Connect to emulators in code
-FirebaseFirestore.getInstance().useEmulator("10.0.2.2", 8080)
-FirebaseAuth.getInstance().useEmulator("10.0.2.2", 9099)
+# Android emulator connects via 10.0.2.2:8080
+# Physical device on same network: use your machine's LAN IP
 ```
 
-### Mock API Responses
-
+### Using Firebase Auth Emulator (optional for local dev)
 ```kotlin
-// Test doubles
-class FakeServiceRepository : ServiceRepository {
-    override suspend fun getServices() = flow {
-        emit(listOf(
-            Service(id = "1", title = "Test Service")
-        ))
-    }
+// In HustleHubApp.onCreate() — debug builds only
+if (BuildConfig.DEBUG) {
+    FirebaseAuth.getInstance().useEmulator("10.0.2.2", 9099)
 }
-```
-
-## Supabase Storage
-
-HustleHub uses Supabase Storage as the primary file storage for user photos and portfolios.
-
-### Upload Image
-
-```kotlin
-// StorageRepository.kt
-suspend fun uploadImage(
-    bucketName: String,
-    path: String,
-    imageBytes: ByteArray
-): Result<String> // Returns public URL
-```
-
-**Configuration:**
-```kotlin
-// SupabaseModule.kt
-@Module
-@InstallIn(SingletonComponent::class)
-object SupabaseModule {
-    @Provides
-    @Singleton
-    fun provideSupabaseClient(): SupabaseClient {
-        return createSupabaseClient(
-            supabaseUrl = BuildConfig.SUPABASE_URL,
-            supabaseKey = BuildConfig.SUPABASE_KEY
-        ) {
-            install(Storage)
-        }
-    }
-}
-```
-
-**Required Keys** (in `keys.properties`):
-```properties
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your_supabase_anon_key
 ```
 
 ---
 
 **See also:**
-- [Firebase Documentation](https://firebase.google.com/docs)
-- [Gemini API Docs](https://ai.google.dev/docs)
-- [Google Maps Platform](https://developers.google.com/maps)
-- [Supabase Storage Docs](https://supabase.com/docs/guides/storage)
+- [Architecture Guide](ARCHITECTURE.md)
+- [Setup Guide](SETUP.md)
+- [Spring Boot Backend Repo](https://github.com/Android-Community-MUST/hustlehub-backend)
