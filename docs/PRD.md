@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![HustleHub Logo](https://via.placeholder.com/200x200/6C5CE7/FFFFFF?text=HustleHub)
+<img src="assets/logo.jpeg" alt="HustleHub Logo" width="200"/>
 
 **Your Campus Marketplace**
 
