@@ -68,14 +68,3 @@ val HustleBadgeBlue = Color(0xFF101A2E)
 val HustleActiveGreen = Color(0xFF4CAF50)
 val HustleOfflineGray = Color(0xFF6E6E8A)
 val HustleWarningAmber = Color(0xFFFFB300)
-
-// Legacy aliases (kept for backward compatibility)
-val HustlePrimary = HustlePrimaryBlue
-val HustleSecondary = HustleDarkSecondary
-val HustleTertiary = HustleTertiaryTeal
-val Purple80 = Color(0xFFBBDEFB)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-val Purple40 = HustlePrimaryBlue
-val PurpleGrey40 = Color(0xFF625B71)
-val Pink40 = Color(0xFF7D5260)
