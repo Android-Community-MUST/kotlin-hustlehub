@@ -75,7 +75,7 @@ fun ServiceCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(16.dp)
     ) {
         Column {
@@ -96,7 +96,7 @@ fun ServiceCard(
                             .size(44.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(
-                                MaterialTheme.colorScheme.surface
+                                MaterialTheme.colorScheme.surfaceVariant
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -209,7 +209,7 @@ fun TagChip(label: String) {
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .background(
-                MaterialTheme.colorScheme.surface
+                MaterialTheme.colorScheme.surfaceVariant
             )
             .padding(
                 horizontal = 10.dp,

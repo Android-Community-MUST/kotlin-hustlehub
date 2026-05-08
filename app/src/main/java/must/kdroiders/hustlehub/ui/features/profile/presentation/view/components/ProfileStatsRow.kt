@@ -75,7 +75,7 @@ fun StatCard(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(vertical = 16.dp, horizontal = 8.dp),
         contentAlignment = Alignment.Center
     ) {
