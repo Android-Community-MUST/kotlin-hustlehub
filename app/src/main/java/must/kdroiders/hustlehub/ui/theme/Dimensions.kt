@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.ui.theme
 
-import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.dp
  * }
  * ```
  */
+@Immutable
 data class Dimensions(
     val spacing4: Dp = 4.dp,
     val spacing8: Dp = 8.dp,
@@ -28,4 +30,8 @@ data class Dimensions(
     val spacing48: Dp = 48.dp
 )
 
-val LocalDimensions = compositionLocalOf { Dimensions() }
+// Shared singleton — never changes at runtime
+val DefaultDimensions = Dimensions()
+
+// staticCompositionLocalOf: reads are NOT tracked, so no recomposition when provided value changes
+val LocalDimensions = staticCompositionLocalOf { DefaultDimensions }

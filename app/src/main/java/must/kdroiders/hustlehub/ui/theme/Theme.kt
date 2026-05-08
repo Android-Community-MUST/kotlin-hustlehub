@@ -94,7 +94,7 @@ fun HustleHubTheme(
         else -> LightColorScheme
     }
 
-    CompositionLocalProvider(LocalDimensions provides Dimensions()) {
+    CompositionLocalProvider(LocalDimensions provides DefaultDimensions) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,

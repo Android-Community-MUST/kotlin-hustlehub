@@ -16,41 +16,43 @@ val InterFontFamily = FontFamily(
     Font(R.font.inter_bold, FontWeight.Bold)
 )
 
+// Base style — Inter applied to every role so no screen ever falls back to the system font
+private fun inter(
+    weight: FontWeight,
+    size: Float,
+    lineHeight: Float,
+    tracking: Float = 0f
+) = TextStyle(
+    fontFamily = InterFontFamily,
+    fontWeight = weight,
+    fontSize = size.sp,
+    lineHeight = lineHeight.sp,
+    letterSpacing = tracking.sp
+)
+
 val Typography = Typography(
-    headlineLarge = TextStyle(  // H1: 28sp Bold
-        fontFamily = InterFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 28.sp,
-        lineHeight = 36.sp
-    ),
-    headlineMedium = TextStyle(  // H2: 22sp SemiBold
-        fontFamily = InterFontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 22.sp,
-        lineHeight = 28.sp
-    ),
-    headlineSmall = TextStyle(  // H3: 18sp SemiBold
-        fontFamily = InterFontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
-        lineHeight = 24.sp
-    ),
-    bodyLarge = TextStyle(  // Body: 16sp Regular
-        fontFamily = InterFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp
-    ),
-    bodyMedium = TextStyle(  // BodySmall: 14sp Regular
-        fontFamily = InterFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp
-    ),
-    labelMedium = TextStyle(  // Caption: 12sp Medium
-        fontFamily = InterFontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp
-    )
+    // Display
+    displayLarge  = inter(FontWeight.Bold,     57f, 64f),
+    displayMedium = inter(FontWeight.Bold,     45f, 52f),
+    displaySmall  = inter(FontWeight.SemiBold, 36f, 44f),
+
+    // Headline (H1 / H2 / H3 per spec)
+    headlineLarge  = inter(FontWeight.Bold,     28f, 36f),  // H1
+    headlineMedium = inter(FontWeight.SemiBold, 22f, 28f),  // H2
+    headlineSmall  = inter(FontWeight.SemiBold, 18f, 24f),  // H3
+
+    // Title
+    titleLarge  = inter(FontWeight.SemiBold, 20f, 28f),
+    titleMedium = inter(FontWeight.Medium,   16f, 24f, 0.15f),
+    titleSmall  = inter(FontWeight.Medium,   14f, 20f, 0.1f),
+
+    // Body (Body / BodySmall per spec)
+    bodyLarge  = inter(FontWeight.Normal, 16f, 24f, 0.5f),  // Body
+    bodyMedium = inter(FontWeight.Normal, 14f, 20f, 0.25f), // BodySmall
+    bodySmall  = inter(FontWeight.Normal, 12f, 16f, 0.4f),
+
+    // Label / Caption
+    labelLarge  = inter(FontWeight.Medium, 14f, 20f, 0.1f),
+    labelMedium = inter(FontWeight.Medium, 12f, 16f, 0.5f), // Caption per spec
+    labelSmall  = inter(FontWeight.Medium, 11f, 16f, 0.5f)
 )
