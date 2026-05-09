@@ -87,10 +87,10 @@ fun LoginScreen(
             value = uiState.password,
             onValueChange = { viewModel.onPasswordChange(it) },
             label = "Password",
-            visualTransformation = if (passwordVisible)
-                VisualTransformation.None
-            else
-                PasswordVisualTransformation(),
+//            visualTransformation = if (passwordVisible)
+//                VisualTransformation.None
+//            else
+//                PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
