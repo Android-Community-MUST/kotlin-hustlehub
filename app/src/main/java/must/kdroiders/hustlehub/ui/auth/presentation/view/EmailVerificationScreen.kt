@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,8 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
+import must.kdroiders.hustlehub.sharedComposables.HustleCard
+import must.kdroiders.hustlehub.sharedComposables.HustleCardVariant
 import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.EmailVerificationViewModel
 
 @Composable
@@ -43,72 +45,84 @@ fun EmailVerificationScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
 
         Text(
             text = "Verify your email",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 8.dp)
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = "Enter the 6-digit code sent to\n$email",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 32.dp)
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+       HustleCard(
+            variant = HustleCardVariant.Elevated
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // 6-digit OTP boxes
+                OtpInputField(
+                    otpValues = otpValues,
+                    focusRequesters = focusRequesters,
+                    onOtpValueChange = { index, value ->
+                        otpValues[index] = value
+                    }
+                )
 
-        // 6-digit OTP boxes
-        OtpInputField(
-            otpValues = otpValues,
-            focusRequesters = focusRequesters,
-            onOtpValueChange = { index, value ->
-                otpValues[index] = value
-            }
-        )
+                Spacer(modifier = Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(24.dp))
+                // Error message
+                uiState.errorMessage?.let { error ->
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
-        // Error message
-        uiState.errorMessage?.let { error ->
-            Text(
-                text = error,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-        }
+                // Verify button
+                HustleButton(
+                    text = if (uiState.isLoading) "Verifying..." else "Verify",
+                    onClick = {
+                        val otp = otpValues.joinToString("")
+                        viewModel.verifyOtp(otp, onVerified)
+                    },
+                    loading = uiState.isLoading,
+                    enabled = otpValues.all { it.isNotEmpty() },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-        // Verify button
-        HustleButton(
-            text = if (uiState.isLoading) "Verifying..." else "Verify",
-            onClick = {
-                val otp = otpValues.joinToString("")
-                viewModel.verifyOtp(otp, onVerified)
-            },
-            enabled = otpValues.all { it.isNotEmpty() } && !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth()
-        )
+                Spacer(modifier = Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Resend with 60s countdown
-        if (uiState.resendCooldown > 0) {
-            Text(
-                text = "Resend OTP in ${uiState.resendCooldown}s",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall
-            )
-        } else {
-            TextButton(onClick = { viewModel.resendOtp() }) {
-                Text("Resend OTP")
+                // Resend with 60s countdown
+                if (uiState.resendCooldown > 0) {
+                    Text(
+                        text = "Resend OTP in ${uiState.resendCooldown}s",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                } else {
+                    HustleButton(
+                        text = "Resend OTP",
+                        onClick = { viewModel.resendOtp() },
+                        variant = HustleButtonVariant.Outlined,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }
