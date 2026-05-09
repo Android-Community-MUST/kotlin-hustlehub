@@ -15,13 +15,21 @@ data object Splash : NavKey
 @Serializable
 data object Onboarding : NavKey
 
-/** Login placeholder (teammate's screen). */
+/** Login screen. */
 @Serializable
 data object Login : NavKey
 
 /** Sign-up / registration screen. */
 @Serializable
 data object SignUp : NavKey
+
+/**
+ * Email OTP verification screen.
+ * Carries the [email] so the screen can display it
+ * and the ViewModel can pass it to the repository.
+ */
+@Serializable
+data class EmailVerification(val email: String) : NavKey
 
 /** Profile-setup wizard shown after first successful login. */
 @Serializable
