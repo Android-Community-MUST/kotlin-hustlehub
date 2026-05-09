@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.sharedComposables
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -28,9 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
@@ -53,6 +56,10 @@ fun HustleButton(
     enabled: Boolean = true,
     loading: Boolean = false,
     icon: ImageVector? = null,
+    /** Bitmap/PNG icon — use when an ImageVector is not available (e.g. Google logo). */
+    painter: Painter? = null,
+    /** Size applied to both [icon] and [painter]. Defaults to 20dp. */
+    iconSize: Dp = 20.dp,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -87,8 +94,8 @@ fun HustleButton(
                     pressedElevation = 0.dp
                 )
             ) {
-                ButtonContent(text = text, loading = loading, icon = icon,
-                    loadingColor = { MaterialTheme.colorScheme.onPrimary })
+                ButtonContent(text = text, loading = loading, icon = icon, painter = painter,
+                    iconSize = iconSize, loadingColor = { MaterialTheme.colorScheme.onPrimary })
             }
         }
 
@@ -112,8 +119,8 @@ fun HustleButton(
                     pressedElevation = 0.dp
                 )
             ) {
-                ButtonContent(text = text, loading = loading, icon = icon,
-                    loadingColor = { MaterialTheme.colorScheme.onSecondaryContainer })
+                ButtonContent(text = text, loading = loading, icon = icon, painter = painter,
+                    iconSize = iconSize, loadingColor = { MaterialTheme.colorScheme.onSecondaryContainer })
             }
         }
 
@@ -136,8 +143,8 @@ fun HustleButton(
                     disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                ButtonContent(text = text, loading = loading, icon = icon,
-                    loadingColor = { MaterialTheme.colorScheme.primary })
+                ButtonContent(text = text, loading = loading, icon = icon, painter = painter,
+                    iconSize = iconSize, loadingColor = { MaterialTheme.colorScheme.primary })
             }
         }
     }
@@ -149,6 +156,8 @@ private fun ButtonContent(
     text: String,
     loading: Boolean,
     icon: ImageVector?,
+    painter: Painter?,
+    iconSize: Dp,
     loadingColor: @Composable () -> androidx.compose.ui.graphics.Color
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -159,11 +168,19 @@ private fun ButtonContent(
                 trackColor = loadingColor().copy(alpha = 0.2f)
             )
             Spacer(Modifier.width(10.dp))
+        } else if (painter != null) {
+            // Bitmap / PNG icon (e.g. Google logo)
+            Image(
+                painter = painter,
+                contentDescription = null,
+                modifier = Modifier.size(iconSize)
+            )
+            Spacer(Modifier.width(10.dp))
         } else if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(iconSize)
             )
             Spacer(Modifier.width(8.dp))
         }

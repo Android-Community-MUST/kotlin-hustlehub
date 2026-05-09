@@ -33,9 +33,7 @@ import must.kdroiders.hustlehub.ui.theme.HustleBadgeGold
 import must.kdroiders.hustlehub.ui.theme.HustleBadgeGreen
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
-// ─────────────────────────────────────────────────
 // Badges — horizontally scrollable chips
-// ─────────────────────────────────────────────────
 
 @Composable
 fun ProfileBadges(

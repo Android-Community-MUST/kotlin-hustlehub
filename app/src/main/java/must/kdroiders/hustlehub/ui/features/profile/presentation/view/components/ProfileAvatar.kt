@@ -20,9 +20,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 
-// ─────────────────────────────────────────────────
 // Avatar — circular photo with gradient border
-// ─────────────────────────────────────────────────
 
 @Composable
 fun ProfileAvatar(photoUrl: String) {

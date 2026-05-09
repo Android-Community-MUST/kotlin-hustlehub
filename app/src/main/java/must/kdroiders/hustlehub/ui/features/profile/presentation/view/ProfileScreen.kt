@@ -62,9 +62,7 @@ fun ProfileScreen(
     }
 }
 
-// ─────────────────────────────────────────────────
 // Main content — LazyColumn for performance
-// ─────────────────────────────────────────────────
 
 @Composable
 private fun ProfileContent(

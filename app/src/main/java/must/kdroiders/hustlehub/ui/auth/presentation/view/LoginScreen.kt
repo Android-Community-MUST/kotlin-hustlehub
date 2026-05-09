@@ -1,6 +1,9 @@
 package must.kdroiders.hustlehub.ui.auth.presentation.view
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,7 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -21,19 +28,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
-import must.kdroiders.hustlehub.sharedComposables.HustleCard
-import must.kdroiders.hustlehub.sharedComposables.HustleCardVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.LoginViewModel
+import must.kdroiders.hustlehub.ui.theme.HustleDarkNavy
 import must.kdroiders.hustlehub.ui.theme.HustleLinkBlue
 
 @Composable
@@ -45,146 +55,217 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
 
-        Text(
-            text = "Welcome Back",
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        // Decorative background
+        LoginBackground()
 
-        Text(
-            text = "Login to your account to continue",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
-
-        HustleCard(
-            variant = HustleCardVariant.Elevated
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // ── Email field ───────────────────────────────────────────────────────
-                HustleTextField(
-                    value = uiState.email,
-                    onValueChange = { viewModel.onEmailChange(it) },
-                    label = "Email",
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    leadingIcon = Icons.Default.Email,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            Spacer(Modifier.height(72.dp))
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // Logo
+            Image(
+                painter = painterResource(id = R.drawable.hustlehub_logo),
+                contentDescription = "HustleHub Logo",
+                modifier = Modifier.size(92.dp)
+            )
 
-                // ── Password field ────────────────────────────────────────────────────
-                HustleTextField(
-                    value = uiState.password,
-                    onValueChange = { viewModel.onPasswordChange(it) },
-                    label = "Password",
-                    isPassword = true,
-                    leadingIcon = Icons.Default.Lock,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            Spacer(Modifier.height(16.dp))
 
-                // ── Forgot password ───────────────────────────────────────────────────
-                TextButton(
-                    onClick = { /* TODO: forgot password */ },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
+            // Two-tone wordmark: "Hustle" (navy) + "Hub" (blue)
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(color = HustleDarkNavy, fontWeight = FontWeight.Bold)) {
+                        append("Hustle")
+                    }
+                    withStyle(SpanStyle(color = HustleLinkBlue, fontWeight = FontWeight.Bold)) {
+                        append("Hub")
+                    }
+                },
+                style = MaterialTheme.typography.headlineLarge
+            )
+
+            Spacer(Modifier.height(6.dp))
+
+            Text(
+                text = "Login to your account",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(Modifier.height(36.dp))
+
+            // Email field — placeholder-only, no floating label
+            HustleTextField(
+                value = uiState.email,
+                onValueChange = { viewModel.onEmailChange(it) },
+                placeholder = "Email",
+                leadingIcon = Icons.Default.Email,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // Password field
+            HustleTextField(
+                value = uiState.password,
+                onValueChange = { viewModel.onPasswordChange(it) },
+                placeholder = "Password",
+                isPassword = true,
+                leadingIcon = Icons.Default.Lock,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            // Forgot password — right-aligned
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                TextButton(onClick = { /* TODO: forgot password navigation */ }) {
                     Text(
                         text = "Forgot password?",
-                        color = HustleLinkBlue
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
                     )
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // ── Error message ─────────────────────────────────────────────────────
-                uiState.errorMessage?.let { error ->
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                // ── Login button ──────────────────────────────────────────────────────
-                HustleButton(
-                    text = if (uiState.isLoading) "Logging in..." else "Login",
-                    onClick = {
-                        viewModel.login(
-                            onSuccess = onLoginSuccess,
-                            onEmailNotVerified = { email ->
-                                onNavigateToEmailVerification(email)
-                            }
-                        )
-                    },
-                    loading = uiState.isLoading,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // ── OR divider ────────────────────────────────────────────────────────
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    HorizontalDivider(modifier = Modifier.weight(1f))
-                    Text(
-                        text = "  OR  ",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    HorizontalDivider(modifier = Modifier.weight(1f))
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // ── Google sign-in button ─────────────────────────────────────────────
-                HustleButton(
-                    text = "Sign in with Google",
-                    onClick = { /* TODO: Google sign-in */ },
-                    variant = HustleButtonVariant.Outlined,
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            // Error message
+            uiState.errorMessage?.let { err ->
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = err,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+            }
 
-        // ── Navigate to Sign Up ───────────────────────────────────────────────
-        val annotatedString = buildAnnotatedString {
-            append("Don't have an account? ")
-            pushStringAnnotation(tag = "signup", annotation = "signup")
-            withStyle(style = SpanStyle(
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
+            Spacer(Modifier.height(8.dp))
+
+            // Login primary button
+            HustleButton(
+                text = "Login",
+                onClick = {
+                    viewModel.login(
+                        onSuccess = onLoginSuccess,
+                        onEmailNotVerified = { onNavigateToEmailVerification(it) }
+                    )
+                },
+                loading = uiState.isLoading,
+                modifier = Modifier.fillMaxWidth()
             )
-            ) {
-                append("Sign Up")
-            }
-            pop()
-        }
 
-        androidx.compose.foundation.text.ClickableText(
-            text = annotatedString,
-            onClick = { offset ->
-                annotatedString.getStringAnnotations(tag = "signup", start = offset, end = offset).firstOrNull()?.let {
-                    onNavigateToSignUp()
-                }
+            Spacer(Modifier.height(28.dp))
+
+            // OR divider
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+                Text(
+                    text = "  OR  ",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 1.sp
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
             }
-        )
+
+            Spacer(Modifier.height(28.dp))
+
+            // Google sign-in — Outlined HustleButton with Google painter
+            HustleButton(
+                text = "Continue with Google",
+                onClick = { /* TODO: Google sign-in */ },
+                variant = HustleButtonVariant.Outlined,
+                painter = painterResource(id = R.drawable.ic_google),
+                iconSize = 22.dp,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(36.dp))
+
+            // Sign up link
+            val signUpText = buildAnnotatedString {
+                withStyle(
+                    SpanStyle(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                    )
+                ) { append("Don't have an account?  ") }
+                pushStringAnnotation("signup", "signup")
+                withStyle(
+                    SpanStyle(
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                    )
+                ) { append("Sign Up") }
+                pop()
+            }
+            ClickableText(
+                text = signUpText,
+                onClick = { offset ->
+                    signUpText
+                        .getStringAnnotations("signup", offset, offset)
+                        .firstOrNull()
+                        ?.let { onNavigateToSignUp() }
+                }
+            )
+
+            Spacer(Modifier.height(48.dp))
+        }
+    }
+}
+
+// Background: themed blobs + dot grid
+@Composable
+private fun LoginBackground() {
+    val blobColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+    val dotColor  = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+    val bgColor   = MaterialTheme.colorScheme.background
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+
+        drawRect(color = bgColor)
+
+        // Top-left blob
+        drawCircle(color = blobColor, radius = w * 0.32f, center = Offset(-w * 0.12f, h * 0.07f))
+        // Bottom-right blob
+        drawCircle(color = blobColor, radius = w * 0.28f, center = Offset(w * 1.08f, h * 0.91f))
+
+        // Top-right dot grid (5 rows × 6 cols)
+        val dotR   = 3.0f
+        val dotGap = 18f
+        val gx = w - 6 * dotGap - 20f
+        val gy = 56f
+        repeat(5) { row ->
+            repeat(6) { col ->
+                drawCircle(
+                    color = dotColor,
+                    radius = dotR,
+                    center = Offset(gx + col * dotGap, gy + row * dotGap)
+                )
+            }
+        }
     }
 }

@@ -34,9 +34,7 @@ import must.kdroiders.hustlehub.data.model.Service
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
 
-// ─────────────────────────────────────────────────
 // Services section
-// ─────────────────────────────────────────────────
 
 @Composable
 fun ServicesHeader(

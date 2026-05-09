@@ -77,7 +77,7 @@ fun HustleHubNav() {
         },
         entryProvider = entryProvider {
 
-            // ── Splash ────────────────────────────────────────────────────────
+            // Splash
             entry<Splash> {
                 SplashScreen(
                     onNavigate = { destination ->
@@ -93,7 +93,7 @@ fun HustleHubNav() {
                 )
             }
 
-            // ── Auth ──────────────────────────────────────────────────────────
+            // Auth
             entry<Login> {
                 LoginScreen(
                     onLoginSuccess = {
@@ -128,7 +128,7 @@ fun HustleHubNav() {
                 )
             }
 
-            // ── Onboarding ────────────────────────────────────────────────────
+            // Onboarding
             entry<Onboarding> {
                 OnboardingScreen(
                     onFinished = {
@@ -138,7 +138,7 @@ fun HustleHubNav() {
                 )
             }
 
-            // ── Profile setup ─────────────────────────────────────────────────
+            // Profile setup
             entry<ProfileSetup> {
                 ProfileSetupScreen(
                     onSetupComplete = {
@@ -148,14 +148,14 @@ fun HustleHubNav() {
                 )
             }
 
-            // ── Main shell ────────────────────────────────────────────────────
+            // Main shell
             entry<MainShell> {
                 MainShellScreen(
                     onNavigateToPortfolio = { backstack.add(PortfolioUpload) },
                 )
             }
 
-            // ── Standalone screens ────────────────────────────────────────────
+            // Standalone screens
             entry<PortfolioUpload> {
                 PortfolioUploadScreen()
             }
@@ -167,9 +167,7 @@ fun HustleHubNav() {
     )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Dev utility – placeholder until teammates complete their screens
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun NavPlaceholderScreen(

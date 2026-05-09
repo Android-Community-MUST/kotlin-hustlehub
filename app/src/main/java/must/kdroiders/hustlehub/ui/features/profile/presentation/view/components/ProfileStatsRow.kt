@@ -29,9 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
-// ─────────────────────────────────────────────────
 // Stats row — Score / Services / Reviews
-// ─────────────────────────────────────────────────
 
 @Composable
 fun ProfileStatsRow(
