@@ -3,9 +3,7 @@ package must.kdroiders.hustlehub.navigation
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Root-flow keys  (splash → auth → onboarding → main shell)
-// ─────────────────────────────────────────────────────────────────────────────
 
 /** Initial full-screen splash / auth-gate. */
 @Serializable
@@ -15,13 +13,21 @@ data object Splash : NavKey
 @Serializable
 data object Onboarding : NavKey
 
-/** Login placeholder (teammate's screen). */
+/** Login screen. */
 @Serializable
 data object Login : NavKey
 
 /** Sign-up / registration screen. */
 @Serializable
 data object SignUp : NavKey
+
+/**
+ * Email OTP verification screen.
+ * Carries the [email] so the screen can display it
+ * and the ViewModel can pass it to the repository.
+ */
+@Serializable
+data class EmailVerification(val email: String) : NavKey
 
 /** Profile-setup wizard shown after first successful login. */
 @Serializable
@@ -34,9 +40,7 @@ data object ProfileSetup : NavKey
 @Serializable
 data object MainShell : NavKey
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Bottom-tab keys  (used by the inner back-stack inside MainShell)
-// ─────────────────────────────────────────────────────────────────────────────
 
 /** Discovery feed tab. */
 @Serializable
@@ -58,9 +62,7 @@ data object BottomChat : NavKey
 @Serializable
 data object BottomProfile : NavKey
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Detail / full-screen keys  (pushed over the shell)
-// ─────────────────────────────────────────────────────────────────────────────
 
 /** Portfolio / gig upload screen reached from Profile tab. */
 @Serializable

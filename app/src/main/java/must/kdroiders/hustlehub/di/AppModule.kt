@@ -19,6 +19,9 @@ import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
 import timber.log.Timber
 import javax.inject.Singleton
+import must.kdroiders.hustlehub.data.repository.AuthRepository
+import must.kdroiders.hustlehub.data.repository.AuthRepositoryImpl
+import must.kdroiders.hustlehub.data.repository.LoginResult
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -35,6 +38,18 @@ object AppModule {
                 "Firebase not initialized — running without auth"
             )
             null
+        }
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(
+        firebaseAuth: FirebaseAuth?
+    ): AuthRepository {
+        return if (firebaseAuth != null) {
+            AuthRepositoryImpl(firebaseAuth)
+        } else {
+            NoopAuthRepository()
         }
     }
 
@@ -98,4 +113,22 @@ private class NoopUserRepository : UserRepository {
 
     override suspend fun hasUserProfile(userId: String): Result<Boolean> =
         Result.failure(IllegalStateException("Firebase not initialized"))
+}
+
+private class NoopAuthRepository : AuthRepository {
+    override suspend fun login(email: String, password: String): LoginResult =
+        throw IllegalStateException("Firebase not initialized")
+
+    override suspend fun sendOtp(email: String) =
+        throw IllegalStateException("Firebase not initialized")
+
+    override suspend fun verifyOtp(email: String, otp: String) =
+        throw IllegalStateException("Firebase not initialized")
+
+    override suspend fun resendOtp(email: String) =
+        throw IllegalStateException("Firebase not initialized")
+
+    override fun getCurrentUser() = null
+
+    override fun logout() {}
 }

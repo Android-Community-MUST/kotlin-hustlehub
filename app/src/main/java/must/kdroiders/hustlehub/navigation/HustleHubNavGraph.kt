@@ -31,6 +31,8 @@ import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
+import must.kdroiders.hustlehub.ui.auth.presentation.view.EmailVerificationScreen
+import must.kdroiders.hustlehub.ui.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.auth.presentation.view.SignUpScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 import must.kdroiders.hustlehub.ui.portfolio.PortfolioUploadScreen
@@ -59,14 +61,12 @@ import must.kdroiders.hustlehub.ui.portfolio.PortfolioUploadScreen
 fun HustleHubNav() {
     val backstack = rememberNavBackStack(Splash)
     val motionScheme = MaterialTheme.motionScheme
-    // IntOffset spec for slide animations, Float spec for fade animations
     val slideSpec = motionScheme.defaultSpatialSpec<IntOffset>()
     val fadeSpec = motionScheme.defaultEffectsSpec<Float>()
 
     NavDisplay(
         backStack = backstack,
         onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
-        // Global transitions using MotionScheme
         transitionSpec = {
             (slideInHorizontally(slideSpec) { it } + fadeIn(fadeSpec)) togetherWith
                 (slideOutHorizontally(slideSpec) { -it } + fadeOut(fadeSpec))
@@ -75,7 +75,6 @@ fun HustleHubNav() {
             (slideInHorizontally(slideSpec) { -it } + fadeIn(fadeSpec)) togetherWith
                 (slideOutHorizontally(slideSpec) { it } + fadeOut(fadeSpec))
         },
-        // Screen routing via entryProvider DSL
         entryProvider = entryProvider {
 
             // Splash
@@ -83,9 +82,9 @@ fun HustleHubNav() {
                 SplashScreen(
                     onNavigate = { destination ->
                         val key: NavKey = when (destination) {
-                            SplashDestination.Home -> MainShell
-                            SplashDestination.Login -> Login
-                            SplashDestination.Onboarding -> Onboarding
+                            SplashDestination.Home        -> MainShell
+                            SplashDestination.Login       -> Login
+                            SplashDestination.Onboarding  -> Onboarding
                             SplashDestination.ProfileSetup -> ProfileSetup
                         }
                         backstack.clear()
@@ -96,23 +95,40 @@ fun HustleHubNav() {
 
             // Auth
             entry<Login> {
-                NavPlaceholderScreen(
-                    title = "Login (Teammate Task)",
-                    showDeveloperShortcuts = BuildConfig.DEBUG,
-                    onDeveloperShortcut = { key -> backstack.add(key) },
+                LoginScreen(
+                    onLoginSuccess = {
+                        backstack.clear()
+                        backstack.add(MainShell)
+                    },
+                    onNavigateToSignUp = {
+                        backstack.add(SignUp)
+                    },
+                    onNavigateToEmailVerification = { email ->
+                        backstack.add(EmailVerification(email = email))
+                    }
+                )
+            }
+
+            entry<EmailVerification> { key ->
+                EmailVerificationScreen(
+                    email = key.email,
+                    onVerified = {
+                        backstack.clear()
+                        backstack.add(ProfileSetup)
+                    }
                 )
             }
 
             entry<SignUp> {
                 SignUpScreen(
                     onNavigateToLogin = {
-                        if (backstack.isNotEmpty()) { backstack.remove(backstack.last()) }
+                        if (backstack.isNotEmpty()) backstack.remove(backstack.last())
                         if (backstack.isEmpty()) backstack.add(Login)
                     },
                 )
             }
 
-            //Onboarding
+            // Onboarding
             entry<Onboarding> {
                 OnboardingScreen(
                     onFinished = {
@@ -122,7 +138,7 @@ fun HustleHubNav() {
                 )
             }
 
-            // Profile setup (post first-login wizard)
+            // Profile setup
             entry<ProfileSetup> {
                 ProfileSetupScreen(
                     onSetupComplete = {
@@ -132,30 +148,26 @@ fun HustleHubNav() {
                 )
             }
 
-            // Main shell (bottom-nav host)
+            // Main shell
             entry<MainShell> {
                 MainShellScreen(
                     onNavigateToPortfolio = { backstack.add(PortfolioUpload) },
                 )
             }
 
-            // Standalone screens reachable from within the shell
+            // Standalone screens
             entry<PortfolioUpload> {
                 PortfolioUploadScreen()
             }
 
-            // Chat detail (also used as adaptive detail pane on tablets)
             entry<ChatDetail> { key ->
-                // TODO: replace with real ChatDetailScreen(key.chatId) in a later sprint
                 NavPlaceholderScreen(title = "Chat – ${key.chatId}")
             }
         },
     )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Dev utility – placeholder until teammates complete their screens
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun NavPlaceholderScreen(
@@ -183,8 +195,8 @@ private fun NavPlaceholderScreen(
                     color = MaterialTheme.colorScheme.primary,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { onDeveloperShortcut(MainShell) }) { Text("Home") }
-                    Button(onClick = { onDeveloperShortcut(SignUp) })    { Text("Sign Up") }
+                    Button(onClick = { onDeveloperShortcut(MainShell) })      { Text("Home") }
+                    Button(onClick = { onDeveloperShortcut(SignUp) })         { Text("Sign Up") }
                     Button(onClick = { onDeveloperShortcut(PortfolioUpload) }) { Text("Upload") }
                 }
             }
