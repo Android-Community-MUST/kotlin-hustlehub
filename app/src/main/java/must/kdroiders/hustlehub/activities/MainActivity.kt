@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HustleHubTheme (
-                darkTheme = true
+                darkTheme = false
             ){
                 // Navigation 3 — no NavController needed at the activity level.
                 HustleHubNav()

@@ -29,6 +29,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -43,8 +45,6 @@ import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.LoginViewModel
-import must.kdroiders.hustlehub.ui.theme.HustleDarkNavy
-import must.kdroiders.hustlehub.ui.theme.HustleLinkBlue
 
 @Composable
 fun LoginScreen(
@@ -79,13 +79,13 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Two-tone wordmark: "Hustle" (navy) + "Hub" (blue)
+            // Two-tone wordmark: "Hustle" (onBackground) + "Hub" (primary)
             Text(
                 text = buildAnnotatedString {
-                    withStyle(SpanStyle(color = HustleDarkNavy, fontWeight = FontWeight.Bold)) {
+                    withStyle(SpanStyle(color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)) {
                         append("Hustle")
                     }
-                    withStyle(SpanStyle(color = HustleLinkBlue, fontWeight = FontWeight.Bold)) {
+                    withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)) {
                         append("Hub")
                     }
                 },
@@ -235,12 +235,13 @@ fun LoginScreen(
     }
 }
 
-// Background: themed blobs + dot grid
+// Background: themed blobs, bottom wave, and dot grid
 @Composable
 private fun LoginBackground() {
     val blobColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
-    val dotColor  = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+    val dotColor  = MaterialTheme.colorScheme.primary.copy(alpha = 0.58f)
     val bgColor   = MaterialTheme.colorScheme.background
+    val density   = LocalDensity.current
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         val w = size.width
@@ -250,14 +251,33 @@ private fun LoginBackground() {
 
         // Top-left blob
         drawCircle(color = blobColor, radius = w * 0.32f, center = Offset(-w * 0.12f, h * 0.07f))
-        // Bottom-right blob
-        drawCircle(color = blobColor, radius = w * 0.28f, center = Offset(w * 1.08f, h * 0.91f))
 
-        // Top-right dot grid (5 rows × 6 cols)
+        // Bottom wave — gentle S-curve, C1-continuous, matches design reference
+        val wavePath = Path().apply {
+            moveTo(0f, h * 0.88f)
+            // Curve 1: horizontal exit → gentle trough
+            cubicTo(
+                w * 0.12f, h * 0.88f,
+                w * 0.32f, h * 0.94f,
+                w * 0.45f, h * 0.92f
+            )
+            // Curve 2: C1-continuous (reflected control) → rises to right end
+            cubicTo(
+                w * 0.58f, h * 0.90f,
+                w * 0.85f, h * 0.84f,
+                w,         h * 0.85f
+            )
+            lineTo(w, h)
+            lineTo(0f, h)
+            close()
+        }
+        drawPath(wavePath, blobColor)
+
+        // Top-right dot grid (5 rows x 6 cols)
         val dotR   = 3.0f
         val dotGap = 18f
         val gx = w - 6 * dotGap - 20f
-        val gy = 56f
+        val gy = with(density) { 50.dp.toPx() }
         repeat(5) { row ->
             repeat(6) { col ->
                 drawCircle(
