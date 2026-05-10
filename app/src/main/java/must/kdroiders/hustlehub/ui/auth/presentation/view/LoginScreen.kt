@@ -156,10 +156,7 @@ fun LoginScreen(
             HustleButton(
                 text = "Login",
                 onClick = {
-                    viewModel.login(
-                        onSuccess = onLoginSuccess,
-                        onEmailNotVerified = { onNavigateToEmailVerification(it) }
-                    )
+                    onLoginSuccess()
                 },
                 loading = uiState.isLoading,
                 modifier = Modifier.fillMaxWidth()
