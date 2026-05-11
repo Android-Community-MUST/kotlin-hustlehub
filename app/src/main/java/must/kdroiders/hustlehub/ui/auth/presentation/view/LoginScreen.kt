@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -71,8 +72,10 @@ fun LoginScreen(
             Spacer(Modifier.height(72.dp))
 
             // Logo
+            val isDarkTheme = false // Forced to true for now
+            val logoResId = if (isDarkTheme) R.drawable.dark_logo else R.drawable.light_logo
             Image(
-                painter = painterResource(id = R.drawable.hustlehub_logo),
+                painter = painterResource(id = logoResId),
                 contentDescription = "HustleHub Logo",
                 modifier = Modifier.size(92.dp)
             )
@@ -192,7 +195,7 @@ fun LoginScreen(
                 text = "Continue with Google",
                 onClick = { /* TODO: Google sign-in */ },
                 variant = HustleButtonVariant.Outlined,
-                painter = painterResource(id = R.drawable.ic_google),
+                painter = painterResource(id = R.drawable.google),
                 iconSize = 22.dp,
                 modifier = Modifier.fillMaxWidth()
             )
