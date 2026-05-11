@@ -71,8 +71,10 @@ fun LoginScreen(
             Spacer(Modifier.height(72.dp))
 
             // Logo
+            val isDarkTheme = isSystemInDarkTheme()
+            val logoResId = if (isDarkTheme) R.drawable.dark_logo else R.drawable.light_logo
             Image(
-                painter = painterResource(id = R.drawable.hustlehub_logo),
+                painter = painterResource(id = logoResId),
                 contentDescription = "HustleHub Logo",
                 modifier = Modifier.size(92.dp)
             )
@@ -192,7 +194,7 @@ fun LoginScreen(
                 text = "Continue with Google",
                 onClick = { /* TODO: Google sign-in */ },
                 variant = HustleButtonVariant.Outlined,
-                painter = painterResource(id = R.drawable.ic_google),
+                painter = painterResource(id = R.drawable.google),
                 iconSize = 22.dp,
                 modifier = Modifier.fillMaxWidth()
             )
