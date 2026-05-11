@@ -71,7 +71,7 @@ fun LoginScreen(
             Spacer(Modifier.height(72.dp))
 
             // Logo
-            val isDarkTheme = false // Forced to true for now
+            val isDarkTheme = isSystemInDarkTheme()
             val logoResId = if (isDarkTheme) R.drawable.dark_logo else R.drawable.light_logo
             Image(
                 painter = painterResource(id = logoResId),
