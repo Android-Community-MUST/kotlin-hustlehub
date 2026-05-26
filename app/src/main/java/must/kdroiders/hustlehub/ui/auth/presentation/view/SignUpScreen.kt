@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
@@ -29,9 +29,10 @@ import must.kdroiders.hustlehub.ui.auth.presentation.view.components.PasswordStr
 @Composable
 fun SignUpScreen(
     onNavigateToLogin: () -> Unit,
-    viewModel: SignUpViewModel = hiltViewModel()
+    onSignUpSuccess: (email: String) -> Unit,
+    signUpViewModel: SignUpViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by signUpViewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
 
     Column(
@@ -57,7 +58,7 @@ fun SignUpScreen(
 
         HustleTextField(
             value = uiState.name,
-            onValueChange = viewModel::onNameChanged,
+            onValueChange = signUpViewModel::onNameChanged,
             label = "Full Name",
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.nameError != null,
@@ -68,7 +69,7 @@ fun SignUpScreen(
 
         HustleTextField(
             value = uiState.email,
-            onValueChange = viewModel::onEmailChanged,
+            onValueChange = signUpViewModel::onEmailChanged,
             label = "Must Student Email",
             placeholder = "example@must.ac.ke",
             modifier = Modifier.fillMaxWidth(),
@@ -81,7 +82,7 @@ fun SignUpScreen(
 
         HustleTextField(
             value = uiState.password,
-            onValueChange = viewModel::onPasswordChanged,
+            onValueChange = signUpViewModel::onPasswordChanged,
             label = "Password",
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.passwordError != null,
@@ -95,7 +96,7 @@ fun SignUpScreen(
 
         HustleTextField(
             value = uiState.confirmPassword,
-            onValueChange = viewModel::onConfirmPasswordChanged,
+            onValueChange = signUpViewModel::onConfirmPasswordChanged,
             label = "Confirm Password",
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.confirmPasswordError != null,
@@ -108,11 +109,11 @@ fun SignUpScreen(
 
         HustleButton(
             text = "Sign Up",
-            onClick = viewModel::signUp,
+            onClick = { signUpViewModel.signUp(onSignUpSuccess) },
             modifier = Modifier.fillMaxWidth(),
             loading = uiState.isLoading
         )
-        
+
         uiState.signUpError?.let {
             Spacer(modifier = Modifier.height(16.dp))
             Text(

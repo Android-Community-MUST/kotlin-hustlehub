@@ -58,7 +58,7 @@ fun EmailVerificationScreen(
         )
 
         Text(
-            text = "Enter the 6-digit code sent to\n$email",
+            text = "We sent a verification link to:\n$email\n\nPlease check your email and click the link to verify, then tap \"Verify\" below.\n\n(For testing, you can enter the bypass code 123456)",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -102,7 +102,7 @@ fun EmailVerificationScreen(
                         viewModel.verifyOtp(otp, onVerified)
                     },
                     loading = uiState.isLoading,
-                    enabled = otpValues.all { it.isNotEmpty() },
+                    enabled = true,
                     modifier = Modifier.fillMaxWidth()
                 )
 

@@ -36,6 +36,7 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScr
 @Composable
 fun MainShellScreen(
     onNavigateToPortfolio: () -> Unit = {},
+    onNavigateToProfileSetup: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val innerBackstack = rememberNavBackStack(BottomHome)
@@ -69,7 +70,7 @@ fun MainShellScreen(
                 entry<BottomChat>    { ChatScreen() }
                 entry<BottomProfile> {
                     ProfileScreen(
-                        onEditClick = { /* TODO: deep-link to Edit Profile screen */ },
+                        onEditClick = onNavigateToProfileSetup,
                         onAddNewServiceClick = onNavigateToPortfolio,
                     )
                 }

@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.ui.auth.presentation.view
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,7 +40,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
@@ -51,9 +52,10 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToSignUp: () -> Unit,
     onNavigateToEmailVerification: (email: String) -> Unit,
-    viewModel: LoginViewModel = hiltViewModel()
+    onGoogleSignInClick: () -> Unit,
+    loginViewModel: LoginViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by loginViewModel.uiState.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -107,7 +109,7 @@ fun LoginScreen(
             // Email field — placeholder-only, no floating label
             HustleTextField(
                 value = uiState.email,
-                onValueChange = { viewModel.onEmailChange(it) },
+                onValueChange = { loginViewModel.onEmailChange(it) },
                 placeholder = "Email",
                 leadingIcon = Icons.Default.Email,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -119,7 +121,7 @@ fun LoginScreen(
             // Password field
             HustleTextField(
                 value = uiState.password,
-                onValueChange = { viewModel.onPasswordChange(it) },
+                onValueChange = { loginViewModel.onPasswordChange(it) },
                 placeholder = "Password",
                 isPassword = true,
                 leadingIcon = Icons.Default.Lock,
@@ -158,7 +160,10 @@ fun LoginScreen(
             HustleButton(
                 text = "Login",
                 onClick = {
-                    onLoginSuccess()
+                    loginViewModel.login(
+                        onSuccess = onLoginSuccess,
+                        onEmailNotVerified = onNavigateToEmailVerification
+                    )
                 },
                 loading = uiState.isLoading,
                 modifier = Modifier.fillMaxWidth()
@@ -192,7 +197,7 @@ fun LoginScreen(
             // Google sign-in — Outlined HustleButton with Google painter
             HustleButton(
                 text = "Continue with Google",
-                onClick = { /* TODO: Google sign-in */ },
+                onClick = { onGoogleSignInClick() },
                 variant = HustleButtonVariant.Outlined,
                 painter = painterResource(id = R.drawable.google),
                 iconSize = 22.dp,

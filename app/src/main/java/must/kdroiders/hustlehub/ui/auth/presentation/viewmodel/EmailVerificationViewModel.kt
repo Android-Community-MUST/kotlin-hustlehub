@@ -6,7 +6,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.data.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.auth.domain.usecase.ResendOtpUseCase
+import must.kdroiders.hustlehub.ui.auth.domain.usecase.VerifyOtpUseCase
 import javax.inject.Inject
 
 data class EmailVerificationUiState(
@@ -17,7 +18,8 @@ data class EmailVerificationUiState(
 
 @HiltViewModel
 class EmailVerificationViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val verifyOtpUseCase: VerifyOtpUseCase,
+    private val resendOtpUseCase: ResendOtpUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EmailVerificationUiState())
@@ -33,35 +35,37 @@ class EmailVerificationViewModel @Inject constructor(
     fun verifyOtp(otp: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            try {
-                authRepository.verifyOtp(email = userEmail, otp = otp)
-                onSuccess() // navigates to ProfileSetup
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = e.message ?: "Verification failed. Check your code."
-                    )
+            verifyOtpUseCase(email = userEmail, otp = otp)
+                .onSuccess {
+                    onSuccess() // navigates to ProfileSetup
                 }
-            }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = e.message ?: "Verification failed. Check your code."
+                        )
+                    }
+                }
         }
     }
 
     fun resendOtp() {
         viewModelScope.launch {
-            try {
-                authRepository.resendOtp(email = userEmail)
-                // Start 60-second countdown
-                for (i in 60 downTo 1) {
-                    _uiState.update { it.copy(resendCooldown = i) }
-                    delay(1000)
+            resendOtpUseCase(email = userEmail)
+                .onSuccess {
+                    // Start 60-second countdown
+                    for (i in 60 downTo 1) {
+                        _uiState.update { it.copy(resendCooldown = i) }
+                        delay(1000)
+                    }
+                    _uiState.update { it.copy(resendCooldown = 0) }
                 }
-                _uiState.update { it.copy(resendCooldown = 0) }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(errorMessage = e.message ?: "Failed to resend OTP")
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(errorMessage = e.message ?: "Failed to resend OTP")
+                    }
                 }
-            }
         }
     }
 }

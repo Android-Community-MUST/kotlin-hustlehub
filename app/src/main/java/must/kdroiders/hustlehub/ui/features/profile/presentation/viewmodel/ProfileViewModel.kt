@@ -27,11 +27,11 @@ class ProfileViewModel @Inject constructor() : ViewModel() {
                 user = User(
                     id = "mock_1",
                     name = "Wanjiku M.",
-                    course = "Computer Sci",
-                    yearOfStudy = 3,
-                    campus = "Nairobi Campus",
-                    profilePhotoUrl = "",
-                    isVerified = true
+                    email = "wanjiku@must.ac.ke",
+                    phone = "0712345678",
+                    campusLocation = "Nairobi Campus",
+                    bio = "Professional braider and content creator",
+                    profilePhotoUrl = ""
                 ),
                 hustleScore = 4.7f,
                 reviewCount = 47,

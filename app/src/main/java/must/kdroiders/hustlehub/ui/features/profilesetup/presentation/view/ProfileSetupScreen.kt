@@ -30,7 +30,8 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,22 +70,6 @@ import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.viewModel.ProfileSetupEvent
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.viewModel.ProfileSetupViewModel
 
-/**
- * List of courses for the dropdown.
- * Add/remove as needed for your university.
- */
-private val courseOptions = listOf(
-    "Computer Science",
-    "Information Technology",
-    "Software Engineering",
-    "Business Administration",
-    "Education",
-    "Agriculture",
-    "Nursing",
-    "Engineering",
-    "Economics",
-    "Other"
-)
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -129,9 +114,6 @@ fun ProfileSetupScreen(
     // ---- Bottom sheet state ----
     var showPhotoSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
-
-    // ---- Course dropdown state ----
-    var courseExpanded by remember { mutableStateOf(false) }
 
     // ---- Main layout ----
     Box(
@@ -257,115 +239,35 @@ fun ProfileSetupScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // ---- Course Dropdown ----
-            ExposedDropdownMenuBox(
-                expanded = courseExpanded,
-                onExpandedChange = {
-                    courseExpanded = it
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                HustleTextField(
-                    value = state.course,
-                    onValueChange = {},
-                    label = "Course",
-                    leadingIcon = Icons.Default.School,
-                    placeholder = "Select your course",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(
-                            MenuAnchorType
-                                .PrimaryNotEditable
-                        )
-                )
-
-                ExposedDropdownMenu(
-                    expanded = courseExpanded,
-                    onDismissRequest = {
-                        courseExpanded = false
-                    }
-                ) {
-                    courseOptions.forEach { course ->
-                        DropdownMenuItem(
-                            text = { Text(course) },
-                            onClick = {
-                                viewModel
-                                    .onCourseChange(course)
-                                courseExpanded = false
-                            },
-                            contentPadding =
-                                ExposedDropdownMenuDefaults
-                                    .ItemContentPadding
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // ---- Year of Study ----
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Year of Study",
-                    style = MaterialTheme.typography
-                        .bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme
-                        .onSurfaceVariant,
-                    modifier = Modifier.padding(
-                        start = 4.dp,
-                        bottom = 8.dp
-                    )
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.spacedBy(8.dp)
-                ) {
-                    (1..5).forEach { year ->
-                        val isSelected =
-                            state.yearOfStudy == year
-
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = {
-                                viewModel.onYearChange(year)
-                            },
-                            label = {
-                                Text(
-                                    "Y$year",
-                                    fontWeight =
-                                        if (isSelected)
-                                            FontWeight.Bold
-                                        else
-                                            FontWeight.Normal
-                                )
-                            },
-                            colors = FilterChipDefaults
-                                .filterChipColors(
-                                    selectedContainerColor =
-                                        primary,
-                                    selectedLabelColor =
-                                        MaterialTheme
-                                            .colorScheme
-                                            .onPrimary
-                                ),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // ---- Hostel / Residence ----
+            // ---- Phone ----
             HustleTextField(
-                value = state.hostel,
-                onValueChange = viewModel::onHostelChange,
-                label = "Hostel / Residence",
+                value = state.phone,
+                onValueChange = viewModel::onPhoneChange,
+                label = "Phone Number",
+                leadingIcon = Icons.Default.Phone,
+                placeholder = "e.g. 0712345678",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // ---- Bio ----
+            HustleTextField(
+                value = state.bio,
+                onValueChange = viewModel::onBioChange,
+                label = "Short Bio",
+                leadingIcon = Icons.Default.Info,
+                placeholder = "e.g. Graphic Designer, Electrician",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // ---- Campus Location ----
+            HustleTextField(
+                value = state.campusLocation,
+                onValueChange = viewModel::onCampusLocationChange,
+                label = "Campus Location / Residence",
                 leadingIcon = Icons.Default.Home,
                 placeholder = "e.g. Hostel A, Off-campus",
                 modifier = Modifier.fillMaxWidth()

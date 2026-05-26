@@ -100,6 +100,9 @@ WS_BASE_URL=ws://10.0.2.2:8080/ws
 
 # Gemini API Key (used by backend, but keep here for client-side config if needed)
 GEMINI_API_KEY=AIzaSy...your_actual_gemini_key
+
+# Google OAuth Web Client ID (from Firebase Console → Google Provider or Google Cloud Console)
+GOOGLE_WEB_CLIENT_ID=your_google_web_client_id_here
 ```
 
 > ⚠️ `keys.properties` is gitignored. **Never commit it.**

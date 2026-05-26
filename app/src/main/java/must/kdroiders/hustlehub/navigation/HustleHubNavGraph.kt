@@ -36,6 +36,10 @@ import must.kdroiders.hustlehub.ui.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.auth.presentation.view.SignUpScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 import must.kdroiders.hustlehub.ui.portfolio.PortfolioUploadScreen
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.ComponentActivity
+import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.LoginViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 
 /**
  * Root Navigation 3 navigator for HustleHub.
@@ -58,7 +62,9 @@ import must.kdroiders.hustlehub.ui.portfolio.PortfolioUploadScreen
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun HustleHubNav() {
+fun HustleHubNav(
+    onGoogleSignInClick: () -> Unit
+) {
     val backstack = rememberNavBackStack(Splash)
     val motionScheme = MaterialTheme.motionScheme
     val slideSpec = motionScheme.defaultSpatialSpec<IntOffset>()
@@ -95,6 +101,14 @@ fun HustleHubNav() {
 
             // Auth
             entry<Login> {
+                val context = LocalContext.current
+                val activity = context as? ComponentActivity
+                val loginViewModel: LoginViewModel = if (activity != null) {
+                    hiltViewModel(viewModelStoreOwner = activity)
+                } else {
+                    hiltViewModel()
+                }
+
                 LoginScreen(
                     onLoginSuccess = {
                         backstack.clear()
@@ -105,7 +119,9 @@ fun HustleHubNav() {
                     },
                     onNavigateToEmailVerification = { email ->
                         backstack.add(EmailVerification(email = email))
-                    }
+                    },
+                    onGoogleSignInClick = onGoogleSignInClick,
+                    loginViewModel = loginViewModel
                 )
             }
 
@@ -114,7 +130,7 @@ fun HustleHubNav() {
                     email = key.email,
                     onVerified = {
                         backstack.clear()
-                        backstack.add(ProfileSetup)
+                        backstack.add(Login)
                     }
                 )
             }
@@ -125,6 +141,9 @@ fun HustleHubNav() {
                         if (backstack.isNotEmpty()) backstack.remove(backstack.last())
                         if (backstack.isEmpty()) backstack.add(Login)
                     },
+                    onSignUpSuccess = { email ->
+                        backstack.add(EmailVerification(email = email))
+                    }
                 )
             }
 
@@ -152,6 +171,7 @@ fun HustleHubNav() {
             entry<MainShell> {
                 MainShellScreen(
                     onNavigateToPortfolio = { backstack.add(PortfolioUpload) },
+                    onNavigateToProfileSetup = { backstack.add(ProfileSetup) }
                 )
             }
 

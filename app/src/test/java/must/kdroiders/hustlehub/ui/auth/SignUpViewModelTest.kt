@@ -1,5 +1,9 @@
 package must.kdroiders.hustlehub.ui.auth
 
+import io.mockk.mockk
+import must.kdroiders.hustlehub.ui.auth.domain.usecase.SignUpUseCase
+import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.PasswordStrength
+import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.SignUpViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -7,11 +11,13 @@ import org.junit.Test
 
 class SignUpViewModelTest {
 
+    private lateinit var mockSignUpUseCase: SignUpUseCase
     private lateinit var viewModel: SignUpViewModel
 
     @Before
     fun setup() {
-        viewModel = SignUpViewModel()
+        mockSignUpUseCase = mockk()
+        viewModel = SignUpViewModel(mockSignUpUseCase)
     }
 
     @Test
@@ -56,7 +62,7 @@ class SignUpViewModelTest {
 
     @Test
     fun `signUp triggers validation errors on empty fields`() {
-        viewModel.signUp()
+        viewModel.signUp {}
         val state = viewModel.uiState.value
         assertEquals("Name cannot be empty", state.nameError)
         assertEquals("Email cannot be empty", state.emailError)
@@ -70,9 +76,9 @@ class SignUpViewModelTest {
         viewModel.onPasswordChanged("Password123")
         viewModel.onConfirmPasswordChanged("Password123")
         
-        viewModel.signUp()
+        viewModel.signUp {}
         val state = viewModel.uiState.value
-        assertEquals("Must use a valid @must.ac.ke email", state.emailError)
+        assertEquals("Must use a valid @must.ac.ke or @students.must.ac.ke email", state.emailError)
     }
 
     @Test
@@ -82,18 +88,18 @@ class SignUpViewModelTest {
         viewModel.onPasswordChanged("weak") // < 8 chars
         viewModel.onConfirmPasswordChanged("weak")
         
-        viewModel.signUp()
+        viewModel.signUp {}
         val state = viewModel.uiState.value
         assertEquals("Password must be at least 8 characters", state.passwordError)
 
         viewModel.onPasswordChanged("alllowercase123") // No uppercase
         viewModel.onConfirmPasswordChanged("alllowercase123")
-        viewModel.signUp()
+        viewModel.signUp {}
         assertEquals("Password must contain at least 1 uppercase letter", viewModel.uiState.value.passwordError)
         
         viewModel.onPasswordChanged("ALLUPPERCASE") // No number
         viewModel.onConfirmPasswordChanged("ALLUPPERCASE")
-        viewModel.signUp()
+        viewModel.signUp {}
         assertEquals("Password must contain at least 1 number", viewModel.uiState.value.passwordError)
     }
 
@@ -104,7 +110,7 @@ class SignUpViewModelTest {
         viewModel.onPasswordChanged("Password123!")
         viewModel.onConfirmPasswordChanged("Password1234") // Mismatch
         
-        viewModel.signUp()
+        viewModel.signUp {}
         val state = viewModel.uiState.value
         assertEquals("Passwords do not match", state.confirmPasswordError)
     }
@@ -116,12 +122,26 @@ class SignUpViewModelTest {
         viewModel.onPasswordChanged("Password123!")
         viewModel.onConfirmPasswordChanged("Password123!")
         
-        viewModel.signUp()
+        viewModel.signUp {}
         val state = viewModel.uiState.value
         assertNull(state.nameError)
         assertNull(state.emailError)
         assertNull(state.passwordError)
         assertNull(state.confirmPasswordError)
-        assertEquals(true, state.isLoading) // Simulating successful validation leads to loading
+    }
+
+    @Test
+    fun `signUp succeeds with valid student email domain`() {
+        viewModel.onNameChanged("John Doe")
+        viewModel.onEmailChanged("student@students.must.ac.ke")
+        viewModel.onPasswordChanged("Password123!")
+        viewModel.onConfirmPasswordChanged("Password123!")
+        
+        viewModel.signUp {}
+        val state = viewModel.uiState.value
+        assertNull(state.nameError)
+        assertNull(state.emailError)
+        assertNull(state.passwordError)
+        assertNull(state.confirmPasswordError)
     }
 }

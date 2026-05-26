@@ -1,10 +1,13 @@
 package must.kdroiders.hustlehub.ui.auth.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.ui.auth.domain.usecase.SignUpUseCase
 import javax.inject.Inject
 
 data class SignUpState(
@@ -26,7 +29,9 @@ enum class PasswordStrength {
 }
 
 @HiltViewModel
-class SignUpViewModel @Inject constructor() : ViewModel() {
+class SignUpViewModel @Inject constructor(
+    private val signUpUseCase: SignUpUseCase
+) : ViewModel() {
     private val _uiState = MutableStateFlow(SignUpState())
     val uiState = _uiState.asStateFlow()
 
@@ -84,8 +89,8 @@ class SignUpViewModel @Inject constructor() : ViewModel() {
         return if (email.isBlank()) {
             _uiState.update { it.copy(emailError = "Email cannot be empty") }
             false
-        } else if (!email.endsWith("@must.ac.ke")) {
-            _uiState.update { it.copy(emailError = "Must use a valid @must.ac.ke email") }
+        } else if (!email.endsWith("@must.ac.ke") && !email.endsWith("@students.must.ac.ke")) {
+            _uiState.update { it.copy(emailError = "Must use a valid @must.ac.ke or @students.must.ac.ke email") }
             false
         } else {
             true
@@ -120,7 +125,7 @@ class SignUpViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    fun signUp() {
+    fun signUp(onSuccess: (email: String) -> Unit) {
         val isNameValid = validateName()
         val isEmailValid = validateEmail()
         val isPasswordValid = validatePassword()
@@ -128,9 +133,23 @@ class SignUpViewModel @Inject constructor() : ViewModel() {
 
         if (isNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid) {
             _uiState.update { it.copy(isLoading = true, signUpError = null) }
-            // TODO: Implement actual signup logic
-            // Simulate network delay for now
-            // _uiState.update { it.copy(isLoading = false) }
+            viewModelScope.launch {
+                signUpUseCase(
+                    name = _uiState.value.name,
+                    email = _uiState.value.email,
+                    password = _uiState.value.password
+                ).onSuccess { result ->
+                    _uiState.update { it.copy(isLoading = false) }
+                    onSuccess(_uiState.value.email)
+                }.onFailure { e ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            signUpError = e.message ?: "Sign-up failed. Please try again."
+                        )
+                    }
+                }
+            }
         }
     }
 }

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.data.repository.UserRepository
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import timber.log.Timber
@@ -73,18 +74,72 @@ class SplashViewModel @Inject constructor(
                             SplashDestination.Onboarding
 
                         currentUser != null -> {
-                            // Check if user has completed
-                            // profile setup
-                            val hasProfile = userRepository
-                                .hasUserProfile(
-                                    currentUser.uid
-                                )
-                                .getOrDefault(false)
+                            // Reload to get latest verified status
+                            try {
+                                currentUser.reload().await()
+                            } catch (e: Exception) {
+                                Timber.e(e, "Failed to reload user in splash screen")
+                            }
 
-                            if (hasProfile) {
-                                SplashDestination.Home
+                            if (currentUser.isEmailVerified) {
+                                val hasProfileResult = userRepository.hasUserProfile(currentUser.uid)
+                                var targetDestination = SplashDestination.Home
+
+                                hasProfileResult.onSuccess { hasProfile ->
+                                    if (!hasProfile) {
+                                        val defaultUser = must.kdroiders.hustlehub.data.model.User(
+                                            id = currentUser.uid,
+                                            name = currentUser.displayName ?: "Student",
+                                            email = currentUser.email ?: "",
+                                            phone = "",
+                                            campusLocation = "",
+                                            role = must.kdroiders.hustlehub.data.model.UserRole.CUSTOMER,
+                                            profilePhotoUrl = currentUser.photoUrl?.toString() ?: "",
+                                            bio = "",
+                                            isVerified = false,
+                                            isOnline = true
+                                        )
+                                        val saveResult = userRepository.saveUserProfile(defaultUser)
+                                        saveResult.onFailure { saveException ->
+                                            if (saveException is retrofit2.HttpException) {
+                                                firebaseAuth.signOut()
+                                                targetDestination = SplashDestination.Login
+                                            } else {
+                                                targetDestination = SplashDestination.Home
+                                            }
+                                        }
+                                    }
+                                }.onFailure { e ->
+                                    if (e is retrofit2.HttpException) {
+                                        if (e.code() == 404 || e.code() == 403 || e.code() == 401) {
+                                            val defaultUser = must.kdroiders.hustlehub.data.model.User(
+                                                id = currentUser.uid,
+                                                name = currentUser.displayName ?: "Student",
+                                                email = currentUser.email ?: "",
+                                                phone = "",
+                                                campusLocation = "",
+                                                role = must.kdroiders.hustlehub.data.model.UserRole.CUSTOMER,
+                                                profilePhotoUrl = currentUser.photoUrl?.toString() ?: "",
+                                                bio = "",
+                                                isVerified = false,
+                                                isOnline = true
+                                            )
+                                            val saveResult = userRepository.saveUserProfile(defaultUser)
+                                            saveResult.onFailure {
+                                                firebaseAuth.signOut()
+                                                targetDestination = SplashDestination.Login
+                                            }
+                                        } else {
+                                            firebaseAuth.signOut()
+                                            targetDestination = SplashDestination.Login
+                                        }
+                                    } else {
+                                        targetDestination = SplashDestination.Home
+                                    }
+                                }
+                                targetDestination
                             } else {
-                                SplashDestination.ProfileSetup
+                                SplashDestination.Login
                             }
                         }
 

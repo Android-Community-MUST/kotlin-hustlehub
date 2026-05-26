@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.data.model.User
 import must.kdroiders.hustlehub.data.model.UserRole
 import must.kdroiders.hustlehub.data.repository.UserRepository
+import must.kdroiders.hustlehub.ui.auth.domain.usecase.SyncUserProfileUseCase
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -25,9 +26,9 @@ import javax.inject.Inject
  */
 data class ProfileSetupState(
     val name: String = "",
-    val course: String = "",
-    val yearOfStudy: Int = 1,
-    val hostel: String = "",
+    val phone: String = "",
+    val campusLocation: String = "",
+    val bio: String = "",
     val role: UserRole = UserRole.CUSTOMER,
     val photoUri: Uri? = null,
     val photoUrl: String = "",
@@ -48,7 +49,8 @@ sealed interface ProfileSetupEvent {
 @HiltViewModel
 class ProfileSetupViewModel @Inject constructor(
     private val firebaseAuth: FirebaseAuth?,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val syncUserProfileUseCase: SyncUserProfileUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileSetupState())
@@ -73,16 +75,16 @@ class ProfileSetupViewModel @Inject constructor(
         _state.update { it.copy(name = value) }
     }
 
-    fun onCourseChange(value: String) {
-        _state.update { it.copy(course = value) }
+    fun onPhoneChange(value: String) {
+        _state.update { it.copy(phone = value) }
     }
 
-    fun onYearChange(year: Int) {
-        _state.update { it.copy(yearOfStudy = year) }
+    fun onBioChange(value: String) {
+        _state.update { it.copy(bio = value) }
     }
 
-    fun onHostelChange(value: String) {
-        _state.update { it.copy(hostel = value) }
+    fun onCampusLocationChange(value: String) {
+        _state.update { it.copy(campusLocation = value) }
     }
 
     fun onRoleChange(role: UserRole) {
@@ -149,16 +151,16 @@ class ProfileSetupViewModel @Inject constructor(
             }
             return
         }
-        if (currentState.course.isBlank()) {
+        if (currentState.phone.isBlank()) {
             _state.update {
-                it.copy(errorMessage = "Please select a course")
+                it.copy(errorMessage = "Phone number is required")
             }
             return
         }
-        if (currentState.hostel.isBlank()) {
+        if (currentState.campusLocation.isBlank()) {
             _state.update {
                 it.copy(
-                    errorMessage = "Hostel/Residence is required"
+                    errorMessage = "Campus Location/Residence is required"
                 )
             }
             return
@@ -180,15 +182,15 @@ class ProfileSetupViewModel @Inject constructor(
             id = userId,
             name = currentState.name,
             email = email,
-            course = currentState.course,
-            yearOfStudy = currentState.yearOfStudy,
-            hostel = currentState.hostel,
+            phone = currentState.phone,
+            campusLocation = currentState.campusLocation,
+            bio = currentState.bio,
             role = currentState.role,
             profilePhotoUrl = currentState.photoUrl
         )
 
         viewModelScope.launch {
-            userRepository.saveUserProfile(user)
+            syncUserProfileUseCase(user)
                 .onSuccess {
                     _state.update { it.copy(isSaving = false) }
                     _events.emit(ProfileSetupEvent.ProfileSaved)

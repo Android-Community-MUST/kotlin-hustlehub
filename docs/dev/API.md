@@ -29,39 +29,91 @@ A `401 Unauthorized` response triggers an automatic token refresh via OkHttp's `
 
 ---
 
+## Response Envelope & Pagination
+
+### Successful Response Wrapper
+Every successful REST request returns a generic `ApiResponse` envelope:
+
+```json
+{
+  "success": true,
+  "message": "Operation description",
+  "data": { ... }
+}
+```
+
+The specific models detailed below will always reside within the `"data"` field of this envelope.
+
+### Paginated Response Wrapper
+Endpoints returning lists of items wrap their contents in a custom `PageResponse` object inside the `data` block:
+
+```json
+{
+  "content": [ ... ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 87,
+  "totalPages": 5
+}
+```
+
+*Note: The page index parameter is named `"page"` (0-indexed).*
+
+### Error Response Format
+All errors return a consistent body mapping to standard HTTP status codes:
+
+```json
+{
+  "timestamp": "2026-02-14T14:30:00Z",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Email must end with @must.ac.ke",
+  "path": "/api/v1/auth/register"
+}
+```
+
+---
+
 ## Auth Endpoints
 
 ### Register / Sync User Profile
-`POST /api/v1/auth/register`
+`POST /api/v1/auth/register` (No authentication header required)
 
-Called after Firebase sign-up to persist the user on the backend.
+Called after Firebase sign-up to persist the user details on the backend.
 
 **Request:**
 ```json
 {
   "firebaseUid": "user_abc123",
-  "name": "John Kamau",
   "email": "john.kamau@must.ac.ke",
-  "studentId": "COM/0234/2023",
-  "campus": "Meru University",
-  "course": "Computer Science",
-  "yearOfStudy": 3,
-  "hostel": "Hostel B, Room 204",
-  "role": "BOTH",
-  "profilePhotoUrl": "https://api.hustlehub.app/media/users/abc123/profile.jpg",
-  "fcmToken": "fcm_token_here"
+  "name": "John Kamau",
+  "bio": "Optional user bio",
+  "avatarUrl": "https://lh3.googleusercontent.com/.../photo.jpg",
+  "phone": "0712345678",
+  "campusLocation": "Hostel B, Room 204"
 }
 ```
 
 **Response `201 Created`:**
 ```json
 {
-  "userId": "user_abc123",
-  "name": "John Kamau",
-  "email": "john.kamau@must.ac.ke",
-  "role": "BOTH",
-  "isVerified": true,
-  "createdAt": "2026-02-14T10:00:00Z"
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "id": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+    "firebaseUid": "user_abc123",
+    "email": "john.kamau@must.ac.ke",
+    "name": "John Kamau",
+    "role": "CUSTOMER",
+    "bio": "Optional user bio",
+    "avatarUrl": "https://lh3.googleusercontent.com/.../photo.jpg",
+    "phone": "0712345678",
+    "campusLocation": "Hostel B, Room 204",
+    "isVerified": true,
+    "isActive": true,
+    "createdAt": "2026-02-14T10:00:00Z",
+    "updatedAt": "2026-02-14T10:00:00Z"
+  }
 }
 ```
 
@@ -70,17 +122,16 @@ Called after Firebase sign-up to persist the user on the backend.
 ### Update FCM Token
 `PUT /api/v1/users/fcm-token`
 
+Saves or updates a user's active device FCM token for push notifications. Caps at the 5 most-recent unique tokens.
+
 **Request:**
 ```json
 {
-  "fcmToken": "new_fcm_token_here"
+  "token": "new_fcm_token_here"
 }
 ```
 
-**Response `200 OK`:**
-```json
-{ "message": "FCM token updated" }
-```
+**Response `204 No Content`** (Empty body).
 
 ---
 
@@ -92,23 +143,23 @@ Called after Firebase sign-up to persist the user on the backend.
 **Response `200 OK`:**
 ```json
 {
-  "userId": "user_abc123",
-  "name": "John Kamau",
-  "email": "john.kamau@must.ac.ke",
-  "studentId": "COM/0234/2023",
-  "campus": "Meru University",
-  "course": "Computer Science",
-  "yearOfStudy": 3,
-  "hostel": "Hostel B, Room 204",
-  "role": "BOTH",
-  "profilePhotoUrl": "https://...",
-  "bio": "Quality laundry services with free pickup",
-  "hustleScore": 4.7,
-  "badges": ["TOP_RATED", "FAST_RESPONDER"],
-  "isVerified": true,
-  "isOnline": true,
-  "createdAt": "2026-02-01T10:00:00Z",
-  "lastSeen": "2026-02-14T14:30:00Z"
+  "success": true,
+  "message": "Profile fetched successfully",
+  "data": {
+    "id": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+    "firebaseUid": "user_abc123",
+    "email": "john.kamau@must.ac.ke",
+    "name": "John Kamau",
+    "role": "CUSTOMER",
+    "bio": "Quality laundry services with free pickup",
+    "avatarUrl": "https://...",
+    "phone": "0712345678",
+    "campusLocation": "Hostel B, Room 204",
+    "isVerified": true,
+    "isActive": true,
+    "createdAt": "2026-02-01T10:00:00Z",
+    "updatedAt": "2026-02-14T14:30:00Z"
+  }
 }
 ```
 
@@ -117,20 +168,29 @@ Called after Firebase sign-up to persist the user on the backend.
 ### Update User Profile
 `PUT /api/v1/users/me`
 
+Updates the profile fields of the currently authenticated user.
+
 **Request:**
 ```json
 {
   "name": "John Kamau",
-  "bio": "Updated bio",
-  "hostel": "Hostel C",
-  "yearOfStudy": 4
+  "bio": "Updated bio details",
+  "avatarUrl": "https://...",
+  "phone": "0712345678",
+  "campusLocation": "Hostel C"
 }
 ```
+
+**Response `200 OK`:** Returns the updated user profile in `UserResponse` format.
 
 ---
 
 ### Get User Profile by ID
 `GET /api/v1/users/{userId}`
+
+Fetches public profile details of any user by their primary PostgreSQL UUID.
+
+**Response `200 OK`:** Returns the user profile in `UserResponse` format.
 
 ---
 
@@ -139,7 +199,48 @@ Called after Firebase sign-up to persist the user on the backend.
 
 **Request:**
 ```json
-{ "isOnline": true }
+{ 
+  "isOnline": true 
+}
+```
+
+**Response `204 No Content`** (Empty body).
+
+---
+
+### Block User
+`POST /api/v1/users/{userId}/block`
+
+Blocks a user by their UUID. Blocked users cannot see each other's profiles, services, or send chat messages.
+
+**Response `204 No Content`** (Empty body).
+
+---
+
+### Unblock User
+`DELETE /api/v1/users/{userId}/block`
+
+**Response `204 No Content`** (Empty body).
+
+---
+
+### Get Blocked Users
+`GET /api/v1/users/me/blocked`
+
+**Response `200 OK`:** Returns a list of blocked users:
+```json
+{
+  "success": true,
+  "message": "Blocked users fetched successfully",
+  "data": [
+    {
+      "id": "89fa88c2-321a-45be-12c6-3d88c75dfb3f",
+      "firebaseUid": "user_xyz789",
+      "email": "jane.wanjiku@must.ac.ke",
+      ...
+    }
+  ]
+}
 ```
 
 ---
@@ -166,23 +267,59 @@ Called after Firebase sign-up to persist the user on the backend.
   "openToBarter": true
 }
 ```
+*Categories:* `SALON`, `LAUNDRY`, `TUTORING`, `FOOD`, `TECH`, `FASHION`, `PHOTOGRAPHY`, `DESIGN`, `OTHER`
 
-**Response `201 Created`:** Full service object.
+**Response `201 Created`:**
+```json
+{
+  "success": true,
+  "message": "Service created successfully",
+  "data": {
+    "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+    "providerId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+    "title": "Professional Braiding Services",
+    "category": "SALON",
+    "description": "All styles — box braids, cornrows, twists, and more.",
+    "priceRange": "300 - 800 KSh",
+    "portfolioImages": [],
+    "tags": ["braids", "hair", "salon", "beauty"],
+    "availability": "AVAILABLE",
+    "avgRating": 0.0,
+    "reviewCount": 0,
+    "location": {
+      "lat": 0.0515,
+      "lng": 37.6456,
+      "label": "Hostel C"
+    },
+    "openToBarter": true,
+    "createdAt": "2026-02-14T10:00:00Z",
+    "updatedAt": "2026-02-14T10:00:00Z"
+  }
+}
+```
 
 ---
 
 ### Get Service by ID
 `GET /api/v1/services/{serviceId}`
 
+**Response `200 OK`:** Service details wrapped in `ApiResponse`.
+
 ---
 
 ### Update Service
 `PUT /api/v1/services/{serviceId}`
 
+**Request:** Same optional fields as `CreateService`.
+
+**Response `200 OK`:** Updated service details wrapped in `ApiResponse`.
+
 ---
 
 ### Delete Service
 `DELETE /api/v1/services/{serviceId}`
+
+**Response `204 No Content`** (Empty body).
 
 ---
 
@@ -191,14 +328,20 @@ Called after Firebase sign-up to persist the user on the backend.
 
 **Request:**
 ```json
-{ "availability": "BUSY" }
+{ 
+  "availability": "BUSY" 
+}
 ```
-Allowed values: `AVAILABLE`, `BUSY`, `OFFLINE`
+*Allowed values:* `AVAILABLE`, `BUSY`, `OFFLINE`
+
+**Response `200 OK`:** Availability update message wrapped in `ApiResponse`.
 
 ---
 
 ### Get My Services
 `GET /api/v1/services/me`
+
+**Response `200 OK`:** List of user's own services wrapped in `ApiResponse`.
 
 ---
 
@@ -213,7 +356,7 @@ Allowed values: `AVAILABLE`, `BUSY`, `OFFLINE`
 |-------|------|---------|
 | `category` | String | `SALON` |
 | `availability` | String | `AVAILABLE` |
-| `minRating` | Float | `4.0` |
+| `minRating` | Double | `4.0` |
 | `maxPrice` | Int | `800` |
 | `lat` | Double | `0.0515` |
 | `lng` | Double | `37.6456` |
@@ -225,27 +368,38 @@ Allowed values: `AVAILABLE`, `BUSY`, `OFFLINE`
 **Response `200 OK`:**
 ```json
 {
-  "content": [
-    {
-      "serviceId": "service_xyz789",
-      "providerId": "user_abc123",
-      "providerName": "Jane Wanjiku",
-      "providerPhotoUrl": "https://...",
-      "title": "Professional Braiding Services",
-      "category": "SALON",
-      "priceRange": "300 - 800",
-      "portfolioImages": ["https://..."],
-      "averageRating": 4.8,
-      "reviewCount": 23,
-      "availability": "AVAILABLE",
-      "distanceMeters": 180,
-      "location": { "lat": 0.0515, "lng": 37.6456, "label": "Hostel C" }
-    }
-  ],
-  "totalElements": 87,
-  "totalPages": 5,
-  "number": 0,
-  "size": 20
+  "success": true,
+  "message": "Services fetched",
+  "data": {
+    "content": [
+      {
+        "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+        "providerId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+        "title": "Professional Braiding Services",
+        "category": "SALON",
+        "description": "All styles — box braids, cornrows, twists, and more.",
+        "priceRange": "300 - 800 KSh",
+        "portfolioImages": [],
+        "tags": ["braids", "hair", "salon", "beauty"],
+        "availability": "AVAILABLE",
+        "avgRating": 4.8,
+        "reviewCount": 23,
+        "location": {
+          "lat": 0.0515,
+          "lng": 37.6456,
+          "label": "Hostel C"
+        },
+        "openToBarter": true,
+        "distanceMeters": 180.2,
+        "createdAt": "2026-02-14T10:00:00Z",
+        "updatedAt": "2026-02-14T10:00:00Z"
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1
+  }
 }
 ```
 
@@ -254,10 +408,16 @@ Allowed values: `AVAILABLE`, `BUSY`, `OFFLINE`
 ### Text Search
 `GET /api/v1/discovery/search?q=braids&page=0&size=20`
 
+Performs a keyword search on title, description, and tags using `ILIKE` queries.
+
+**Response `200 OK`:** Paginated search results formatted as `PageResponse<ServiceResponse>` wrapped in `ApiResponse`.
+
 ---
 
 ### AI-Powered Natural Language Search
 `POST /api/v1/discovery/ai-search`
+
+Takes a natural language search query, parses parameters via Gemini, and queries the database.
 
 **Request:**
 ```json
@@ -274,21 +434,27 @@ Allowed values: `AVAILABLE`, `BUSY`, `OFFLINE`
 **Response `200 OK`:**
 ```json
 {
-  "matches": [
-    {
-      "serviceId": "service_xyz789",
-      "providerId": "user_abc123",
-      "relevanceScore": 0.95,
-      "matchReason": "Offers box braiding, within 200m of Hostel C, price range 300–800 KSh",
-      "distance": 180,
-      "priceRange": "300 - 800"
+  "success": true,
+  "message": "AI search results",
+  "data": {
+    "matches": [
+      {
+        "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+        "providerId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+        "title": "Professional Braiding Services",
+        "category": "SALON",
+        "priceRange": "300 - 800 KSh",
+        "relevanceScore": 0.95,
+        "matchReason": "Offers box braiding, within 200m of Hostel C, price range 300–800 KSh",
+        "distanceMeters": 180.2
+      }
+    ],
+    "queryUnderstanding": {
+      "service": "box braids",
+      "location": "Hostel C",
+      "maxPrice": 500,
+      "category": "SALON"
     }
-  ],
-  "queryUnderstanding": {
-    "service": "box braids",
-    "location": "Hostel C",
-    "maxPrice": 500,
-    "category": "SALON"
   }
 }
 ```
@@ -300,19 +466,24 @@ Allowed values: `AVAILABLE`, `BUSY`, `OFFLINE`
 
 **Response `200 OK`:**
 ```json
-[
-  {
-    "serviceId": "service_xyz789",
-    "providerId": "user_abc123",
-    "providerName": "Jane Wanjiku",
-    "providerPhotoUrl": "https://...",
-    "title": "Professional Braiding",
-    "category": "SALON",
-    "availability": "AVAILABLE",
-    "averageRating": 4.8,
-    "location": { "lat": 0.0515, "lng": 37.6456 }
-  }
-]
+{
+  "success": true,
+  "message": "Map pins fetched",
+  "data": [
+    {
+      "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+      "providerId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+      "providerName": "John Kamau",
+      "providerPhotoUrl": "https://...",
+      "title": "Professional Braiding Services",
+      "category": "SALON",
+      "availability": "AVAILABLE",
+      "averageRating": 4.8,
+      "lat": 0.0515,
+      "lng": 37.6456
+    }
+  ]
+}
 ```
 
 ---
@@ -322,25 +493,33 @@ Allowed values: `AVAILABLE`, `BUSY`, `OFFLINE`
 ### Get Conversation List
 `GET /api/v1/conversations?page=0&size=20`
 
+Returns a sorted list of conversations (newest activity first).
+
 **Response `200 OK`:**
 ```json
 {
-  "content": [
-    {
-      "conversationId": "conv_123abc",
-      "otherParticipant": {
-        "userId": "user_xyz789",
-        "name": "Jane Wanjiku",
-        "photoUrl": "https://..."
-      },
-      "serviceId": "service_xyz789",
-      "serviceTitle": "Professional Braiding",
-      "lastMessage": "I'm available tomorrow at 2pm",
-      "lastMessageType": "TEXT",
-      "lastMessageAt": "2026-02-14T14:30:00Z",
-      "unreadCount": 2
-    }
-  ]
+  "success": true,
+  "message": "OK",
+  "data": {
+    "content": [
+      {
+        "id": "bb4c969d-210d-45be-91c6-1c88c75dfb3f",
+        "otherUserId": "89fa88c2-321a-45be-12c6-3d88c75dfb3f",
+        "otherUserName": "Jane Wanjiku",
+        "otherUserAvatar": "https://...",
+        "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+        "lastMessage": "I'm available tomorrow at 2pm",
+        "lastMessageType": "TEXT",
+        "lastMessageAt": "2026-02-14T14:30:00Z",
+        "unreadCount": 2,
+        "createdAt": "2026-02-14T10:00:00Z"
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1
+  }
 }
 ```
 
@@ -352,32 +531,85 @@ Allowed values: `AVAILABLE`, `BUSY`, `OFFLINE`
 **Request:**
 ```json
 {
-  "otherUserId": "user_xyz789",
-  "serviceId": "service_xyz789"
+  "otherUserId": "89fa88c2-321a-45be-12c6-3d88c75dfb3f",
+  "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f"
 }
 ```
 
-**Response `200 OK` or `201 Created`:** Conversation object.
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "id": "bb4c969d-210d-45be-91c6-1c88c75dfb3f",
+    "otherUserId": "89fa88c2-321a-45be-12c6-3d88c75dfb3f",
+    "otherUserName": "Jane Wanjiku",
+    "otherUserAvatar": "https://...",
+    "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+    "lastMessage": null,
+    "lastMessageType": null,
+    "lastMessageAt": null,
+    "unreadCount": 0,
+    "createdAt": "2026-02-14T10:00:00Z"
+  }
+}
+```
 
 ---
 
 ### Get Message History
 `GET /api/v1/conversations/{conversationId}/messages?page=0&size=50`
 
-**Response `200 OK`:** Paginated list of messages (newest first).
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "content": [
+      {
+        "id": "cc5c969d-210d-45be-91c6-1c88c75dfb3f",
+        "conversationId": "bb4c969d-210d-45be-91c6-1c88c75dfb3f",
+        "senderId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+        "type": "TEXT",
+        "content": "I'm available tomorrow at 2pm",
+        "mediaUrl": null,
+        "thumbnailUrl": null,
+        "metadata": null,
+        "timestamp": "2026-02-14T14:30:00Z",
+        "deliveredAt": "2026-02-14T14:30:05Z",
+        "readAt": null
+      }
+    ],
+    "page": 0,
+    "size": 50,
+    "totalElements": 1,
+    "totalPages": 1
+  }
+}
+```
 
 ---
 
 ### Mark Conversation as Read
 `PUT /api/v1/conversations/{conversationId}/read`
 
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Conversation marked as read"
+}
+```
+
 ---
 
-## Real-Time Chat — WebSocket (STOMP over SockJS)
+## Real-Time Chat — WebSocket (STOMP Protocol)
 
 Connect to: `ws://10.0.2.2:8080/ws` (debug) / `wss://api.hustlehub.app/ws` (release)
 
-Include Firebase token as a query parameter on connect:
+Include Firebase ID token as a handshake query parameter or STOMP connect header:
 ```
 /ws?token=<firebase_id_token>
 ```
@@ -385,30 +617,34 @@ Include Firebase token as a query parameter on connect:
 ### Send a Message
 **Destination:** `/app/chat.send`
 
+**Stomp frame body:**
 ```json
 {
-  "conversationId": "conv_123abc",
+  "conversationId": "bb4c969d-210d-45be-91c6-1c88c75dfb3f",
   "type": "TEXT",
   "content": "I'm available tomorrow at 2pm",
   "mediaUrl": null,
+  "thumbnailUrl": null,
   "metadata": null
 }
 ```
+*Message Types:* `TEXT`, `VOICE`, `IMAGE`, `LOCATION`, `SERVICE_CARD`
 
-**Message Types:** `TEXT`, `VOICE`, `IMAGE`, `LOCATION`, `SERVICE_CARD`
+---
 
 ### Receive Messages
-**Subscribe to:** `/topic/conversation/{conversationId}`
+**Subscribe destination:** `/topic/conversation/{conversationId}`
 
-**Payload received:**
+**Payload received:** Returns a single `MessageResponse` JSON structure:
 ```json
 {
-  "messageId": "msg_456def",
-  "conversationId": "conv_123abc",
-  "senderId": "user_abc123",
+  "id": "cc5c969d-210d-45be-91c6-1c88c75dfb3f",
+  "conversationId": "bb4c969d-210d-45be-91c6-1c88c75dfb3f",
+  "senderId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
   "type": "TEXT",
   "content": "I'm available tomorrow at 2pm",
   "mediaUrl": null,
+  "thumbnailUrl": null,
   "metadata": null,
   "timestamp": "2026-02-14T14:30:00Z",
   "deliveredAt": "2026-02-14T14:30:05Z",
@@ -416,15 +652,28 @@ Include Firebase token as a query parameter on connect:
 }
 ```
 
+---
+
 ### Typing Indicators
-**Send:** `/app/chat.typing`
+**Publish destination:** `/app/chat.typing`
 ```json
-{ "conversationId": "conv_123abc", "isTyping": true }
+{
+  "conversationId": "bb4c969d-210d-45be-91c6-1c88c75dfb3f",
+  "senderId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+  "isTyping": true
+}
 ```
-**Receive:** `/topic/conversation/{conversationId}/typing`
+
+**Subscribe destination:** `/topic/conversation/{conversationId}/typing`
+
+**Payload received:** Returns the typing indicator JSON structure above.
+
+---
 
 ### Presence (Online/Offline)
-**Subscribe to:** `/topic/user/{userId}/presence`
+**Subscribe destination:** `/topic/user/{userId}/presence`
+
+**Payload received:** Returns `OnlineStatusRequest` format.
 
 ---
 
@@ -436,17 +685,21 @@ Include Firebase token as a query parameter on connect:
 **Request:**
 ```json
 {
-  "serviceId": "service_xyz789",
+  "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
   "rating": 5,
   "comment": "Amazing braids! Very professional.",
   "isAnonymous": false
 }
 ```
 
+**Response `200 OK`:** Submit confirmation wrapped in `ApiResponse`.
+
 ---
 
 ### Get Reviews for a Service
 `GET /api/v1/services/{serviceId}/reviews?page=0&size=10`
+
+**Response `200 OK`:** Paginated reviews list formatted as `PageResponse<ReviewResponse>` wrapped in `ApiResponse`.
 
 ---
 
@@ -455,8 +708,12 @@ Include Firebase token as a query parameter on connect:
 
 **Request:**
 ```json
-{ "reason": "Inappropriate content" }
+{ 
+  "reason": "Inappropriate content" 
+}
 ```
+
+**Response `200 OK`:** Report confirmation wrapped in `ApiResponse`.
 
 ---
 
@@ -470,15 +727,19 @@ Include Firebase token as a query parameter on connect:
 **Form fields:**
 - `file` — the image file (JPEG, PNG)
 - `type` — `PROFILE_PHOTO` / `PORTFOLIO` / `CHAT_IMAGE`
-- `entityId` — service ID or conversation ID (optional)
+- `entityId` — service UUID or conversation UUID (optional)
 
 **Response `200 OK`:**
 ```json
 {
-  "mediaId": "media_abc123",
-  "url": "https://api.hustlehub.app/media/services/xyz789/img1.jpg",
-  "thumbnailUrl": "https://api.hustlehub.app/media/services/xyz789/img1_thumb.jpg",
-  "type": "PORTFOLIO"
+  "success": true,
+  "message": "Image uploaded successfully",
+  "data": {
+    "mediaId": "media_abc123",
+    "url": "https://api.hustlehub.app/media/services/xyz789/img1.jpg",
+    "thumbnailUrl": "https://api.hustlehub.app/media/services/xyz789/img1_thumb.jpg",
+    "type": "PORTFOLIO"
+  }
 }
 ```
 
@@ -491,15 +752,19 @@ Include Firebase token as a query parameter on connect:
 
 **Form fields:**
 - `file` — audio file (AAC/M4A)
-- `conversationId` — conversation this voice note belongs to
+- `conversationId` — conversation UUID this voice note belongs to
 
 **Response `200 OK`:**
 ```json
 {
-  "mediaId": "media_voice_123",
-  "url": "https://api.hustlehub.app/media/voice/abc123.m4a",
-  "durationSeconds": 12,
-  "type": "VOICE_NOTE"
+  "success": true,
+  "message": "Voice note uploaded successfully",
+  "data": {
+    "mediaId": "media_voice_123",
+    "url": "https://api.hustlehub.app/media/voice/abc123.m4a",
+    "durationSeconds": 12,
+    "type": "VOICE_NOTE"
+  }
 }
 ```
 
@@ -510,102 +775,18 @@ Include Firebase token as a query parameter on connect:
 ### Get Notification History
 `GET /api/v1/notifications?page=0&size=20`
 
+**Response `200 OK`:** Paginated history list formatted as `PageResponse<NotificationResponse>` wrapped in `ApiResponse`.
+
 ---
 
 ### Mark Notification as Read
 `PUT /api/v1/notifications/{notificationId}/read`
+
+**Response `200 OK`:** Confirmation wrapped in `ApiResponse`.
 
 ---
 
 ### Mark All as Read
 `PUT /api/v1/notifications/read-all`
 
----
-
-## Error Handling
-
-All errors follow a consistent structure:
-
-```json
-{
-  "timestamp": "2026-02-14T14:30:00Z",
-  "status": 400,
-  "error": "Bad Request",
-  "message": "Email must end with @must.ac.ke",
-  "path": "/api/v1/auth/register"
-}
-```
-
-### Common HTTP Status Codes
-
-| Code | Meaning |
-|------|---------|
-| `200` | OK |
-| `201` | Created |
-| `400` | Bad Request (validation error) |
-| `401` | Unauthorized (invalid/expired Firebase token) |
-| `403` | Forbidden (action not allowed for this user) |
-| `404` | Resource not found |
-| `409` | Conflict (duplicate entry) |
-| `429` | Too Many Requests (rate limited) |
-| `500` | Internal Server Error |
-
-### Kotlin Handling Example
-
-```kotlin
-// Repository pattern with sealed Result
-suspend fun getServices(): Result<List<Service>> {
-    return try {
-        val response = apiService.getServices()
-        if (response.isSuccessful) {
-            Result.Success(response.body()!!.content)
-        } else {
-            Result.Error("Server error: ${response.code()}")
-        }
-    } catch (e: IOException) {
-        Result.Error("No internet connection")
-    } catch (e: HttpException) {
-        Result.Error("HTTP ${e.code()}: ${e.message()}")
-    }
-}
-```
-
----
-
-## Rate Limits
-
-| Endpoint group | Limit |
-|----------------|-------|
-| Auth endpoints | 10 req/min per IP |
-| Discovery / Search | 60 req/min per user |
-| AI Search | 20 req/min per user |
-| Media upload | 30 uploads/hour per user |
-| Chat messages | 120 messages/min per conversation |
-| General API | 300 req/min per user |
-
----
-
-## Testing Against Local Backend
-
-```bash
-# Start Spring Boot backend locally
-./gradlew bootRun   # in backend repo
-
-# Android emulator connects via 10.0.2.2:8080
-# Physical device on same network: use your machine's LAN IP
-```
-
-### Using Firebase Auth Emulator (optional for local dev)
-```kotlin
-// In HustleHubApp.onCreate() — debug builds only
-if (BuildConfig.DEBUG) {
-    FirebaseAuth.getInstance().useEmulator("10.0.2.2", 9099)
-}
-```
-
----
-
-**See also:**
-- [Architecture Guide](ARCHITECTURE.md)
-- [Setup Guide](SETUP.md)
-- [Spring Boot Backend Repo](https://github.com/Android-Community-MUST/hustlehub-backend)
+**Response `200 OK`:** Confirmation wrapped in `ApiResponse`.
