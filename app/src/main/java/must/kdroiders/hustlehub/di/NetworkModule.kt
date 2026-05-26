@@ -8,7 +8,7 @@ import dagger.hilt.components.SingletonComponent
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.core.api.AuthInterceptor
 import must.kdroiders.hustlehub.core.api.TokenAuthenticator
-import must.kdroiders.hustlehub.data.remote.AuthApiService
+import must.kdroiders.hustlehub.ui.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.data.remote.UserApiService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit

@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
+import must.kdroiders.hustlehub.ui.auth.data.remote.UserResponseDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT

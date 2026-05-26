@@ -83,7 +83,7 @@ class SplashViewModel @Inject constructor(
 
                             if (currentUser.isEmailVerified) {
                                 val hasProfileResult = userRepository.hasUserProfile(currentUser.uid)
-                                var targetDestination = SplashDestination.Home
+                                var targetDestination: SplashDestination = SplashDestination.Home
 
                                 hasProfileResult.onSuccess { hasProfile ->
                                     if (!hasProfile) {

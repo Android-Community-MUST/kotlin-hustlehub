@@ -1,6 +1,6 @@
 package must.kdroiders.hustlehub.ui.auth.domain.usecase
 
-import must.kdroiders.hustlehub.data.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.auth.domain.repository.AuthRepository
 import javax.inject.Inject
 
 class ResendOtpUseCase @Inject constructor(

@@ -1,7 +1,7 @@
 package must.kdroiders.hustlehub.ui.auth.domain.usecase
 
-import must.kdroiders.hustlehub.data.repository.AuthRepository
-import must.kdroiders.hustlehub.data.repository.LoginResult
+import must.kdroiders.hustlehub.ui.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.auth.domain.repository.LoginResult
 import javax.inject.Inject
 
 class LoginUseCase @Inject constructor(

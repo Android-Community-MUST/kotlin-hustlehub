@@ -1,29 +1,14 @@
-package must.kdroiders.hustlehub.data.repository
+package must.kdroiders.hustlehub.ui.auth.data.repository
 
-import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.tasks.await
+import must.kdroiders.hustlehub.ui.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.auth.domain.repository.LoginResult
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
-
-data class LoginResult(
-    val user: FirebaseUser,
-    val isEmailVerified: Boolean
-)
-
-interface AuthRepository {
-    suspend fun login(email: String, password: String): LoginResult
-    suspend fun signUp(name: String, email: String, password: String): LoginResult
-    suspend fun signInWithGoogle(idToken: String): LoginResult
-    suspend fun sendOtp(email: String)
-    suspend fun verifyOtp(email: String, otp: String)
-    suspend fun resendOtp(email: String)
-    fun getCurrentUser(): FirebaseUser?
-    fun logout()
-}
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
