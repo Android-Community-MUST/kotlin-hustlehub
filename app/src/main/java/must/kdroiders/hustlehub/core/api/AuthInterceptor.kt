@@ -24,23 +24,40 @@ class AuthInterceptor(
             return chain.proceed(originalRequest)
         }
 
-        return try {
-            // Get ID token synchronously using Tasks.await with a timeout
-            val tokenTask = currentUser.getIdToken(false)
-            val result = Tasks.await(tokenTask, 5, TimeUnit.SECONDS)
-            val token = result.token
+        val token = fetchTokenWithFallback()
 
-            if (!token.isNullOrEmpty()) {
-                val newRequest = originalRequest.newBuilder()
-                    .header("Authorization", "Bearer $token")
-                    .build()
-                chain.proceed(newRequest)
-            } else {
-                chain.proceed(originalRequest)
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Error fetching Firebase ID token in interceptor")
+        return if (!token.isNullOrEmpty()) {
+            val newRequest = originalRequest.newBuilder()
+                .header("Authorization", "Bearer $token")
+                .build()
+            chain.proceed(newRequest)
+        } else {
             chain.proceed(originalRequest)
         }
     }
+
+    /**
+     * Attempts to fetch a cached Firebase ID token first (fast path).
+     * If that times out, it retries with a forced network refresh (slow path).
+     * Returns null only if both attempts fail.
+     */
+    private fun fetchTokenWithFallback(): String? {
+        val currentUser = firebaseAuth?.currentUser ?: return null
+        return try {
+            // Fast path: use cached token (usually instant)
+            val result = Tasks.await(currentUser.getIdToken(false), 10, TimeUnit.SECONDS)
+            result.token
+        } catch (e: Exception) {
+            Timber.w(e, "Cached token fetch timed out — retrying with force refresh")
+            try {
+                // Slow path: force a network token refresh
+                val result = Tasks.await(currentUser.getIdToken(true), 15, TimeUnit.SECONDS)
+                result.token
+            } catch (e2: Exception) {
+                Timber.e(e2, "Force-refresh token fetch also failed — proceeding without token")
+                null
+            }
+        }
+    }
 }
+

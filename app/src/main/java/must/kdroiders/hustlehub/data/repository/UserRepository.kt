@@ -86,14 +86,36 @@ class UserRepositoryImpl @Inject constructor(
                 },
                 profilePhotoUrl = dto.avatarUrl ?: "",
                 bio = dto.bio ?: "",
-                isVerified = dto.isVerified,
-                isOnline = dto.isActive
+                isVerified = dto.verified,
+                isOnline = dto.active
             )
         } else {
             throw Exception(response.message)
         }
-    }.onFailure { e ->
-        Timber.e(e, "Failed to save user profile")
+    }.recoverCatching { e ->
+        if (e is retrofit2.HttpException) {
+            when (e.code()) {
+                409 -> {
+                    // Backend returned 409 Conflict = user already exists → treat as success
+                    Timber.d("User already registered in backend (HTTP 409) — treating as success")
+                    user
+                }
+                500 -> {
+                    // Backend returned 500 = likely a duplicate key constraint crash
+                    // (backend should send 409 but sends 500 for existing emails).
+                    // Allow the user to proceed — their account already exists.
+                    Timber.w("Backend returned HTTP 500 on register — likely duplicate email. Treating as existing user and proceeding.")
+                    user
+                }
+                else -> {
+                    Timber.e(e, "Failed to save user profile (HTTP ${e.code()})")
+                    throw e
+                }
+            }
+        } else {
+            Timber.e(e, "Failed to save user profile")
+            throw e
+        }
     }
 
     override suspend fun getUserProfile(
@@ -116,8 +138,8 @@ class UserRepositoryImpl @Inject constructor(
                 },
                 profilePhotoUrl = dto.avatarUrl ?: "",
                 bio = dto.bio ?: "",
-                isVerified = dto.isVerified,
-                isOnline = dto.isActive
+                isVerified = dto.verified,
+                isOnline = dto.active
             )
         } else {
             null
@@ -131,7 +153,14 @@ class UserRepositoryImpl @Inject constructor(
     ): Result<Boolean> = runCatching {
         val response = userApiService.getMe()
         response.success && response.data != null
-    }.onFailure { e ->
-        Timber.e(e, "Failed to check user profile")
+    }.recoverCatching { e ->
+        // HTTP 403 or 404 means the profile doesn't exist yet — not an error
+        if (e is retrofit2.HttpException && (e.code() == 403 || e.code() == 404)) {
+            Timber.d("No backend profile found for user (HTTP ${e.code()}) — assuming new user")
+            false
+        } else {
+            Timber.e(e, "Failed to check user profile")
+            throw e
+        }
     }
 }

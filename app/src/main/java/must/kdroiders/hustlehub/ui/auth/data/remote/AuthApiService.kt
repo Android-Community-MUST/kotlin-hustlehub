@@ -24,8 +24,10 @@ data class UserResponseDto(
     val avatarUrl: String?,
     val phone: String?,
     val campusLocation: String?,
-    val isVerified: Boolean,
-    val isActive: Boolean,
+    // Jackson strips the "is" prefix from Kotlin Boolean properties when serializing:
+    // isVerified → "verified", isActive → "active" in the JSON response.
+    val verified: Boolean,
+    val active: Boolean,
     val createdAt: String,
     val updatedAt: String
 )
