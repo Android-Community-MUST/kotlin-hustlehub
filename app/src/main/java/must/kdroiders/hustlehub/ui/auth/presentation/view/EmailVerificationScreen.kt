@@ -58,7 +58,7 @@ fun EmailVerificationScreen(
         )
 
         Text(
-            text = "We sent a verification link to:\n$email\n\nPlease check your email and click the link to verify, then tap \"Verify\" below.\n\n(For testing, you can enter the bypass code 123456)",
+            text = "We sent a verification link to:\n$email\n\nPlease check your email and click the link to verify, then tap \"Verify\" below.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

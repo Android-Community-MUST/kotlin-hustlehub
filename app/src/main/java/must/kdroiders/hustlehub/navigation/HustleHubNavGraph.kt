@@ -5,14 +5,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,8 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -40,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.activity.ComponentActivity
 import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.LoginViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.LaunchedEffect
 
 /**
  * Root Navigation 3 navigator for HustleHub.
@@ -107,6 +100,14 @@ fun HustleHubNav(
                     hiltViewModel(viewModelStoreOwner = activity)
                 } else {
                     hiltViewModel()
+                }
+
+                // Observe Google sign-in navigation events from the shared ViewModel
+                LaunchedEffect(loginViewModel) {
+                    loginViewModel.navigateToHome.collect {
+                        backstack.clear()
+                        backstack.add(MainShell)
+                    }
                 }
 
                 LoginScreen(
@@ -181,45 +182,14 @@ fun HustleHubNav(
             }
 
             entry<ChatDetail> { key ->
-                NavPlaceholderScreen(title = "Chat – ${key.chatId}")
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "Chat – ${key.chatId}",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
             }
         },
     )
-}
-
-// Dev utility – placeholder until teammates complete their screens
-
-@Composable
-private fun NavPlaceholderScreen(
-    title: String,
-    showDeveloperShortcuts: Boolean = false,
-    onDeveloperShortcut: (NavKey) -> Unit = {},
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = title,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-
-            if (showDeveloperShortcuts) {
-                Spacer(Modifier.height(32.dp))
-                Text(
-                    text = "Developer Shortcuts",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { onDeveloperShortcut(MainShell) })      { Text("Home") }
-                    Button(onClick = { onDeveloperShortcut(SignUp) })         { Text("Sign Up") }
-                    Button(onClick = { onDeveloperShortcut(PortfolioUpload) }) { Text("Upload") }
-                }
-            }
-        }
-    }
 }

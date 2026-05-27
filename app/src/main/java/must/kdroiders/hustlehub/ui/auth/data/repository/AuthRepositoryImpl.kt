@@ -122,11 +122,8 @@ class AuthRepositoryImpl @Inject constructor(
 
             user.reload().await()
 
-            // Verification bypass for easier emulator/dev testing:
-            if (otp == "123456" || user.isEmailVerified) {
-                Timber.d("Email verified or bypassed for $email (otp=$otp)")
-            } else {
-                throw Exception("Email not yet verified. Please check your inbox and click the verification link, or use the testing bypass code 123456.")
+            if (!user.isEmailVerified) {
+                throw Exception("Email not yet verified. Please check your inbox and click the verification link, then tap \"Verify\" below.")
             }
         } catch (e: Exception) {
             Timber.e(e, "Email verification failed")
