@@ -126,7 +126,7 @@ fun HustleHubNav(
                 )
             }
 
-             entry<EmailVerification> { key ->
+            entry<EmailVerification> { key ->
                 EmailVerificationScreen(
                     email = key.email,
                     onVerified = {

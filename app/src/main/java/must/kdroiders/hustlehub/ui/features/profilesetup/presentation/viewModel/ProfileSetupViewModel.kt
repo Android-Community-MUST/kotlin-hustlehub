@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.data.model.User
-import must.kdroiders.hustlehub.data.model.UserRole
 import must.kdroiders.hustlehub.data.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SyncUserProfileUseCase
 import timber.log.Timber
@@ -29,7 +28,6 @@ data class ProfileSetupState(
     val phone: String = "",
     val campusLocation: String = "",
     val bio: String = "",
-    val role: UserRole = UserRole.CUSTOMER,
     val photoUri: Uri? = null,
     val photoUrl: String = "",
     val isUploadingPhoto: Boolean = false,
@@ -85,10 +83,6 @@ class ProfileSetupViewModel @Inject constructor(
 
     fun onCampusLocationChange(value: String) {
         _state.update { it.copy(campusLocation = value) }
-    }
-
-    fun onRoleChange(role: UserRole) {
-        _state.update { it.copy(role = role) }
     }
 
     // ---- photo handling ----
@@ -185,7 +179,6 @@ class ProfileSetupViewModel @Inject constructor(
             phone = currentState.phone,
             campusLocation = currentState.campusLocation,
             bio = currentState.bio,
-            role = currentState.role,
             profilePhotoUrl = currentState.photoUrl
         )
 

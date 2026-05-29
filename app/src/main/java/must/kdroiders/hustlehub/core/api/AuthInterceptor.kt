@@ -16,9 +16,7 @@ class AuthInterceptor(
 
         // Skip auth token only for exactly /auth/register — strict match to avoid
         // accidentally exempting future /auth/register-* paths
-        val segments = path.trimEnd('/').split("/")
-        val isRegisterEndpoint = segments.lastOrNull() == "register" &&
-            segments.getOrNull(segments.size - 2) == "auth"
+        val isRegisterEndpoint = path.trimEnd('/').endsWith("/auth/register")
         if (isRegisterEndpoint) {
             return chain.proceed(originalRequest)
         }

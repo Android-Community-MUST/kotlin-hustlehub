@@ -21,8 +21,8 @@ class TokenAuthenticator(
         }
 
         return try {
-            // getIdToken(false) forces a refresh only if the token is expired/invalid.
-            val tokenTask = currentUser.getIdToken(false)
+            // Force a network refresh — this runs after a 401, so a cached token was already rejected.
+            val tokenTask = currentUser.getIdToken(true)
             val result = Tasks.await(tokenTask, 3, TimeUnit.SECONDS)
             val token = result.token
 
