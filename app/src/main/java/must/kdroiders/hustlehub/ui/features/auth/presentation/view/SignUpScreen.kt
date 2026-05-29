@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -63,7 +65,11 @@ fun SignUpScreen(
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.nameError != null,
             errorText = uiState.nameError,
-            leadingIcon = Icons.Default.Person
+            leadingIcon = Icons.Default.Person,
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Words,
+                imeAction = ImeAction.Next
+            ),
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -71,11 +77,14 @@ fun SignUpScreen(
             value = uiState.email,
             onValueChange = signUpViewModel::onEmailChanged,
             label = "Must Student Email",
-            placeholder = "example@must.ac.ke",
+            placeholder = "example@student.must.ac.ke",
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.emailError != null,
             errorText = uiState.emailError,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            ),
             leadingIcon = Icons.Default.Email
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -88,10 +97,15 @@ fun SignUpScreen(
             isError = uiState.passwordError != null,
             errorText = uiState.passwordError,
             isPassword = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Next
+                ),
             leadingIcon = Icons.Default.Lock
         )
-        PasswordStrengthIndicator(strength = uiState.passwordStrength)
+        if (uiState.password.isNotEmpty()) {
+            PasswordStrengthIndicator(strength = uiState.passwordStrength)
+        }
         Spacer(modifier = Modifier.height(16.dp))
 
         HustleTextField(

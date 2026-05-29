@@ -17,7 +17,7 @@ data class SignUpState(
     val emailError: String? = null,
     val password: String = "",
     val passwordError: String? = null,
-    val passwordStrength: PasswordStrength = PasswordStrength.WEAK,
+    val passwordStrength: PasswordStrength = PasswordStrength.NONE,
     val confirmPassword: String = "",
     val confirmPasswordError: String? = null,
     val isLoading: Boolean = false,
@@ -25,7 +25,7 @@ data class SignUpState(
 )
 
 enum class PasswordStrength {
-    WEAK, MEDIUM, STRONG
+    NONE, WEAK, MEDIUM, STRONG, VERY_STRONG
 }
 
 @HiltViewModel
@@ -63,15 +63,21 @@ class SignUpViewModel @Inject constructor(
     }
 
     private fun calculatePasswordStrength(password: String): PasswordStrength {
-        if (password.length < 8) return PasswordStrength.WEAK
-        val hasUppercase = password.any { it.isUpperCase() }
-        val hasNumber = password.any { it.isDigit() }
-        val hasSpecial = password.any { !it.isLetterOrDigit() }
+        if (password.isEmpty()) return PasswordStrength.NONE
+        var score = 0
+        if (password.length >= 8) score++
+        if (password.any { it.isUpperCase() }) score++
+        if (password.any { it.isLowerCase() }) score++
+        if (password.any { it.isDigit() }) score++
+        if (password.any { !it.isLetterOrDigit() }) score++
 
-        return when {
-            hasUppercase && hasNumber && hasSpecial && password.length >= 10 -> PasswordStrength.STRONG
-            hasUppercase && hasNumber -> PasswordStrength.MEDIUM
-            else -> PasswordStrength.WEAK
+        return when (score) {
+            0, 1 -> PasswordStrength.NONE
+            2 -> PasswordStrength.WEAK
+            3 -> PasswordStrength.MEDIUM
+            4 -> PasswordStrength.STRONG
+            5 -> PasswordStrength.VERY_STRONG
+            else -> PasswordStrength.NONE
         }
     }
 
