@@ -15,15 +15,15 @@ class TokenAuthenticator(
     override fun authenticate(route: Route?, response: Response): Request? {
         val currentUser = firebaseAuth?.currentUser ?: return null
 
-        // Avoid infinite loops if the request has already been retried multiple times
-        if (responseCount(response) >= 3) {
+        // Avoid infinite loops if the request has already been retried
+        if (responseCount(response) >= 2) {
             return null
         }
 
         return try {
-            // Force refresh the token by passing true
+            // Force a network refresh — this runs after a 401, so a cached token was already rejected.
             val tokenTask = currentUser.getIdToken(true)
-            val result = Tasks.await(tokenTask, 5, TimeUnit.SECONDS)
+            val result = Tasks.await(tokenTask, 3, TimeUnit.SECONDS)
             val token = result.token
 
             if (!token.isNullOrEmpty()) {

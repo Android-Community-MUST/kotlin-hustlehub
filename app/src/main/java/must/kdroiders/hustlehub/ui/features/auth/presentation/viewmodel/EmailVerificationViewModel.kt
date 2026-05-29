@@ -51,9 +51,12 @@ class EmailVerificationViewModel @Inject constructor(
     }
 
     fun resendOtp() {
+        if (_uiState.value.resendCooldown > 0 || _uiState.value.isLoading) return
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             resendOtpUseCase(email = userEmail)
                 .onSuccess {
+                    _uiState.update { it.copy(isLoading = false) }
                     // Start 60-second countdown
                     for (i in 60 downTo 1) {
                         _uiState.update { it.copy(resendCooldown = i) }
@@ -63,7 +66,10 @@ class EmailVerificationViewModel @Inject constructor(
                 }
                 .onFailure { e ->
                     _uiState.update {
-                        it.copy(errorMessage = e.message ?: "Failed to resend OTP")
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = e.message ?: "Failed to resend verification email"
+                        )
                     }
                 }
         }

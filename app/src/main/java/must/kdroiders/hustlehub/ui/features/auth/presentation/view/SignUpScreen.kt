@@ -77,7 +77,7 @@ fun SignUpScreen(
             value = uiState.email,
             onValueChange = signUpViewModel::onEmailChanged,
             label = "Must Student Email",
-            placeholder = "example@student.must.ac.ke",
+            placeholder = "example@students.must.ac.ke",
             modifier = Modifier.fillMaxWidth(),
             isError = uiState.emailError != null,
             errorText = uiState.emailError,

@@ -7,11 +7,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,15 +30,9 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -64,17 +55,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.data.model.UserRole
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.viewModel.ProfileSetupEvent
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.viewModel.ProfileSetupViewModel
 
 
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalLayoutApi::class
-)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileSetupScreen(
     viewModel: ProfileSetupViewModel = hiltViewModel(),
@@ -273,68 +260,6 @@ fun ProfileSetupScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(20.dp))
-
-            // ---- Role Selection ----
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "I want to...",
-                    style = MaterialTheme.typography
-                        .bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme
-                        .onSurfaceVariant,
-                    modifier = Modifier.padding(
-                        start = 4.dp,
-                        bottom = 8.dp
-                    )
-                )
-
-                FlowRow(
-                    horizontalArrangement =
-                        Arrangement.spacedBy(10.dp),
-                    verticalArrangement =
-                        Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    RoleChip(
-                        label = "Find Services",
-                        description = "Customer",
-                        isSelected =
-                            state.role == UserRole.CUSTOMER,
-                        onClick = {
-                            viewModel.onRoleChange(
-                                UserRole.CUSTOMER
-                            )
-                        }
-                    )
-                    RoleChip(
-                        label = "Offer Services",
-                        description = "Provider",
-                        isSelected =
-                            state.role == UserRole.PROVIDER,
-                        onClick = {
-                            viewModel.onRoleChange(
-                                UserRole.PROVIDER
-                            )
-                        }
-                    )
-                    RoleChip(
-                        label = "Both",
-                        description = "Provide & Find",
-                        isSelected =
-                            state.role == UserRole.BOTH,
-                        onClick = {
-                            viewModel.onRoleChange(
-                                UserRole.BOTH
-                            )
-                        }
-                    )
-                }
-            }
-
             Spacer(Modifier.height(24.dp))
 
             // ---- Error Message ----
@@ -473,49 +398,4 @@ fun ProfileSetupScreen(
     }
 }
 
-/**
- * Reusable chip for role selection.
- */
-@Composable
-private fun RoleChip(
-    label: String,
-    description: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    FilterChip(
-        selected = isSelected,
-        onClick = onClick,
-        label = {
-            Column(
-                modifier = Modifier
-                    .padding(vertical = 4.dp)
-            ) {
-                Text(
-                    text = label,
-                    fontWeight = if (isSelected)
-                        FontWeight.Bold
-                    else FontWeight.Normal,
-                    fontSize = 13.sp
-                )
-                Text(
-                    text = description,
-                    fontSize = 11.sp,
-                    color = if (isSelected)
-                        MaterialTheme.colorScheme
-                            .onPrimary
-                            .copy(alpha = 0.8f)
-                    else MaterialTheme.colorScheme
-                        .onSurfaceVariant
-                )
-            }
-        },
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor =
-                MaterialTheme.colorScheme.primary,
-            selectedLabelColor =
-                MaterialTheme.colorScheme.onPrimary
-        ),
-        shape = RoundedCornerShape(12.dp)
-    )
-}
+

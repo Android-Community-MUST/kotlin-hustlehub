@@ -100,13 +100,6 @@ class UserRepositoryImpl @Inject constructor(
                     Timber.d("User already registered in backend (HTTP 409) — treating as success")
                     user
                 }
-                500 -> {
-                    // Backend returned 500 = likely a duplicate key constraint crash
-                    // (backend should send 409 but sends 500 for existing emails).
-                    // Allow the user to proceed — their account already exists.
-                    Timber.w("Backend returned HTTP 500 on register — likely duplicate email. Treating as existing user and proceeding.")
-                    user
-                }
                 else -> {
                     Timber.e(e, "Failed to save user profile (HTTP ${e.code()})")
                     throw e

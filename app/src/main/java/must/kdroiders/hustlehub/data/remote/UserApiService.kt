@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT
@@ -33,8 +34,9 @@ interface UserApiService {
         @Path("id") id: String
     ): ApiResponse<UserResponseDto>
 
+    /** Returns 204 No Content on success. */
     @PUT("users/me/status")
     suspend fun updateOnlineStatus(
         @Body request: OnlineStatusRequest
-    )
+    ): Response<Unit>
 }

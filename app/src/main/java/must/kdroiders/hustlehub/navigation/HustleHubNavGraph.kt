@@ -81,7 +81,7 @@ fun HustleHubNav(
                     onNavigate = { destination ->
                         val key: NavKey = when (destination) {
                             SplashDestination.Home -> MainShell
-                            SplashDestination.Login -> Login
+                            SplashDestination.Login -> Login()
                             SplashDestination.Onboarding -> Onboarding
                             SplashDestination.ProfileSetup -> ProfileSetup
                         }
@@ -92,7 +92,7 @@ fun HustleHubNav(
             }
 
             // Auth
-            entry<Login> {
+            entry<Login> { key ->
                 val context = LocalContext.current
                 val activity = context as? ComponentActivity
                 val loginViewModel: LoginViewModel = if (activity != null) {
@@ -103,16 +103,17 @@ fun HustleHubNav(
 
                 // Observe Google sign-in navigation events from the shared ViewModel
                 LaunchedEffect(loginViewModel) {
-                    loginViewModel.navigateToHome.collect {
+                    loginViewModel.navigateToHome.collect { hasProfile ->
                         backstack.clear()
-                        backstack.add(MainShell)
+                        backstack.add(if (hasProfile) MainShell else ProfileSetup)
                     }
                 }
 
                 LoginScreen(
-                    onLoginSuccess = {
+                    prefilledEmail = key.email,
+                    onLoginSuccess = { hasProfile ->
                         backstack.clear()
-                        backstack.add(MainShell)
+                        backstack.add(if (hasProfile) MainShell else ProfileSetup)
                     },
                     onNavigateToSignUp = {
                         backstack.add(SignUp)
@@ -130,7 +131,7 @@ fun HustleHubNav(
                     email = key.email,
                     onVerified = {
                         backstack.clear()
-                        backstack.add(Login)
+                        backstack.add(Login(email = key.email))
                     }
                 )
             }
@@ -139,7 +140,7 @@ fun HustleHubNav(
                 SignUpScreen(
                     onNavigateToLogin = {
                         if (backstack.isNotEmpty()) backstack.remove(backstack.last())
-                        if (backstack.isEmpty()) backstack.add(Login)
+                        if (backstack.isEmpty()) backstack.add(Login())
                     },
                     onSignUpSuccess = { email ->
                         backstack.add(EmailVerification(email = email))
@@ -152,7 +153,7 @@ fun HustleHubNav(
                 OnboardingScreen(
                     onFinished = {
                         backstack.clear()
-                        backstack.add(Login)
+                        backstack.add(Login())
                     },
                 )
             }

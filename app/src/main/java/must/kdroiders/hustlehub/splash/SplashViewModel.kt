@@ -105,7 +105,7 @@ class SplashViewModel @Inject constructor(
                                         val saveResult = userRepository.saveUserProfile(defaultUser)
                                         saveResult.onFailure { saveException ->
                                             if (saveException is retrofit2.HttpException) {
-                                                firebaseAuth.signOut()
+                                                firebaseAuth?.signOut()
                                                 targetDestination = SplashDestination.Login
                                             } else {
                                                 targetDestination = SplashDestination.Home
@@ -129,11 +129,11 @@ class SplashViewModel @Inject constructor(
                                             )
                                             val saveResult = userRepository.saveUserProfile(defaultUser)
                                             saveResult.onFailure {
-                                                firebaseAuth.signOut()
+                                                firebaseAuth?.signOut()
                                                 targetDestination = SplashDestination.Login
                                             }
                                         } else {
-                                            firebaseAuth.signOut()
+                                            firebaseAuth?.signOut()
                                             targetDestination = SplashDestination.Login
                                         }
                                     } else {

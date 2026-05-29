@@ -39,7 +39,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 cp keys.properties.template keys.properties
 # Edit keys.properties with real values:
-# MAPS_API_KEY, GEMINI_API_KEY, SUPABASE_URL, SUPABASE_KEY
+# MAPS_API_KEY, GEMINI_API_KEY, GOOGLE_WEB_CLIENT_ID
 # Place google-services.json in app/
 ```
 

@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -50,13 +51,21 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginVie
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
+    prefilledEmail: String = "",
+    onLoginSuccess: (hasProfile: Boolean) -> Unit,
     onNavigateToSignUp: () -> Unit,
     onNavigateToEmailVerification: (email: String) -> Unit,
     onGoogleSignInClick: () -> Unit,
     loginViewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by loginViewModel.uiState.collectAsState()
+
+    // Prefill email if passed from navigation (e.g. after registration or email verification)
+    LaunchedEffect(prefilledEmail) {
+        if (prefilledEmail.isNotEmpty()) {
+            loginViewModel.onEmailChange(prefilledEmail)
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -165,7 +174,7 @@ fun LoginScreen(
                 text = "Login",
                 onClick = {
                     loginViewModel.login(
-                        onSuccess = onLoginSuccess,
+                        onSuccess = { hasProfile -> onLoginSuccess(hasProfile) },
                         onEmailNotVerified = onNavigateToEmailVerification
                     )
                 },
