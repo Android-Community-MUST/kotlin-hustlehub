@@ -21,6 +21,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import must.kdroiders.hustlehub.data.model.UserRole
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleCard
+import must.kdroiders.hustlehub.sharedComposables.HustleCardVariant
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ErrorState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.LoadingState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileAvatar
@@ -133,11 +139,11 @@ private fun ProfileContent(
             )
         }
 
-        if (user.role == must.kdroiders.hustlehub.data.model.UserRole.CUSTOMER) {
+        if (user.role == UserRole.CUSTOMER) {
             item(key = "become_provider_banner") {
                 Spacer(Modifier.height(16.dp))
-                must.kdroiders.hustlehub.sharedComposables.HustleCard(
-                    variant = must.kdroiders.hustlehub.sharedComposables.HustleCardVariant.Elevated,
+                HustleCard(
+                    variant = HustleCardVariant.Elevated,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
                     Column(
@@ -147,7 +153,7 @@ private fun ProfileContent(
                         Text(
                             text = "Earn Money on HustleHub!",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(Modifier.height(4.dp))
@@ -155,10 +161,10 @@ private fun ProfileContent(
                             text = "Complete your provider profile to list your services, show your portfolio, and receive booking requests from fellow students.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            textAlign = TextAlign.Center
                         )
                         Spacer(Modifier.height(12.dp))
-                        must.kdroiders.hustlehub.sharedComposables.HustleButton(
+                        HustleButton(
                             text = "Become a Service Provider",
                             onClick = onEditClick,
                             modifier = Modifier.fillMaxWidth()

@@ -15,15 +15,15 @@ class TokenAuthenticator(
     override fun authenticate(route: Route?, response: Response): Request? {
         val currentUser = firebaseAuth?.currentUser ?: return null
 
-        // Avoid infinite loops if the request has already been retried multiple times
-        if (responseCount(response) >= 3) {
+        // Avoid infinite loops if the request has already been retried
+        if (responseCount(response) >= 2) {
             return null
         }
 
         return try {
-            // Force refresh the token by passing true
-            val tokenTask = currentUser.getIdToken(true)
-            val result = Tasks.await(tokenTask, 5, TimeUnit.SECONDS)
+            // getIdToken(false) forces a refresh only if the token is expired/invalid.
+            val tokenTask = currentUser.getIdToken(false)
+            val result = Tasks.await(tokenTask, 3, TimeUnit.SECONDS)
             val token = result.token
 
             if (!token.isNullOrEmpty()) {

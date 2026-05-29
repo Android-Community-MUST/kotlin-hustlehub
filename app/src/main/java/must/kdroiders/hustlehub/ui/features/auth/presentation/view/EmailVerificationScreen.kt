@@ -34,8 +34,6 @@ fun EmailVerificationScreen(
     viewModel: EmailVerificationViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val otpValues = remember { mutableStateListOf("", "", "", "", "", "") }
-    val focusRequesters = remember { List(6) { FocusRequester() } }
 
     // Pass the email into the ViewModel as soon as screen loads
     LaunchedEffect(email) {
@@ -72,16 +70,7 @@ fun EmailVerificationScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 6-digit OTP boxes
-                OtpInputField(
-                    otpValues = otpValues,
-                    focusRequesters = focusRequesters,
-                    onOtpValueChange = { index, value ->
-                        otpValues[index] = value
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Error message
                 uiState.errorMessage?.let { error ->
@@ -96,10 +85,9 @@ fun EmailVerificationScreen(
 
                 // Verify button
                 HustleButton(
-                    text = if (uiState.isLoading) "Verifying..." else "Verify",
+                    text = if (uiState.isLoading) "Verifying..." else "Verify Status",
                     onClick = {
-                        val otp = otpValues.joinToString("")
-                        viewModel.verifyOtp(otp, onVerified)
+                        viewModel.verifyOtp("", onVerified)
                     },
                     loading = uiState.isLoading,
                     enabled = true,
@@ -111,13 +99,13 @@ fun EmailVerificationScreen(
                 // Resend with 60s countdown
                 if (uiState.resendCooldown > 0) {
                     Text(
-                        text = "Resend OTP in ${uiState.resendCooldown}s",
+                        text = "Resend email in ${uiState.resendCooldown}s",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
                 } else {
                     HustleButton(
-                        text = "Resend OTP",
+                        text = "Resend Verification Email",
                         onClick = { viewModel.resendOtp() },
                         variant = HustleButtonVariant.Outlined,
                         modifier = Modifier.fillMaxWidth()

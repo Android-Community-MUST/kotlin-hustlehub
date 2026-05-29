@@ -1,15 +1,38 @@
 package must.kdroiders.hustlehub.ui.features.auth
 
+import io.mockk.coEvery
 import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignUpUseCase
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.PasswordStrength
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.SignUpViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class MainDispatcherRule : TestWatcher() {
+    private val testDispatcher = UnconfinedTestDispatcher()
+    override fun starting(description: Description) {
+        Dispatchers.setMain(testDispatcher)
+    }
+    override fun finished(description: Description) {
+        Dispatchers.resetMain()
+    }
+}
 
 class SignUpViewModelTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var mockSignUpUseCase: SignUpUseCase
     private lateinit var viewModel: SignUpViewModel
@@ -31,7 +54,7 @@ class SignUpViewModelTest {
         assertNull(state.emailError)
         assertNull(state.passwordError)
         assertNull(state.confirmPasswordError)
-        assertEquals(PasswordStrength.WEAK, state.passwordStrength)
+        assertEquals(PasswordStrength.NONE, state.passwordStrength)
     }
 
     @Test
@@ -44,20 +67,21 @@ class SignUpViewModelTest {
 
     @Test
     fun `password strength is calculated correctly`() {
-        // Weak: < 8 chars or just letters
+        // None/Very Weak: < 8 chars or just letters
         viewModel.onPasswordChanged("short")
-        assertEquals(PasswordStrength.WEAK, viewModel.uiState.value.passwordStrength)
+        assertEquals(PasswordStrength.NONE, viewModel.uiState.value.passwordStrength)
 
+        // Weak: length >= 8, only lowercase
         viewModel.onPasswordChanged("onlylowercase")
         assertEquals(PasswordStrength.WEAK, viewModel.uiState.value.passwordStrength)
 
-        // Medium: >= 8 chars, uppercase, number
+        // Strong: >= 8 chars, uppercase, number
         viewModel.onPasswordChanged("Password123")
-        assertEquals(PasswordStrength.MEDIUM, viewModel.uiState.value.passwordStrength)
-
-        // Strong: >= 10 chars, uppercase, number, special char
-        viewModel.onPasswordChanged("StrongPass123!")
         assertEquals(PasswordStrength.STRONG, viewModel.uiState.value.passwordStrength)
+
+        // Very Strong: >= 10 chars, uppercase, number, special char
+        viewModel.onPasswordChanged("StrongPass123!")
+        assertEquals(PasswordStrength.VERY_STRONG, viewModel.uiState.value.passwordStrength)
     }
 
     @Test
@@ -117,6 +141,8 @@ class SignUpViewModelTest {
 
     @Test
     fun `signUp succeeds with valid data`() {
+        coEvery { mockSignUpUseCase(any(), any(), any()) } returns Result.success(mockk(relaxed = true))
+
         viewModel.onNameChanged("John Doe")
         viewModel.onEmailChanged("john@must.ac.ke")
         viewModel.onPasswordChanged("Password123!")
@@ -132,6 +158,8 @@ class SignUpViewModelTest {
 
     @Test
     fun `signUp succeeds with valid student email domain`() {
+        coEvery { mockSignUpUseCase(any(), any(), any()) } returns Result.success(mockk(relaxed = true))
+
         viewModel.onNameChanged("John Doe")
         viewModel.onEmailChanged("student@students.must.ac.ke")
         viewModel.onPasswordChanged("Password123!")

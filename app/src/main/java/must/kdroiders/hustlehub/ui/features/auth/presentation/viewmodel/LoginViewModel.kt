@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.CheckUserProfileUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.GoogleSignInUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.LoginUseCase
-import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SyncUserProfileUseCase
 import javax.inject.Inject
 
 data class LoginUiState(
@@ -30,7 +29,6 @@ class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val googleSignInUseCase: GoogleSignInUseCase,
     private val checkUserProfileUseCase: CheckUserProfileUseCase,
-    private val syncUserProfileUseCase: SyncUserProfileUseCase,
     private val firebaseAuth: FirebaseAuth?
 ) : ViewModel() {
 
@@ -42,9 +40,9 @@ class LoginViewModel @Inject constructor(
     private fun isAllowedDomain(email: String): Boolean =
         ALLOWED_DOMAINS.any { email.endsWith(it) }
 
-    private val _navigateToHome = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    /** Emits a single Unit event when Google sign-in completes successfully. */
-    val navigateToHome: SharedFlow<Unit> = _navigateToHome.asSharedFlow()
+    private val _navigateToHome = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+    /** Emits a single Boolean event (hasProfile) when Google sign-in completes successfully. */
+    val navigateToHome: SharedFlow<Boolean> = _navigateToHome.asSharedFlow()
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -57,30 +55,13 @@ class LoginViewModel @Inject constructor(
         _uiState.update { it.copy(password = password, errorMessage = null) }
     }
 
-    private suspend fun checkAndSyncProfile(firebaseUser: com.google.firebase.auth.FirebaseUser): Boolean {
+    private suspend fun hasProfile(firebaseUser: com.google.firebase.auth.FirebaseUser): Boolean {
         val uid = firebaseUser.uid
-        val hasProfile = checkUserProfileUseCase(uid).getOrDefault(false)
-        if (!hasProfile) {
-            val defaultUser = must.kdroiders.hustlehub.data.model.User(
-                id = uid,
-                name = firebaseUser.displayName ?: "Student",
-                email = firebaseUser.email ?: "",
-                phone = "",
-                campusLocation = "",
-                role = must.kdroiders.hustlehub.data.model.UserRole.CUSTOMER,
-                profilePhotoUrl = firebaseUser.photoUrl?.toString() ?: "",
-                bio = "",
-                isVerified = false,
-                isOnline = true
-            )
-            val result = syncUserProfileUseCase(defaultUser)
-            return result.isSuccess
-        }
-        return true
+        return checkUserProfileUseCase(uid).getOrDefault(false)
     }
 
     fun login(
-        onSuccess: () -> Unit,
+        onSuccess: (hasProfile: Boolean) -> Unit,
         onEmailNotVerified: (email: String) -> Unit
     ) {
         viewModelScope.launch {
@@ -90,15 +71,9 @@ class LoginViewModel @Inject constructor(
                 password = _uiState.value.password
             ).onSuccess { result ->
                 if (result.isEmailVerified) {
-                    val syncSuccess = checkAndSyncProfile(result.user)
+                    val hasProfile = hasProfile(result.user)
                     _uiState.update { it.copy(isLoading = false) }
-                    if (syncSuccess) {
-                        onSuccess()
-                    } else {
-                        _uiState.update {
-                            it.copy(errorMessage = "Failed to sync profile with database. Please try again.")
-                        }
-                    }
+                    onSuccess(hasProfile)
                 } else {
                     _uiState.update { it.copy(isLoading = false) }
                     onEmailNotVerified(_uiState.value.email)
@@ -116,7 +91,7 @@ class LoginViewModel @Inject constructor(
 
     fun signInWithGoogle(
         idToken: String,
-        onSuccess: () -> Unit
+        onSuccess: (hasProfile: Boolean) -> Unit
     ) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -137,17 +112,10 @@ class LoginViewModel @Inject constructor(
                         return@onSuccess
                     }
 
-                    val syncSuccess = checkAndSyncProfile(result.user)
+                    val hasProfile = hasProfile(result.user)
                     _uiState.update { it.copy(isLoading = false) }
-                    if (syncSuccess) {
-                        // Emit navigation event — observed by the NavGraph
-                        _navigateToHome.tryEmit(Unit)
-                        onSuccess()
-                    } else {
-                        _uiState.update {
-                            it.copy(errorMessage = "Failed to sync profile. Please try again.")
-                        }
-                    }
+                    _navigateToHome.tryEmit(hasProfile)
+                    onSuccess(hasProfile)
                 }
                 .onFailure { e ->
                     _uiState.update {

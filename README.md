@@ -188,9 +188,9 @@ See [SETUP.md](docs/dev/SETUP.md) for full setup instructions.
 
 <div align="center">
 
-| Home / Discovery | Chat | Profile |
-|-----------------|------|---------|
-| ![Home](https://via.placeholder.com/200x400/6C5CE7/FFFFFF?text=Home) | ![Chat](https://via.placeholder.com/200x400/00B894/FFFFFF?text=Chat) | ![Profile](https://via.placeholder.com/200x400/E17055/FFFFFF?text=Profile) |
+| Login | Home / Discovery | Chat | Profile |
+|-------|-----------------|------|---------|
+| <img src="screenshots/login_light.png" width="200"/> | ![Home](https://via.placeholder.com/200x400/6C5CE7/FFFFFF?text=Home) | ![Chat](https://via.placeholder.com/200x400/00B894/FFFFFF?text=Chat) | ![Profile](https://via.placeholder.com/200x400/E17055/FFFFFF?text=Profile) |
 
 *Screenshots coming soon as development progresses*
 

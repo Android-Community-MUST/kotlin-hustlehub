@@ -15,7 +15,7 @@ data object Onboarding : NavKey
 
 /** Login screen. */
 @Serializable
-data object Login : NavKey
+data class Login(val email: String = "") : NavKey
 
 /** Sign-up / registration screen. */
 @Serializable
