@@ -86,8 +86,10 @@ fun HustleButton(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    disabledContainerColor = if (loading) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                                             else MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContentColor = if (loading) MaterialTheme.colorScheme.onPrimary
+                                           else MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 0.dp,
@@ -111,8 +113,10 @@ fun HustleButton(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    disabledContainerColor = if (loading) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+                                             else MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContentColor = if (loading) MaterialTheme.colorScheme.onSecondaryContainer
+                                           else MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 0.dp,
@@ -136,11 +140,13 @@ fun HustleButton(
                 border = BorderStroke(
                     width = 1.5.dp,
                     color = if (isActive) MaterialTheme.colorScheme.primary
+                    else if (loading) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
                     else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
                 ),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.primary,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    disabledContentColor = if (loading) MaterialTheme.colorScheme.primary
+                                           else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
                 ButtonContent(text = text, loading = loading, icon = icon, painter = painter,

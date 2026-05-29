@@ -1,13 +1,12 @@
 package must.kdroiders.hustlehub.data.repository
 
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.storage.BucketApi
-import io.github.jan.supabase.storage.Storage
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import must.kdroiders.hustlehub.core.api.ApiResponse
+import must.kdroiders.hustlehub.data.remote.MediaApiService
+import must.kdroiders.hustlehub.data.remote.MediaUploadResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -15,31 +14,31 @@ import org.junit.Test
 
 class StorageRepositoryTest {
 
-    private lateinit var mockStorage: Storage
-    private lateinit var mockBucketApi: BucketApi
+    private lateinit var mockMediaApiService: MediaApiService
     private lateinit var repository: StorageRepository
 
     @Before
     fun setup() {
-        mockStorage = mockk()
-        mockBucketApi = mockk()
-        
-        every { mockStorage.get("hustlehub-media") } returns mockBucketApi
-        
-        repository = StorageRepository(mockStorage)
+        mockMediaApiService = mockk()
+        repository = StorageRepository(mockMediaApiService)
     }
 
     @Test
     fun `uploadPortfolioImage emits Progress then Success on successful upload`() = runTest {
         val serviceId = "service123"
         val imageBytes = ByteArray(10)
-        val publicUrl = "https://example.supabase.co/storage/v1/object/public/hustlehub-media/services/service123/portfolio/image.jpg"
+        val publicUrl = "https://example.com/media/image.jpg"
         
-        // Mock successful upload and public URL generation.
-        // Since upload is an inline extension, we mock what it does under the hood or just accept any bytearray call if possible.
-        // However, MockK handles inline functions with reified types if we mock the correct matcher.
-        coEvery { mockBucketApi.upload(any(), eq(imageBytes), any()) } returns mockk()
-        every { mockBucketApi.publicUrl(any()) } returns publicUrl
+        coEvery { mockMediaApiService.uploadImage(any(), any(), any()) } returns ApiResponse(
+            success = true,
+            message = "Uploaded",
+            data = MediaUploadResponse(
+                mediaId = "media123",
+                url = publicUrl,
+                thumbnailUrl = null,
+                type = "PORTFOLIO"
+            )
+        )
 
         val results = repository.uploadPortfolioImage(serviceId, imageBytes).toList()
 
@@ -56,7 +55,7 @@ class StorageRepositoryTest {
         val imageBytes = ByteArray(10)
         val errorMessage = "Network timeout"
         
-        coEvery { mockBucketApi.upload(any(), eq(imageBytes), any()) } throws RuntimeException(errorMessage)
+        coEvery { mockMediaApiService.uploadImage(any(), any(), any()) } throws RuntimeException(errorMessage)
 
         val results = repository.uploadPortfolioImage(serviceId, imageBytes).toList()
 

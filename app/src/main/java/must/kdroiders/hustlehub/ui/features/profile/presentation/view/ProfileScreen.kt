@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -101,9 +102,9 @@ private fun ProfileContent(
                 Spacer(Modifier.height(12.dp))
                 ProfileInfo(
                     name = user.name,
-                    course = user.course,
-                    yearOfStudy = user.yearOfStudy,
-                    campus = user.campus
+                    phone = user.phone,
+                    campusLocation = user.campusLocation,
+                    bio = user.bio
                 )
             }
         }
@@ -130,6 +131,41 @@ private fun ProfileContent(
                     horizontal = 16.dp
                 )
             )
+        }
+
+        if (user.role == must.kdroiders.hustlehub.data.model.UserRole.CUSTOMER) {
+            item(key = "become_provider_banner") {
+                Spacer(Modifier.height(16.dp))
+                must.kdroiders.hustlehub.sharedComposables.HustleCard(
+                    variant = must.kdroiders.hustlehub.sharedComposables.HustleCardVariant.Elevated,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Earn Money on HustleHub!",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Complete your provider profile to list your services, show your portfolio, and receive booking requests from fellow students.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        must.kdroiders.hustlehub.sharedComposables.HustleButton(
+                            text = "Become a Service Provider",
+                            onClick = onEditClick,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
         }
 
         // Services header
