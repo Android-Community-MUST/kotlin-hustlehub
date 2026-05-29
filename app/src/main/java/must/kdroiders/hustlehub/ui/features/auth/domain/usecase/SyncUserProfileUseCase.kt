@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.auth.domain.usecase
+package must.kdroiders.hustlehub.ui.features.auth.domain.usecase
 
 import must.kdroiders.hustlehub.data.model.User
 import must.kdroiders.hustlehub.data.repository.UserRepository

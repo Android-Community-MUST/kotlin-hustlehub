@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.portfolio
+package must.kdroiders.hustlehub.ui.features.portfolio
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -47,22 +47,22 @@ class PortfolioUploadViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isUploading = true) }
             val uris = _state.value.selectedUris
-            
+
             uris.forEach { uri ->
-                _state.update { 
+                _state.update {
                     it.copy(uploadResults = it.uploadResults + (uri to UploadResult.Progress(0f)))
                 }
-                
+
                 val bitmap = uriToBitmap(context, uri)
                 if (bitmap != null) {
                     val compressedBytes = ImageUtils.compressBitmap(bitmap)
                     storageRepository.uploadPortfolioImage(serviceId, compressedBytes).collect { result ->
-                        _state.update { 
+                        _state.update {
                             it.copy(uploadResults = it.uploadResults + (uri to result))
                         }
                     }
                 } else {
-                    _state.update { 
+                    _state.update {
                         it.copy(uploadResults = it.uploadResults + (uri to UploadResult.Error("Failed to load image")))
                     }
                 }

@@ -1,11 +1,11 @@
-package must.kdroiders.hustlehub.ui.auth.data.repository
+package must.kdroiders.hustlehub.ui.features.auth.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.tasks.await
-import must.kdroiders.hustlehub.ui.auth.domain.repository.AuthRepository
-import must.kdroiders.hustlehub.ui.auth.domain.repository.LoginResult
+import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton

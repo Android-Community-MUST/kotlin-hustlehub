@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.data.model.Service
 import must.kdroiders.hustlehub.data.repository.UserRepository
-import must.kdroiders.hustlehub.ui.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import timber.log.Timber
 import javax.inject.Inject
 

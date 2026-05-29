@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.auth.presentation.view
+package must.kdroiders.hustlehub.ui.features.auth.presentation.view
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -45,7 +45,7 @@ import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
-import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.LoginViewModel
+import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(

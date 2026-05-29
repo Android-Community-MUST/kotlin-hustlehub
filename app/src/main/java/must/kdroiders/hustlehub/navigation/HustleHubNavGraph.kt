@@ -19,18 +19,17 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
-import must.kdroiders.hustlehub.ui.auth.presentation.view.EmailVerificationScreen
-import must.kdroiders.hustlehub.ui.auth.presentation.view.LoginScreen
-import must.kdroiders.hustlehub.ui.auth.presentation.view.SignUpScreen
+import must.kdroiders.hustlehub.ui.features.auth.presentation.view.EmailVerificationScreen
+import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
+import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
-import must.kdroiders.hustlehub.ui.portfolio.PortfolioUploadScreen
+import must.kdroiders.hustlehub.ui.features.portfolio.PortfolioUploadScreen
 import androidx.compose.ui.platform.LocalContext
 import androidx.activity.ComponentActivity
-import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.LoginViewModel
+import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.LaunchedEffect
 
@@ -81,9 +80,9 @@ fun HustleHubNav(
                 SplashScreen(
                     onNavigate = { destination ->
                         val key: NavKey = when (destination) {
-                            SplashDestination.Home        -> MainShell
-                            SplashDestination.Login       -> Login
-                            SplashDestination.Onboarding  -> Onboarding
+                            SplashDestination.Home -> MainShell
+                            SplashDestination.Login -> Login
+                            SplashDestination.Onboarding -> Onboarding
                             SplashDestination.ProfileSetup -> ProfileSetup
                         }
                         backstack.clear()

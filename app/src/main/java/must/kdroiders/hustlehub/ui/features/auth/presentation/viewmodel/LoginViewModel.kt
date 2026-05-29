@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.auth.presentation.viewmodel
+package must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,10 +12,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.ui.auth.domain.usecase.CheckUserProfileUseCase
-import must.kdroiders.hustlehub.ui.auth.domain.usecase.GoogleSignInUseCase
-import must.kdroiders.hustlehub.ui.auth.domain.usecase.LoginUseCase
-import must.kdroiders.hustlehub.ui.auth.domain.usecase.SyncUserProfileUseCase
+import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.CheckUserProfileUseCase
+import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.GoogleSignInUseCase
+import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.LoginUseCase
+import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SyncUserProfileUseCase
 import javax.inject.Inject
 
 data class LoginUiState(

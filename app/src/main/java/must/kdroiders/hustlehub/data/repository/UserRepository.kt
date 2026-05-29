@@ -5,8 +5,8 @@ import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import must.kdroiders.hustlehub.data.model.User
 import must.kdroiders.hustlehub.data.model.UserRole
-import must.kdroiders.hustlehub.ui.auth.data.remote.AuthApiService
-import must.kdroiders.hustlehub.ui.auth.data.remote.RegisterRequest
+import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
+import must.kdroiders.hustlehub.ui.features.auth.data.remote.RegisterRequest
 import must.kdroiders.hustlehub.data.remote.MediaApiService
 import must.kdroiders.hustlehub.data.remote.UserApiService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull

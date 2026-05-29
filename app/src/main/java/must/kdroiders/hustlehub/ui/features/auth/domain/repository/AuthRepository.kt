@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.auth.domain.repository
+package must.kdroiders.hustlehub.ui.features.auth.domain.repository
 
 import com.google.firebase.auth.FirebaseUser
 

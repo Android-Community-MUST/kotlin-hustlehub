@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.auth.presentation.view
+package must.kdroiders.hustlehub.ui.features.auth.presentation.view
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -23,8 +23,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
-import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.SignUpViewModel
-import must.kdroiders.hustlehub.ui.auth.presentation.view.components.PasswordStrengthIndicator
+import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.SignUpViewModel
+import must.kdroiders.hustlehub.ui.features.auth.presentation.view.components.PasswordStrengthIndicator
 
 @Composable
 fun SignUpScreen(

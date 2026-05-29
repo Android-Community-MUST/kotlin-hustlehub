@@ -25,7 +25,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.navigation.HustleHubNav
-import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.LoginViewModel
+import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 import timber.log.Timber
 

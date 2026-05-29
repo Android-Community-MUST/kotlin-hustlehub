@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.auth.presentation.viewmodel
+package must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,8 +6,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.ui.auth.domain.usecase.ResendOtpUseCase
-import must.kdroiders.hustlehub.ui.auth.domain.usecase.VerifyOtpUseCase
+import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.ResendOtpUseCase
+import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.VerifyOtpUseCase
 import javax.inject.Inject
 
 data class EmailVerificationUiState(

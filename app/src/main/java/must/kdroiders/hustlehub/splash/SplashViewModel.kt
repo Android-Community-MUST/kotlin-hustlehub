@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import must.kdroiders.hustlehub.data.model.User
+import must.kdroiders.hustlehub.data.model.UserRole
 import must.kdroiders.hustlehub.data.repository.UserRepository
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import timber.log.Timber
@@ -87,14 +89,15 @@ class SplashViewModel @Inject constructor(
 
                                 hasProfileResult.onSuccess { hasProfile ->
                                     if (!hasProfile) {
-                                        val defaultUser = must.kdroiders.hustlehub.data.model.User(
+                                        val defaultUser = User(
                                             id = currentUser.uid,
                                             name = currentUser.displayName ?: "Student",
                                             email = currentUser.email ?: "",
                                             phone = "",
                                             campusLocation = "",
-                                            role = must.kdroiders.hustlehub.data.model.UserRole.CUSTOMER,
-                                            profilePhotoUrl = currentUser.photoUrl?.toString() ?: "",
+                                            role = UserRole.CUSTOMER,
+                                            profilePhotoUrl = currentUser.photoUrl?.toString()
+                                                ?: "",
                                             bio = "",
                                             isVerified = false,
                                             isOnline = true
@@ -112,13 +115,13 @@ class SplashViewModel @Inject constructor(
                                 }.onFailure { e ->
                                     if (e is retrofit2.HttpException) {
                                         if (e.code() == 404 || e.code() == 403 || e.code() == 401) {
-                                            val defaultUser = must.kdroiders.hustlehub.data.model.User(
+                                            val defaultUser = User(
                                                 id = currentUser.uid,
                                                 name = currentUser.displayName ?: "Student",
                                                 email = currentUser.email ?: "",
                                                 phone = "",
                                                 campusLocation = "",
-                                                role = must.kdroiders.hustlehub.data.model.UserRole.CUSTOMER,
+                                                role = UserRole.CUSTOMER,
                                                 profilePhotoUrl = currentUser.photoUrl?.toString() ?: "",
                                                 bio = "",
                                                 isVerified = false,

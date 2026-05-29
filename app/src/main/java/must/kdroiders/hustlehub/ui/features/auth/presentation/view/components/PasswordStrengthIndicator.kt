@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.auth.presentation.view.components
+package must.kdroiders.hustlehub.ui.features.auth.presentation.view.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.PasswordStrength
+import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.PasswordStrength
 
 @Composable
 fun PasswordStrengthIndicator(strength: PasswordStrength) {
@@ -20,7 +20,7 @@ fun PasswordStrengthIndicator(strength: PasswordStrength) {
         PasswordStrength.MEDIUM -> Color(0xFFFFA500) // Orange
         PasswordStrength.STRONG -> Color(0xFF00C853) // Green
     }
-    
+
     val text = when (strength) {
         PasswordStrength.WEAK -> "Weak"
         PasswordStrength.MEDIUM -> "Medium"

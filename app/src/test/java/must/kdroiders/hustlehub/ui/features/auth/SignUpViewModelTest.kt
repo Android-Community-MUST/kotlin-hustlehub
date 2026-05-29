@@ -1,9 +1,9 @@
-package must.kdroiders.hustlehub.ui.auth
+package must.kdroiders.hustlehub.ui.features.auth
 
 import io.mockk.mockk
-import must.kdroiders.hustlehub.ui.auth.domain.usecase.SignUpUseCase
-import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.PasswordStrength
-import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.SignUpViewModel
+import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignUpUseCase
+import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.PasswordStrength
+import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.SignUpViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -47,7 +47,7 @@ class SignUpViewModelTest {
         // Weak: < 8 chars or just letters
         viewModel.onPasswordChanged("short")
         assertEquals(PasswordStrength.WEAK, viewModel.uiState.value.passwordStrength)
-        
+
         viewModel.onPasswordChanged("onlylowercase")
         assertEquals(PasswordStrength.WEAK, viewModel.uiState.value.passwordStrength)
 
@@ -75,7 +75,7 @@ class SignUpViewModelTest {
         viewModel.onEmailChanged("john@gmail.com")
         viewModel.onPasswordChanged("Password123")
         viewModel.onConfirmPasswordChanged("Password123")
-        
+
         viewModel.signUp {}
         val state = viewModel.uiState.value
         assertEquals("Must use a valid @must.ac.ke or @students.must.ac.ke email", state.emailError)
@@ -87,7 +87,7 @@ class SignUpViewModelTest {
         viewModel.onEmailChanged("john@must.ac.ke")
         viewModel.onPasswordChanged("weak") // < 8 chars
         viewModel.onConfirmPasswordChanged("weak")
-        
+
         viewModel.signUp {}
         val state = viewModel.uiState.value
         assertEquals("Password must be at least 8 characters", state.passwordError)
@@ -96,7 +96,7 @@ class SignUpViewModelTest {
         viewModel.onConfirmPasswordChanged("alllowercase123")
         viewModel.signUp {}
         assertEquals("Password must contain at least 1 uppercase letter", viewModel.uiState.value.passwordError)
-        
+
         viewModel.onPasswordChanged("ALLUPPERCASE") // No number
         viewModel.onConfirmPasswordChanged("ALLUPPERCASE")
         viewModel.signUp {}
@@ -109,7 +109,7 @@ class SignUpViewModelTest {
         viewModel.onEmailChanged("john@must.ac.ke")
         viewModel.onPasswordChanged("Password123!")
         viewModel.onConfirmPasswordChanged("Password1234") // Mismatch
-        
+
         viewModel.signUp {}
         val state = viewModel.uiState.value
         assertEquals("Passwords do not match", state.confirmPasswordError)
@@ -121,7 +121,7 @@ class SignUpViewModelTest {
         viewModel.onEmailChanged("john@must.ac.ke")
         viewModel.onPasswordChanged("Password123!")
         viewModel.onConfirmPasswordChanged("Password123!")
-        
+
         viewModel.signUp {}
         val state = viewModel.uiState.value
         assertNull(state.nameError)
@@ -136,7 +136,7 @@ class SignUpViewModelTest {
         viewModel.onEmailChanged("student@students.must.ac.ke")
         viewModel.onPasswordChanged("Password123!")
         viewModel.onConfirmPasswordChanged("Password123!")
-        
+
         viewModel.signUp {}
         val state = viewModel.uiState.value
         assertNull(state.nameError)

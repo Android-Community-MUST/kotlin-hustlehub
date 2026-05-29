@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.auth.presentation.view
+package must.kdroiders.hustlehub.ui.features.auth.presentation.view
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,7 +25,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleCard
 import must.kdroiders.hustlehub.sharedComposables.HustleCardVariant
-import must.kdroiders.hustlehub.ui.auth.presentation.viewmodel.EmailVerificationViewModel
+import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.EmailVerificationViewModel
 
 @Composable
 fun EmailVerificationScreen(

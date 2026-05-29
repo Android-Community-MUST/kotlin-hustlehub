@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.auth.data.remote
+package must.kdroiders.hustlehub.ui.features.auth.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
 import retrofit2.http.Body

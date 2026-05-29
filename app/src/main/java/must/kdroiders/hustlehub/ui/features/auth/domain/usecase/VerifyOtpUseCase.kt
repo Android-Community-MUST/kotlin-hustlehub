@@ -1,6 +1,6 @@
-package must.kdroiders.hustlehub.ui.auth.domain.usecase
+package must.kdroiders.hustlehub.ui.features.auth.domain.usecase
 
-import must.kdroiders.hustlehub.ui.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import javax.inject.Inject
 
 class VerifyOtpUseCase @Inject constructor(

@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.auth.presentation.view
+package must.kdroiders.hustlehub.ui.features.auth.presentation.view
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

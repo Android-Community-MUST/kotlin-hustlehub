@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.portfolio
+package must.kdroiders.hustlehub.ui.features.portfolio
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

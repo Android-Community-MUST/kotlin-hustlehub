@@ -8,7 +8,8 @@ import dagger.hilt.components.SingletonComponent
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.core.api.AuthInterceptor
 import must.kdroiders.hustlehub.core.api.TokenAuthenticator
-import must.kdroiders.hustlehub.ui.auth.data.remote.AuthApiService
+import must.kdroiders.hustlehub.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.data.remote.UserApiService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -71,7 +72,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideMediaApiService(retrofit: Retrofit): must.kdroiders.hustlehub.data.remote.MediaApiService {
-        return retrofit.create(must.kdroiders.hustlehub.data.remote.MediaApiService::class.java)
+    fun provideMediaApiService(retrofit: Retrofit): MediaApiService {
+        return retrofit.create(MediaApiService::class.java)
     }
 }

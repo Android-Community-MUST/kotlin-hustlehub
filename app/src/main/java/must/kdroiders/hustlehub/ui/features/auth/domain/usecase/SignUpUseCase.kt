@@ -1,7 +1,7 @@
-package must.kdroiders.hustlehub.ui.auth.domain.usecase
+package must.kdroiders.hustlehub.ui.features.auth.domain.usecase
 
-import must.kdroiders.hustlehub.ui.auth.domain.repository.AuthRepository
-import must.kdroiders.hustlehub.ui.auth.domain.repository.LoginResult
+import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
 import javax.inject.Inject
 
 class SignUpUseCase @Inject constructor(

@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.auth.presentation.viewmodel
+package must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.ui.auth.domain.usecase.SignUpUseCase
+import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignUpUseCase
 import javax.inject.Inject
 
 data class SignUpState(
@@ -45,12 +45,12 @@ class SignUpViewModel @Inject constructor(
 
     fun onPasswordChanged(password: String) {
         val strength = calculatePasswordStrength(password)
-        _uiState.update { 
+        _uiState.update {
             it.copy(
-                password = password, 
+                password = password,
                 passwordError = null,
                 passwordStrength = strength
-            ) 
+            )
         }
         // Re-validate confirm password if it's already filled
         if (_uiState.value.confirmPassword.isNotEmpty()) {
@@ -67,7 +67,7 @@ class SignUpViewModel @Inject constructor(
         val hasUppercase = password.any { it.isUpperCase() }
         val hasNumber = password.any { it.isDigit() }
         val hasSpecial = password.any { !it.isLetterOrDigit() }
-        
+
         return when {
             hasUppercase && hasNumber && hasSpecial && password.length >= 10 -> PasswordStrength.STRONG
             hasUppercase && hasNumber -> PasswordStrength.MEDIUM
