@@ -38,6 +38,7 @@ fun MainShellScreen(
     onNavigateToPortfolio: () -> Unit = {},
     onNavigateToProfileSetup: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToCreateService: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val innerBackstack = rememberNavBackStack(BottomHome)
@@ -72,7 +73,7 @@ fun MainShellScreen(
                 entry<BottomProfile> {
                     ProfileScreen(
                         onEditClick = onNavigateToProfileSetup,
-                        onAddNewServiceClick = onNavigateToPortfolio,
+                        onAddNewServiceClick = onNavigateToCreateService,
                         onSettingsClick = onNavigateToSettings
                     )
                 }
