@@ -32,6 +32,12 @@ fun SignUpScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
 
+    LaunchedEffect(uiState.isSignUpSuccess) {
+        if (uiState.isSignUpSuccess) {
+            onNavigateToLogin()
+        }
+    }
+
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 

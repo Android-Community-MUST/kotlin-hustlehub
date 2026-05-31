@@ -1,10 +1,15 @@
 package must.kdroiders.hustlehub.ui.auth
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 import javax.inject.Inject
 
 data class SignUpState(
@@ -18,7 +23,8 @@ data class SignUpState(
     val confirmPassword: String = "",
     val confirmPasswordError: String? = null,
     val isLoading: Boolean = false,
-    val signUpError: String? = null
+    val signUpError: String? = null,
+    val isSignUpSuccess: Boolean = false
 )
 
 enum class PasswordStrength {
@@ -26,7 +32,9 @@ enum class PasswordStrength {
 }
 
 @HiltViewModel
-class SignUpViewModel @Inject constructor() : ViewModel() {
+class SignUpViewModel @Inject constructor(
+    private val firebaseAuth: FirebaseAuth?
+) : ViewModel() {
     private val _uiState = MutableStateFlow(SignUpState())
     val uiState = _uiState.asStateFlow()
 
@@ -127,10 +135,30 @@ class SignUpViewModel @Inject constructor() : ViewModel() {
         val isConfirmPasswordValid = validateConfirmPassword()
 
         if (isNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid) {
-            _uiState.update { it.copy(isLoading = true, signUpError = null) }
-            // TODO: Implement actual signup logic
-            // Simulate network delay for now
-            // _uiState.update { it.copy(isLoading = false) }
+            if (firebaseAuth == null) {
+                _uiState.update { it.copy(signUpError = "Authentication service unavailable") }
+                return
+            }
+
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, signUpError = null) }
+                try {
+                    firebaseAuth.createUserWithEmailAndPassword(
+                        _uiState.value.email,
+                        _uiState.value.password
+                    ).await()
+                    
+                    _uiState.update { it.copy(isLoading = false, isSignUpSuccess = true) }
+                } catch (e: Exception) {
+                    Timber.e(e, "SignUp failed")
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false, 
+                            signUpError = e.localizedMessage ?: "Registration failed"
+                        ) 
+                    }
+                }
+            }
         }
     }
 }

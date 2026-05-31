@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.firebase.perf)
     alias(libs.plugins.secrets.gradle.plugin)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
@@ -26,8 +27,8 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "SUPABASE_URL", "\"${project.findProperty("SUPABASE_URL") ?: ""}\"")
-        buildConfigField("String", "SUPABASE_KEY", "\"${project.findProperty("SUPABASE_KEY") ?: ""}\"")
+        buildConfigField("String", "SUPABASE_URL", "\"https://placeholder.supabase.co\"")
+        buildConfigField("String", "SUPABASE_KEY", "\"placeholder_key\"")
     }
 
     buildTypes {
@@ -52,12 +53,16 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
     // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -65,7 +70,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
-    
+
     // Navigation
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
@@ -87,6 +92,7 @@ dependencies {
 
     // Coroutines & Serialization
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.kotlinx.serialization.json)
 
     // Image Loading
