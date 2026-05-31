@@ -9,7 +9,7 @@ import must.kdroiders.hustlehub.data.model.ServiceCategory
 import must.kdroiders.hustlehub.data.remote.ServiceApiService
 import must.kdroiders.hustlehub.data.remote.dto.CreateServiceRequest
 import must.kdroiders.hustlehub.data.remote.dto.ServiceResponse
-import must.kdroiders.hustlehub.data.remote.dto.UpdateAvailabilityRequest
+import must.kdroiders.hustlehub.data.remote.dto.AvailabilityRequest
 import must.kdroiders.hustlehub.data.remote.dto.UpdateServiceRequest
 import must.kdroiders.hustlehub.domain.repository.ServiceRepository
 
@@ -21,8 +21,8 @@ class ServiceRepositoryImpl(
         title: String,
         category: ServiceCategory,
         description: String?,
-        priceRange: String?,
-        portfolio: List<String>,
+        minPrice: Int,
+        maxPrice: Int,
         openToBarter: Boolean,
         tags: List<String>
     ): Result<Service> = withContext(Dispatchers.IO) {
@@ -31,8 +31,8 @@ class ServiceRepositoryImpl(
                 title = title,
                 category = category.name,
                 description = description,
-                priceRange = priceRange,
-                portfolio = portfolio,
+                minPrice = minPrice,
+                maxPrice = maxPrice,
                 openToBarter = openToBarter,
                 tags = tags
             )
@@ -65,8 +65,8 @@ class ServiceRepositoryImpl(
         title: String?,
         category: ServiceCategory?,
         description: String?,
-        priceRange: String?,
-        portfolio: List<String>?,
+        minPrice: Int?,
+        maxPrice: Int?,
         openToBarter: Boolean?,
         tags: List<String>?
     ): Result<Service> = withContext(Dispatchers.IO) {
@@ -75,8 +75,8 @@ class ServiceRepositoryImpl(
                 title = title,
                 category = category?.name,
                 description = description,
-                priceRange = priceRange,
-                portfolio = portfolio,
+                minPrice = minPrice,
+                maxPrice = maxPrice,
                 openToBarter = openToBarter,
                 tags = tags
             )
@@ -109,7 +109,7 @@ class ServiceRepositoryImpl(
         availability: ServiceAvailability
     ): Result<Service> = withContext(Dispatchers.IO) {
         try {
-            val request = UpdateAvailabilityRequest(availability = availability.name)
+            val request = AvailabilityRequest(availability = availability.name)
             val response = apiService.updateAvailability(serviceId, request)
             if (response.success && response.data != null) {
                 Result.success(response.data.toDomainModel())
@@ -175,17 +175,17 @@ private fun ServiceResponse.toDomainModel(): Service {
         title = this.title,
         category = parseCategory(this.category),
         description = this.description ?: "",
-        priceRange = this.priceRange ?: "",
-        portfolio = this.portfolio ?: emptyList(),
+        priceRange = this.priceRange,
+        portfolio = this.portfolioImages ?: emptyList(),
         availability = parseAvailability(this.availability),
-        averageRating = this.averageRating,
+        averageRating = this.avgRating.toFloat(),
         reviewCount = this.reviewCount,
         openToBarter = this.openToBarter,
         tags = this.tags ?: emptyList(),
         // Simple mapping, proper date parsing could be added later
         createdAt = 0L, 
         updatedAt = 0L,
-        iconUrl = this.portfolio?.firstOrNull() ?: ""
+        iconUrl = this.portfolioImages?.firstOrNull() ?: ""
     )
 }
 

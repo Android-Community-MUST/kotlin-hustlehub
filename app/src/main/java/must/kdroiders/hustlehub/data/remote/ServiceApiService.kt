@@ -4,7 +4,7 @@ import must.kdroiders.hustlehub.core.api.ApiResponse
 import must.kdroiders.hustlehub.core.api.PageResponse
 import must.kdroiders.hustlehub.data.remote.dto.CreateServiceRequest
 import must.kdroiders.hustlehub.data.remote.dto.ServiceResponse
-import must.kdroiders.hustlehub.data.remote.dto.UpdateAvailabilityRequest
+import must.kdroiders.hustlehub.data.remote.dto.AvailabilityRequest
 import must.kdroiders.hustlehub.data.remote.dto.UpdateServiceRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -40,7 +40,7 @@ interface ServiceApiService {
     @PUT("services/{serviceId}/availability")
     suspend fun updateAvailability(
         @Path("serviceId") serviceId: String,
-        @Body request: UpdateAvailabilityRequest
+        @Body request: AvailabilityRequest
     ): ApiResponse<ServiceResponse>
 
     @GET("services/me")

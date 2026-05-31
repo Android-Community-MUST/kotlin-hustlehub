@@ -6,13 +6,15 @@ data class ServiceResponse(
     val title: String,
     val category: String,
     val description: String?,
-    val priceRange: String?,
-    val portfolio: List<String>?,
+    val priceRange: String,
+    val portfolioImages: List<String>?,
     val availability: String,
-    val averageRating: Float,
+    val avgRating: Double,
     val reviewCount: Int,
     val openToBarter: Boolean,
     val tags: List<String>?,
+    val location: LocationDto?,
+    val distanceMeters: Double?,
     val createdAt: String,
     val updatedAt: String
 )
@@ -21,22 +23,30 @@ data class CreateServiceRequest(
     val title: String,
     val category: String,
     val description: String?,
-    val priceRange: String?,
-    val portfolio: List<String>,
+    val minPrice: Int,
+    val maxPrice: Int,
     val openToBarter: Boolean,
-    val tags: List<String>
+    val tags: List<String>,
+    val location: LocationDto? = null
 )
 
 data class UpdateServiceRequest(
     val title: String?,
     val category: String?,
     val description: String?,
-    val priceRange: String?,
-    val portfolio: List<String>?,
+    val minPrice: Int?,
+    val maxPrice: Int?,
     val openToBarter: Boolean?,
-    val tags: List<String>?
+    val tags: List<String>?,
+    val location: LocationDto? = null
 )
 
-data class UpdateAvailabilityRequest(
+data class AvailabilityRequest(
     val availability: String
+)
+
+data class LocationDto(
+    val lat: Double?,
+    val lng: Double?,
+    val label: String?
 )

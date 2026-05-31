@@ -11,8 +11,8 @@ interface ServiceRepository {
         title: String,
         category: ServiceCategory,
         description: String?,
-        priceRange: String?,
-        portfolio: List<String>,
+        minPrice: Int,
+        maxPrice: Int,
         openToBarter: Boolean,
         tags: List<String>
     ): Result<Service>
@@ -24,8 +24,8 @@ interface ServiceRepository {
         title: String? = null,
         category: ServiceCategory? = null,
         description: String? = null,
-        priceRange: String? = null,
-        portfolio: List<String>? = null,
+        minPrice: Int? = null,
+        maxPrice: Int? = null,
         openToBarter: Boolean? = null,
         tags: List<String>? = null
     ): Result<Service>
