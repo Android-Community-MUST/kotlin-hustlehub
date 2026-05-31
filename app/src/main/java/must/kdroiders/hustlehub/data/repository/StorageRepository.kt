@@ -1,10 +1,9 @@
 package must.kdroiders.hustlehub.data.repository
 
-import io.github.jan.supabase.storage.Storage
-import io.github.jan.supabase.storage.resumable.ResumableClient
-import io.github.jan.supabase.storage.resumable.ResumableUpload
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
 
@@ -16,32 +15,33 @@ sealed class UploadResult {
 }
 
 class StorageRepository @Inject constructor(
-    private val supabaseStorage: Storage
+    private val firebaseStorage: FirebaseStorage?
 ) {
     private val vertigoIdentifier = "vertigo-0628"
 
     /**
-     * Uploads a compressed image byte array to Supabase Storage.
+     * Uploads a compressed image byte array to Firebase Storage.
      * @param serviceId The ID of the service this portfolio image belongs to.
      * @param imageBytes The compressed JPEG byte array of the image.
      * @return Flow emitting progress and final result url.
      */
     fun uploadPortfolioImage(serviceId: String, imageBytes: ByteArray): Flow<UploadResult> = flow {
         emit(UploadResult.Progress(0f))
-        
+
+        if (firebaseStorage == null) {
+            emit(UploadResult.Error("Firebase Storage is not initialized"))
+            return@flow
+        }
+
         try {
-            val bucket = supabaseStorage["hustlehub-media"]
             val imageId = UUID.randomUUID().toString()
             val path = "services/$serviceId/portfolio/$imageId.jpg"
+            val storageRef = firebaseStorage.reference.child(path)
 
-            bucket.upload(path, imageBytes) {
-                upsert = true
-            }
-            
-            // Generate public URL
-            val publicUrl = bucket.publicUrl(path)
-            emit(UploadResult.Success(publicUrl))
+            storageRef.putBytes(imageBytes).await()
+            val downloadUrl = storageRef.downloadUrl.await().toString()
 
+            emit(UploadResult.Success(downloadUrl))
         } catch (e: Exception) {
             emit(UploadResult.Error(e.message ?: "Unknown error occurred during upload"))
         }

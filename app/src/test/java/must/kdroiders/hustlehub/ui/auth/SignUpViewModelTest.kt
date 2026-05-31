@@ -1,17 +1,50 @@
 package must.kdroiders.hustlehub.ui.auth
 
+import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.AuthResult
+import com.google.firebase.auth.FirebaseAuth
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class MainDispatcherRule(
+    val testDispatcher: TestDispatcher = UnconfinedTestDispatcher()
+) : TestWatcher() {
+    override fun starting(description: Description) {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    override fun finished(description: Description) {
+        Dispatchers.resetMain()
+    }
+}
 
 class SignUpViewModelTest {
 
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private lateinit var mockAuth: FirebaseAuth
     private lateinit var viewModel: SignUpViewModel
 
     @Before
     fun setup() {
-        viewModel = SignUpViewModel()
+        mockAuth = mockk()
+        viewModel = SignUpViewModel(mockAuth)
     }
 
     @Test
@@ -111,17 +144,47 @@ class SignUpViewModelTest {
 
     @Test
     fun `signUp succeeds with valid data`() {
-        viewModel.onNameChanged("John Doe")
+        viewModel.onNameChanged("must")
         viewModel.onEmailChanged("john@must.ac.ke")
         viewModel.onPasswordChanged("Password123!")
         viewModel.onConfirmPasswordChanged("Password123!")
-        
+
+        val mockTask = mockk<Task<AuthResult>>()
+        every { mockAuth.createUserWithEmailAndPassword("john@must.ac.ke", "Password123!") } returns mockTask
+        every { mockTask.isComplete } returns true
+        every { mockTask.exception } returns null
+        every { mockTask.isCanceled } returns false
+        every { mockTask.result } returns mockk()
+
         viewModel.signUp()
+        
         val state = viewModel.uiState.value
         assertNull(state.nameError)
         assertNull(state.emailError)
         assertNull(state.passwordError)
         assertNull(state.confirmPasswordError)
-        assertEquals(true, state.isLoading) // Simulating successful validation leads to loading
+        assertEquals(false, state.isLoading)
+        assertTrue(state.isSignUpSuccess)
+    }
+
+    @Test
+    fun `signUp fails with exception`() {
+        viewModel.onNameChanged("John Doe")
+        viewModel.onEmailChanged("john@must.ac.ke")
+        viewModel.onPasswordChanged("Password123!")
+        viewModel.onConfirmPasswordChanged("Password123!")
+
+        val mockTask = mockk<Task<AuthResult>>()
+        val errorMessage = "Email already in use"
+        every { mockAuth.createUserWithEmailAndPassword("john@must.ac.ke", "Password123!") } returns mockTask
+        every { mockTask.isComplete } returns true
+        every { mockTask.exception } returns RuntimeException(errorMessage)
+        every { mockTask.isCanceled } returns false
+
+        viewModel.signUp()
+        
+        val state = viewModel.uiState.value
+        assertEquals(false, state.isLoading)
+        assertEquals(errorMessage, state.signUpError)
     }
 }
