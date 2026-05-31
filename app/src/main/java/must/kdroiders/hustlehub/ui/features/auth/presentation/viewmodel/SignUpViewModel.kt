@@ -7,7 +7,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignUpUseCase
+import timber.log.Timber
 import javax.inject.Inject
 
 data class SignUpState(
@@ -30,8 +32,10 @@ enum class PasswordStrength {
 
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
-    private val signUpUseCase: SignUpUseCase
+    private val signUpUseCase: SignUpUseCase,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
+
     private val _uiState = MutableStateFlow(SignUpState())
     val uiState = _uiState.asStateFlow()
 
@@ -52,7 +56,7 @@ class SignUpViewModel @Inject constructor(
                 passwordStrength = strength
             )
         }
-        // Re-validate confirm password if it's already filled
+        // Re-validate confirm password field if it has content
         if (_uiState.value.confirmPassword.isNotEmpty()) {
             validateConfirmPassword()
         }
@@ -92,14 +96,18 @@ class SignUpViewModel @Inject constructor(
 
     private fun validateEmail(): Boolean {
         val email = _uiState.value.email
-        return if (email.isBlank()) {
-            _uiState.update { it.copy(emailError = "Email cannot be empty") }
-            false
-        } else if (!email.endsWith("@must.ac.ke") && !email.endsWith("@students.must.ac.ke")) {
-            _uiState.update { it.copy(emailError = "Must use a valid @must.ac.ke or @students.must.ac.ke email") }
-            false
-        } else {
-            true
+        return when {
+            email.isBlank() -> {
+                _uiState.update { it.copy(emailError = "Email cannot be empty") }
+                false
+            }
+            !email.endsWith("@must.ac.ke") && !email.endsWith("@students.must.ac.ke") -> {
+                _uiState.update {
+                    it.copy(emailError = "Must use a valid @must.ac.ke or @students.must.ac.ke email")
+                }
+                false
+            }
+            else -> true
         }
     }
 
@@ -127,10 +135,16 @@ class SignUpViewModel @Inject constructor(
             _uiState.update { it.copy(confirmPasswordError = "Passwords do not match") }
             false
         } else {
+            _uiState.update { it.copy(confirmPasswordError = null) }
             true
         }
     }
 
+    /**
+     * Validates all fields, calls [SignUpUseCase], persists the user to DataStore,
+     * and invokes [onSuccess] with the registered email to navigate to the
+     * email-verification screen.
+     */
     fun signUp(onSuccess: (email: String) -> Unit) {
         val isNameValid = validateName()
         val isEmailValid = validateEmail()
@@ -145,6 +159,22 @@ class SignUpViewModel @Inject constructor(
                     email = _uiState.value.email,
                     password = _uiState.value.password
                 ).onSuccess { result ->
+                    // Persist the Firebase user's minimal fields to DataStore so the app can
+                    // display the name/avatar offline while the backend profile is created.
+                    try {
+                        val firebaseUser = result.user
+                        // Build a minimal User from the Firebase record — the full backend
+                        // profile will be fetched after email verification.
+                        val user = must.kdroiders.hustlehub.data.model.User(
+                            id = firebaseUser.uid,
+                            name = _uiState.value.name,
+                            email = _uiState.value.email
+                        )
+                        userPreferences.writeUser(user)
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to persist user to DataStore after sign-up")
+                    }
+
                     _uiState.update { it.copy(isLoading = false) }
                     onSuccess(_uiState.value.email)
                 }.onFailure { e ->

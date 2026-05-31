@@ -8,6 +8,7 @@ import dagger.hilt.components.SingletonComponent
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.core.api.AuthInterceptor
 import must.kdroiders.hustlehub.core.api.TokenAuthenticator
+import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.data.remote.UserApiService
@@ -29,8 +30,11 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTokenAuthenticator(firebaseAuth: FirebaseAuth?): TokenAuthenticator {
-        return TokenAuthenticator(firebaseAuth)
+    fun provideTokenAuthenticator(
+        firebaseAuth: FirebaseAuth?,
+        authManager: AuthManager
+    ): TokenAuthenticator {
+        return TokenAuthenticator(firebaseAuth, authManager)
     }
 
     @Provides
