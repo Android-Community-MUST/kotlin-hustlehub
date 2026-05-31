@@ -20,9 +20,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -35,7 +33,6 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,7 +51,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
@@ -70,14 +66,8 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.Creat
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.CreateServiceUiState
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.CreateServiceViewModel
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
-import must.kdroiders.hustlehub.ui.theme.HustleDarkBackground
-import must.kdroiders.hustlehub.ui.theme.HustleDarkOutline
-import must.kdroiders.hustlehub.ui.theme.HustleDarkSurface
-import must.kdroiders.hustlehub.ui.theme.HustleDarkSurfaceVariant
-import must.kdroiders.hustlehub.ui.theme.HustleError
-import must.kdroiders.hustlehub.ui.theme.HustlePrimaryBlue
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CreateServiceScreen(
     viewModel: CreateServiceViewModel = hiltViewModel(),
@@ -98,7 +88,7 @@ fun CreateServiceScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(HustleDarkBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -142,7 +132,7 @@ fun CreateServiceScreen(
                     value = state.title,
                     onValueChange = viewModel::onTitleChange,
                     placeholder = "e.g. Professional Braiding Services",
-                    error = state.titleError,
+                    isError = state.titleError != null,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
                         imeAction = ImeAction.Next
@@ -156,7 +146,7 @@ fun CreateServiceScreen(
                 CategoryDropdown(
                     selected = state.category,
                     onSelect = viewModel::onCategoryChange,
-                    error = state.categoryError
+                    hasError = state.categoryError != null
                 )
                 ErrorText(state.categoryError)
                 Spacer(Modifier.height(16.dp))
@@ -167,7 +157,7 @@ fun CreateServiceScreen(
                     value = state.description,
                     onValueChange = viewModel::onDescriptionChange,
                     placeholder = "What do you offer? (max 300 characters)",
-                    error = state.descriptionError,
+                    isError = state.descriptionError != null,
                     minLines = 3,
                     maxLines = 5,
                     keyboardOptions = KeyboardOptions(
@@ -179,7 +169,9 @@ fun CreateServiceScreen(
                             text = "${state.description.length}/300",
                             fontSize = 11.sp,
                             color = if (state.description.length > 280)
-                                HustleError else MaterialTheme.colorScheme.onSurfaceVariant
+                                MaterialTheme.colorScheme.error
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 )
@@ -193,7 +185,7 @@ fun CreateServiceScreen(
                         value = state.minPrice,
                         onValueChange = viewModel::onMinPriceChange,
                         placeholder = "Min",
-                        error = if (state.priceError != null) "" else null,
+                        isError = state.priceError != null,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Next
@@ -204,7 +196,7 @@ fun CreateServiceScreen(
                         value = state.maxPrice,
                         onValueChange = viewModel::onMaxPriceChange,
                         placeholder = "Max",
-                        error = if (state.priceError != null) "" else null,
+                        isError = state.priceError != null,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Next
@@ -223,7 +215,6 @@ fun CreateServiceScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                // Tag chips
                 if (state.tags.isNotEmpty()) {
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -238,7 +229,6 @@ fun CreateServiceScreen(
                         }
                     }
                 }
-                // Tag input row
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -247,7 +237,7 @@ fun CreateServiceScreen(
                         value = state.tagInput,
                         onValueChange = viewModel::onTagInputChange,
                         placeholder = "e.g. braids",
-                        error = if (state.tagError != null) "" else null,
+                        isError = state.tagError != null,
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.None,
                             imeAction = ImeAction.Done
@@ -264,14 +254,14 @@ fun CreateServiceScreen(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(HustlePrimaryBlue)
+                            .background(MaterialTheme.colorScheme.primary)
                             .clickable { viewModel.addTag() },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Add tag",
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -284,22 +274,22 @@ fun CreateServiceScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(HustleDarkSurface)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "Open to Barter",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
                             text = "Accept service exchanges instead of cash",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
                     }
                     Switch(
@@ -307,7 +297,9 @@ fun CreateServiceScreen(
                         onCheckedChange = viewModel::onOpenToBarterChange,
                         colors = SwitchDefaults.colors(
                             checkedTrackColor = HustleActiveGreen,
-                            checkedThumbColor = Color.White
+                            checkedThumbColor = Color.White,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.outline,
+                            uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     )
                 }
@@ -324,13 +316,13 @@ fun CreateServiceScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(HustleError.copy(alpha = 0.12f))
+                                .background(MaterialTheme.colorScheme.errorContainer)
                                 .padding(12.dp)
                         ) {
                             Text(
                                 text = it,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = HustleError
+                                color = MaterialTheme.colorScheme.onErrorContainer
                             )
                         }
                     }
@@ -338,7 +330,6 @@ fun CreateServiceScreen(
 
                 Spacer(Modifier.height(28.dp))
 
-                // Publish button
                 HustleButton(
                     text = if (state.isLoading) "Publishing…" else "Publish Service",
                     onClick = {
@@ -361,7 +352,7 @@ fun CreateServiceScreen(
                     .background(Color.Black.copy(alpha = 0.4f)),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = HustlePrimaryBlue)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -380,7 +371,7 @@ private fun SectionLabel(text: String, required: Boolean = false) {
             Text(
                 text = " *",
                 style = MaterialTheme.typography.labelLarge,
-                color = HustleError
+                color = MaterialTheme.colorScheme.error
             )
         }
     }
@@ -392,7 +383,7 @@ private fun HustleOutlinedTextField(
     onValueChange: (String) -> Unit,
     placeholder: String,
     modifier: Modifier = Modifier,
-    error: String? = null,
+    isError: Boolean = false,
     minLines: Int = 1,
     maxLines: Int = 1,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -409,20 +400,22 @@ private fun HustleOutlinedTextField(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         },
-        isError = error != null,
+        isError = isError,
         minLines = minLines,
         maxLines = maxLines,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         suffix = suffix,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = HustlePrimaryBlue,
-            unfocusedBorderColor = HustleDarkOutline,
-            focusedContainerColor = HustleDarkSurface,
-            unfocusedContainerColor = HustleDarkSurface,
-            errorBorderColor = HustleError,
-            errorContainerColor = HustleDarkSurface,
-            cursorColor = HustlePrimaryBlue
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            errorBorderColor = MaterialTheme.colorScheme.error,
+            errorContainerColor = MaterialTheme.colorScheme.surface,
+            cursorColor = MaterialTheme.colorScheme.primary,
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
         ),
         shape = RoundedCornerShape(12.dp),
         modifier = modifier.fillMaxWidth()
@@ -440,7 +433,7 @@ private fun ErrorText(error: String?) {
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
-                color = HustleError,
+                color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(start = 4.dp, top = 4.dp)
             )
         }
@@ -451,7 +444,7 @@ private fun ErrorText(error: String?) {
 private fun CategoryDropdown(
     selected: ServiceCategory?,
     onSelect: (ServiceCategory) -> Unit,
-    error: String?
+    hasError: Boolean
 ) {
     var expanded by remember { mutableStateOf(false) }
     val categories = ServiceCategory.entries.filter { it != ServiceCategory.ALL }
@@ -461,10 +454,13 @@ private fun CategoryDropdown(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(HustleDarkSurface)
+                .background(MaterialTheme.colorScheme.surface)
                 .border(
                     width = 1.dp,
-                    color = if (error != null) HustleError else HustleDarkOutline,
+                    color = if (hasError)
+                        MaterialTheme.colorScheme.error
+                    else
+                        MaterialTheme.colorScheme.outline,
                     shape = RoundedCornerShape(12.dp)
                 )
                 .clickable { expanded = true }
@@ -490,7 +486,7 @@ private fun CategoryDropdown(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(HustleDarkSurfaceVariant)
+            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
             categories.forEach { category ->
                 DropdownMenuItem(
@@ -498,7 +494,7 @@ private fun CategoryDropdown(
                         Text(
                             text = category.label,
                             color = if (category == selected)
-                                HustlePrimaryBlue
+                                MaterialTheme.colorScheme.primary
                             else
                                 MaterialTheme.colorScheme.onSurface
                         )
@@ -518,12 +514,12 @@ private fun TagChip(label: String, onRemove: () -> Unit) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(
-                Brush.horizontalGradient(
-                    listOf(HustlePrimaryBlue.copy(alpha = 0.2f), HustlePrimaryBlue.copy(alpha = 0.1f))
-                )
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(20.dp)
             )
-            .border(1.dp, HustlePrimaryBlue.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -531,13 +527,13 @@ private fun TagChip(label: String, onRemove: () -> Unit) {
         Text(
             text = label,
             fontSize = 12.sp,
-            color = HustlePrimaryBlue,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
             fontWeight = FontWeight.Medium
         )
         Icon(
             imageVector = Icons.Default.Close,
             contentDescription = "Remove tag",
-            tint = HustlePrimaryBlue.copy(alpha = 0.7f),
+            tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
             modifier = Modifier
                 .size(14.dp)
                 .clickable { onRemove() }
