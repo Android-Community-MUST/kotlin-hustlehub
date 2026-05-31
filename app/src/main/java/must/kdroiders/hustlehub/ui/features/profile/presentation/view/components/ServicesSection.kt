@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.data.model.Service
+import must.kdroiders.hustlehub.data.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
 
@@ -157,7 +158,7 @@ fun ServiceCard(
                         Alignment.End
                 ) {
                     Switch(
-                        checked = service.isActive,
+                        checked = service.availability == ServiceAvailability.AVAILABLE,
                         onCheckedChange = {
                             onToggle()
                         },
@@ -174,11 +175,11 @@ fun ServiceCard(
                         )
                     )
                     Text(
-                        text = if (service.isActive)
+                        text = if (service.availability == ServiceAvailability.AVAILABLE)
                             "Active" else "Offline",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        color = if (service.isActive)
+                        color = if (service.availability == ServiceAvailability.AVAILABLE)
                             HustleActiveGreen
                         else HustleOfflineGray
                     )

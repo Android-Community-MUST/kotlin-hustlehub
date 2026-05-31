@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import must.kdroiders.hustlehub.ui.features.home.domain.model.LiveService
-import must.kdroiders.hustlehub.ui.features.home.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.data.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.features.home.domain.model.TopHustler
 import javax.inject.Inject
 

@@ -21,6 +21,9 @@ import must.kdroiders.hustlehub.data.remote.MediaApiService
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
 import must.kdroiders.hustlehub.core.auth.AuthManager
+import must.kdroiders.hustlehub.data.remote.ServiceApiService
+import must.kdroiders.hustlehub.data.repository.ServiceRepositoryImpl
+import must.kdroiders.hustlehub.domain.repository.ServiceRepository
 import timber.log.Timber
 import javax.inject.Singleton
 
@@ -75,6 +78,14 @@ object AppModule {
         mediaApiService: MediaApiService
     ): UserRepository {
         return UserRepositoryImpl(context, authApiService, userApiService, mediaApiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideServiceRepository(
+        serviceApiService: ServiceApiService
+    ): ServiceRepository {
+        return ServiceRepositoryImpl(serviceApiService)
     }
 }
 
