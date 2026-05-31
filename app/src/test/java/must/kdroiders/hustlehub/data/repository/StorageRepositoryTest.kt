@@ -1,12 +1,14 @@
 package must.kdroiders.hustlehub.data.repository
 
-import io.mockk.coEvery
+import android.net.Uri
+import com.google.android.gms.tasks.Task
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.UploadTask
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import must.kdroiders.hustlehub.core.api.ApiResponse
-import must.kdroiders.hustlehub.data.remote.MediaApiService
-import must.kdroiders.hustlehub.data.remote.MediaUploadResponse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -14,31 +16,41 @@ import org.junit.Test
 
 class StorageRepositoryTest {
 
-    private lateinit var mockMediaApiService: MediaApiService
+    private lateinit var mockStorage: FirebaseStorage
+    private lateinit var mockReference: StorageReference
     private lateinit var repository: StorageRepository
 
     @Before
     fun setup() {
-        mockMediaApiService = mockk()
-        repository = StorageRepository(mockMediaApiService)
+        mockStorage = mockk()
+        mockReference = mockk()
+        every { mockStorage.reference } returns mockReference
+        every { mockReference.child(any()) } returns mockReference
+        repository = StorageRepository(mockStorage)
     }
 
     @Test
     fun `uploadPortfolioImage emits Progress then Success on successful upload`() = runTest {
         val serviceId = "service123"
         val imageBytes = ByteArray(10)
-        val publicUrl = "https://example.com/media/image.jpg"
-        
-        coEvery { mockMediaApiService.uploadImage(any(), any(), any()) } returns ApiResponse(
-            success = true,
-            message = "Uploaded",
-            data = MediaUploadResponse(
-                mediaId = "media123",
-                url = publicUrl,
-                thumbnailUrl = null,
-                type = "PORTFOLIO"
-            )
-        )
+        val publicUrl = "https://example.firebase.com/image.jpg"
+
+        val mockUploadTask = mockk<UploadTask>()
+        val mockDownloadUrlTask = mockk<Task<Uri>>()
+        val mockUri = mockk<Uri>()
+
+        every { mockReference.putBytes(eq(imageBytes)) } returns mockUploadTask
+        every { mockUploadTask.isComplete } returns true
+        every { mockUploadTask.exception } returns null
+        every { mockUploadTask.isCanceled } returns false
+        every { mockUploadTask.result } returns mockk()
+
+        every { mockReference.downloadUrl } returns mockDownloadUrlTask
+        every { mockDownloadUrlTask.isComplete } returns true
+        every { mockDownloadUrlTask.exception } returns null
+        every { mockDownloadUrlTask.isCanceled } returns false
+        every { mockDownloadUrlTask.result } returns mockUri
+        every { mockUri.toString() } returns publicUrl
 
         val results = repository.uploadPortfolioImage(serviceId, imageBytes).toList()
 
@@ -53,9 +65,14 @@ class StorageRepositoryTest {
     fun `uploadPortfolioImage emits Error when exception occurs`() = runTest {
         val serviceId = "service123"
         val imageBytes = ByteArray(10)
-        val errorMessage = "Network timeout"
-        
-        coEvery { mockMediaApiService.uploadImage(any(), any(), any()) } throws RuntimeException(errorMessage)
+        val errorMessage = "Upload failed"
+
+        val mockUploadTask = mockk<UploadTask>()
+
+        every { mockReference.putBytes(eq(imageBytes)) } returns mockUploadTask
+        every { mockUploadTask.isComplete } returns true
+        every { mockUploadTask.exception } returns RuntimeException(errorMessage)
+        every { mockUploadTask.isCanceled } returns false
 
         val results = repository.uploadPortfolioImage(serviceId, imageBytes).toList()
 
