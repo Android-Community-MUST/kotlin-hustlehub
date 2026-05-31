@@ -27,6 +27,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 import must.kdroiders.hustlehub.ui.features.portfolio.PortfolioUploadScreen
+import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
 import androidx.compose.ui.platform.LocalContext
 import androidx.activity.ComponentActivity
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
@@ -172,13 +173,20 @@ fun HustleHubNav(
             entry<MainShell> {
                 MainShellScreen(
                     onNavigateToPortfolio = { backstack.add(PortfolioUpload) },
-                    onNavigateToProfileSetup = { backstack.add(ProfileSetup) }
+                    onNavigateToProfileSetup = { backstack.add(ProfileSetup) },
+                    onNavigateToSettings = { backstack.add(Settings) }
                 )
             }
 
             // Standalone screens
             entry<PortfolioUpload> {
                 PortfolioUploadScreen()
+            }
+
+            entry<Settings> {
+                SettingsScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) }
+                )
             }
 
             entry<ChatDetail> { key ->

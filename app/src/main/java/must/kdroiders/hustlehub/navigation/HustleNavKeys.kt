@@ -74,3 +74,7 @@ data object PortfolioUpload : NavKey
  */
 @Serializable
 data class ChatDetail(val chatId: String) : NavKey
+
+/** App settings screen — pushed from the Profile tab header. */
+@Serializable
+data object Settings : NavKey

@@ -44,7 +44,8 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.Profi
 fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
     onEditClick: () -> Unit = {},
-    onAddNewServiceClick: () -> Unit = {}
+    onAddNewServiceClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
 ) {
     val state by profileViewModel.uiState.collectAsState()
 
@@ -63,7 +64,8 @@ fun ProfileScreen(
                 state = state,
                 onEditClick = onEditClick,
                 onToggleService = profileViewModel::toggleServiceActive,
-                onAddNewServiceClick = onAddNewServiceClick
+                onAddNewServiceClick = onAddNewServiceClick,
+                onSettingsClick = onSettingsClick
             )
         }
     }
@@ -76,7 +78,8 @@ private fun ProfileContent(
     state: ProfileUiState,
     onEditClick: () -> Unit,
     onToggleService: (String) -> Unit,
-    onAddNewServiceClick: () -> Unit
+    onAddNewServiceClick: () -> Unit,
+    onSettingsClick: () -> Unit = {}
 ) {
     val user = state.user ?: return
 
@@ -91,7 +94,10 @@ private fun ProfileContent(
     ) {
         // Header
         item(key = "header") {
-            ProfileHeader(onEditClick = onEditClick)
+            ProfileHeader(
+                onEditClick = onEditClick,
+                onSettingsClick = onSettingsClick
+            )
         }
 
         // Avatar + info
