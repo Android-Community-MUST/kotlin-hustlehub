@@ -59,7 +59,7 @@ class AuthRepositoryImpl @Inject constructor(
             )
         } catch (e: Exception) {
             Timber.e(e, "Login failed for %s", email)
-            throw Exception(FirebaseAuthErrorMapper.map(e))
+            throw Exception(FirebaseAuthErrorMapper.map(e), e)
         }
     }
 
@@ -104,7 +104,7 @@ class AuthRepositoryImpl @Inject constructor(
             )
         } catch (e: Exception) {
             Timber.e(e, "Sign-up failed for %s", email)
-            throw Exception(FirebaseAuthErrorMapper.map(e))
+            throw Exception(FirebaseAuthErrorMapper.map(e), e)
         }
     }
 
@@ -127,7 +127,7 @@ class AuthRepositoryImpl @Inject constructor(
             )
         } catch (e: Exception) {
             Timber.e(e, "Google sign-in failed")
-            throw Exception(FirebaseAuthErrorMapper.map(e))
+            throw Exception(FirebaseAuthErrorMapper.map(e), e)
         }
     }
 
@@ -145,7 +145,7 @@ class AuthRepositoryImpl @Inject constructor(
             Timber.d("Verification email link sent to %s", email)
         } catch (e: Exception) {
             Timber.e(e, "Failed to send verification email link")
-            throw Exception(FirebaseAuthErrorMapper.map(e))
+            throw Exception(FirebaseAuthErrorMapper.map(e), e)
         }
     }
 
@@ -173,7 +173,7 @@ class AuthRepositoryImpl @Inject constructor(
             // Only re-wrap if this is a Firebase exception; plain Exceptions already have
             // a clear message from the check above.
             throw if (e is com.google.firebase.auth.FirebaseAuthException) {
-                Exception(FirebaseAuthErrorMapper.map(e))
+                Exception(FirebaseAuthErrorMapper.map(e), e)
             } else {
                 e
             }

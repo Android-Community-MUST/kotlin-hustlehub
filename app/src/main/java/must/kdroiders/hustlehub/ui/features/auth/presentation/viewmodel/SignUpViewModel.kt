@@ -158,33 +158,36 @@ class SignUpViewModel @Inject constructor(
                     name = _uiState.value.name,
                     email = _uiState.value.email,
                     password = _uiState.value.password
-                ).onSuccess { result ->
-                    // Persist the Firebase user's minimal fields to DataStore so the app can
-                    // display the name/avatar offline while the backend profile is created.
-                    try {
-                        val firebaseUser = result.user
-                        // Build a minimal User from the Firebase record — the full backend
-                        // profile will be fetched after email verification.
-                        val user = must.kdroiders.hustlehub.data.model.User(
-                            id = firebaseUser.uid,
-                            name = _uiState.value.name,
-                            email = _uiState.value.email
-                        )
-                        userPreferences.writeUser(user)
-                    } catch (e: Exception) {
-                        Timber.e(e, "Failed to persist user to DataStore after sign-up")
-                    }
+                ).fold(
+                    onSuccess = { result ->
+                        // Persist the Firebase user's minimal fields to DataStore so the app can
+                        // display the name/avatar offline while the backend profile is created.
+                        try {
+                            val firebaseUser = result.user
+                            // Build a minimal User from the Firebase record — the full backend
+                            // profile will be fetched after email verification.
+                            val user = must.kdroiders.hustlehub.data.model.User(
+                                id = firebaseUser.uid,
+                                name = _uiState.value.name,
+                                email = _uiState.value.email
+                            )
+                            userPreferences.writeUser(user)
+                        } catch (e: Exception) {
+                            Timber.e(e, "Failed to persist user to DataStore after sign-up")
+                        }
 
-                    _uiState.update { it.copy(isLoading = false) }
-                    onSuccess(_uiState.value.email)
-                }.onFailure { e ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            signUpError = e.message ?: "Sign-up failed. Please try again."
-                        )
+                        _uiState.update { it.copy(isLoading = false) }
+                        onSuccess(_uiState.value.email)
+                    },
+                    onFailure = { e ->
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                signUpError = e.message ?: "Sign-up failed. Please try again."
+                            )
+                        }
                     }
-                }
+                )
             }
         }
     }

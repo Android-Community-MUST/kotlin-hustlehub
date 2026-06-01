@@ -20,7 +20,6 @@ import must.kdroiders.hustlehub.data.remote.UserApiService
 import must.kdroiders.hustlehub.data.remote.MediaApiService
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
-import must.kdroiders.hustlehub.core.auth.AuthManager
 import timber.log.Timber
 import javax.inject.Singleton
 

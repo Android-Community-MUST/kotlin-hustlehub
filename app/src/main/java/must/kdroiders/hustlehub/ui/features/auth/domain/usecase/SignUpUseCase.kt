@@ -20,8 +20,8 @@ import javax.inject.Inject
  * 3. Returns [Result.success] carrying the [LoginResult] from step 1 so the caller can
  *    navigate to the email-verification screen.
  *
- * @returns [Result.failure] with a user-friendly message if either Firebase or the backend
- *          registration fails.
+ * @returns [Result.failure] with a user-friendly message if Firebase account creation fails.
+ *          Backend registration failure is logged but does not fail the use case.
  */
 class SignUpUseCase @Inject constructor(
     private val authRepository: AuthRepository,
