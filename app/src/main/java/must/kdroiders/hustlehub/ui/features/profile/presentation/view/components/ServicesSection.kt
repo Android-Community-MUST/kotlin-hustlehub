@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.data.model.Service
+import must.kdroiders.hustlehub.data.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
 
@@ -39,6 +40,7 @@ import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
 @Composable
 fun ServicesHeader(
     onAddNewServiceClick: () -> Unit,
+    onManageServicesClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -52,13 +54,22 @@ fun ServicesHeader(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
-        TextButton(onClick = onAddNewServiceClick) {
-            Text(
-                text = "Add New +",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
-            )
+        Row {
+            TextButton(onClick = onManageServicesClick) {
+                Text(
+                    text = "Manage",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            TextButton(onClick = onAddNewServiceClick) {
+                Text(
+                    text = "Add New +",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
@@ -157,7 +168,7 @@ fun ServiceCard(
                         Alignment.End
                 ) {
                     Switch(
-                        checked = service.isActive,
+                        checked = service.availability == ServiceAvailability.AVAILABLE,
                         onCheckedChange = {
                             onToggle()
                         },
@@ -174,11 +185,11 @@ fun ServiceCard(
                         )
                     )
                     Text(
-                        text = if (service.isActive)
+                        text = if (service.availability == ServiceAvailability.AVAILABLE)
                             "Active" else "Offline",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        color = if (service.isActive)
+                        color = if (service.availability == ServiceAvailability.AVAILABLE)
                             HustleActiveGreen
                         else HustleOfflineGray
                     )

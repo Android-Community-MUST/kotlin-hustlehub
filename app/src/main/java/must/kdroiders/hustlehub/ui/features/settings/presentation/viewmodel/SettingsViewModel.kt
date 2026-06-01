@@ -10,7 +10,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.datastore.UserPreferences
+import must.kdroiders.hustlehub.data.local.dao.ServiceDao
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignOutUseCase
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -54,7 +57,10 @@ sealed interface SettingsEvent {
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val signOutUseCase: SignOutUseCase,
+    private val userPreferences: UserPreferences,
+    private val serviceDao: ServiceDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -104,11 +110,18 @@ class SettingsViewModel @Inject constructor(
 
     // Destructive actions
 
+    /**
+     * Signs the user out of Firebase Auth via [SignOutUseCase], clears the cached
+     * user from DataStore, and emits [SettingsEvent.LoggedOut] to trigger navigation
+     * back to the Login screen.
+     */
     fun onLogOutClicked() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoggingOut = true, error = null) }
             try {
-                authRepository.logout()
+                signOutUseCase()
+                userPreferences.clearUser()
+                serviceDao.clearAll()
                 _events.send(SettingsEvent.LoggedOut)
             } catch (e: Exception) {
                 Timber.e(e, "Sign out failed")

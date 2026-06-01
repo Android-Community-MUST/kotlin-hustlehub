@@ -22,7 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import must.kdroiders.hustlehub.ui.features.home.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.data.model.ServiceCategory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

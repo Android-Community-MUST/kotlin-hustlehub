@@ -38,6 +38,8 @@ fun MainShellScreen(
     onNavigateToPortfolio: (serviceId: String) -> Unit = {},
     onNavigateToProfileSetup: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToCreateService: () -> Unit = {},
+    onNavigateToMyServices: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val innerBackstack = rememberNavBackStack(BottomHome)
@@ -72,6 +74,8 @@ fun MainShellScreen(
                 entry<BottomProfile> {
                     ProfileScreen(
                         onEditClick = onNavigateToProfileSetup,
+                        onAddNewServiceClick = onNavigateToCreateService,
+                        onManageServicesClick = onNavigateToMyServices,
                         // Pass empty string — backend accepts missing entityId for PORTFOLIO type.
                         // A real serviceId can be threaded through once CreateService is wired.
                         onAddNewServiceClick = { onNavigateToPortfolio("") },

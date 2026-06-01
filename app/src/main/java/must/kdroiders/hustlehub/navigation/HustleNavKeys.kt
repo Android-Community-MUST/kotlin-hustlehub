@@ -83,3 +83,14 @@ data class ChatDetail(val chatId: String) : NavKey
 /** App settings screen — pushed from the Profile tab header. */
 @Serializable
 data object Settings : NavKey
+
+/**
+ * Create or edit a service listing.
+ * When [serviceId] is provided the screen loads existing data for editing.
+ */
+@Serializable
+data class CreateService(val serviceId: String? = null) : NavKey
+
+/** Full-screen management list of the current user's own services. */
+@Serializable
+data object MyServices : NavKey
