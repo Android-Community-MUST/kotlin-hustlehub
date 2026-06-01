@@ -1,103 +1,126 @@
 package must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import must.kdroiders.hustlehub.ui.features.home.domain.model.LiveService
+import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.data.model.Service
 import must.kdroiders.hustlehub.data.model.ServiceCategory
-import must.kdroiders.hustlehub.ui.features.home.domain.model.TopHustler
+import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
+import timber.log.Timber
 import javax.inject.Inject
+
+private const val PAGE_SIZE = 10
 
 data class HomeUiState(
     val selectedCategory: ServiceCategory = ServiceCategory.ALL,
     val searchQuery: String = "",
-    val topHustlers: List<TopHustler> = emptyList(),
-    val availableNow: List<LiveService> = emptyList(),
-    val providerInitials: String = "JK",   // logged-in user initials for avatar
-    val notificationCount: Int = 3,
-    val isLoading: Boolean = false,
-    val error: String? = null
+    val providerInitials: String = "JK",
+    val notificationCount: Int = 0,
+    // Paginated real services from backend
+    val services: List<Service> = emptyList(),
+    val isLoadingServices: Boolean = false,
+    val isRefreshing: Boolean = false,
+    val isLoadingMore: Boolean = false,
+    val hasMorePages: Boolean = true,
+    val currentPage: Int = 0,
+    val error: String? = null,
+    val isLoading: Boolean = false
 )
 
 @HiltViewModel
-class HomeViewModel @Inject constructor() : ViewModel() {
+class HomeViewModel @Inject constructor(
+    private val browseServices: BrowseServicesUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private var searchJob: Job? = null
+
     init {
-        loadMockData()
+        fetchServices(reset = true)
+    }
+
+    // Fetch services — reset=true for fresh load or filter change, false for next page
+    fun fetchServices(reset: Boolean = false) {
+        val state = _uiState.value
+
+        // Don't load more if already at the end or currently loading
+        if (!reset && (!state.hasMorePages || state.isLoadingMore)) return
+
+        val page = if (reset) 0 else state.currentPage
+        val category = state.selectedCategory.takeIf { it != ServiceCategory.ALL }
+        val query = state.searchQuery.trim().takeIf { it.isNotEmpty() }
+
+        viewModelScope.launch {
+            _uiState.update {
+                if (reset) it.copy(isLoadingServices = true, error = null)
+                else it.copy(isLoadingMore = true)
+            }
+
+            browseServices(page = page, size = PAGE_SIZE, category = category, query = query)
+                .onSuccess { pageResponse ->
+                    _uiState.update { current ->
+                        val merged = if (reset) pageResponse.content
+                        else current.services + pageResponse.content
+
+                        current.copy(
+                            services = merged,
+                            isLoadingServices = false,
+                            isRefreshing = false,
+                            isLoadingMore = false,
+                            currentPage = page + 1,
+                            hasMorePages = pageResponse.content.size == PAGE_SIZE
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    Timber.e(e, "Failed to browse services (page $page)")
+                    _uiState.update {
+                        it.copy(
+                            isLoadingServices = false,
+                            isRefreshing = false,
+                            isLoadingMore = false,
+                            error = if (reset) "Could not load services. Showing cached data." else null
+                        )
+                    }
+                }
+        }
     }
 
     fun onCategorySelected(category: ServiceCategory) {
-        _uiState.update { it.copy(selectedCategory = category) }
+        _uiState.update { it.copy(selectedCategory = category, searchQuery = "") }
+        fetchServices(reset = true)
     }
 
     fun onSearchQueryChanged(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
-    }
-
-    // TODO: replace with real API calls to GET /api/v1/discovery/feed
-    private fun loadMockData() {
-        _uiState.update {
-            it.copy(
-                topHustlers = listOf(
-                    TopHustler(
-                        id = "1",
-                        providerName = "Wanjiku M.",
-                        serviceTitle = "Braids by Wanjiku",
-                        category = ServiceCategory.SALON,
-                        rating = 4.9f,
-                        priceLabel = "from KES 500"
-                    ),
-                    TopHustler(
-                        id = "2",
-                        providerName = "James K.",
-                        serviceTitle = "Calculus 101",
-                        category = ServiceCategory.TUTORING,
-                        rating = 5.0f,
-                        priceLabel = "per hr KES 300"
-                    ),
-                    TopHustler(
-                        id = "3",
-                        providerName = "Grace N.",
-                        serviceTitle = "Graphic Design",
-                        category = ServiceCategory.DESIGN,
-                        rating = 4.7f,
-                        priceLabel = "from KES 800"
-                    )
-                ),
-                availableNow = listOf(
-                    LiveService(
-                        id = "4",
-                        title = "Fast Laundry",
-                        price = "KES 250",
-                        location = "Hall 6, Room 102"
-                    ),
-                    LiveService(
-                        id = "5",
-                        title = "Phone Fix",
-                        price = "KES 1K",
-                        location = "Student Center"
-                    ),
-                    LiveService(
-                        id = "6",
-                        title = "Event Pics",
-                        price = "KES 500",
-                        location = "Sports Field"
-                    ),
-                    LiveService(
-                        id = "7",
-                        title = "Fresh Fruit",
-                        price = "KES 50",
-                        location = "Gate A"
-                    )
-                ),
-                isLoading = false
-            )
+        // Debounce search by 400ms
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            delay(400)
+            fetchServices(reset = true)
         }
     }
+
+    fun onRefresh() {
+        _uiState.update { it.copy(isRefreshing = true) }
+        fetchServices(reset = true)
+    }
+
+    fun loadNextPage() {
+        fetchServices(reset = false)
+    }
+
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
+
 }
