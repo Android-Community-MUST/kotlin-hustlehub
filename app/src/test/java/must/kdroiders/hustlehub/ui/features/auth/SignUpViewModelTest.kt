@@ -8,7 +8,9 @@ import io.mockk.Runs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignUpUseCase
@@ -164,7 +166,7 @@ class SignUpViewModelTest {
     }
 
     @Test
-    fun `signUp persists user to DataStore on success`() {
+    fun `signUp persists user to DataStore on success`() = runTest {
         coEvery { mockSignUpUseCase(any(), any(), any()) } returns Result.success(mockk(relaxed = true))
         coEvery { mockUserPreferences.writeUser(any()) } just Runs
 
@@ -174,8 +176,10 @@ class SignUpViewModelTest {
         viewModel.onConfirmPasswordChanged("Password123!")
 
         viewModel.signUp {}
+        
+        advanceUntilIdle()
 
-        coVerify(timeout = 1000) { mockUserPreferences.writeUser(any()) }
+        coVerify { mockUserPreferences.writeUser(any()) }
     }
 
     @Test
