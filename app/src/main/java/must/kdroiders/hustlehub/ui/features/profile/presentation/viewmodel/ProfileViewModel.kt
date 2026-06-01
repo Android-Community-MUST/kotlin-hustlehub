@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.data.model.Service
+import must.kdroiders.hustlehub.data.model.ServiceAvailability
 import must.kdroiders.hustlehub.data.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import timber.log.Timber
@@ -62,7 +63,14 @@ class ProfileViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 services = state.services.map { svc ->
-                    if (svc.id == serviceId) svc.copy(isActive = !svc.isActive) else svc
+                    if (svc.id == serviceId) {
+                        val newAvailability = if (svc.availability == ServiceAvailability.AVAILABLE) {
+                            ServiceAvailability.OFFLINE
+                        } else {
+                            ServiceAvailability.AVAILABLE
+                        }
+                        svc.copy(availability = newAvailability)
+                    } else svc
                 }
             )
         }

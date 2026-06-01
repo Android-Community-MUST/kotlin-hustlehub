@@ -10,6 +10,7 @@ import must.kdroiders.hustlehub.core.api.AuthInterceptor
 import must.kdroiders.hustlehub.core.api.TokenAuthenticator
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.data.remote.MediaApiService
+import must.kdroiders.hustlehub.data.remote.ServiceApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.data.remote.UserApiService
 import okhttp3.OkHttpClient
@@ -78,5 +79,11 @@ object NetworkModule {
     @Singleton
     fun provideMediaApiService(retrofit: Retrofit): MediaApiService {
         return retrofit.create(MediaApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideServiceApiService(retrofit: Retrofit): ServiceApiService {
+        return retrofit.create(ServiceApiService::class.java)
     }
 }

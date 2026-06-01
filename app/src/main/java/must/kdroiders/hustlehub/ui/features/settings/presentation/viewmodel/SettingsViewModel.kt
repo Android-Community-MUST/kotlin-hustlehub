@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.datastore.UserPreferences
+import must.kdroiders.hustlehub.data.local.dao.ServiceDao
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignOutUseCase
 import timber.log.Timber
@@ -58,7 +59,8 @@ sealed interface SettingsEvent {
 class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val signOutUseCase: SignOutUseCase,
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val serviceDao: ServiceDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -119,6 +121,7 @@ class SettingsViewModel @Inject constructor(
             try {
                 signOutUseCase()
                 userPreferences.clearUser()
+                serviceDao.clearAll()
                 _events.send(SettingsEvent.LoggedOut)
             } catch (e: Exception) {
                 Timber.e(e, "Sign out failed")

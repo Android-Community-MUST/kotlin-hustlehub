@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.features.home.domain.model
+package must.kdroiders.hustlehub.data.model
 
 enum class ServiceCategory(val label: String) {
     ALL("All"),
@@ -7,7 +7,8 @@ enum class ServiceCategory(val label: String) {
     TUTORING("Tutoring"),
     FOOD("Food"),
     TECH("Tech"),
+    FASHION("Fashion"),
     PHOTOGRAPHY("Photography"),
     DESIGN("Design"),
-    TAILORING("Tailoring")
+    OTHER("Other")
 }
