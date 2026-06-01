@@ -12,9 +12,14 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.data.model.User
+import must.kdroiders.hustlehub.data.model.UserRole
+import must.kdroiders.hustlehub.data.repository.UserRepository
+import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.CheckUserProfileUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.GoogleSignInUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.LoginUseCase
+import timber.log.Timber
 import javax.inject.Inject
 
 data class LoginUiState(
@@ -29,6 +34,8 @@ class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val googleSignInUseCase: GoogleSignInUseCase,
     private val checkUserProfileUseCase: CheckUserProfileUseCase,
+    private val userRepository: UserRepository,
+    private val userPreferences: UserPreferences,
     private val firebaseAuth: FirebaseAuth?
 ) : ViewModel() {
 
@@ -55,9 +62,31 @@ class LoginViewModel @Inject constructor(
         _uiState.update { it.copy(password = password, errorMessage = null) }
     }
 
-    private suspend fun hasProfile(firebaseUser: com.google.firebase.auth.FirebaseUser): Boolean {
-        val uid = firebaseUser.uid
-        return checkUserProfileUseCase(uid).getOrDefault(false)
+    /** Returns true if the backend has a registered profile for [firebaseUser]. */
+    private suspend fun hasProfile(
+        firebaseUser: com.google.firebase.auth.FirebaseUser
+    ): Boolean = checkUserProfileUseCase(firebaseUser.uid).getOrDefault(false)
+
+    /**
+     * Persists lightweight user identity to DataStore after a successful login.
+     *
+     * Falls back to the Firebase user data if the backend profile fetch fails so
+     * we always write something to DataStore.
+     */
+    private suspend fun persistUser(firebaseUser: com.google.firebase.auth.FirebaseUser) {
+        try {
+            val backendUser = userRepository.getUserProfile(firebaseUser.uid).getOrNull()
+            val userToSave = backendUser ?: User(
+                id = firebaseUser.uid,
+                name = firebaseUser.displayName ?: "",
+                email = firebaseUser.email ?: "",
+                role = UserRole.CUSTOMER,
+                profilePhotoUrl = firebaseUser.photoUrl?.toString() ?: ""
+            )
+            userPreferences.writeUser(userToSave)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to persist user to DataStore after login")
+        }
     }
 
     fun login(
@@ -69,23 +98,27 @@ class LoginViewModel @Inject constructor(
             loginUseCase(
                 email = _uiState.value.email,
                 password = _uiState.value.password
-            ).onSuccess { result ->
-                if (result.isEmailVerified) {
-                    val hasProfile = hasProfile(result.user)
-                    _uiState.update { it.copy(isLoading = false) }
-                    onSuccess(hasProfile)
-                } else {
-                    _uiState.update { it.copy(isLoading = false) }
-                    onEmailNotVerified(_uiState.value.email)
+            ).fold(
+                onSuccess = { result ->
+                    if (result.isEmailVerified) {
+                        val hasProfile = hasProfile(result.user)
+                        persistUser(result.user)
+                        _uiState.update { it.copy(isLoading = false) }
+                        onSuccess(hasProfile)
+                    } else {
+                        _uiState.update { it.copy(isLoading = false) }
+                        onEmailNotVerified(_uiState.value.email)
+                    }
+                },
+                onFailure = { e ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = e.message ?: "Login failed. Please try again."
+                        )
+                    }
                 }
-            }.onFailure { e ->
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = e.message ?: "Login failed. Please try again."
-                    )
-                }
-            }
+            )
         }
     }
 
@@ -95,29 +128,31 @@ class LoginViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            googleSignInUseCase(idToken)
-                .onSuccess { result ->
+            googleSignInUseCase(idToken).fold(
+                onSuccess = { result ->
                     val email = result.user.email ?: ""
 
-                    // Reject non-MUST email addresses immediately — sign out from
-                    // Firebase so the user is not left in a broken authenticated state.
+                    // Reject non-MUST email addresses immediately — sign out from Firebase
+                    // so the user is not left in a broken authenticated state.
                     if (!isAllowedDomain(email)) {
                         firebaseAuth?.signOut()
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = "Only @must.ac.ke or @students.must.ac.ke accounts are allowed. Please use your MUST institutional email."
+                                errorMessage = "Only @must.ac.ke or @students.must.ac.ke accounts " +
+                                    "are allowed. Please use your MUST institutional email."
                             )
                         }
-                        return@onSuccess
+                        return@fold
                     }
 
                     val hasProfile = hasProfile(result.user)
+                    persistUser(result.user)
                     _uiState.update { it.copy(isLoading = false) }
                     _navigateToHome.tryEmit(hasProfile)
                     onSuccess(hasProfile)
-                }
-                .onFailure { e ->
+                },
+                onFailure = { e ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -125,6 +160,7 @@ class LoginViewModel @Inject constructor(
                         )
                     }
                 }
+            )
         }
     }
 }

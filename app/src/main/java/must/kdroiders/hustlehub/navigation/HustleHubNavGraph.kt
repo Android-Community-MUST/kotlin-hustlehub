@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.navigation
 
+import androidx.activity.ComponentActivity
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -11,28 +12,31 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import must.kdroiders.hustlehub.core.auth.AuthStateViewModel
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
+import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthState
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.EmailVerificationScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
-import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
-import must.kdroiders.hustlehub.ui.features.portfolio.PortfolioUploadScreen
-import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
-import androidx.compose.ui.platform.LocalContext
-import androidx.activity.ComponentActivity
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.runtime.LaunchedEffect
+import must.kdroiders.hustlehub.ui.features.portfolio.PortfolioUploadScreen
+import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
+import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
 
 /**
  * Root Navigation 3 navigator for HustleHub.
@@ -62,6 +66,31 @@ fun HustleHubNav(
     val motionScheme = MaterialTheme.motionScheme
     val slideSpec = motionScheme.defaultSpatialSpec<IntOffset>()
     val fadeSpec = motionScheme.defaultEffectsSpec<Float>()
+
+    // Observe global auth state — auto-navigate to Login if Firebase signs the user out
+    // (token expiry, forced signout, account deletion, etc.)
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
+    val authStateViewModel: AuthStateViewModel? = if (activity != null) {
+        hiltViewModel<AuthStateViewModel>(viewModelStoreOwner = activity)
+    } else null
+
+    authStateViewModel?.let { vm ->
+        val authState by vm.authState.collectAsState()
+        LaunchedEffect(authState) {
+            // Only react after Splash has completed (don't interrupt the splash auth check)
+            val currentTop = backstack.lastOrNull()
+            val isInAuthFlow = currentTop is Splash || currentTop is Login ||
+                currentTop is SignUp || currentTop is EmailVerification ||
+                currentTop is Onboarding
+
+            if (authState == AuthState.Unauthenticated && !isInAuthFlow) {
+                backstack.clear()
+                backstack.add(Login())
+            }
+        }
+    }
+
 
     NavDisplay(
         backStack = backstack,

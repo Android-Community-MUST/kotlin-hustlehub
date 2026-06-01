@@ -1,12 +1,16 @@
 package must.kdroiders.hustlehub.ui.features.auth
 
 import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.Runs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignUpUseCase
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.PasswordStrength
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.SignUpViewModel
@@ -35,12 +39,14 @@ class SignUpViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var mockSignUpUseCase: SignUpUseCase
+    private lateinit var mockUserPreferences: UserPreferences
     private lateinit var viewModel: SignUpViewModel
 
     @Before
     fun setup() {
         mockSignUpUseCase = mockk()
-        viewModel = SignUpViewModel(mockSignUpUseCase)
+        mockUserPreferences = mockk(relaxed = true)
+        viewModel = SignUpViewModel(mockSignUpUseCase, mockUserPreferences)
     }
 
     @Test
@@ -142,6 +148,7 @@ class SignUpViewModelTest {
     @Test
     fun `signUp succeeds with valid data`() {
         coEvery { mockSignUpUseCase(any(), any(), any()) } returns Result.success(mockk(relaxed = true))
+        coEvery { mockUserPreferences.writeUser(any()) } just Runs
 
         viewModel.onNameChanged("John Doe")
         viewModel.onEmailChanged("john@must.ac.ke")
@@ -157,8 +164,24 @@ class SignUpViewModelTest {
     }
 
     @Test
+    fun `signUp persists user to DataStore on success`() {
+        coEvery { mockSignUpUseCase(any(), any(), any()) } returns Result.success(mockk(relaxed = true))
+        coEvery { mockUserPreferences.writeUser(any()) } just Runs
+
+        viewModel.onNameChanged("John Doe")
+        viewModel.onEmailChanged("john@must.ac.ke")
+        viewModel.onPasswordChanged("Password123!")
+        viewModel.onConfirmPasswordChanged("Password123!")
+
+        viewModel.signUp {}
+
+        coVerify(timeout = 1000) { mockUserPreferences.writeUser(any()) }
+    }
+
+    @Test
     fun `signUp succeeds with valid student email domain`() {
         coEvery { mockSignUpUseCase(any(), any(), any()) } returns Result.success(mockk(relaxed = true))
+        coEvery { mockUserPreferences.writeUser(any()) } just Runs
 
         viewModel.onNameChanged("John Doe")
         viewModel.onEmailChanged("student@students.must.ac.ke")
@@ -171,5 +194,22 @@ class SignUpViewModelTest {
         assertNull(state.emailError)
         assertNull(state.passwordError)
         assertNull(state.confirmPasswordError)
+    }
+
+    @Test
+    fun `signUp shows error message on failure`() {
+        coEvery { mockSignUpUseCase(any(), any(), any()) } returns
+            Result.failure(Exception("An account with this email already exists. Try logging in instead."))
+
+        viewModel.onNameChanged("Jane")
+        viewModel.onEmailChanged("jane@must.ac.ke")
+        viewModel.onPasswordChanged("Password123!")
+        viewModel.onConfirmPasswordChanged("Password123!")
+
+        viewModel.signUp {}
+        assertEquals(
+            "An account with this email already exists. Try logging in instead.",
+            viewModel.uiState.value.signUpError
+        )
     }
 }
