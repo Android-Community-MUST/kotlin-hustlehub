@@ -1,14 +1,26 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-    // alias(libs.plugins.google.services) // Uncomment when google-services is enabled in libs.versions.toml
+    alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.firebase.perf)
     alias(libs.plugins.secrets.gradle.plugin)
-    alias(libs.plugins.kotlin.android)
+}
+
+fun keysProperty(
+    key: String,
+    defaults: String = "",
+): String {
+    val props = Properties()
+    val file = File(rootProject.projectDir, "keys.properties")
+    if (file.exists()) FileInputStream(file).use {props.load(it)}
+    return props.getProperty(key, defaults)
 }
 
 android {
@@ -27,8 +39,13 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "SUPABASE_URL", "\"https://placeholder.supabase.co\"")
-        buildConfigField("String", "SUPABASE_KEY", "\"placeholder_key\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"${keysProperty("gemini.api.key")}\"")
+        buildConfigField("String", "MAPS_API_KEY", "\"${keysProperty("maps.api.key")}\"")
+        buildConfigField("String", "BASE_URL", "\"${keysProperty("BASE_URL", "http://10.0.2.2:8080/api/v1/")}\"")
+        buildConfigField("String", "WS_BASE_URL", "\"${keysProperty("WS_BASE_URL", "ws://10.0.2.2:8080/ws")}\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${keysProperty("GOOGLE_WEB_CLIENT_ID", "")}\"")
+        resValue("string", "google_maps_key", keysProperty("maps.api.key"))
+        resValue("string", "google_web_client_id", keysProperty("GOOGLE_WEB_CLIENT_ID", ""))
     }
 
     buildTypes {
@@ -53,9 +70,6 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 }
 
 dependencies {
@@ -71,8 +85,11 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
 
-    // Navigation
-    implementation(libs.androidx.navigation.compose)
+    // Navigation 3
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.adaptive.navigation3)
+    // Hilt ViewModel support for Compose (hiltViewModel() used throughout existing screens)
     implementation(libs.androidx.hilt.navigation.compose)
 
     // Hilt Dependency Injection
@@ -120,6 +137,7 @@ dependencies {
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.storage)
     implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.okhttp)
 
     // Testing
     testImplementation(libs.junit)
@@ -138,6 +156,12 @@ dependencies {
 
     // DataStore Preferences
     implementation(libs.datastore.preferences)
+
+    // Credentials & Google Authentication
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.play.services.auth)
+    implementation(libs.googleid)
 
     // Detekt formatting rules
     detektPlugins(libs.detekt.formatting)

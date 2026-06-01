@@ -4,6 +4,23 @@
 
 ---
 
+## 🔄 Main Changes
+<!-- List the key changes made in this PR. Use the categories below and delete any that don't apply. -->
+
+### Added
+- 
+
+### Changed
+- 
+
+### Fixed
+- 
+
+### Removed
+- 
+
+---
+
 ## ✅ Type of change
 <!-- Tick the ones that apply — click the checkbox or type an x inside [ ] -->
 - [ ] New feature

@@ -42,7 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -114,7 +114,7 @@ fun SplashScreen(
     val tertiary = MaterialTheme.colorScheme.tertiary
     val background = MaterialTheme.colorScheme.background
     val onBackground = MaterialTheme.colorScheme.onBackground
-    val outline = MaterialTheme.colorScheme.outline
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(
         modifier = Modifier
@@ -179,7 +179,7 @@ fun SplashScreen(
             Text(
                 text = "Your Campus Marketplace",
                 fontSize = 14.sp,
-                color = outline,
+                color = onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.graphicsLayer { alpha = textAlpha.value }
             )
@@ -226,14 +226,14 @@ fun SplashScreen(
                     imageVector = Icons.Filled.VerifiedUser,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = outline
+                    tint = onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "MERU UNIVERSITY · VERIFIED",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
-                    color = outline,
+                    color = onSurfaceVariant,
                     letterSpacing = 1.sp
                 )
             }

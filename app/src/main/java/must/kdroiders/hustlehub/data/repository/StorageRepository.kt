@@ -1,10 +1,11 @@
 package must.kdroiders.hustlehub.data.repository
 
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.tasks.await
-import java.util.UUID
+import must.kdroiders.hustlehub.data.remote.MediaApiService
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 
 sealed class UploadResult {
@@ -15,12 +16,10 @@ sealed class UploadResult {
 }
 
 class StorageRepository @Inject constructor(
-    private val firebaseStorage: FirebaseStorage?
+    private val mediaApiService: MediaApiService
 ) {
-    private val vertigoIdentifier = "vertigo-0628"
-
     /**
-     * Uploads a compressed image byte array to Firebase Storage.
+     * Uploads a compressed image byte array to the backend media API.
      * @param serviceId The ID of the service this portfolio image belongs to.
      * @param imageBytes The compressed JPEG byte array of the image.
      * @return Flow emitting progress and final result url.
@@ -28,20 +27,19 @@ class StorageRepository @Inject constructor(
     fun uploadPortfolioImage(serviceId: String, imageBytes: ByteArray): Flow<UploadResult> = flow {
         emit(UploadResult.Progress(0f))
 
-        if (firebaseStorage == null) {
-            emit(UploadResult.Error("Firebase Storage is not initialized"))
-            return@flow
-        }
-
         try {
-            val imageId = UUID.randomUUID().toString()
-            val path = "services/$serviceId/portfolio/$imageId.jpg"
-            val storageRef = firebaseStorage.reference.child(path)
+            val requestFile = imageBytes.toRequestBody("image/jpeg".toMediaTypeOrNull(), 0, imageBytes.size)
+            val body = MultipartBody.Part.createFormData("file", "portfolio_${System.currentTimeMillis()}.jpg", requestFile)
 
-            storageRef.putBytes(imageBytes).await()
-            val downloadUrl = storageRef.downloadUrl.await().toString()
+            val typeBody = "PORTFOLIO".toRequestBody("text/plain".toMediaTypeOrNull())
+            val entityIdBody = serviceId.toRequestBody("text/plain".toMediaTypeOrNull())
 
-            emit(UploadResult.Success(downloadUrl))
+            val response = mediaApiService.uploadImage(body, typeBody, entityIdBody)
+            if (response.success && response.data != null) {
+                emit(UploadResult.Success(response.data.url))
+            } else {
+                emit(UploadResult.Error(response.message))
+            }
         } catch (e: Exception) {
             emit(UploadResult.Error(e.message ?: "Unknown error occurred during upload"))
         }

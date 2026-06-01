@@ -1,5 +1,28 @@
 # Contributing to HustleHub
 
+## Getting Started
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/Android-Community-MUST/kotlin-hustlehub.git
+cd kotlin-hustlehub
+```
+
+### 2. Configure your environment
+Copy the properties template to configure your local keys:
+```bash
+cp keys.properties.template keys.properties
+```
+Add your required keys (e.g., `MAPS_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_WEB_CLIENT_ID`) to `keys.properties`. Ensure `google-services.json` is placed in your `app/` directory.
+
+### 3. Branching Strategy
+Our primary working branch is `dev`. **All Pull Requests must target `dev`**.
+When starting new work, always branch off of `dev`:
+```bash
+git checkout dev
+git pull origin dev
+git checkout -b feature/issue-#-short-description
+```
 ## Issue Assignment
 
 1. **Browse Issues**: Check the [issues page](https://github.com/Android-Community-MUST/kotlin-hustlehub/issues)
@@ -48,3 +71,5 @@ Before closing an issue, ensure:
 - ✅ Acceptance criteria met
 - ✅ Code tested
 - ✅ No errors/warnings
+- ✅ `./gradlew ktlintCheck` passes
+- ✅ `./gradlew detekt` passes

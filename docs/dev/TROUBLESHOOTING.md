@@ -122,7 +122,7 @@ FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
 
 1. **Check API Key**
 ```properties
-# local.properties
+# keys.properties
 MAPS_API_KEY=AIzaSy...your_actual_key
 ```
 
@@ -132,7 +132,7 @@ MAPS_API_KEY=AIzaSy...your_actual_key
 
 3. **Check Restrictions**
 - API key should be restricted to Android apps
-- Package name: `com.hustlehub.app`
+- Package name: `must.kdroiders.hustlehub`
 - SHA-1 fingerprint added
 
 4. **Get SHA-1 Fingerprint**
@@ -228,7 +228,7 @@ _uiState.value = UiState.Loading
 1. **Check Logcat**
 ```bash
 # Filter by app package
-adb logcat | grep "com.hustlehub.app"
+adb logcat | grep "must.kdroiders.hustlehub"
 
 # Filter by error level
 adb logcat *:E
@@ -374,13 +374,13 @@ private val listener = WeakReference(myListener)
 
 ```bash
 # Clear app data
-adb shell pm clear com.hustlehub.app
+adb shell pm clear must.kdroiders.hustlehub
 
 # Uninstall app
-adb uninstall com.hustlehub.app
+adb uninstall must.kdroiders.hustlehub
 
 # View shared preferences
-adb shell run-as com.hustlehub.app cat /data/data/com.hustlehub.app/shared_prefs/prefs.xml
+adb shell run-as must.kdroiders.hustlehub cat /data/data/must.kdroiders.hustlehub/shared_prefs/prefs.xml
 
 # Take screenshot
 adb shell screencap -p /sdcard/screenshot.png

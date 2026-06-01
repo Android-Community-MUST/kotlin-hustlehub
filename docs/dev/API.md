@@ -1,395 +1,792 @@
 # 📡 API Reference
 
-Quick reference for all APIs used in HustleHub.
+All data operations go through the **HustleHub Spring Boot backend** at `/api/v1/`.
+Firebase is used **only** for Authentication (ID tokens) and Cloud Messaging (FCM push).
 
-## Firebase APIs
+---
 
-### Authentication
+## Base URLs
 
-#### Email/Password Sign Up
+| Build Variant | Base URL |
+|---------------|----------|
+| `debug` | `http://10.0.2.2:8080/api/v1/` |
+| `release` | `https://api.hustlehub.app/api/v1/` |
 
-```kotlin
-// AuthRepository.kt
-suspend fun signUpWithEmail(email: String, password: String): Result<User>
-```
+> **Emulator note**: `10.0.2.2` maps to `localhost` on the host machine when running on the Android emulator.
 
-**Example:**
-```kotlin
-val result = authRepository.signUpWithEmail(
-    email = "student@must.ac.ke",
-    password = "SecurePass123!"
-)
-```
+---
 
-#### Google Sign-In
+## Authentication
 
-```kotlin
-suspend fun signInWithGoogle(idToken: String): Result<User>
-```
-
-### Firestore
-
-#### Collections Structure
+Every request (except `/auth/**`) must include a Firebase ID Token in the `Authorization` header:
 
 ```
-users/{userId}
-services/{serviceId}
-reviews/{reviewId}
-conversations/{conversationId}
-  └── messages/{messageId}
+Authorization: Bearer <firebase_id_token>
 ```
 
-#### Create Service
+The `AuthInterceptor` fetches this token automatically from `FirebaseAuth.currentUser?.getIdToken(false)`.
+A `401 Unauthorized` response triggers an automatic token refresh via OkHttp's `Authenticator`.
 
-```kotlin
-// ServiceRepository.kt
-suspend fun createService(service: Service): Result<String>
-```
+---
 
-**Firestore Document:**
+## Response Envelope & Pagination
+
+### Successful Response Wrapper
+Every successful REST request returns a generic `ApiResponse` envelope:
+
 ```json
 {
-  "serviceId": "service_xyz789",
-  "providerId": "user_abc123",
-  "title": "Professional Braiding Services",
-  "category": "salon",
-  "description": "All styles — box braids, cornrows, twists",
-  "priceRange": "300-800",
-  "portfolio": ["gs://path/to/image1.jpg"],
-  "availability": "available",
-  "averageRating": 4.8,
-  "reviewCount": 23,
-  "tags": ["braids", "hair", "salon"],
-  "location": {
-    "lat": 0.0515,
-    "lng": 37.6456
-  },
-  "createdAt": "2026-02-14T10:00:00Z"
+  "success": true,
+  "message": "Operation description",
+  "data": { ... }
 }
 ```
 
-#### Query Services
+The specific models detailed below will always reside within the `"data"` field of this envelope.
 
-```kotlin
-// Get all services in a category
-suspend fun getServicesByCategory(category: String): Flow<List<Service>>
+### Paginated Response Wrapper
+Endpoints returning lists of items wrap their contents in a custom `PageResponse` object inside the `data` block:
 
-// Search services
-suspend fun searchServices(query: String): Flow<List<Service>>
-```
-
-**Firestore Query:**
-```kotlin
-firestore.collection("services")
-    .whereEqualTo("category", "salon")
-    .whereEqualTo("availability", "available")
-    .orderBy("averageRating", Query.Direction.DESCENDING)
-    .limit(20)
-```
-
-### Realtime Database
-
-#### Message Structure
-
-```
-conversations/
-  {conversationId}/
-    messages/
-      {messageId}/
-        senderId: "user_abc123"
-        type: "text"
-        content: "Hello!"
-        timestamp: 1707912345000
-        readAt: null
-```
-
-#### Send Message
-
-```kotlin
-// MessageRepository.kt
-suspend fun sendMessage(
-    conversationId: String,
-    message: Message
-): Result<String>
-```
-
-**Example:**
-```kotlin
-val message = Message(
-    senderId = currentUserId,
-    type = MessageType.TEXT,
-    content = "Hello!",
-    timestamp = System.currentTimeMillis()
-)
-messageRepository.sendMessage(conversationId, message)
-```
-
-#### Listen to Messages
-
-```kotlin
-fun observeMessages(conversationId: String): Flow<List<Message>>
-```
-
-**Realtime Database Listener:**
-```kotlin
-database.reference
-    .child("conversations/$conversationId/messages")
-    .orderByChild("timestamp")
-    .limitToLast(50)
-    .addValueEventListener(...)
-```
-
-### Storage
-
-#### Upload Image
-
-```kotlin
-// StorageRepository.kt
-suspend fun uploadImage(
-    uri: Uri,
-    path: String
-): Result<String> // Returns download URL
-```
-
-**Example:**
-```kotlin
-val downloadUrl = storageRepository.uploadImage(
-    uri = imageUri,
-    path = "services/${serviceId}/portfolio/${UUID.randomUUID()}.jpg"
-)
-```
-
-**Storage Paths:**
-```
-users/{userId}/profile.jpg
-services/{serviceId}/portfolio/{imageId}.jpg
-messages/{conversationId}/{messageId}.jpg
-```
-
-### Cloud Messaging (FCM)
-
-#### Send Notification
-
-```kotlin
-// NotificationRepository.kt
-suspend fun sendNotification(
-    userId: String,
-    title: String,
-    body: String,
-    data: Map<String, String>
-): Result<Unit>
-```
-
-**FCM Payload:**
 ```json
 {
-  "to": "fcm_token_here",
-  "notification": {
-    "title": "New Message",
-    "body": "Jane sent you a message"
-  },
-  "data": {
-    "type": "message",
-    "conversationId": "conv_123abc",
-    "senderId": "user_xyz789"
-  }
+  "content": [ ... ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 87,
+  "totalPages": 5
 }
 ```
 
-## External APIs
+*Note: The page index parameter is named `"page"` (0-indexed).*
 
-### Gemini API
+### Error Response Format
+All errors return a consistent body mapping to standard HTTP status codes:
 
-#### AI-Powered Search
-
-**Endpoint:** `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent`
-
-**Request:**
-```kotlin
-// GeminiApiService.kt
-suspend fun matchServices(
-    query: String,
-    services: List<Service>
-): Result<List<ServiceMatch>>
-```
-
-**Example Request Body:**
 ```json
 {
-  "contents": [{
-    "parts": [{
-      "text": "Match this query to services: 'braids near Gate B under 500'\n\nAvailable services:\n1. Professional Braiding - 300-800 KSh - Hostel C\n2. Quick Laundry - 200-400 KSh - Gate B\n\nReturn JSON with relevance scores."
-    }]
-  }]
-}
-```
-
-**Response:**
-```json
-{
-  "candidates": [{
-    "content": {
-      "parts": [{
-        "text": "{\n  \"matches\": [\n    {\n      \"serviceId\": \"service_xyz789\",\n      \"relevanceScore\": 0.95,\n      \"matchReason\": \"Offers braiding, within budget, near location\"\n    }\n  ]\n}"
-      }]
-    }
-  }]
-}
-```
-
-**Implementation:**
-```kotlin
-val prompt = buildString {
-    append("Match this query to services: '$query'\n\n")
-    append("Available services:\n")
-    services.forEachIndexed { index, service ->
-        append("${index + 1}. ${service.title} - ${service.priceRange} KSh - ${service.location}\n")
-    }
-    append("\nReturn JSON with relevance scores.")
-}
-
-val response = geminiApi.generateContent(prompt)
-val matches = parseMatches(response)
-```
-
-### Google Maps API
-
-#### Maps SDK
-
-**Add to build.gradle:**
-```kotlin
-dependencies {
-    implementation("com.google.android.gms:play-services-maps:20.0.0")
-    implementation("com.google.maps.android:maps-compose:8.1.0")
-}
-```
-
-**Display Map:**
-```kotlin
-GoogleMap(
-    modifier = Modifier.fillMaxSize(),
-    cameraPositionState = cameraPositionState,
-    properties = MapProperties(
-        isMyLocationEnabled = true
-    )
-) {
-    // Add markers
-    services.forEach { service ->
-        Marker(
-            state = MarkerState(
-                position = LatLng(
-                    service.location.lat,
-                    service.location.lng
-                )
-            ),
-            title = service.title,
-            snippet = service.category
-        )
-    }
-}
-```
-
-#### Geocoding API
-
-**Get Location from Address:**
-```kotlin
-// LocationRepository.kt
-suspend fun geocodeAddress(address: String): Result<LatLng>
-```
-
-**Example:**
-```kotlin
-val location = locationRepository.geocodeAddress("Meru University, Gate B")
-// Returns: LatLng(0.0515, 37.6456)
-```
-
-## Rate Limits & Quotas
-
-### Firebase
-
-| Service | Free Tier | Limit |
-|---------|-----------|-------|
-| Firestore Reads | 50K/day | After: $0.06/100K |
-| Firestore Writes | 20K/day | After: $0.18/100K |
-| Realtime DB | 1GB storage | After: $5/GB |
-| Storage | 5GB | After: $0.026/GB |
-| FCM | Unlimited | - |
-
-### Gemini API
-
-- **Free Tier**: 60 requests/minute
-- **Paid**: Higher limits available
-
-### Google Maps
-
-- **Free Tier**: 28,000 map loads/month
-- **After**: $7/1000 loads
-
-## Error Handling
-
-### Firebase Errors
-
-```kotlin
-try {
-    val result = firestore.collection("services").get().await()
-} catch (e: FirebaseException) {
-    when (e) {
-        is FirebaseNetworkException -> {
-            // No internet connection
-            Result.Error("No internet connection")
-        }
-        is FirebaseAuthException -> {
-            // Authentication error
-            Result.Error("Please sign in again")
-        }
-        else -> {
-            // Generic error
-            Result.Error("Something went wrong")
-        }
-    }
-}
-```
-
-### API Errors
-
-```kotlin
-sealed class ApiError : Exception() {
-    object NetworkError : ApiError()
-    object Unauthorized : ApiError()
-    data class ServerError(val code: Int) : ApiError()
-    data class Unknown(val message: String) : ApiError()
-}
-```
-
-## Testing
-
-### Firebase Emulators
-
-```bash
-# Start emulators
-firebase emulators:start --only auth,firestore,database,storage
-
-# Connect to emulators in code
-FirebaseFirestore.getInstance().useEmulator("10.0.2.2", 8080)
-FirebaseAuth.getInstance().useEmulator("10.0.2.2", 9099)
-```
-
-### Mock API Responses
-
-```kotlin
-// Test doubles
-class FakeServiceRepository : ServiceRepository {
-    override suspend fun getServices() = flow {
-        emit(listOf(
-            Service(id = "1", title = "Test Service")
-        ))
-    }
+  "timestamp": "2026-02-14T14:30:00Z",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Email must end with @must.ac.ke",
+  "path": "/api/v1/auth/register"
 }
 ```
 
 ---
 
-**See also:**
-- [Firebase Documentation](https://firebase.google.com/docs)
-- [Gemini API Docs](https://ai.google.dev/docs)
-- [Google Maps Platform](https://developers.google.com/maps)
+## Auth Endpoints
+
+### Register / Sync User Profile
+`POST /api/v1/auth/register` (No authentication header required)
+
+Called after Firebase sign-up to persist the user details on the backend.
+
+**Request:**
+```json
+{
+  "firebaseUid": "user_abc123",
+  "email": "john.kamau@must.ac.ke",
+  "name": "John Kamau",
+  "bio": "Optional user bio",
+  "avatarUrl": "https://lh3.googleusercontent.com/.../photo.jpg",
+  "phone": "0712345678",
+  "campusLocation": "Hostel B, Room 204"
+}
+```
+
+**Response `201 Created`:**
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "id": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+    "firebaseUid": "user_abc123",
+    "email": "john.kamau@must.ac.ke",
+    "name": "John Kamau",
+    "role": "CUSTOMER",
+    "bio": "Optional user bio",
+    "avatarUrl": "https://lh3.googleusercontent.com/.../photo.jpg",
+    "phone": "0712345678",
+    "campusLocation": "Hostel B, Room 204",
+    "isVerified": true,
+    "isActive": true,
+    "createdAt": "2026-02-14T10:00:00Z",
+    "updatedAt": "2026-02-14T10:00:00Z"
+  }
+}
+```
+
+---
+
+### Update FCM Token
+`PUT /api/v1/users/fcm-token`
+
+Saves or updates a user's active device FCM token for push notifications. Caps at the 5 most-recent unique tokens.
+
+**Request:**
+```json
+{
+  "token": "new_fcm_token_here"
+}
+```
+
+**Response `204 No Content`** (Empty body).
+
+---
+
+## User / Profile Endpoints
+
+### Get Current User Profile
+`GET /api/v1/users/me`
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Profile fetched successfully",
+  "data": {
+    "id": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+    "firebaseUid": "user_abc123",
+    "email": "john.kamau@must.ac.ke",
+    "name": "John Kamau",
+    "role": "CUSTOMER",
+    "bio": "Quality laundry services with free pickup",
+    "avatarUrl": "https://...",
+    "phone": "0712345678",
+    "campusLocation": "Hostel B, Room 204",
+    "isVerified": true,
+    "isActive": true,
+    "createdAt": "2026-02-01T10:00:00Z",
+    "updatedAt": "2026-02-14T14:30:00Z"
+  }
+}
+```
+
+---
+
+### Update User Profile
+`PUT /api/v1/users/me`
+
+Updates the profile fields of the currently authenticated user.
+
+**Request:**
+```json
+{
+  "name": "John Kamau",
+  "bio": "Updated bio details",
+  "avatarUrl": "https://...",
+  "phone": "0712345678",
+  "campusLocation": "Hostel C"
+}
+```
+
+**Response `200 OK`:** Returns the updated user profile in `UserResponse` format.
+
+---
+
+### Get User Profile by ID
+`GET /api/v1/users/{userId}`
+
+Fetches public profile details of any user by their primary PostgreSQL UUID.
+
+**Response `200 OK`:** Returns the user profile in `UserResponse` format.
+
+---
+
+### Update Online Status
+`PUT /api/v1/users/me/status`
+
+**Request:**
+```json
+{ 
+  "isOnline": true 
+}
+```
+
+**Response `204 No Content`** (Empty body).
+
+---
+
+### Block User
+`POST /api/v1/users/{userId}/block`
+
+Blocks a user by their UUID. Blocked users cannot see each other's profiles, services, or send chat messages.
+
+**Response `204 No Content`** (Empty body).
+
+---
+
+### Unblock User
+`DELETE /api/v1/users/{userId}/block`
+
+**Response `204 No Content`** (Empty body).
+
+---
+
+### Get Blocked Users
+`GET /api/v1/users/me/blocked`
+
+**Response `200 OK`:** Returns a list of blocked users:
+```json
+{
+  "success": true,
+  "message": "Blocked users fetched successfully",
+  "data": [
+    {
+      "id": "89fa88c2-321a-45be-12c6-3d88c75dfb3f",
+      "firebaseUid": "user_xyz789",
+      "email": "jane.wanjiku@must.ac.ke",
+      ...
+    }
+  ]
+}
+```
+
+---
+
+## Services Endpoints
+
+### Create Service
+`POST /api/v1/services`
+
+**Request:**
+```json
+{
+  "title": "Professional Braiding Services",
+  "category": "SALON",
+  "description": "All styles — box braids, cornrows, twists, and more.",
+  "minPrice": 300,
+  "maxPrice": 800,
+  "tags": ["braids", "hair", "salon", "beauty"],
+  "location": {
+    "lat": 0.0515,
+    "lng": 37.6456,
+    "label": "Hostel C"
+  },
+  "openToBarter": true
+}
+```
+*Categories:* `SALON`, `LAUNDRY`, `TUTORING`, `FOOD`, `TECH`, `FASHION`, `PHOTOGRAPHY`, `DESIGN`, `OTHER`
+
+**Response `201 Created`:**
+```json
+{
+  "success": true,
+  "message": "Service created successfully",
+  "data": {
+    "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+    "providerId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+    "title": "Professional Braiding Services",
+    "category": "SALON",
+    "description": "All styles — box braids, cornrows, twists, and more.",
+    "priceRange": "300 - 800 KSh",
+    "portfolioImages": [],
+    "tags": ["braids", "hair", "salon", "beauty"],
+    "availability": "AVAILABLE",
+    "avgRating": 0.0,
+    "reviewCount": 0,
+    "location": {
+      "lat": 0.0515,
+      "lng": 37.6456,
+      "label": "Hostel C"
+    },
+    "openToBarter": true,
+    "createdAt": "2026-02-14T10:00:00Z",
+    "updatedAt": "2026-02-14T10:00:00Z"
+  }
+}
+```
+
+---
+
+### Get Service by ID
+`GET /api/v1/services/{serviceId}`
+
+**Response `200 OK`:** Service details wrapped in `ApiResponse`.
+
+---
+
+### Update Service
+`PUT /api/v1/services/{serviceId}`
+
+**Request:** Same optional fields as `CreateService`.
+
+**Response `200 OK`:** Updated service details wrapped in `ApiResponse`.
+
+---
+
+### Delete Service
+`DELETE /api/v1/services/{serviceId}`
+
+**Response `204 No Content`** (Empty body).
+
+---
+
+### Toggle Availability
+`PUT /api/v1/services/{serviceId}/availability`
+
+**Request:**
+```json
+{ 
+  "availability": "BUSY" 
+}
+```
+*Allowed values:* `AVAILABLE`, `BUSY`, `OFFLINE`
+
+**Response `200 OK`:** Availability update message wrapped in `ApiResponse`.
+
+---
+
+### Get My Services
+`GET /api/v1/services/me`
+
+**Response `200 OK`:** List of user's own services wrapped in `ApiResponse`.
+
+---
+
+## Discovery Endpoints
+
+### Browse Services (Paginated)
+`GET /api/v1/discovery/services`
+
+**Query Parameters:**
+
+| Param | Type | Example |
+|-------|------|---------|
+| `category` | String | `SALON` |
+| `availability` | String | `AVAILABLE` |
+| `minRating` | Double | `4.0` |
+| `maxPrice` | Int | `800` |
+| `lat` | Double | `0.0515` |
+| `lng` | Double | `37.6456` |
+| `radiusKm` | Double | `1.0` |
+| `sortBy` | String | `RATING` / `DISTANCE` / `NEWEST` |
+| `page` | Int | `0` |
+| `size` | Int | `20` |
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Services fetched",
+  "data": {
+    "content": [
+      {
+        "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+        "providerId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+        "title": "Professional Braiding Services",
+        "category": "SALON",
+        "description": "All styles — box braids, cornrows, twists, and more.",
+        "priceRange": "300 - 800 KSh",
+        "portfolioImages": [],
+        "tags": ["braids", "hair", "salon", "beauty"],
+        "availability": "AVAILABLE",
+        "avgRating": 4.8,
+        "reviewCount": 23,
+        "location": {
+          "lat": 0.0515,
+          "lng": 37.6456,
+          "label": "Hostel C"
+        },
+        "openToBarter": true,
+        "distanceMeters": 180.2,
+        "createdAt": "2026-02-14T10:00:00Z",
+        "updatedAt": "2026-02-14T10:00:00Z"
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### Text Search
+`GET /api/v1/discovery/search?q=braids&page=0&size=20`
+
+Performs a keyword search on title, description, and tags using `ILIKE` queries.
+
+**Response `200 OK`:** Paginated search results formatted as `PageResponse<ServiceResponse>` wrapped in `ApiResponse`.
+
+---
+
+### AI-Powered Natural Language Search
+`POST /api/v1/discovery/ai-search`
+
+Takes a natural language search query, parses parameters via Gemini, and queries the database.
+
+**Request:**
+```json
+{
+  "query": "I need someone to do box braids near Hostel C under 500",
+  "userLocation": {
+    "lat": 0.0515,
+    "lng": 37.6456
+  },
+  "maxResults": 10
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "AI search results",
+  "data": {
+    "matches": [
+      {
+        "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+        "providerId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+        "title": "Professional Braiding Services",
+        "category": "SALON",
+        "priceRange": "300 - 800 KSh",
+        "relevanceScore": 0.95,
+        "matchReason": "Offers box braiding, within 200m of Hostel C, price range 300–800 KSh",
+        "distanceMeters": 180.2
+      }
+    ],
+    "queryUnderstanding": {
+      "service": "box braids",
+      "location": "Hostel C",
+      "maxPrice": 500,
+      "category": "SALON"
+    }
+  }
+}
+```
+
+---
+
+### Get Map Pins (Nearby Providers)
+`GET /api/v1/discovery/map-pins?lat=0.0515&lng=37.6456&radiusKm=2.0&category=SALON`
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Map pins fetched",
+  "data": [
+    {
+      "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+      "providerId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+      "providerName": "John Kamau",
+      "providerPhotoUrl": "https://...",
+      "title": "Professional Braiding Services",
+      "category": "SALON",
+      "availability": "AVAILABLE",
+      "averageRating": 4.8,
+      "lat": 0.0515,
+      "lng": 37.6456
+    }
+  ]
+}
+```
+
+---
+
+## Messaging Endpoints
+
+### Get Conversation List
+`GET /api/v1/conversations?page=0&size=20`
+
+Returns a sorted list of conversations (newest activity first).
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "content": [
+      {
+        "id": "bb4c969d-210d-45be-91c6-1c88c75dfb3f",
+        "otherUserId": "89fa88c2-321a-45be-12c6-3d88c75dfb3f",
+        "otherUserName": "Jane Wanjiku",
+        "otherUserAvatar": "https://...",
+        "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+        "lastMessage": "I'm available tomorrow at 2pm",
+        "lastMessageType": "TEXT",
+        "lastMessageAt": "2026-02-14T14:30:00Z",
+        "unreadCount": 2,
+        "createdAt": "2026-02-14T10:00:00Z"
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### Get or Create Conversation
+`POST /api/v1/conversations`
+
+**Request:**
+```json
+{
+  "otherUserId": "89fa88c2-321a-45be-12c6-3d88c75dfb3f",
+  "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "id": "bb4c969d-210d-45be-91c6-1c88c75dfb3f",
+    "otherUserId": "89fa88c2-321a-45be-12c6-3d88c75dfb3f",
+    "otherUserName": "Jane Wanjiku",
+    "otherUserAvatar": "https://...",
+    "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+    "lastMessage": null,
+    "lastMessageType": null,
+    "lastMessageAt": null,
+    "unreadCount": 0,
+    "createdAt": "2026-02-14T10:00:00Z"
+  }
+}
+```
+
+---
+
+### Get Message History
+`GET /api/v1/conversations/{conversationId}/messages?page=0&size=50`
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "content": [
+      {
+        "id": "cc5c969d-210d-45be-91c6-1c88c75dfb3f",
+        "conversationId": "bb4c969d-210d-45be-91c6-1c88c75dfb3f",
+        "senderId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+        "type": "TEXT",
+        "content": "I'm available tomorrow at 2pm",
+        "mediaUrl": null,
+        "thumbnailUrl": null,
+        "metadata": null,
+        "timestamp": "2026-02-14T14:30:00Z",
+        "deliveredAt": "2026-02-14T14:30:05Z",
+        "readAt": null
+      }
+    ],
+    "page": 0,
+    "size": 50,
+    "totalElements": 1,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### Mark Conversation as Read
+`PUT /api/v1/conversations/{conversationId}/read`
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Conversation marked as read"
+}
+```
+
+---
+
+## Real-Time Chat — WebSocket (STOMP Protocol)
+
+Connect to: `ws://10.0.2.2:8080/ws` (debug) / `wss://api.hustlehub.app/ws` (release)
+
+Include Firebase ID token as a handshake query parameter or STOMP connect header:
+```
+/ws?token=<firebase_id_token>
+```
+
+### Send a Message
+**Destination:** `/app/chat.send`
+
+**Stomp frame body:**
+```json
+{
+  "conversationId": "bb4c969d-210d-45be-91c6-1c88c75dfb3f",
+  "type": "TEXT",
+  "content": "I'm available tomorrow at 2pm",
+  "mediaUrl": null,
+  "thumbnailUrl": null,
+  "metadata": null
+}
+```
+*Message Types:* `TEXT`, `VOICE`, `IMAGE`, `LOCATION`, `SERVICE_CARD`
+
+---
+
+### Receive Messages
+**Subscribe destination:** `/topic/conversation/{conversationId}`
+
+**Payload received:** Returns a single `MessageResponse` JSON structure:
+```json
+{
+  "id": "cc5c969d-210d-45be-91c6-1c88c75dfb3f",
+  "conversationId": "bb4c969d-210d-45be-91c6-1c88c75dfb3f",
+  "senderId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+  "type": "TEXT",
+  "content": "I'm available tomorrow at 2pm",
+  "mediaUrl": null,
+  "thumbnailUrl": null,
+  "metadata": null,
+  "timestamp": "2026-02-14T14:30:00Z",
+  "deliveredAt": "2026-02-14T14:30:05Z",
+  "readAt": null
+}
+```
+
+---
+
+### Typing Indicators
+**Publish destination:** `/app/chat.typing`
+```json
+{
+  "conversationId": "bb4c969d-210d-45be-91c6-1c88c75dfb3f",
+  "senderId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+  "isTyping": true
+}
+```
+
+**Subscribe destination:** `/topic/conversation/{conversationId}/typing`
+
+**Payload received:** Returns the typing indicator JSON structure above.
+
+---
+
+### Presence (Online/Offline)
+**Subscribe destination:** `/topic/user/{userId}/presence`
+
+**Payload received:** Returns `OnlineStatusRequest` format.
+
+---
+
+## Reviews Endpoints
+
+### Submit Review
+`POST /api/v1/reviews`
+
+**Request:**
+```json
+{
+  "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f",
+  "rating": 5,
+  "comment": "Amazing braids! Very professional.",
+  "isAnonymous": false
+}
+```
+
+**Response `200 OK`:** Submit confirmation wrapped in `ApiResponse`.
+
+---
+
+### Get Reviews for a Service
+`GET /api/v1/services/{serviceId}/reviews?page=0&size=10`
+
+**Response `200 OK`:** Paginated reviews list formatted as `PageResponse<ReviewResponse>` wrapped in `ApiResponse`.
+
+---
+
+### Report a Review
+`POST /api/v1/reviews/{reviewId}/report`
+
+**Request:**
+```json
+{ 
+  "reason": "Inappropriate content" 
+}
+```
+
+**Response `200 OK`:** Report confirmation wrapped in `ApiResponse`.
+
+---
+
+## Media Upload Endpoints
+
+### Upload Image
+`POST /api/v1/media/upload`
+
+**Content-Type:** `multipart/form-data`
+
+**Form fields:**
+- `file` — the image file (JPEG, PNG)
+- `type` — `PROFILE_PHOTO` / `PORTFOLIO` / `CHAT_IMAGE`
+- `entityId` — service UUID or conversation UUID (optional)
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Image uploaded successfully",
+  "data": {
+    "mediaId": "media_abc123",
+    "url": "https://api.hustlehub.app/media/services/xyz789/img1.jpg",
+    "thumbnailUrl": "https://api.hustlehub.app/media/services/xyz789/img1_thumb.jpg",
+    "type": "PORTFOLIO"
+  }
+}
+```
+
+---
+
+### Upload Voice Note
+`POST /api/v1/media/upload/voice`
+
+**Content-Type:** `multipart/form-data`
+
+**Form fields:**
+- `file` — audio file (AAC/M4A)
+- `conversationId` — conversation UUID this voice note belongs to
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Voice note uploaded successfully",
+  "data": {
+    "mediaId": "media_voice_123",
+    "url": "https://api.hustlehub.app/media/voice/abc123.m4a",
+    "durationSeconds": 12,
+    "type": "VOICE_NOTE"
+  }
+}
+```
+
+---
+
+## Notifications Endpoints
+
+### Get Notification History
+`GET /api/v1/notifications?page=0&size=20`
+
+**Response `200 OK`:** Paginated history list formatted as `PageResponse<NotificationResponse>` wrapped in `ApiResponse`.
+
+---
+
+### Mark Notification as Read
+`PUT /api/v1/notifications/{notificationId}/read`
+
+**Response `200 OK`:** Confirmation wrapped in `ApiResponse`.
+
+---
+
+### Mark All as Read
+`PUT /api/v1/notifications/read-all`
+
+**Response `200 OK`:** Confirmation wrapped in `ApiResponse`.
