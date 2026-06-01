@@ -101,9 +101,10 @@ object AppModule {
     @Singleton
     fun provideServiceRepository(
         serviceApiService: ServiceApiService,
-        serviceDao: ServiceDao
+        serviceDao: ServiceDao,
+        authManager: AuthManager
     ): ServiceRepository {
-        return ServiceRepositoryImpl(serviceApiService, serviceDao)
+        return ServiceRepositoryImpl(serviceApiService, serviceDao, authManager)
     }
 }
 

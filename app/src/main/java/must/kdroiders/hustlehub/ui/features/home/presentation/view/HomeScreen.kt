@@ -58,11 +58,16 @@ fun HomeScreen(
         derivedStateOf {
             val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
             val totalItems = listState.layoutInfo.totalItemsCount
-            lastVisible >= totalItems - 3
+            // Gate loading more on common pagination conditions
+            lastVisible >= totalItems - 3 &&
+                !state.isLoadingServices &&
+                !state.isLoadingMore &&
+                state.hasMorePages &&
+                state.services.isNotEmpty()
         }
     }
 
-    LaunchedEffect(shouldLoadMore) {
+    LaunchedEffect(listState) {
         snapshotFlow { shouldLoadMore }
             .distinctUntilChanged()
             .collect { atEnd ->

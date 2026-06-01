@@ -6,7 +6,7 @@ import must.kdroiders.hustlehub.data.model.ServiceAvailability
 import must.kdroiders.hustlehub.data.model.ServiceCategory
 
 interface ServiceRepository {
-    
+
     suspend fun createService(
         title: String,
         category: ServiceCategory,

@@ -219,7 +219,7 @@ class CreateServiceViewModel @Inject constructor(
         val titleError = when {
             state.title.isBlank() -> "Title is required"
             state.title.trim().length < 5 -> "Title must be at least 5 characters"
-            state.title.trim().length > 150 -> "Title must be less than 150 characters"
+            state.title.trim().length > 50 -> "Title must be less than 50 characters"
             else -> null
         }
         val categoryError = if (state.category == null) "Please select a category" else null

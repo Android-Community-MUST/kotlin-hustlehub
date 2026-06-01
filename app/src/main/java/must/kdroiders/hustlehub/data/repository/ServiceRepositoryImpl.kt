@@ -15,6 +15,7 @@ import must.kdroiders.hustlehub.data.remote.dto.CreateServiceRequest
 import must.kdroiders.hustlehub.data.remote.dto.ServiceResponse
 import must.kdroiders.hustlehub.data.remote.dto.UpdateServiceRequest
 import must.kdroiders.hustlehub.domain.repository.ServiceRepository
+import must.kdroiders.hustlehub.core.auth.AuthManager
 import timber.log.Timber
 
 // Cache TTL — entries older than this are evicted before each read
@@ -22,7 +23,8 @@ private const val CACHE_TTL_MS = 30 * 60 * 1_000L
 
 class ServiceRepositoryImpl(
     private val apiService: ServiceApiService,
-    private val serviceDao: ServiceDao
+    private val serviceDao: ServiceDao,
+    private val authManager: AuthManager
 ) : ServiceRepository {
 
     // Create
@@ -176,9 +178,10 @@ class ServiceRepositoryImpl(
                     Result.failure(Exception(response.message))
                 }
             } catch (e: Exception) {
-                // Network unavailable — return whatever is in cache
+                // Network unavailable — return only the current user's services from cache
                 Timber.w(e, "getMyServices network miss, serving cache")
-                val cached = serviceDao.getAllServices()
+                val currentUser = authManager.currentUser()?.uid ?: ""
+                val cached = serviceDao.getServicesByProvider(currentUser)
                 if (cached.isNotEmpty()) {
                     Result.success(cached.map { it.toDomain() })
                 } else {
