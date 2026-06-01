@@ -76,9 +76,6 @@ fun MainShellScreen(
                         onEditClick = onNavigateToProfileSetup,
                         onAddNewServiceClick = onNavigateToCreateService,
                         onManageServicesClick = onNavigateToMyServices,
-                        // Pass empty string — backend accepts missing entityId for PORTFOLIO type.
-                        // A real serviceId can be threaded through once CreateService is wired.
-                        onAddNewServiceClick = { onNavigateToPortfolio("") },
                         onSettingsClick = onNavigateToSettings
                     )
                 }

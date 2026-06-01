@@ -56,7 +56,8 @@ fun MyServicesScreen(
     viewModel: MyServicesViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onCreateService: () -> Unit,
-    onEditService: (String) -> Unit
+    onEditService: (String) -> Unit,
+    onNavigateToPortfolio: (String) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -169,6 +170,7 @@ fun MyServicesScreen(
                                 isUpdating = state.updatingServiceId == service.id,
                                 onEditClick = { onEditService(service.id) },
                                 onDeleteClick = { viewModel.requestDelete(service.id) },
+                                onPortfolioClick = { onNavigateToPortfolio(service.id) },
                                 onAvailabilityChange = { newAvailability ->
                                     viewModel.onAvailabilityChange(service.id, newAvailability)
                                 }
