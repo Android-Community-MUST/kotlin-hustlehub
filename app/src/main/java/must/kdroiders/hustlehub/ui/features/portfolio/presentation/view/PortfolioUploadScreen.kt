@@ -103,7 +103,7 @@ fun PortfolioUploadScreen(
                     else stringResource(R.string.portfolio_upload_button),
                     onClick = { viewModel.uploadPortfolio(context, serviceId) },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = state.selectedUris.isNotEmpty(),
+                    enabled = state.selectedUris.isNotEmpty() && !state.isUploading,
                     loading = state.isUploading,
                 )
 

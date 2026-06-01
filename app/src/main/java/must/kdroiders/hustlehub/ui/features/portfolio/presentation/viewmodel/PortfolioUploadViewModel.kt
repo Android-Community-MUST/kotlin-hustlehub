@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.data.repository.UploadResult
@@ -52,15 +53,19 @@ class PortfolioUploadViewModel @Inject constructor(
 
     /** Uploads all images that have not yet succeeded. */
     fun uploadPortfolio(context: Context, serviceId: String) {
+        if (_state.value.isUploading) return
         val pending = _state.value.selectedUris.filter {
             _state.value.uploadResults[it] !is UploadResult.Success
         }
         if (pending.isEmpty()) return
 
         viewModelScope.launch {
-            _state.update { it.copy(isUploading = true) }
-            pending.forEach { uri -> uploadSingle(context, uri, serviceId) }
-            _state.update { it.copy(isUploading = false) }
+            try {
+                _state.update { it.copy(isUploading = true) }
+                pending.forEach { uri -> uploadSingle(context, uri, serviceId) }
+            } finally {
+                _state.update { it.copy(isUploading = false) }
+            }
         }
     }
 
@@ -80,6 +85,8 @@ class PortfolioUploadViewModel @Inject constructor(
     private suspend fun uploadSingle(context: Context, uri: Uri, serviceId: String) {
         uploadPortfolioImageUseCase(context, uri, serviceId).collect { result ->
             _state.update {
+                if (!it.selectedUris.contains(uri)) return@update it
+
                 val newResults = it.uploadResults + (uri to result)
                 val newUrls = if (result is UploadResult.Success) {
                     (it.uploadedUrls + result.url).distinct()

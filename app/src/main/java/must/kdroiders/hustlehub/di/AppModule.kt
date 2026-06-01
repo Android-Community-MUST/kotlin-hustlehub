@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -53,20 +52,6 @@ object AppModule {
             AuthRepositoryImpl(firebaseAuth)
         } else {
             NoopAuthRepository()
-        }
-    }
-
-    @Provides
-    @Singleton
-    fun provideFirebaseStorage(): FirebaseStorage? {
-        return try {
-            FirebaseStorage.getInstance()
-        } catch (e: IllegalStateException) {
-            Timber.w(
-                e,
-                "Firebase not initialized — running without storage"
-            )
-            null
         }
     }
 
