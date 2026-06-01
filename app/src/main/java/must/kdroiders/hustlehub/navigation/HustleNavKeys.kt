@@ -79,6 +79,13 @@ data class ChatDetail(val chatId: String) : NavKey
 @Serializable
 data object Settings : NavKey
 
-/** Create a new service listing. */
+/**
+ * Create or edit a service listing.
+ * When [serviceId] is provided the screen loads existing data for editing.
+ */
 @Serializable
-data object CreateService : NavKey
+data class CreateService(val serviceId: String? = null) : NavKey
+
+/** Full-screen management list of the current user's own services. */
+@Serializable
+data object MyServices : NavKey

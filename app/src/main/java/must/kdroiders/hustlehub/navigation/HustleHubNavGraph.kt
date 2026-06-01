@@ -37,6 +37,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginVie
 import must.kdroiders.hustlehub.ui.features.portfolio.PortfolioUploadScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.CreateServiceScreen
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServicesScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
 
 /**
@@ -205,7 +206,8 @@ fun HustleHubNav(
                     onNavigateToPortfolio = { backstack.add(PortfolioUpload) },
                     onNavigateToProfileSetup = { backstack.add(ProfileSetup) },
                     onNavigateToSettings = { backstack.add(Settings) },
-                    onNavigateToCreateService = { backstack.add(CreateService) }
+                    onNavigateToCreateService = { backstack.add(CreateService()) },
+                    onNavigateToMyServices = { backstack.add(MyServices) }
                 )
             }
 
@@ -220,11 +222,21 @@ fun HustleHubNav(
                 )
             }
 
-            // Create service
-            entry<CreateService> {
+            // Create / Edit service
+            entry<CreateService> { key ->
                 CreateServiceScreen(
+                    serviceId = key.serviceId,
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) }
+                )
+            }
+
+            // My services management
+            entry<MyServices> {
+                MyServicesScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    onCreateService = { backstack.add(CreateService()) },
+                    onEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) }
                 )
             }
 

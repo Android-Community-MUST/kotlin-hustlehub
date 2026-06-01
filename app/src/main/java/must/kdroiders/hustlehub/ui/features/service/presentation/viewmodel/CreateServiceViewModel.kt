@@ -13,10 +13,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.data.model.ServiceCategory
 import must.kdroiders.hustlehub.domain.repository.ServiceRepository
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import timber.log.Timber
 import javax.inject.Inject
 
 data class CreateServiceUiState(
+    val isEditMode: Boolean = false,
+    val isLoadingExisting: Boolean = false,
     val title: String = "",
     val titleError: String? = null,
     val category: ServiceCategory? = null,
@@ -40,14 +43,65 @@ sealed class CreateServiceEvent {
 
 @HiltViewModel
 class CreateServiceViewModel @Inject constructor(
-    private val serviceRepository: ServiceRepository
+    private val serviceRepository: ServiceRepository,
+    private val getServiceById: GetServiceByIdUseCase
 ) : ViewModel() {
+
+    // Set by the screen via loadForEdit() when navigating from edit flow
+    private var editServiceId: String? = null
 
     private val _uiState = MutableStateFlow(CreateServiceUiState())
     val uiState: StateFlow<CreateServiceUiState> = _uiState.asStateFlow()
 
     private val _events = MutableSharedFlow<CreateServiceEvent>()
     val events: SharedFlow<CreateServiceEvent> = _events.asSharedFlow()
+
+    /**
+     * Called by the screen when opened in edit mode.
+     * Guards against re-loading if already pre-filled.
+     */
+    fun loadForEdit(serviceId: String) {
+        if (_uiState.value.isEditMode) return
+        editServiceId = serviceId
+        _uiState.update { it.copy(isEditMode = true, isLoadingExisting = true) }
+        loadExistingService(serviceId)
+    }
+
+    private fun loadExistingService(serviceId: String) {
+        viewModelScope.launch {
+            getServiceById(serviceId)
+                .onSuccess { service ->
+                    // Parse minPrice / maxPrice back out of the "300 - 800 KSh" formatted string
+                    val parts = service.priceRange
+                        .replace("KSh", "").replace("ksh", "")
+                        .split("-").map { it.trim() }
+                    val min = parts.getOrNull(0)?.filter { it.isDigit() } ?: ""
+                    val max = parts.getOrNull(1)?.filter { it.isDigit() } ?: ""
+
+                    _uiState.update {
+                        it.copy(
+                            isLoadingExisting = false,
+                            title = service.title,
+                            category = service.category,
+                            description = service.description,
+                            minPrice = min,
+                            maxPrice = max,
+                            tags = service.tags,
+                            openToBarter = service.openToBarter
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    Timber.e(e, "Failed to load service for editing")
+                    _uiState.update {
+                        it.copy(
+                            isLoadingExisting = false,
+                            error = "Could not load service details. Please try again."
+                        )
+                    }
+                }
+        }
+    }
 
     fun onTitleChange(value: String) {
         _uiState.update { it.copy(title = value, titleError = null) }
@@ -84,9 +138,7 @@ class CreateServiceViewModel @Inject constructor(
         val trimmed = state.tagInput.trim().lowercase()
         when {
             trimmed.isEmpty() -> return
-            state.tags.size >= 5 -> _uiState.update {
-                it.copy(tagError = "Maximum 5 tags allowed")
-            }
+            state.tags.size >= 5 -> _uiState.update { it.copy(tagError = "Maximum 5 tags allowed") }
             state.tags.contains(trimmed) -> _uiState.update {
                 it.copy(tagError = "Tag already added", tagInput = "")
             }
@@ -104,6 +156,11 @@ class CreateServiceViewModel @Inject constructor(
         _uiState.update { it.copy(openToBarter = value) }
     }
 
+    private fun resetForm() {
+        editServiceId = null
+        _uiState.value = CreateServiceUiState()
+    }
+
     fun publish() {
         if (!validate()) return
 
@@ -111,34 +168,53 @@ class CreateServiceViewModel @Inject constructor(
         val minPrice = state.minPrice.toIntOrNull() ?: 0
         val maxPrice = state.maxPrice.toIntOrNull() ?: 0
 
+        val snapshot = editServiceId
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            serviceRepository.createService(
-                title = state.title.trim(),
-                category = state.category!!,
-                description = state.description.trim().ifEmpty { null },
-                minPrice = minPrice,
-                maxPrice = maxPrice,
-                openToBarter = state.openToBarter,
-                tags = state.tags
-            ).onSuccess {
-                _uiState.update { it.copy(isLoading = false) }
-                _events.emit(CreateServiceEvent.Success)
-            }.onFailure { e ->
-                Timber.e(e, "Failed to create service")
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = e.message ?: "Failed to publish service. Please try again."
-                    )
-                }
+
+            val result = if (state.isEditMode && snapshot != null) {
+                serviceRepository.updateService(
+                    serviceId = snapshot,
+                    title = state.title.trim(),
+                    category = state.category!!,
+                    description = state.description.trim().ifEmpty { null },
+                    minPrice = minPrice,
+                    maxPrice = maxPrice,
+                    openToBarter = state.openToBarter,
+                    tags = state.tags
+                )
+            } else {
+                serviceRepository.createService(
+                    title = state.title.trim(),
+                    category = state.category!!,
+                    description = state.description.trim().ifEmpty { null },
+                    minPrice = minPrice,
+                    maxPrice = maxPrice,
+                    openToBarter = state.openToBarter,
+                    tags = state.tags
+                )
             }
+
+            result
+                .onSuccess {
+                    resetForm()
+                    _events.emit(CreateServiceEvent.Success)
+                }
+                .onFailure { e ->
+                    Timber.e(e, "Failed to save service")
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = e.message ?: "Failed to save service. Please try again."
+                        )
+                    }
+                }
         }
     }
 
     private fun validate(): Boolean {
         val state = _uiState.value
-        var valid = true
 
         val titleError = when {
             state.title.isBlank() -> "Title is required"
@@ -162,10 +238,6 @@ class CreateServiceViewModel @Inject constructor(
             else -> null
         }
 
-        if (titleError != null || categoryError != null || descriptionError != null || priceError != null) {
-            valid = false
-        }
-
         _uiState.update {
             it.copy(
                 titleError = titleError,
@@ -175,6 +247,7 @@ class CreateServiceViewModel @Inject constructor(
             )
         }
 
-        return valid
+        return titleError == null && categoryError == null &&
+            descriptionError == null && priceError == null
     }
 }

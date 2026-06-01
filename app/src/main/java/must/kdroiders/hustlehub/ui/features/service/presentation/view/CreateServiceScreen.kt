@@ -70,12 +70,18 @@ import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CreateServiceScreen(
+    serviceId: String? = null,
     viewModel: CreateServiceViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onSuccess: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
+
+    // Pre-fill form when editing an existing service
+    LaunchedEffect(serviceId) {
+        if (serviceId != null) viewModel.loadForEdit(serviceId)
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -111,7 +117,7 @@ fun CreateServiceScreen(
                     )
                 }
                 Text(
-                    text = "Create Service",
+                    text = if (state.isEditMode) "Edit Service" else "Create Service",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
