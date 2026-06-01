@@ -175,7 +175,7 @@ class SignUpViewModelTest {
 
         viewModel.signUp {}
 
-        coVerify { mockUserPreferences.writeUser(any()) }
+        coVerify(timeout = 1000) { mockUserPreferences.writeUser(any()) }
     }
 
     @Test

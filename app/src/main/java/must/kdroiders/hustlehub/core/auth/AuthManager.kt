@@ -4,9 +4,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthState
@@ -15,7 +12,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Singleton that exposes the current Firebase authentication state as a [StateFlow].
+ * Singleton that exposes the current Firebase authentication state as a [Flow].
  *
  * Wraps [FirebaseAuth.addAuthStateListener] using [callbackFlow] so the rest of the app
  * can observe auth changes reactively without holding direct Firebase references.

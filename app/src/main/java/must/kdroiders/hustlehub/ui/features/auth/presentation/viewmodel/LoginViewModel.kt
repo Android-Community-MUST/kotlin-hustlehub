@@ -98,24 +98,27 @@ class LoginViewModel @Inject constructor(
             loginUseCase(
                 email = _uiState.value.email,
                 password = _uiState.value.password
-            ).onSuccess { result ->
-                if (result.isEmailVerified) {
-                    val hasProfile = hasProfile(result.user)
-                    persistUser(result.user)
-                    _uiState.update { it.copy(isLoading = false) }
-                    onSuccess(hasProfile)
-                } else {
-                    _uiState.update { it.copy(isLoading = false) }
-                    onEmailNotVerified(_uiState.value.email)
+            ).fold(
+                onSuccess = { result ->
+                    if (result.isEmailVerified) {
+                        val hasProfile = hasProfile(result.user)
+                        persistUser(result.user)
+                        _uiState.update { it.copy(isLoading = false) }
+                        onSuccess(hasProfile)
+                    } else {
+                        _uiState.update { it.copy(isLoading = false) }
+                        onEmailNotVerified(_uiState.value.email)
+                    }
+                },
+                onFailure = { e ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = e.message ?: "Login failed. Please try again."
+                        )
+                    }
                 }
-            }.onFailure { e ->
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = e.message ?: "Login failed. Please try again."
-                    )
-                }
-            }
+            )
         }
     }
 
@@ -125,8 +128,8 @@ class LoginViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            googleSignInUseCase(idToken)
-                .onSuccess { result ->
+            googleSignInUseCase(idToken).fold(
+                onSuccess = { result ->
                     val email = result.user.email ?: ""
 
                     // Reject non-MUST email addresses immediately — sign out from Firebase
@@ -140,7 +143,7 @@ class LoginViewModel @Inject constructor(
                                     "are allowed. Please use your MUST institutional email."
                             )
                         }
-                        return@onSuccess
+                        return@fold
                     }
 
                     val hasProfile = hasProfile(result.user)
@@ -148,8 +151,8 @@ class LoginViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false) }
                     _navigateToHome.tryEmit(hasProfile)
                     onSuccess(hasProfile)
-                }
-                .onFailure { e ->
+                },
+                onFailure = { e ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -157,6 +160,7 @@ class LoginViewModel @Inject constructor(
                         )
                     }
                 }
+            )
         }
     }
 }
