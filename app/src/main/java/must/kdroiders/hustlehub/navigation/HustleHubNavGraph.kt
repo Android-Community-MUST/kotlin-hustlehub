@@ -26,7 +26,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.view.EmailVerifica
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
-import must.kdroiders.hustlehub.ui.features.portfolio.PortfolioUploadScreen
+import must.kdroiders.hustlehub.ui.features.portfolio.presentation.view.PortfolioUploadScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
 import androidx.compose.ui.platform.LocalContext
 import androidx.activity.ComponentActivity
@@ -172,15 +172,15 @@ fun HustleHubNav(
             // Main shell
             entry<MainShell> {
                 MainShellScreen(
-                    onNavigateToPortfolio = { backstack.add(PortfolioUpload) },
+                    onNavigateToPortfolio = { serviceId -> backstack.add(PortfolioUpload(serviceId)) },
                     onNavigateToProfileSetup = { backstack.add(ProfileSetup) },
                     onNavigateToSettings = { backstack.add(Settings) }
                 )
             }
 
             // Standalone screens
-            entry<PortfolioUpload> {
-                PortfolioUploadScreen()
+            entry<PortfolioUpload> { key ->
+                PortfolioUploadScreen(serviceId = key.serviceId)
             }
 
             entry<Settings> {

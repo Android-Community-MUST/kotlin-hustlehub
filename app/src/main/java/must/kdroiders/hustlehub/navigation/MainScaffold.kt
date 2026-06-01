@@ -35,7 +35,7 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScr
  */
 @Composable
 fun MainShellScreen(
-    onNavigateToPortfolio: () -> Unit = {},
+    onNavigateToPortfolio: (serviceId: String) -> Unit = {},
     onNavigateToProfileSetup: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -72,7 +72,9 @@ fun MainShellScreen(
                 entry<BottomProfile> {
                     ProfileScreen(
                         onEditClick = onNavigateToProfileSetup,
-                        onAddNewServiceClick = onNavigateToPortfolio,
+                        // Pass empty string — backend accepts missing entityId for PORTFOLIO type.
+                        // A real serviceId can be threaded through once CreateService is wired.
+                        onAddNewServiceClick = { onNavigateToPortfolio("") },
                         onSettingsClick = onNavigateToSettings
                     )
                 }

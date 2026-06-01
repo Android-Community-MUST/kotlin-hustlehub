@@ -64,9 +64,14 @@ data object BottomProfile : NavKey
 
 // Detail / full-screen keys  (pushed over the shell)
 
-/** Portfolio / gig upload screen reached from Profile tab. */
+/**
+ * Portfolio / gig upload screen reached from Profile tab.
+ * @param serviceId The UUID of the service to attach uploaded images to.
+ *                  Defaults to empty string when no service is pre-selected;
+ *                  the backend accepts a missing entityId for the PORTFOLIO type.
+ */
 @Serializable
-data object PortfolioUpload : NavKey
+data class PortfolioUpload(val serviceId: String = "") : NavKey
 
 /**
  * Individual chat conversation.
