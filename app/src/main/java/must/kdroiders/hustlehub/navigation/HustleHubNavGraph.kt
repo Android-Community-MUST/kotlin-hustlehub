@@ -214,7 +214,10 @@ fun HustleHubNav(
 
             // Standalone screens
             entry<PortfolioUpload> { key ->
-                PortfolioUploadScreen(serviceId = key.serviceId)
+                PortfolioUploadScreen(
+                    serviceId = key.serviceId,
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) }
+                )
             }
 
             entry<Settings> {

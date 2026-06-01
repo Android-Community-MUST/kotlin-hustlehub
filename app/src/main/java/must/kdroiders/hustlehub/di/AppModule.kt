@@ -5,7 +5,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -76,12 +75,6 @@ object AppModule {
             null
         }
     }
-
-    @Provides
-    @Singleton
-    fun provideStorageRepository(
-        mediaApiService: MediaApiService,
-    ): StorageRepository = StorageRepositoryImpl(mediaApiService)
 
     @Provides
     @Singleton
