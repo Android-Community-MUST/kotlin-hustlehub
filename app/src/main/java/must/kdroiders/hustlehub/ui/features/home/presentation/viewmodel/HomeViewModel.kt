@@ -15,6 +15,8 @@ import must.kdroiders.hustlehub.data.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
 import timber.log.Timber
 import javax.inject.Inject
+import must.kdroiders.hustlehub.core.auth.AuthManager
+import must.kdroiders.hustlehub.data.repository.UserRepository
 
 private const val PAGE_SIZE = 10
 
@@ -36,7 +38,9 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val browseServices: BrowseServicesUseCase
+    private val browseServices: BrowseServicesUseCase,
+    private val authManager: AuthManager,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -45,7 +49,26 @@ class HomeViewModel @Inject constructor(
     private var searchJob: Job? = null
 
     init {
+        loadUserInitials()
         fetchServices(reset = true)
+    }
+
+    private fun loadUserInitials() {
+        viewModelScope.launch {
+            val uid = authManager.currentUser()?.uid ?: return@launch
+            userRepository.getUserProfile(uid)
+                .onSuccess { user ->
+                    if (user != null && user.name.isNotBlank()) {
+                        val parts = user.name.trim().split("\\s+".toRegex())
+                        val initials = if (parts.size >= 2) {
+                            "${parts[0].first().uppercase()}${parts[1].first().uppercase()}"
+                        } else {
+                            parts[0].take(2).uppercase()
+                        }
+                        _uiState.update { it.copy(providerInitials = initials) }
+                    }
+                }
+        }
     }
 
     // Fetch services — reset=true for fresh load or filter change, false for next page
@@ -69,7 +92,7 @@ class HomeViewModel @Inject constructor(
                 .onSuccess { pageResponse ->
                     _uiState.update { current ->
                         val merged = if (reset) pageResponse.content
-                        else current.services + pageResponse.content
+                        else (current.services + pageResponse.content).distinctBy { it.id }
 
                         current.copy(
                             services = merged,
