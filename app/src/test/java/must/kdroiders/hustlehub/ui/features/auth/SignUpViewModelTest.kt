@@ -1,17 +1,26 @@
 package must.kdroiders.hustlehub.ui.features.auth
 
+import android.net.Uri
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.Runs
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import must.kdroiders.hustlehub.data.repository.MediaRepository
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignUpUseCase
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.PasswordStrength
@@ -23,6 +32,35 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+import must.kdroiders.hustlehub.core.ui.UiState
+
+@HiltViewModel
+class YourViewModel @Inject constructor(
+    private val mediaRepository: MediaRepository
+) : ViewModel() {
+}
+
+
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val mediaRepository: MediaRepository
+) : ViewModel() {
+
+    private val _uploadState = MutableStateFlow<UiState<String>>(UiState.Idle)
+    val uploadState = _uploadState.asStateFlow()
+
+    fun uploadProfilePicture(uri: Uri) {
+        viewModelScope.launch {
+            _uploadState.value = UiState.Loading
+            try {
+                val url = mediaRepository.uploadUserMedia(uri, "profile.jpg")
+                _uploadState.value = UiState.Success(url)
+            } catch (e: Exception) {
+                _uploadState.value = UiState.Error(e.message ?: "Upload failed")
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainDispatcherRule : TestWatcher() {
@@ -176,7 +214,7 @@ class SignUpViewModelTest {
         viewModel.onConfirmPasswordChanged("Password123!")
 
         viewModel.signUp {}
-        
+
         advanceUntilIdle()
 
         coVerify { mockUserPreferences.writeUser(any()) }
