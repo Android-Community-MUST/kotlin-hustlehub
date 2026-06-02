@@ -35,7 +35,7 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScr
  */
 @Composable
 fun MainShellScreen(
-    onNavigateToPortfolio: () -> Unit = {},
+    onNavigateToPortfolio: (serviceId: String) -> Unit = {},
     onNavigateToProfileSetup: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToCreateService: () -> Unit = {},

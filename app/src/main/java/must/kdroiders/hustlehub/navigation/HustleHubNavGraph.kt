@@ -34,7 +34,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.view.EmailVerifica
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
-import must.kdroiders.hustlehub.ui.features.portfolio.PortfolioUploadScreen
+import must.kdroiders.hustlehub.ui.features.portfolio.presentation.view.PortfolioUploadScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.CreateServiceScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServicesScreen
@@ -203,7 +203,7 @@ fun HustleHubNav(
             // Main shell
             entry<MainShell> {
                 MainShellScreen(
-                    onNavigateToPortfolio = { backstack.add(PortfolioUpload) },
+                    onNavigateToPortfolio = { serviceId -> backstack.add(PortfolioUpload(serviceId)) },
                     onNavigateToProfileSetup = { backstack.add(ProfileSetup) },
                     onNavigateToSettings = { backstack.add(Settings) },
                     onNavigateToCreateService = { backstack.add(CreateService()) },
@@ -212,8 +212,11 @@ fun HustleHubNav(
             }
 
             // Standalone screens
-            entry<PortfolioUpload> {
-                PortfolioUploadScreen()
+            entry<PortfolioUpload> { key ->
+                PortfolioUploadScreen(
+                    serviceId = key.serviceId,
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) }
+                )
             }
 
             entry<Settings> {
@@ -236,7 +239,8 @@ fun HustleHubNav(
                 MyServicesScreen(
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onCreateService = { backstack.add(CreateService()) },
-                    onEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) }
+                    onEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
+                    onNavigateToPortfolio = { serviceId -> backstack.add(PortfolioUpload(serviceId)) }
                 )
             }
 

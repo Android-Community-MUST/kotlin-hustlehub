@@ -20,7 +20,7 @@ class StorageRepositoryTest {
     @Before
     fun setup() {
         mockMediaApiService = mockk()
-        repository = StorageRepository(mockMediaApiService)
+        repository = StorageRepositoryImpl(mockMediaApiService)
     }
 
     @Test
@@ -42,11 +42,13 @@ class StorageRepositoryTest {
 
         val results = repository.uploadPortfolioImage(serviceId, imageBytes).toList()
 
-        assertEquals(2, results.size)
+        assertEquals(3, results.size)
         assertTrue(results[0] is UploadResult.Progress)
         assertEquals(0f, (results[0] as UploadResult.Progress).percent)
-        assertTrue(results[1] is UploadResult.Success)
-        assertEquals(publicUrl, (results[1] as UploadResult.Success).url)
+        assertTrue(results[1] is UploadResult.Progress)
+        assertEquals(0.5f, (results[1] as UploadResult.Progress).percent)
+        assertTrue(results[2] is UploadResult.Success)
+        assertEquals(publicUrl, (results[2] as UploadResult.Success).url)
     }
 
     @Test
@@ -59,9 +61,10 @@ class StorageRepositoryTest {
 
         val results = repository.uploadPortfolioImage(serviceId, imageBytes).toList()
 
-        assertEquals(2, results.size)
+        assertEquals(3, results.size)
         assertTrue(results[0] is UploadResult.Progress)
-        assertTrue(results[1] is UploadResult.Error)
-        assertEquals(errorMessage, (results[1] as UploadResult.Error).message)
+        assertTrue(results[1] is UploadResult.Progress)
+        assertTrue(results[2] is UploadResult.Error)
+        assertEquals(errorMessage, (results[2] as UploadResult.Error).message)
     }
 }

@@ -16,6 +16,8 @@ import must.kdroiders.hustlehub.data.model.User
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.data.repository.AuthRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
+import must.kdroiders.hustlehub.data.repository.StorageRepository
+import must.kdroiders.hustlehub.data.repository.StorageRepositoryImpl
 import must.kdroiders.hustlehub.data.repository.UserRepository
 import must.kdroiders.hustlehub.data.repository.UserRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
@@ -59,6 +61,13 @@ object AppModule {
             NoopAuthRepository()
         }
     }
+
+
+    @Provides
+    @Singleton
+    fun provideStorageRepository(
+        mediaApiService: MediaApiService,
+    ): StorageRepository = StorageRepositoryImpl(mediaApiService)
 
     @Provides
     @Singleton
