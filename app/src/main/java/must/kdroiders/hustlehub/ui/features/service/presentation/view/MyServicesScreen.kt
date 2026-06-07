@@ -24,6 +24,9 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -56,8 +59,7 @@ fun MyServicesScreen(
     viewModel: MyServicesViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onCreateService: () -> Unit,
-    onEditService: (String) -> Unit,
-    onNavigateToPortfolio: (String) -> Unit
+    onEditService: (String) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -154,27 +156,44 @@ fun MyServicesScreen(
                 }
 
                 else -> {
-                    LazyColumn(
-                        contentPadding = PaddingValues(
-                            horizontal = 16.dp,
-                            vertical = 12.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(
-                            items = state.services,
-                            key = { it.id }
-                        ) { service ->
-                            ServiceManagementCard(
-                                service = service,
-                                isUpdating = state.updatingServiceId == service.id,
-                                onEditClick = { onEditService(service.id) },
-                                onDeleteClick = { viewModel.requestDelete(service.id) },
-                                onPortfolioClick = { onNavigateToPortfolio(service.id) },
-                                onAvailabilityChange = { newAvailability ->
-                                    viewModel.onAvailabilityChange(service.id, newAvailability)
-                                }
+                    val pullToRefreshState = rememberPullToRefreshState()
+                    PullToRefreshBox(
+                        isRefreshing = state.isLoading,
+                        onRefresh = viewModel::loadServices,
+                        modifier = Modifier.fillMaxSize(),
+                        state = pullToRefreshState,
+                        indicator = {
+                            PullToRefreshDefaults.Indicator(
+                                modifier = Modifier.align(Alignment.TopCenter),
+                                isRefreshing = state.isLoading,
+                                state = pullToRefreshState,
+                                color = MaterialTheme.colorScheme.primary,
+                                containerColor = MaterialTheme.colorScheme.surface
                             )
+                        }
+                    ) {
+                        LazyColumn(
+                            contentPadding = PaddingValues(
+                                horizontal = 16.dp,
+                                vertical = 12.dp
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(
+                                items = state.services,
+                                key = { it.id }
+                            ) { service ->
+                                ServiceManagementCard(
+                                    service = service,
+                                    isUpdating = state.updatingServiceId == service.id,
+                                    onEditClick = { onEditService(service.id) },
+                                    onDeleteClick = { viewModel.requestDelete(service.id) },
+                                    onAvailabilityChange = { newAvailability ->
+                                        viewModel.onAvailabilityChange(service.id, newAvailability)
+                                    }
+                                )
+                            }
                         }
                     }
                 }

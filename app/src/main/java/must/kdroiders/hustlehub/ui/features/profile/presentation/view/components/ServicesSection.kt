@@ -36,11 +36,10 @@ import must.kdroiders.hustlehub.data.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
 
-// Services section
-
 @Composable
 fun ServicesHeader(
     onAddNewServiceClick: () -> Unit,
+    onManageServicesClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -54,13 +53,23 @@ fun ServicesHeader(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
-        TextButton(onClick = onAddNewServiceClick) {
-            Text(
-                text = "Add New +",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
-            )
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            TextButton(onClick = onManageServicesClick) {
+                Text(
+                    text = "Manage",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+            TextButton(onClick = onAddNewServiceClick) {
+                Text(
+                    text = "Add New +",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
