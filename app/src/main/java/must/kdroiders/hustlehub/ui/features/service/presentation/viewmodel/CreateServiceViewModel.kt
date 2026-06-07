@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.data.model.ServiceAvailability
 import must.kdroiders.hustlehub.data.model.ServiceCategory
 import must.kdroiders.hustlehub.domain.repository.ServiceRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
@@ -33,6 +35,11 @@ data class CreateServiceUiState(
     val tags: List<String> = emptyList(),
     val tagError: String? = null,
     val openToBarter: Boolean = false,
+    // Portfolio
+    val portfolioUris: List<Uri> = emptyList(),           // newly picked local images
+    val existingPortfolioUrls: List<String> = emptyList(), // loaded from server on edit
+    // Availability / Current Status
+    val availability: ServiceAvailability = ServiceAvailability.AVAILABLE,
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -47,8 +54,8 @@ class CreateServiceViewModel @Inject constructor(
     private val getServiceById: GetServiceByIdUseCase
 ) : ViewModel() {
 
-    // Set by the screen via loadForEdit() when navigating from edit flow
     private var editServiceId: String? = null
+    private var originalAvailability: ServiceAvailability = ServiceAvailability.AVAILABLE
 
     private val _uiState = MutableStateFlow(CreateServiceUiState())
     val uiState: StateFlow<CreateServiceUiState> = _uiState.asStateFlow()
@@ -71,12 +78,13 @@ class CreateServiceViewModel @Inject constructor(
         viewModelScope.launch {
             getServiceById(serviceId)
                 .onSuccess { service ->
-                    // Parse minPrice / maxPrice back out of the "300 - 800 KSh" formatted string
                     val parts = service.priceRange
                         .replace("KSh", "").replace("ksh", "")
                         .split("-").map { it.trim() }
                     val min = parts.getOrNull(0)?.filter { it.isDigit() } ?: ""
                     val max = parts.getOrNull(1)?.filter { it.isDigit() } ?: ""
+
+                    originalAvailability = service.availability
 
                     _uiState.update {
                         it.copy(
@@ -87,7 +95,9 @@ class CreateServiceViewModel @Inject constructor(
                             minPrice = min,
                             maxPrice = max,
                             tags = service.tags,
-                            openToBarter = service.openToBarter
+                            openToBarter = service.openToBarter,
+                            existingPortfolioUrls = service.portfolio,
+                            availability = service.availability
                         )
                     }
                 }
@@ -156,8 +166,37 @@ class CreateServiceViewModel @Inject constructor(
         _uiState.update { it.copy(openToBarter = value) }
     }
 
+    // --- Portfolio ---
+
+    fun onPortfolioImageAdded(uri: Uri) {
+        val state = _uiState.value
+        val totalCount = state.portfolioUris.size + state.existingPortfolioUrls.size
+        if (totalCount < 3) {
+            _uiState.update { it.copy(portfolioUris = it.portfolioUris + uri) }
+        }
+    }
+
+    fun onPortfolioNewImageRemoved(index: Int) {
+        _uiState.update {
+            it.copy(portfolioUris = it.portfolioUris.toMutableList().also { list -> list.removeAt(index) })
+        }
+    }
+
+    fun onPortfolioExistingImageRemoved(index: Int) {
+        _uiState.update {
+            it.copy(existingPortfolioUrls = it.existingPortfolioUrls.toMutableList().also { list -> list.removeAt(index) })
+        }
+    }
+
+    // --- Availability / Status ---
+
+    fun onAvailabilityChange(value: ServiceAvailability) {
+        _uiState.update { it.copy(availability = value) }
+    }
+
     private fun resetForm() {
         editServiceId = null
+        originalAvailability = ServiceAvailability.AVAILABLE
         _uiState.value = CreateServiceUiState()
     }
 
@@ -167,7 +206,6 @@ class CreateServiceViewModel @Inject constructor(
         val state = _uiState.value
         val minPrice = state.minPrice.toIntOrNull() ?: 0
         val maxPrice = state.maxPrice.toIntOrNull() ?: 0
-
         val snapshot = editServiceId
 
         viewModelScope.launch {
@@ -197,9 +235,21 @@ class CreateServiceViewModel @Inject constructor(
             }
 
             result
-                .onSuccess {
-                    resetForm()
-                    _events.emit(CreateServiceEvent.Success)
+                .onSuccess { savedService ->
+                    val targetId = if (state.isEditMode && snapshot != null) snapshot else savedService.id
+                    val availResult = serviceRepository.updateAvailability(targetId, state.availability)
+                    
+                    if (availResult.isFailure) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = "Service saved, but failed to update status."
+                            )
+                        }
+                    } else {
+                        resetForm()
+                        _events.emit(CreateServiceEvent.Success)
+                    }
                 }
                 .onFailure { e ->
                     Timber.e(e, "Failed to save service")

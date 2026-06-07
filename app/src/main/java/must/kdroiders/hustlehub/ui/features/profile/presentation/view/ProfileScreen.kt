@@ -46,6 +46,7 @@ fun ProfileScreen(
     onEditClick: () -> Unit = {},
     onAddNewServiceClick: () -> Unit = {},
     onServiceClick: (serviceId: String) -> Unit = {},
+    onNavigateToMyServices: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
     val state by profileViewModel.uiState.collectAsState()
@@ -67,6 +68,7 @@ fun ProfileScreen(
                 onToggleService = profileViewModel::toggleServiceActive,
                 onAddNewServiceClick = onAddNewServiceClick,
                 onServiceClick = onServiceClick,
+                onNavigateToMyServices = onNavigateToMyServices,
                 onSettingsClick = onSettingsClick
             )
         }
@@ -82,6 +84,7 @@ private fun ProfileContent(
     onToggleService: (String) -> Unit,
     onAddNewServiceClick: () -> Unit,
     onServiceClick: (serviceId: String) -> Unit = {},
+    onNavigateToMyServices: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
     val user = state.user ?: return
@@ -188,6 +191,7 @@ private fun ProfileContent(
             Spacer(Modifier.height(24.dp))
             ServicesHeader(
                 onAddNewServiceClick = onAddNewServiceClick,
+                onManageServicesClick = onNavigateToMyServices,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
             Spacer(Modifier.height(12.dp))
