@@ -212,14 +212,6 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 )
             }
 
-            // Standalone screens
-            entry<PortfolioUpload> { key ->
-                PortfolioUploadScreen(
-                    serviceId = key.serviceId,
-                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) }
-                )
-            }
-
             entry<Settings> {
                 SettingsScreen(
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
