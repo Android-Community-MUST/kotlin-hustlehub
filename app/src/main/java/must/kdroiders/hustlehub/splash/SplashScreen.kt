@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -192,25 +193,15 @@ fun SplashScreen(
                 .padding(bottom = 48.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Gradient progress bar
+            // Linear Wavy Progress Indicator
             Box(
-                modifier = Modifier
-                    .graphicsLayer { alpha = barAlpha.value }
-                    .width(200.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(onBackground.copy(alpha = 0.1f))
+                modifier = Modifier.graphicsLayer { alpha = barAlpha.value }
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(fraction = shimmerProgress.coerceIn(0f, 1f))
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(primary, tertiary)
-                            )
-                        )
+                LinearWavyProgressIndicator(
+                    modifier = Modifier.width(200.dp),
+                    color = primary,
+                    trackColor = primary.copy(alpha = 0.12f),
+                    waveSpeed = 15.dp
                 )
             }
 
