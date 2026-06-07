@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PortfolioSlots(
     existingUrls: List<String>,
@@ -40,16 +43,19 @@ fun PortfolioSlots(
     onAddClick: () -> Unit,
     onRemoveExisting: (Int) -> Unit,
     onRemoveNew: (Int) -> Unit,
+    maxSlots: Int = 3,
     modifier: Modifier = Modifier
 ) {
     val totalFilled = existingUrls.size + newUris.size
-    Row(
+    FlowRow(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        maxItemsInEachRow = 3
     ) {
-        // Render 3 slots
-        for (slotIndex in 0 until 3) {
-            Box(modifier = Modifier.weight(1f)) {
+        // Render maxSlots slots
+        for (slotIndex in 0 until maxSlots) {
+            Box(modifier = Modifier.fillMaxWidth(0.31f)) {
                 when {
                     slotIndex < existingUrls.size -> {
                         FilledSlot(
@@ -66,7 +72,7 @@ fun PortfolioSlots(
                     }
                     else -> {
                         EmptySlot(
-                            onClick = if (totalFilled < 3) onAddClick else null
+                            onClick = if (totalFilled < maxSlots) onAddClick else null
                         )
                     }
                 }

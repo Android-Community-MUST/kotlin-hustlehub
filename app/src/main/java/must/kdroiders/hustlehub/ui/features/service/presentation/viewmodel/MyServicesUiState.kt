@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel
 
+import android.net.Uri
 import must.kdroiders.hustlehub.data.model.Service
 import must.kdroiders.hustlehub.data.model.ServiceAvailability
 
@@ -10,5 +11,10 @@ data class MyServicesUiState(
     // ID of the service that is waiting for a network response (optimistic locking)
     val updatingServiceId: String? = null,
     // ID of the service pending delete confirmation
-    val pendingDeleteServiceId: String? = null
+    val pendingDeleteServiceId: String? = null,
+    
+    // --- Gallery Bottom Sheet State ---
+    val selectedServiceForGallery: String? = null,
+    val existingPortfolioUrls: List<String> = emptyList(),
+    val portfolioUris: List<Uri> = emptyList()
 )

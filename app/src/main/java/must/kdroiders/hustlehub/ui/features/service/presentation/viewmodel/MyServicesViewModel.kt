@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -117,5 +118,75 @@ class MyServicesViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    // --- Gallery / Portfolio ---
+
+    fun openGallery(serviceId: String) {
+        val service = _uiState.value.services.find { it.id == serviceId } ?: return
+        _uiState.update {
+            it.copy(
+                selectedServiceForGallery = serviceId,
+                existingPortfolioUrls = service.portfolio,
+                portfolioUris = emptyList()
+            )
+        }
+    }
+
+    fun closeGallery() {
+        _uiState.update {
+            it.copy(
+                selectedServiceForGallery = null,
+                existingPortfolioUrls = emptyList(),
+                portfolioUris = emptyList()
+            )
+        }
+    }
+
+    fun onGalleryImageAdded(uri: Uri) {
+        val state = _uiState.value
+        val totalCount = state.portfolioUris.size + state.existingPortfolioUrls.size
+        if (totalCount < 6) {
+            _uiState.update { it.copy(portfolioUris = it.portfolioUris + uri) }
+        } else {
+            _uiState.update { it.copy(error = "Maximum 6 images allowed") }
+        }
+    }
+
+    fun onGalleryExistingImageRemoved(index: Int) {
+        _uiState.update {
+            val newList = it.existingPortfolioUrls.toMutableList().apply { removeAt(index) }
+            it.copy(existingPortfolioUrls = newList)
+        }
+    }
+
+    fun onGalleryNewImageRemoved(index: Int) {
+        _uiState.update {
+            val newList = it.portfolioUris.toMutableList().apply { removeAt(index) }
+            it.copy(portfolioUris = newList)
+        }
+    }
+
+    fun saveGallery() {
+        val serviceId = _uiState.value.selectedServiceForGallery ?: return
+        // TODO: Implement actual S3 upload and API update here in the future
+        
+        _uiState.update { state ->
+            // Optimistically update the local state with the existing URLs for now
+            // (In reality, we would wait for the new URIs to be uploaded and get their remote URLs back)
+            val updatedServices = state.services.map { service ->
+                if (service.id == serviceId) {
+                    service.copy(portfolio = state.existingPortfolioUrls)
+                } else {
+                    service
+                }
+            }
+            state.copy(
+                services = updatedServices,
+                selectedServiceForGallery = null,
+                existingPortfolioUrls = emptyList(),
+                portfolioUris = emptyList()
+            )
+        }
     }
 }
