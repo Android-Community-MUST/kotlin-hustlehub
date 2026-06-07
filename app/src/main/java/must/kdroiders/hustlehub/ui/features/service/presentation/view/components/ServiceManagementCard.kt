@@ -1,9 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.view.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,19 +19,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,9 +35,6 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.data.model.Service
 import must.kdroiders.hustlehub.data.model.ServiceAvailability
-import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
-import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
-import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -52,7 +43,6 @@ fun ServiceManagementCard(
     isUpdating: Boolean,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
-    onPortfolioClick: () -> Unit,
     onAvailabilityChange: (ServiceAvailability) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -115,38 +105,39 @@ fun ServiceManagementCard(
                 }
 
                 // Edit + Delete actions
-                Row {
-                    IconButton(
-                        onClick = onEditClick,
-                        enabled = !isUpdating
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .clickable(enabled = !isUpdating, onClick = onEditClick),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit service",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
-                    IconButton(
-                        onClick = onPortfolioClick,
-                        enabled = !isUpdating
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PhotoLibrary,
-                            contentDescription = "Manage portfolio",
-                            tint = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    IconButton(
-                        onClick = onDeleteClick,
-                        enabled = !isUpdating
+
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.errorContainer)
+                            .clickable(enabled = !isUpdating, onClick = onDeleteClick),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete service",
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(20.dp)
+                            tint = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }

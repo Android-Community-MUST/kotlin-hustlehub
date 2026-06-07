@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -63,8 +64,12 @@ fun HustleTextField(
     trailingIcon: @Composable (() -> Unit)? = null,
     isPassword: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = true,
+    minLines: Int = 1,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     placeholder: String? = null,
+    suffix: @Composable (() -> Unit)? = null,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -160,7 +165,11 @@ fun HustleTextField(
             },
             trailingIcon = actualTrailingIcon,
             keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
             singleLine = singleLine,
+            minLines = minLines,
+            maxLines = maxLines,
+            suffix = suffix,
             shape = TextFieldShape,
             textStyle = MaterialTheme.typography.bodyLarge,
             colors = OutlinedTextFieldDefaults.colors(
@@ -217,7 +226,7 @@ fun HustleTextFieldPreview() {
                 leadingIcon = Icons.Default.Person,
                 placeholder = "Enter your username"
             )
-            androidx.compose.foundation.layout.Spacer(Modifier.padding(8.dp))
+            Spacer(Modifier.padding(8.dp))
             HustleTextField(
                 value = "bad@email",
                 onValueChange = {},
@@ -226,7 +235,7 @@ fun HustleTextFieldPreview() {
                 isError = true,
                 errorText = "Please enter a valid email address"
             )
-            androidx.compose.foundation.layout.Spacer(Modifier.padding(8.dp))
+            Spacer(Modifier.padding(8.dp))
             HustleTextField(
                 value = "valid@email.com",
                 onValueChange = {},
@@ -234,7 +243,7 @@ fun HustleTextFieldPreview() {
                 leadingIcon = Icons.Default.Email,
                 isSuccess = true
             )
-            androidx.compose.foundation.layout.Spacer(Modifier.padding(8.dp))
+            Spacer(Modifier.padding(8.dp))
             HustleTextField(
                 value = "password123",
                 onValueChange = {},

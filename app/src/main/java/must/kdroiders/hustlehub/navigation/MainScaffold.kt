@@ -23,8 +23,8 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScr
  * Tab switching **replaces** the first element rather than pushing, keeping the stack
  * at depth 1 for tabs — this matches how apps like YouTube and Gmail work.
  *
- * Navigation into detail screens (e.g. [PortfolioUpload]) is delegated back up to the
- * root back-stack via [onNavigateToPortfolio].
+ * Navigation into detail screens is delegated back up to the
+ * root back-stack.
  *
  * Architecture (within this shell):
  * ```
@@ -35,7 +35,6 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScr
  */
 @Composable
 fun MainShellScreen(
-    onNavigateToPortfolio: (serviceId: String) -> Unit = {},
     onNavigateToProfileSetup: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToCreateService: () -> Unit = {},
@@ -77,6 +76,7 @@ fun MainShellScreen(
                         onEditClick = onNavigateToProfileSetup,
                         onAddNewServiceClick = onNavigateToCreateService,
                         onServiceClick = onNavigateToEditService,
+                        onNavigateToMyServices = onNavigateToMyServices,
                         onSettingsClick = onNavigateToSettings
                     )
                 }
