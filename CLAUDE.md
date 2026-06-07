@@ -125,6 +125,7 @@ Uses **Navigation 3** (`androidx.navigation3`) exclusively — no legacy `NavCon
 - Every ViewModel: `@HiltViewModel` + `@Inject constructor(…)`.
 - Firebase dependencies (`FirebaseAuth`, `FirebaseFirestore`, `FirebaseStorage`) are provided as **nullable**; the app has `Noop*` fallbacks so it runs without Firebase (useful in CI / tests).
 - Inject at ViewModel level only — never directly into Composables.
+- **IMPORTANT**: When getting a ViewModel in a Composable, DO NOT use `import androidx.hilt.navigation.compose.hiltViewModel`. Instead, use `import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel`.
 
 ---
 
