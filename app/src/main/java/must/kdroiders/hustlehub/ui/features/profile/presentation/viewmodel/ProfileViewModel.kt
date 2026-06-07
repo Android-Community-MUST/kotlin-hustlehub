@@ -12,6 +12,8 @@ import must.kdroiders.hustlehub.data.model.Service
 import must.kdroiders.hustlehub.data.model.ServiceAvailability
 import must.kdroiders.hustlehub.data.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.UpdateAvailabilityUseCase
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -19,6 +21,8 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
+    private val getMyServicesUseCase: GetMyServicesUseCase,
+    private val updateAvailabilityUseCase: UpdateAvailabilityUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -36,12 +40,17 @@ class ProfileViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = false, error = "Not logged in") }
                 return@launch
             }
-            userRepository.getUserProfile(firebaseUser.uid)
+
+            // Load user profile and services in parallel
+            val userResult = userRepository.getUserProfile(firebaseUser.uid)
+            val servicesResult = getMyServicesUseCase()
+
+            userResult
                 .onSuccess { user ->
                     _uiState.update {
                         it.copy(
                             user = user,
-                            services = emptyList(), // TODO: load from ServiceRepository when available
+                            services = servicesResult.getOrElse { emptyList() },
                             hustleScore = 0f,
                             reviewCount = 0,
                             badges = emptyList(),
@@ -60,19 +69,36 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun toggleServiceActive(serviceId: String) {
+        val currentService = _uiState.value.services.find { it.id == serviceId } ?: return
+        val newAvailability = if (currentService.availability == ServiceAvailability.AVAILABLE) {
+            ServiceAvailability.OFFLINE
+        } else {
+            ServiceAvailability.AVAILABLE
+        }
+
+        // Optimistically update UI
         _uiState.update { state ->
             state.copy(
                 services = state.services.map { svc ->
-                    if (svc.id == serviceId) {
-                        val newAvailability = if (svc.availability == ServiceAvailability.AVAILABLE) {
-                            ServiceAvailability.OFFLINE
-                        } else {
-                            ServiceAvailability.AVAILABLE
-                        }
-                        svc.copy(availability = newAvailability)
-                    } else svc
+                    if (svc.id == serviceId) svc.copy(availability = newAvailability) else svc
                 }
             )
+        }
+
+        // Update on backend
+        viewModelScope.launch {
+            updateAvailabilityUseCase(serviceId, newAvailability).onFailure { e ->
+                Timber.e(e, "Failed to update service availability")
+                // Revert on failure
+                _uiState.update { state ->
+                    state.copy(
+                        services = state.services.map { svc ->
+                            if (svc.id == serviceId) svc.copy(availability = currentService.availability) else svc
+                        },
+                        error = "Failed to update service availability"
+                    )
+                }
+            }
         }
     }
 
