@@ -1,3 +1,4 @@
+
 # 🚀 HustleHub
 
 <div align="center">
@@ -168,11 +169,12 @@ See [ARCHITECTURE.md](docs/dev/ARCHITECTURE.md) for full detail.
    ```
    Edit `keys.properties`:
    ```properties
-   MAPS_API_KEY=AIzaSy...your_maps_key
-   BASE_URL=http://10.0.2.2:8080/api/v1/
-   WS_BASE_URL=ws://10.0.2.2:8080/ws
-   GEMINI_API_KEY=AIzaSy...your_gemini_key
-   ```
+    MAPS_API_KEY=AIzaSy...your_maps_key
+    BASE_URL=http://10.0.2.2:8080/api/v1/
+    WS_BASE_URL=ws://10.0.2.2:8080/ws
+    GEMINI_API_KEY=AIzaSy...your_gemini_key
+    GOOGLE_WEB_CLIENT_ID=your_google_web_client_id_here
+    ```
 
 5. **Build and run**
    ```bash
@@ -187,9 +189,9 @@ See [SETUP.md](docs/dev/SETUP.md) for full setup instructions.
 
 <div align="center">
 
-| Home / Discovery | Chat | Profile |
-|-----------------|------|---------|
-| ![Home](https://via.placeholder.com/200x400/6C5CE7/FFFFFF?text=Home) | ![Chat](https://via.placeholder.com/200x400/00B894/FFFFFF?text=Chat) | ![Profile](https://via.placeholder.com/200x400/E17055/FFFFFF?text=Profile) |
+| Login | Home / Discovery | Chat | Profile |
+|-------|-----------------|------|---------|
+| <img src="screenshots/login_light.png" width="200"/> | ![Home](https://via.placeholder.com/200x400/6C5CE7/FFFFFF?text=Home) | ![Chat](https://via.placeholder.com/200x400/00B894/FFFFFF?text=Chat) | ![Profile](https://via.placeholder.com/200x400/E17055/FFFFFF?text=Profile) |
 
 *Screenshots coming soon as development progresses*
 

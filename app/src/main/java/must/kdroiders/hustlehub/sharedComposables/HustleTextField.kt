@@ -53,7 +53,8 @@ private val TextFieldShape = RoundedCornerShape(10.dp)
 fun HustleTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String,
+    /** Optional floating label. When null, only [placeholder] is shown — no label floats on focus. */
+    label: String? = null,
     modifier: Modifier = Modifier,
     isError: Boolean = false,
     errorText: String? = null,
@@ -123,12 +124,14 @@ fun HustleTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            label = {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
+            label = label?.let {
+                {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             },
             placeholder = placeholder?.let {
                 {

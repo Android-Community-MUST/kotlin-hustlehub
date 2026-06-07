@@ -1,80 +1,52 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view
 
-import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.*
-import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
-import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
-import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.Badge
-import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.BadgeType
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.MonetizationOn
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import coil.compose.AsyncImage
-import must.kdroiders.hustlehub.data.model.Service
-import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeBlue
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeGold
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeGreen
-import must.kdroiders.hustlehub.ui.theme.HustleDarkSurfaceBright
-import must.kdroiders.hustlehub.ui.theme.HustleDarkSurfaceVariant
-import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
-import must.kdroiders.hustlehub.ui.theme.HustlePrimary
-import must.kdroiders.hustlehub.ui.theme.HustlePrimaryVariant
-import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
-import androidx.compose.material3.*
+import must.kdroiders.hustlehub.data.model.UserRole
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleCard
+import must.kdroiders.hustlehub.sharedComposables.HustleCardVariant
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ErrorState
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.LoadingState
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileAvatar
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileBadges
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileBottomTabs
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileHeader
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileInfo
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileStatsRow
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ServiceCard
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ServicesHeader
+import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
+import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
     onEditClick: () -> Unit = {},
-    onAddNewServiceClick: () -> Unit = {}
+    onAddNewServiceClick: () -> Unit = {},
+    onManageServicesClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
 ) {
     val state by profileViewModel.uiState.collectAsState()
 
@@ -93,22 +65,24 @@ fun ProfileScreen(
                 state = state,
                 onEditClick = onEditClick,
                 onToggleService = profileViewModel::toggleServiceActive,
-                onAddNewServiceClick = onAddNewServiceClick
+                onAddNewServiceClick = onAddNewServiceClick,
+                onManageServicesClick = onManageServicesClick,
+                onSettingsClick = onSettingsClick
             )
         }
     }
 }
 
-// ─────────────────────────────────────────────────
 // Main content — LazyColumn for performance
-// ─────────────────────────────────────────────────
 
 @Composable
 private fun ProfileContent(
     state: ProfileUiState,
     onEditClick: () -> Unit,
     onToggleService: (String) -> Unit,
-    onAddNewServiceClick: () -> Unit
+    onAddNewServiceClick: () -> Unit,
+    onManageServicesClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
 ) {
     val user = state.user ?: return
 
@@ -123,7 +97,10 @@ private fun ProfileContent(
     ) {
         // Header
         item(key = "header") {
-            ProfileHeader(onEditClick = onEditClick)
+            ProfileHeader(
+                onEditClick = onEditClick,
+                onSettingsClick = onSettingsClick
+            )
         }
 
         // Avatar + info
@@ -140,9 +117,9 @@ private fun ProfileContent(
                 Spacer(Modifier.height(12.dp))
                 ProfileInfo(
                     name = user.name,
-                    course = user.course,
-                    yearOfStudy = user.yearOfStudy,
-                    campus = user.campus
+                    phone = user.phone,
+                    campusLocation = user.campusLocation,
+                    bio = user.bio
                 )
             }
         }
@@ -171,14 +148,48 @@ private fun ProfileContent(
             )
         }
 
+        if (user.role == UserRole.CUSTOMER) {
+            item(key = "become_provider_banner") {
+                Spacer(Modifier.height(16.dp))
+                HustleCard(
+                    variant = HustleCardVariant.Elevated,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Earn Money on HustleHub!",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Complete your provider profile to list your services, show your portfolio, and receive booking requests from fellow students.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        HustleButton(
+                            text = "Become a Service Provider",
+                            onClick = onEditClick,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        }
+
         // Services header
         item(key = "services_header") {
             Spacer(Modifier.height(24.dp))
             ServicesHeader(
                 onAddNewServiceClick = onAddNewServiceClick,
-                modifier = Modifier.padding(
-                    horizontal = 16.dp
-                )
+                onManageServicesClick = onManageServicesClick,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
             Spacer(Modifier.height(12.dp))
         }

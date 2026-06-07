@@ -1,39 +1,44 @@
 package must.kdroiders.hustlehub.navigation
 
+import androidx.activity.ComponentActivity
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import must.kdroiders.hustlehub.BuildConfig
+import must.kdroiders.hustlehub.core.auth.AuthStateViewModel
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
-import must.kdroiders.hustlehub.ui.auth.presentation.view.SignUpScreen
+import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthState
+import must.kdroiders.hustlehub.ui.features.auth.presentation.view.EmailVerificationScreen
+import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
+import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
+import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
+import must.kdroiders.hustlehub.ui.features.portfolio.PortfolioUploadScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
-import must.kdroiders.hustlehub.ui.portfolio.PortfolioUploadScreen
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.CreateServiceScreen
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServicesScreen
+import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
 
 /**
  * Root Navigation 3 navigator for HustleHub.
@@ -56,17 +61,42 @@ import must.kdroiders.hustlehub.ui.portfolio.PortfolioUploadScreen
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun HustleHubNav() {
+fun HustleHubNav(
+    onGoogleSignInClick: () -> Unit
+) {
     val backstack = rememberNavBackStack(Splash)
     val motionScheme = MaterialTheme.motionScheme
-    // IntOffset spec for slide animations, Float spec for fade animations
     val slideSpec = motionScheme.defaultSpatialSpec<IntOffset>()
     val fadeSpec = motionScheme.defaultEffectsSpec<Float>()
+
+    // Observe global auth state — auto-navigate to Login if Firebase signs the user out
+    // (token expiry, forced signout, account deletion, etc.)
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
+    val authStateViewModel: AuthStateViewModel? = if (activity != null) {
+        hiltViewModel<AuthStateViewModel>(viewModelStoreOwner = activity)
+    } else null
+
+    authStateViewModel?.let { vm ->
+        val authState by vm.authState.collectAsState()
+        LaunchedEffect(authState) {
+            // Only react after Splash has completed (don't interrupt the splash auth check)
+            val currentTop = backstack.lastOrNull()
+            val isInAuthFlow = currentTop is Splash || currentTop is Login ||
+                currentTop is SignUp || currentTop is EmailVerification ||
+                currentTop is Onboarding
+
+            if (authState == AuthState.Unauthenticated && !isInAuthFlow) {
+                backstack.clear()
+                backstack.add(Login())
+            }
+        }
+    }
+
 
     NavDisplay(
         backStack = backstack,
         onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
-        // Global transitions using MotionScheme
         transitionSpec = {
             (slideInHorizontally(slideSpec) { it } + fadeIn(fadeSpec)) togetherWith
                 (slideOutHorizontally(slideSpec) { -it } + fadeOut(fadeSpec))
@@ -75,7 +105,6 @@ fun HustleHubNav() {
             (slideInHorizontally(slideSpec) { -it } + fadeIn(fadeSpec)) togetherWith
                 (slideOutHorizontally(slideSpec) { it } + fadeOut(fadeSpec))
         },
-        // Screen routing via entryProvider DSL
         entryProvider = entryProvider {
 
             // Splash
@@ -84,7 +113,7 @@ fun HustleHubNav() {
                     onNavigate = { destination ->
                         val key: NavKey = when (destination) {
                             SplashDestination.Home -> MainShell
-                            SplashDestination.Login -> Login
+                            SplashDestination.Login -> Login()
                             SplashDestination.Onboarding -> Onboarding
                             SplashDestination.ProfileSetup -> ProfileSetup
                         }
@@ -95,34 +124,73 @@ fun HustleHubNav() {
             }
 
             // Auth
-            entry<Login> {
-                NavPlaceholderScreen(
-                    title = "Login (Teammate Task)",
-                    showDeveloperShortcuts = BuildConfig.DEBUG,
-                    onDeveloperShortcut = { key -> backstack.add(key) },
+            entry<Login> { key ->
+                val context = LocalContext.current
+                val activity = context as? ComponentActivity
+                val loginViewModel: LoginViewModel = if (activity != null) {
+                    hiltViewModel(viewModelStoreOwner = activity)
+                } else {
+                    hiltViewModel()
+                }
+
+                // Observe Google sign-in navigation events from the shared ViewModel
+                LaunchedEffect(loginViewModel) {
+                    loginViewModel.navigateToHome.collect { hasProfile ->
+                        backstack.clear()
+                        backstack.add(if (hasProfile) MainShell else ProfileSetup)
+                    }
+                }
+
+                LoginScreen(
+                    prefilledEmail = key.email,
+                    onLoginSuccess = { hasProfile ->
+                        backstack.clear()
+                        backstack.add(if (hasProfile) MainShell else ProfileSetup)
+                    },
+                    onNavigateToSignUp = {
+                        backstack.add(SignUp)
+                    },
+                    onNavigateToEmailVerification = { email ->
+                        backstack.add(EmailVerification(email = email))
+                    },
+                    onGoogleSignInClick = onGoogleSignInClick,
+                    loginViewModel = loginViewModel
+                )
+            }
+
+            entry<EmailVerification> { key ->
+                EmailVerificationScreen(
+                    email = key.email,
+                    onVerified = {
+                        backstack.clear()
+                        backstack.add(Login(email = key.email))
+                    }
                 )
             }
 
             entry<SignUp> {
                 SignUpScreen(
                     onNavigateToLogin = {
-                        if (backstack.isNotEmpty()) { backstack.remove(backstack.last()) }
-                        if (backstack.isEmpty()) backstack.add(Login)
+                        if (backstack.isNotEmpty()) backstack.remove(backstack.last())
+                        if (backstack.isEmpty()) backstack.add(Login())
                     },
+                    onSignUpSuccess = { email ->
+                        backstack.add(EmailVerification(email = email))
+                    }
                 )
             }
 
-            //Onboarding
+            // Onboarding
             entry<Onboarding> {
                 OnboardingScreen(
                     onFinished = {
                         backstack.clear()
-                        backstack.add(Login)
+                        backstack.add(Login())
                     },
                 )
             }
 
-            // Profile setup (post first-login wizard)
+            // Profile setup
             entry<ProfileSetup> {
                 ProfileSetupScreen(
                     onSetupComplete = {
@@ -132,62 +200,55 @@ fun HustleHubNav() {
                 )
             }
 
-            // Main shell (bottom-nav host)
+            // Main shell
             entry<MainShell> {
                 MainShellScreen(
                     onNavigateToPortfolio = { backstack.add(PortfolioUpload) },
+                    onNavigateToProfileSetup = { backstack.add(ProfileSetup) },
+                    onNavigateToSettings = { backstack.add(Settings) },
+                    onNavigateToCreateService = { backstack.add(CreateService()) },
+                    onNavigateToMyServices = { backstack.add(MyServices) }
                 )
             }
 
-            // Standalone screens reachable from within the shell
+            // Standalone screens
             entry<PortfolioUpload> {
                 PortfolioUploadScreen()
             }
 
-            // Chat detail (also used as adaptive detail pane on tablets)
+            entry<Settings> {
+                SettingsScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) }
+                )
+            }
+
+            // Create / Edit service
+            entry<CreateService> { key ->
+                CreateServiceScreen(
+                    serviceId = key.serviceId,
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    onSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) }
+                )
+            }
+
+            // My services management
+            entry<MyServices> {
+                MyServicesScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    onCreateService = { backstack.add(CreateService()) },
+                    onEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) }
+                )
+            }
+
             entry<ChatDetail> { key ->
-                // TODO: replace with real ChatDetailScreen(key.chatId) in a later sprint
-                NavPlaceholderScreen(title = "Chat – ${key.chatId}")
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "Chat – ${key.chatId}",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
             }
         },
     )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Dev utility – placeholder until teammates complete their screens
-// ─────────────────────────────────────────────────────────────────────────────
-
-@Composable
-private fun NavPlaceholderScreen(
-    title: String,
-    showDeveloperShortcuts: Boolean = false,
-    onDeveloperShortcut: (NavKey) -> Unit = {},
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = title,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-
-            if (showDeveloperShortcuts) {
-                Spacer(Modifier.height(32.dp))
-                Text(
-                    text = "Developer Shortcuts",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { onDeveloperShortcut(MainShell) }) { Text("Home") }
-                    Button(onClick = { onDeveloperShortcut(SignUp) })    { Text("Sign Up") }
-                    Button(onClick = { onDeveloperShortcut(PortfolioUpload) }) { Text("Upload") }
-                }
-            }
-        }
-    }
 }

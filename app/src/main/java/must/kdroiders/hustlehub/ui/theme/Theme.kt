@@ -10,36 +10,79 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = HustlePrimary,
+private val LightColorScheme = lightColorScheme(
+    primary = HustlePrimaryBlue,
     onPrimary = HustleOnPrimary,
-    secondary = HustleSecondary,
-    tertiary = HustleTertiary,
-    background = HustleDarkBackground,
-    onBackground = HustleOnBackground,
-    surface = HustleDarkSurface,
-    onSurface = HustleOnSurface,
-    surfaceVariant = HustleDarkSurfaceVariant,
-    onSurfaceVariant = HustleOnSurfaceVariant,
-    outline = HustleOutline,
-    outlineVariant = HustleOutlineVariant,
-    error = HustleError
+    primaryContainer = HustleSecondaryBlue,
+    onPrimaryContainer = HustleOnSecondaryBlue,
+
+    secondary = HustleLinkBlue,
+    onSecondary = HustleOnPrimary,
+    secondaryContainer = HustleSecondaryBlue,
+    onSecondaryContainer = HustleOnSecondaryBlue,
+
+    tertiary = HustleTertiaryTeal,
+    onTertiary = HustleOnTertiary,
+    tertiaryContainer = Color(0xFFE0F7FA),
+    onTertiaryContainer = Color(0xFF006064),
+
+    background = HustleLightBackground,
+    onBackground = HustleDarkNavy,
+    surface = HustleWhite,
+    onSurface = HustleDarkNavy,
+    surfaceVariant = HustleLightBackground,
+    onSurfaceVariant = HustleMediumGrey,
+
+    outline = HustleInputBorder,
+    outlineVariant = HustleDividerGrey,
+
+    error = HustleError,
+    onError = HustleWhite,
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF93000A),
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+private val DarkColorScheme = darkColorScheme(
+    primary = HustlePrimaryBlue,
+    onPrimary = HustleOnDarkPrimary,
+    primaryContainer = HustleDarkSecondaryContainer,
+    onPrimaryContainer = HustleDarkOnSecondaryContainer,
+
+    secondary = HustleLinkBlue,
+    onSecondary = HustleOnPrimary,
+    secondaryContainer = HustleDarkSecondaryContainer,
+    onSecondaryContainer = HustleDarkOnSecondaryContainer,
+
+    tertiary = HustleDarkTertiary,
+    onTertiary = HustleOnTertiary,
+    tertiaryContainer = HustleDarkTertiaryContainer,
+    onTertiaryContainer = HustleDarkOnTertiaryContainer,
+
+    background = HustleDarkBackground,
+    onBackground = HustleDarkOnBackground,
+    surface = HustleDarkSurface,
+    onSurface = HustleDarkOnBackground,
+    surfaceVariant = HustleDarkSurfaceVariant,
+    onSurfaceVariant = HustleDarkOnSurfaceVariant,
+
+    outline = HustleDarkOutline,
+    outlineVariant = HustleDarkOutlineVariant,
+
+    error = HustleError,
+    onError = HustleWhite,
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6),
 )
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HustleHubTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = false,
+    dynamicColor: Boolean = false, // kept false to enforce brand palette
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -47,16 +90,17 @@ fun HustleHubTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        shapes = HustleShapes,
-        motionScheme = MotionScheme.expressive(),
-        content = content
-    )
+    CompositionLocalProvider(LocalDimensions provides DefaultDimensions) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            shapes = HustleShapes,
+            motionScheme = MotionScheme.expressive(),
+            content = content
+        )
+    }
 }

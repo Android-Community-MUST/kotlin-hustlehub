@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -10,14 +13,24 @@ plugins {
     alias(libs.plugins.secrets.gradle.plugin)
 }
 
+fun keysProperty(
+    key: String,
+    defaults: String = "",
+): String {
+    val props = Properties()
+    val file = File(rootProject.projectDir, "keys.properties")
+    if (file.exists()) FileInputStream(file).use {props.load(it)}
+    return props.getProperty(key, defaults)
+}
+
 android {
     namespace = "must.kdroiders.hustlehub"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "must.kdroiders.hustlehub"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -26,8 +39,13 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "SUPABASE_URL", "\"${project.findProperty("SUPABASE_URL") ?: ""}\"")
-        buildConfigField("String", "SUPABASE_KEY", "\"${project.findProperty("SUPABASE_KEY") ?: ""}\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"${keysProperty("gemini.api.key")}\"")
+        buildConfigField("String", "MAPS_API_KEY", "\"${keysProperty("maps.api.key")}\"")
+        buildConfigField("String", "BASE_URL", "\"${keysProperty("BASE_URL", "http://10.0.2.2:8080/api/v1/")}\"")
+        buildConfigField("String", "WS_BASE_URL", "\"${keysProperty("WS_BASE_URL", "ws://10.0.2.2:8080/ws")}\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${keysProperty("GOOGLE_WEB_CLIENT_ID", "")}\"")
+        resValue("string", "google_maps_key", keysProperty("maps.api.key"))
+        resValue("string", "google_web_client_id", keysProperty("GOOGLE_WEB_CLIENT_ID", ""))
     }
 
     buildTypes {
@@ -136,6 +154,12 @@ dependencies {
 
     // DataStore Preferences
     implementation(libs.datastore.preferences)
+
+    // Credentials & Google Authentication
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.play.services.auth)
+    implementation(libs.googleid)
 
     // Detekt formatting rules
     detektPlugins(libs.detekt.formatting)

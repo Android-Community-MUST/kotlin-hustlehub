@@ -7,11 +7,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,17 +27,12 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -63,33 +55,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.data.model.UserRole
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.viewModel.ProfileSetupEvent
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.viewModel.ProfileSetupViewModel
 
-/**
- * List of courses for the dropdown.
- * Add/remove as needed for your university.
- */
-private val courseOptions = listOf(
-    "Computer Science",
-    "Information Technology",
-    "Software Engineering",
-    "Business Administration",
-    "Education",
-    "Agriculture",
-    "Nursing",
-    "Engineering",
-    "Economics",
-    "Other"
-)
 
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalLayoutApi::class
-)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileSetupScreen(
     viewModel: ProfileSetupViewModel = hiltViewModel(),
@@ -129,9 +101,6 @@ fun ProfileSetupScreen(
     // ---- Bottom sheet state ----
     var showPhotoSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
-
-    // ---- Course dropdown state ----
-    var courseExpanded by remember { mutableStateOf(false) }
 
     // ---- Main layout ----
     Box(
@@ -257,181 +226,39 @@ fun ProfileSetupScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // ---- Course Dropdown ----
-            ExposedDropdownMenuBox(
-                expanded = courseExpanded,
-                onExpandedChange = {
-                    courseExpanded = it
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                HustleTextField(
-                    value = state.course,
-                    onValueChange = {},
-                    label = "Course",
-                    leadingIcon = Icons.Default.School,
-                    placeholder = "Select your course",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(
-                            MenuAnchorType
-                                .PrimaryNotEditable
-                        )
-                )
-
-                ExposedDropdownMenu(
-                    expanded = courseExpanded,
-                    onDismissRequest = {
-                        courseExpanded = false
-                    }
-                ) {
-                    courseOptions.forEach { course ->
-                        DropdownMenuItem(
-                            text = { Text(course) },
-                            onClick = {
-                                viewModel
-                                    .onCourseChange(course)
-                                courseExpanded = false
-                            },
-                            contentPadding =
-                                ExposedDropdownMenuDefaults
-                                    .ItemContentPadding
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // ---- Year of Study ----
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Year of Study",
-                    style = MaterialTheme.typography
-                        .bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme
-                        .onSurfaceVariant,
-                    modifier = Modifier.padding(
-                        start = 4.dp,
-                        bottom = 8.dp
-                    )
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.spacedBy(8.dp)
-                ) {
-                    (1..5).forEach { year ->
-                        val isSelected =
-                            state.yearOfStudy == year
-
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = {
-                                viewModel.onYearChange(year)
-                            },
-                            label = {
-                                Text(
-                                    "Y$year",
-                                    fontWeight =
-                                        if (isSelected)
-                                            FontWeight.Bold
-                                        else
-                                            FontWeight.Normal
-                                )
-                            },
-                            colors = FilterChipDefaults
-                                .filterChipColors(
-                                    selectedContainerColor =
-                                        primary,
-                                    selectedLabelColor =
-                                        MaterialTheme
-                                            .colorScheme
-                                            .onPrimary
-                                ),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // ---- Hostel / Residence ----
+            // ---- Phone ----
             HustleTextField(
-                value = state.hostel,
-                onValueChange = viewModel::onHostelChange,
-                label = "Hostel / Residence",
+                value = state.phone,
+                onValueChange = viewModel::onPhoneChange,
+                label = "Phone Number",
+                leadingIcon = Icons.Default.Phone,
+                placeholder = "e.g. 0712345678",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // ---- Bio ----
+            HustleTextField(
+                value = state.bio,
+                onValueChange = viewModel::onBioChange,
+                label = "Short Bio",
+                leadingIcon = Icons.Default.Info,
+                placeholder = "e.g. Graphic Designer, Electrician",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // ---- Campus Location ----
+            HustleTextField(
+                value = state.campusLocation,
+                onValueChange = viewModel::onCampusLocationChange,
+                label = "Campus Location / Residence",
                 leadingIcon = Icons.Default.Home,
                 placeholder = "e.g. Hostel A, Off-campus",
                 modifier = Modifier.fillMaxWidth()
             )
-
-            Spacer(Modifier.height(20.dp))
-
-            // ---- Role Selection ----
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "I want to...",
-                    style = MaterialTheme.typography
-                        .bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme
-                        .onSurfaceVariant,
-                    modifier = Modifier.padding(
-                        start = 4.dp,
-                        bottom = 8.dp
-                    )
-                )
-
-                FlowRow(
-                    horizontalArrangement =
-                        Arrangement.spacedBy(10.dp),
-                    verticalArrangement =
-                        Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    RoleChip(
-                        label = "Find Services",
-                        description = "Customer",
-                        isSelected =
-                            state.role == UserRole.CUSTOMER,
-                        onClick = {
-                            viewModel.onRoleChange(
-                                UserRole.CUSTOMER
-                            )
-                        }
-                    )
-                    RoleChip(
-                        label = "Offer Services",
-                        description = "Provider",
-                        isSelected =
-                            state.role == UserRole.PROVIDER,
-                        onClick = {
-                            viewModel.onRoleChange(
-                                UserRole.PROVIDER
-                            )
-                        }
-                    )
-                    RoleChip(
-                        label = "Both",
-                        description = "Provide & Find",
-                        isSelected =
-                            state.role == UserRole.BOTH,
-                        onClick = {
-                            viewModel.onRoleChange(
-                                UserRole.BOTH
-                            )
-                        }
-                    )
-                }
-            }
 
             Spacer(Modifier.height(24.dp))
 
@@ -571,49 +398,4 @@ fun ProfileSetupScreen(
     }
 }
 
-/**
- * Reusable chip for role selection.
- */
-@Composable
-private fun RoleChip(
-    label: String,
-    description: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    FilterChip(
-        selected = isSelected,
-        onClick = onClick,
-        label = {
-            Column(
-                modifier = Modifier
-                    .padding(vertical = 4.dp)
-            ) {
-                Text(
-                    text = label,
-                    fontWeight = if (isSelected)
-                        FontWeight.Bold
-                    else FontWeight.Normal,
-                    fontSize = 13.sp
-                )
-                Text(
-                    text = description,
-                    fontSize = 11.sp,
-                    color = if (isSelected)
-                        MaterialTheme.colorScheme
-                            .onPrimary
-                            .copy(alpha = 0.8f)
-                    else MaterialTheme.colorScheme
-                        .onSurfaceVariant
-                )
-            }
-        },
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor =
-                MaterialTheme.colorScheme.primary,
-            selectedLabelColor =
-                MaterialTheme.colorScheme.onPrimary
-        ),
-        shape = RoundedCornerShape(12.dp)
-    )
-}
+
