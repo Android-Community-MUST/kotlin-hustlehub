@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -42,6 +43,7 @@ fun ServiceManagementCard(
     service: Service,
     isUpdating: Boolean,
     onEditClick: () -> Unit,
+    onGalleryClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onAvailabilityChange: (ServiceAvailability) -> Unit,
     modifier: Modifier = Modifier
@@ -121,6 +123,22 @@ fun ServiceManagementCard(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit service",
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .clickable(enabled = !isUpdating, onClick = onGalleryClick),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhotoLibrary,
+                            contentDescription = "Manage gallery",
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
                             modifier = Modifier.size(18.dp)
                         )
                     }

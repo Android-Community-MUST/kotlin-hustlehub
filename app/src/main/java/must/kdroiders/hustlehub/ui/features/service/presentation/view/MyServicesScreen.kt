@@ -1,6 +1,10 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.view
 
 import androidx.compose.foundation.background
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +28,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -49,7 +54,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import must.kdroiders.hustlehub.data.model.ServiceAvailability
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.DeleteConfirmDialog
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.PortfolioSlots
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ServiceManagementCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.MyServicesViewModel
 
@@ -63,6 +70,12 @@ fun MyServicesScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.onGalleryImageAdded(it) }
+    }
 
     // Show errors as snackbar
     LaunchedEffect(state.error) {
@@ -94,6 +107,57 @@ fun MyServicesScreen(
             onConfirm = viewModel::confirmDelete,
             onDismiss = viewModel::cancelDelete
         )
+    }
+
+    // Gallery Bottom Sheet
+    if (state.selectedServiceForGallery != null) {
+        val selectedService = state.services.find { it.id == state.selectedServiceForGallery }
+        if (selectedService != null) {
+            ModalBottomSheet(
+                onDismissRequest = viewModel::closeGallery,
+                containerColor = MaterialTheme.colorScheme.surface
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .padding(bottom = 32.dp) // extra padding for bottom navigation
+                ) {
+                    Text(
+                        text = "Quick Gallery",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Manage photos for ${selectedService.title}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    PortfolioSlots(
+                        existingUrls = state.existingPortfolioUrls,
+                        newUris = state.portfolioUris,
+                        onAddClick = { 
+                            imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) 
+                        },
+                        onRemoveExisting = viewModel::onGalleryExistingImageRemoved,
+                        onRemoveNew = viewModel::onGalleryNewImageRemoved,
+                        maxSlots = 6
+                    )
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+                    
+                    HustleButton(
+                        text = "Save Changes",
+                        onClick = viewModel::saveGallery,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
     }
 
     Scaffold(
@@ -188,6 +252,7 @@ fun MyServicesScreen(
                                     service = service,
                                     isUpdating = state.updatingServiceId == service.id,
                                     onEditClick = { onEditService(service.id) },
+                                    onGalleryClick = { viewModel.openGallery(service.id) },
                                     onDeleteClick = { viewModel.requestDelete(service.id) },
                                     onAvailabilityChange = { newAvailability ->
                                         viewModel.onAvailabilityChange(service.id, newAvailability)
