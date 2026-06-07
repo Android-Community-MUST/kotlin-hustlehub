@@ -1,3 +1,28 @@
 <resources>
     <string name="app_name">HustleHub</string>
+
+    <!-- Generic navigation -->
+    <string name="cd_navigate_back">Navigate back</string>
+
+    <!-- Portfolio Upload Screen -->
+    <string name="portfolio_upload_title">Portfolio Upload</string>
+    <string name="portfolio_add_images">Add Images</string>
+    <string name="portfolio_add_images_cd">Add portfolio images</string>
+    <string name="portfolio_empty_hint">No images selected. Showcase your work!</string>
+    <string name="portfolio_image_cd">Portfolio image preview</string>
+    <string name="portfolio_remove_image_cd">Remove image</string>
+    <string name="portfolio_upload_button">Upload Portfolio</string>
+    <string name="portfolio_uploading">Uploading…</string>
+    <string name="portfolio_upload_progress_title">Upload Progress</string>
+    <string name="portfolio_unknown_file">Image</string>
+    <string name="portfolio_retry">Retry</string>
+    <string name="portfolio_status_pending">Pending</string>
+    <string name="portfolio_status_success_cd">Upload successful</string>
+    <string name="portfolio_status_error_cd">Upload failed</string>
+    <!-- %1$d = count of selected images, %2$d = max allowed -->
+    <string name="portfolio_picker_count">Portfolio Images (%1$d/%2$d)</string>
+    <!-- %1$d = percent complete (0–100) -->
+    <string name="portfolio_status_percent">%1$d%%</string>
+    <!-- %1$d = uploaded count, %2$d = total selected -->
+    <string name="portfolio_upload_success_count">%1$d of %2$d images uploaded successfully</string>
 </resources>
