@@ -23,7 +23,7 @@ private const val PAGE_SIZE = 10
 data class HomeUiState(
     val selectedCategory: ServiceCategory = ServiceCategory.ALL,
     val searchQuery: String = "",
-    val providerInitials: String = "JK",
+    val providerInitials: String = "HH",
     val notificationCount: Int = 0,
     // Paginated real services from backend
     val services: List<Service> = emptyList(),
