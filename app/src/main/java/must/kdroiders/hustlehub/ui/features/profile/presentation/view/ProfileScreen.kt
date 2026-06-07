@@ -45,7 +45,7 @@ fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
     onEditClick: () -> Unit = {},
     onAddNewServiceClick: () -> Unit = {},
-    onManageServicesClick: () -> Unit = {},
+    onServiceClick: (serviceId: String) -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
     val state by profileViewModel.uiState.collectAsState()
@@ -66,7 +66,7 @@ fun ProfileScreen(
                 onEditClick = onEditClick,
                 onToggleService = profileViewModel::toggleServiceActive,
                 onAddNewServiceClick = onAddNewServiceClick,
-                onManageServicesClick = onManageServicesClick,
+                onServiceClick = onServiceClick,
                 onSettingsClick = onSettingsClick
             )
         }
@@ -81,7 +81,7 @@ private fun ProfileContent(
     onEditClick: () -> Unit,
     onToggleService: (String) -> Unit,
     onAddNewServiceClick: () -> Unit,
-    onManageServicesClick: () -> Unit = {},
+    onServiceClick: (serviceId: String) -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
     val user = state.user ?: return
@@ -188,19 +188,19 @@ private fun ProfileContent(
             Spacer(Modifier.height(24.dp))
             ServicesHeader(
                 onAddNewServiceClick = onAddNewServiceClick,
-                onManageServicesClick = onManageServicesClick,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
             Spacer(Modifier.height(12.dp))
         }
 
-        // Service cards
+        // Service cards — each tappable to manage that specific service
         items(
             items = state.services,
             key = { it.id }
         ) { service ->
             ServiceCard(
                 service = service,
+                onClick = { onServiceClick(service.id) },
                 onToggle = {
                     onToggleService(service.id)
                 },

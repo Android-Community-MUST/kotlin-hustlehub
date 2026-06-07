@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -207,7 +207,8 @@ fun HustleHubNav(
                     onNavigateToProfileSetup = { backstack.add(ProfileSetup) },
                     onNavigateToSettings = { backstack.add(Settings) },
                     onNavigateToCreateService = { backstack.add(CreateService()) },
-                    onNavigateToMyServices = { backstack.add(MyServices) }
+                    onNavigateToMyServices = { backstack.add(MyServices) },
+                    onNavigateToEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) }
                 )
             }
 

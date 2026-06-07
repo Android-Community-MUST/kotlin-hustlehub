@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,7 +41,6 @@ import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
 @Composable
 fun ServicesHeader(
     onAddNewServiceClick: () -> Unit,
-    onManageServicesClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -54,22 +54,13 @@ fun ServicesHeader(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
-        Row {
-            TextButton(onClick = onManageServicesClick) {
-                Text(
-                    text = "Manage",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            TextButton(onClick = onAddNewServiceClick) {
-                Text(
-                    text = "Add New +",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+        TextButton(onClick = onAddNewServiceClick) {
+            Text(
+                text = "Add New +",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
@@ -78,6 +69,7 @@ fun ServicesHeader(
 fun ServiceCard(
     service: Service,
     onToggle: () -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -85,6 +77,7 @@ fun ServiceCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
+            .clickable { onClick() }
             .padding(16.dp)
     ) {
         Column {
