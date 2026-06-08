@@ -35,75 +35,76 @@ import javax.inject.Singleton
  * ```
  */
 @Singleton
-class AuthManager @Inject constructor(
-    private val firebaseAuth: FirebaseAuth?
-) {
-
-    /**
-     * Cold flow of [AuthState] backed by [FirebaseAuth.addAuthStateListener].
-     *
-     * Emits [AuthState.Loading] immediately, then [AuthState.Authenticated] or
-     * [AuthState.Unauthenticated] as Firebase notifies the listener.
-     *
-     * Uses [distinctUntilChanged] to avoid duplicate emissions when the same
-     * auth state fires multiple times (e.g., token refresh).
-     */
-    val authState: Flow<AuthState> = callbackFlow {
-        // Firebase not available (CI / tests without google-services.json)
-        if (firebaseAuth == null) {
-            trySend(AuthState.Unauthenticated)
-            awaitClose()
-            return@callbackFlow
-        }
-
-        // Send Loading until the first listener callback arrives
-        trySend(AuthState.Loading)
-
-        val listener = FirebaseAuth.AuthStateListener { auth ->
-            val user: FirebaseUser? = auth.currentUser
-            val newState: AuthState = if (user != null) {
-                Timber.d("AuthManager: user signed in — uid=%s", user.uid)
-                AuthState.Authenticated(user)
-            } else {
-                Timber.d("AuthManager: no current user — Unauthenticated")
-                AuthState.Unauthenticated
+class AuthManager
+    @Inject
+    constructor(
+        private val firebaseAuth: FirebaseAuth?,
+    ) {
+        /**
+         * Cold flow of [AuthState] backed by [FirebaseAuth.addAuthStateListener].
+         *
+         * Emits [AuthState.Loading] immediately, then [AuthState.Authenticated] or
+         * [AuthState.Unauthenticated] as Firebase notifies the listener.
+         *
+         * Uses [distinctUntilChanged] to avoid duplicate emissions when the same
+         * auth state fires multiple times (e.g., token refresh).
+         */
+        val authState: Flow<AuthState> = callbackFlow {
+            // Firebase not available (CI / tests without google-services.json)
+            if (firebaseAuth == null) {
+                trySend(AuthState.Unauthenticated)
+                awaitClose()
+                return@callbackFlow
             }
-            trySend(newState)
+
+            // Send Loading until the first listener callback arrives
+            trySend(AuthState.Loading)
+
+            val listener = FirebaseAuth.AuthStateListener { auth ->
+                val user: FirebaseUser? = auth.currentUser
+                val newState: AuthState = if (user != null) {
+                    Timber.d("AuthManager: user signed in — uid=%s", user.uid)
+                    AuthState.Authenticated(user)
+                } else {
+                    Timber.d("AuthManager: no current user — Unauthenticated")
+                    AuthState.Unauthenticated
+                }
+                trySend(newState)
+            }
+
+            firebaseAuth.addAuthStateListener(listener)
+
+            // Remove the listener when the collector is cancelled
+            awaitClose {
+                Timber.d("AuthManager: removing auth state listener")
+                firebaseAuth.removeAuthStateListener(listener)
+            }
+        }.distinctUntilChanged()
+
+        /**
+         * Returns the currently signed-in [FirebaseUser], or null if the user is
+         * not authenticated. This is a synchronous snapshot — prefer [authState]
+         * for reactive observation.
+         */
+        fun currentUser(): FirebaseUser? = firebaseAuth?.currentUser
+
+        /**
+         * Returns true if there is a currently authenticated Firebase user.
+         *
+         * Convenience helper for one-off checks (e.g., deciding whether to show
+         * a "Login" button).
+         */
+        fun isAuthenticated(): Boolean = firebaseAuth?.currentUser != null
+
+        /**
+         * Signs the current user out of Firebase Auth.
+         *
+         * Prefer calling [SignOutUseCase] from ViewModels — this method is provided
+         * for cases where the sign-out must happen outside the ViewModel (e.g.,
+         * [TokenAuthenticator] after an unrecoverable 401).
+         */
+        fun signOut() {
+            Timber.d("AuthManager: signing out")
+            firebaseAuth?.signOut()
         }
-
-        firebaseAuth.addAuthStateListener(listener)
-
-        // Remove the listener when the collector is cancelled
-        awaitClose {
-            Timber.d("AuthManager: removing auth state listener")
-            firebaseAuth.removeAuthStateListener(listener)
-        }
-    }.distinctUntilChanged()
-
-    /**
-     * Returns the currently signed-in [FirebaseUser], or null if the user is
-     * not authenticated. This is a synchronous snapshot — prefer [authState]
-     * for reactive observation.
-     */
-    fun currentUser(): FirebaseUser? = firebaseAuth?.currentUser
-
-    /**
-     * Returns true if there is a currently authenticated Firebase user.
-     *
-     * Convenience helper for one-off checks (e.g., deciding whether to show
-     * a "Login" button).
-     */
-    fun isAuthenticated(): Boolean = firebaseAuth?.currentUser != null
-
-    /**
-     * Signs the current user out of Firebase Auth.
-     *
-     * Prefer calling [SignOutUseCase] from ViewModels — this method is provided
-     * for cases where the sign-out must happen outside the ViewModel (e.g.,
-     * [TokenAuthenticator] after an unrecoverable 401).
-     */
-    fun signOut() {
-        Timber.d("AuthManager: signing out")
-        firebaseAuth?.signOut()
     }
-}

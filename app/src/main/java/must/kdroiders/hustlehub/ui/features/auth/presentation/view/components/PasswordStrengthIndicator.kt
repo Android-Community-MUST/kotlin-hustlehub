@@ -25,7 +25,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.Password
 
 @Composable
 fun PasswordStrengthIndicator(strength: PasswordStrength) {
-    val strengthText = when(strength) {
+    val strengthText = when (strength) {
         PasswordStrength.NONE -> "Very Weak"
         PasswordStrength.WEAK -> "Weak"
         PasswordStrength.MEDIUM -> "Medium"
@@ -35,11 +35,11 @@ fun PasswordStrengthIndicator(strength: PasswordStrength) {
 
     val errorColor = MaterialTheme.colorScheme.error
     val warningColor = Color(0xFFFFA500) // Orange
-    val infoColor = Color(0xFF03A9F4)    // Light Blue
+    val infoColor = Color(0xFF03A9F4) // Light Blue
     val successColor = Color(0xFF4CAF50) // Green
     val primaryColor = MaterialTheme.colorScheme.primary
 
-    val strengthColor = when(strength) {
+    val strengthColor = when (strength) {
         PasswordStrength.NONE -> errorColor
         PasswordStrength.WEAK -> warningColor
         PasswordStrength.MEDIUM -> infoColor
@@ -47,7 +47,7 @@ fun PasswordStrengthIndicator(strength: PasswordStrength) {
         PasswordStrength.VERY_STRONG -> primaryColor
     }
 
-    val targetFillPercentage = when(strength) {
+    val targetFillPercentage = when (strength) {
         PasswordStrength.NONE -> 0.2f
         PasswordStrength.WEAK -> 0.4f
         PasswordStrength.MEDIUM -> 0.6f
@@ -59,29 +59,29 @@ fun PasswordStrengthIndicator(strength: PasswordStrength) {
     val animatedFillPercentage by animateFloatAsState(
         targetValue = targetFillPercentage,
         animationSpec = tween(durationMillis = 300),
-        label = "PasswordStrengthProgress"
+        label = "PasswordStrengthProgress",
     )
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 4.dp, bottom = 8.dp)
+            .padding(top = 4.dp, bottom = 8.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "Password Strength",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             Text(
                 text = strengthText,
                 style = MaterialTheme.typography.bodySmall,
-                color = strengthColor
+                color = strengthColor,
             )
         }
 
@@ -91,7 +91,7 @@ fun PasswordStrengthIndicator(strength: PasswordStrength) {
                 .height(6.dp)
                 .padding(top = 4.dp)
                 .clip(RoundedCornerShape(3.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
         ) {
             Box(
                 modifier = Modifier
@@ -100,15 +100,15 @@ fun PasswordStrengthIndicator(strength: PasswordStrength) {
                     .clip(RoundedCornerShape(3.dp))
                     .background(
                         brush = Brush.horizontalGradient(
-                            colors = when(strength) {
+                            colors = when (strength) {
                                 PasswordStrength.NONE -> listOf(errorColor, errorColor)
                                 PasswordStrength.WEAK -> listOf(errorColor, warningColor)
                                 PasswordStrength.MEDIUM -> listOf(warningColor, infoColor)
                                 PasswordStrength.STRONG -> listOf(infoColor, successColor)
                                 PasswordStrength.VERY_STRONG -> listOf(successColor, primaryColor)
-                            }
-                        )
-                    )
+                            },
+                        ),
+                    ),
             )
         }
     }

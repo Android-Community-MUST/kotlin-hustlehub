@@ -9,12 +9,15 @@ object ImageUtils {
     /**
      * Compresses a Bitmap to a target maximum size in KB.
      * Iteratively reduces the JPEG quality until the resulting byte array is under the max size.
-     * 
+     *
      * @param bitmap The Bitmap to compress
      * @param maxSizeKB The target maximum file size in Kilobytes (default: 500)
      * @return Compressed ByteArray
      */
-    fun compressBitmap(bitmap: Bitmap, maxSizeKB: Int = 500): ByteArray {
+    fun compressBitmap(
+        bitmap: Bitmap,
+        maxSizeKB: Int = 500,
+    ): ByteArray {
         var quality = 90
         var byteArray: ByteArray
         do {

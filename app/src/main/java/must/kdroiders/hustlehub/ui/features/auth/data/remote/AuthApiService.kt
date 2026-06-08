@@ -11,7 +11,7 @@ data class RegisterRequest(
     val bio: String? = null,
     val avatarUrl: String? = null,
     val phone: String? = null,
-    val campusLocation: String? = null
+    val campusLocation: String? = null,
 )
 
 data class UserResponseDto(
@@ -29,12 +29,12 @@ data class UserResponseDto(
     val verified: Boolean,
     val active: Boolean,
     val createdAt: String,
-    val updatedAt: String
+    val updatedAt: String,
 )
 
 interface AuthApiService {
     @POST("auth/register")
     suspend fun register(
-        @Body request: RegisterRequest
+        @Body request: RegisterRequest,
     ): ApiResponse<UserResponseDto>
 }

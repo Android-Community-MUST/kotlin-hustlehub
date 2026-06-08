@@ -13,8 +13,10 @@ import org.junit.Test
  * own message.
  */
 class FirebaseAuthErrorMapperTest {
-
-    private fun fakeFirebaseException(errorCode: String, message: String? = null): FirebaseAuthException {
+    private fun fakeFirebaseException(
+        errorCode: String,
+        message: String? = null,
+    ): FirebaseAuthException {
         val ex = mockk<FirebaseAuthException>(relaxed = true)
         every { ex.errorCode } returns errorCode
         every { ex.message } returns message
@@ -26,7 +28,7 @@ class FirebaseAuthErrorMapperTest {
     @Test
     fun `should_return_friendly_message_when_email_already_in_use`() {
         val result = FirebaseAuthErrorMapper.map(
-            fakeFirebaseException("ERROR_EMAIL_ALREADY_IN_USE")
+            fakeFirebaseException("ERROR_EMAIL_ALREADY_IN_USE"),
         )
         assertTrue(result.contains("already exists", ignoreCase = true))
     }
@@ -34,7 +36,7 @@ class FirebaseAuthErrorMapperTest {
     @Test
     fun `should_return_friendly_message_when_email_is_invalid`() {
         val result = FirebaseAuthErrorMapper.map(
-            fakeFirebaseException("ERROR_INVALID_EMAIL")
+            fakeFirebaseException("ERROR_INVALID_EMAIL"),
         )
         assertTrue(result.contains("valid email", ignoreCase = true))
     }
@@ -42,7 +44,7 @@ class FirebaseAuthErrorMapperTest {
     @Test
     fun `should_return_friendly_message_when_password_is_weak`() {
         val result = FirebaseAuthErrorMapper.map(
-            fakeFirebaseException("ERROR_WEAK_PASSWORD")
+            fakeFirebaseException("ERROR_WEAK_PASSWORD"),
         )
         assertTrue(result.contains("weak", ignoreCase = true) || result.contains("password", ignoreCase = true))
     }
@@ -52,7 +54,7 @@ class FirebaseAuthErrorMapperTest {
     @Test
     fun `should_return_friendly_message_when_user_not_found`() {
         val result = FirebaseAuthErrorMapper.map(
-            fakeFirebaseException("ERROR_USER_NOT_FOUND")
+            fakeFirebaseException("ERROR_USER_NOT_FOUND"),
         )
         assertTrue(result.contains("No account found", ignoreCase = true))
     }
@@ -60,7 +62,7 @@ class FirebaseAuthErrorMapperTest {
     @Test
     fun `should_return_friendly_message_when_password_is_wrong`() {
         val result = FirebaseAuthErrorMapper.map(
-            fakeFirebaseException("ERROR_WRONG_PASSWORD")
+            fakeFirebaseException("ERROR_WRONG_PASSWORD"),
         )
         assertTrue(result.contains("Incorrect password", ignoreCase = true))
     }
@@ -68,7 +70,7 @@ class FirebaseAuthErrorMapperTest {
     @Test
     fun `should_return_friendly_message_when_credential_is_invalid`() {
         val result = FirebaseAuthErrorMapper.map(
-            fakeFirebaseException("ERROR_INVALID_CREDENTIAL")
+            fakeFirebaseException("ERROR_INVALID_CREDENTIAL"),
         )
         assertTrue(result.contains("Incorrect password", ignoreCase = true))
     }
@@ -76,7 +78,7 @@ class FirebaseAuthErrorMapperTest {
     @Test
     fun `should_return_friendly_message_when_user_is_disabled`() {
         val result = FirebaseAuthErrorMapper.map(
-            fakeFirebaseException("ERROR_USER_DISABLED")
+            fakeFirebaseException("ERROR_USER_DISABLED"),
         )
         assertTrue(result.contains("disabled", ignoreCase = true))
     }
@@ -86,7 +88,7 @@ class FirebaseAuthErrorMapperTest {
     @Test
     fun `should_return_friendly_message_when_network_request_failed`() {
         val result = FirebaseAuthErrorMapper.map(
-            fakeFirebaseException("ERROR_NETWORK_REQUEST_FAILED")
+            fakeFirebaseException("ERROR_NETWORK_REQUEST_FAILED"),
         )
         assertTrue(result.contains("Network error", ignoreCase = true))
     }
@@ -94,7 +96,7 @@ class FirebaseAuthErrorMapperTest {
     @Test
     fun `should_return_friendly_message_when_too_many_requests`() {
         val result = FirebaseAuthErrorMapper.map(
-            fakeFirebaseException("ERROR_TOO_MANY_REQUESTS")
+            fakeFirebaseException("ERROR_TOO_MANY_REQUESTS"),
         )
         assertTrue(result.contains("Too many", ignoreCase = true))
     }

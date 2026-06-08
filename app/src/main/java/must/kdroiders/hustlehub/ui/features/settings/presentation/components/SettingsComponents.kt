@@ -39,7 +39,7 @@ fun SettingsSectionLabel(text: String) {
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         letterSpacing = 1.2.sp,
-        modifier = Modifier.padding(start = 4.dp)
+        modifier = Modifier.padding(start = 4.dp),
     )
 }
 
@@ -49,7 +49,7 @@ fun SettingsGroup(content: @Composable () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.surface),
     ) {
         content()
     }
@@ -62,14 +62,14 @@ fun SettingsRowNavigate(
     onClick: () -> Unit,
     subtitle: String? = null,
     subtitleColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    trailing: String? = null
+    trailing: String? = null,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         SettingsIconBox(icon = icon)
         Spacer(Modifier.width(14.dp))
@@ -78,7 +78,7 @@ fun SettingsRowNavigate(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
             if (subtitle != null) {
                 Spacer(Modifier.height(2.dp))
@@ -86,7 +86,7 @@ fun SettingsRowNavigate(
                     text = subtitle,
                     style = MaterialTheme.typography.labelSmall,
                     color = subtitleColor,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
         }
@@ -94,7 +94,7 @@ fun SettingsRowNavigate(
             Text(
                 text = trailing,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.width(8.dp))
         }
@@ -102,7 +102,7 @@ fun SettingsRowNavigate(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(16.dp),
         )
     }
 }
@@ -111,14 +111,14 @@ fun SettingsRowNavigate(
 fun SettingsRowExternalLink(
     icon: ImageVector,
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         SettingsIconBox(icon = icon)
         Spacer(Modifier.width(14.dp))
@@ -127,13 +127,13 @@ fun SettingsRowExternalLink(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         Icon(
             imageVector = Icons.AutoMirrored.Filled.OpenInNew,
             contentDescription = "Opens externally",
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(16.dp),
         )
     }
 }
@@ -144,13 +144,13 @@ fun SettingsRowToggle(
     icon: ImageVector,
     label: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         SettingsIconBox(icon = icon)
         Spacer(Modifier.width(14.dp))
@@ -159,7 +159,7 @@ fun SettingsRowToggle(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         Switch(
             checked = checked,
@@ -168,8 +168,8 @@ fun SettingsRowToggle(
                 checkedTrackColor = MaterialTheme.colorScheme.primary,
                 checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                 uncheckedTrackColor = MaterialTheme.colorScheme.outline,
-                uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
         )
     }
 }
@@ -180,14 +180,14 @@ fun SettingsIconBox(icon: ImageVector) {
         modifier = Modifier
             .size(36.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.primaryContainer),   // deep purple tint
-        contentAlignment = Alignment.Center
+            .background(MaterialTheme.colorScheme.primaryContainer), // deep purple tint
+        contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(18.dp),
         )
     }
 }
@@ -197,16 +197,16 @@ fun SettingsDivider() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 66.dp)   // aligns with label start
+            .padding(start = 66.dp) // aligns with label start
             .height(0.5.dp)
-            .background(MaterialTheme.colorScheme.outlineVariant)
+            .background(MaterialTheme.colorScheme.outlineVariant),
     )
 }
 
 @Composable
 fun LogOutButton(
     isLoading: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -215,14 +215,14 @@ fun LogOutButton(
             .background(MaterialTheme.colorScheme.surface)
             .clickable(enabled = !isLoading, onClick = onClick)
             .padding(vertical = 18.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = if (isLoading) "Logging out…" else "Log Out",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.error,
-            fontSize = 16.sp
+            fontSize = 16.sp,
         )
     }
 }

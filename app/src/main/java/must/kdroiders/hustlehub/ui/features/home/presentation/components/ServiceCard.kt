@@ -2,7 +2,6 @@ package must.kdroiders.hustlehub.ui.features.home.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,7 +39,7 @@ import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 fun ServiceCard(
     service: Service,
     onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
@@ -48,14 +47,14 @@ fun ServiceCard(
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
             .clickable(onClick = onClick)
-            .padding(bottom = 12.dp)
+            .padding(bottom = 12.dp),
     ) {
         // Thumbnail image
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(16f / 9f)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .background(MaterialTheme.colorScheme.surfaceVariant),
         ) {
             val imageUrl = service.portfolio.firstOrNull() ?: service.iconUrl
             if (imageUrl.isNotBlank()) {
@@ -63,7 +62,7 @@ fun ServiceCard(
                     model = imageUrl,
                     contentDescription = service.title,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
 
@@ -72,7 +71,7 @@ fun ServiceCard(
                 availability = service.availability,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(8.dp)
+                    .padding(8.dp),
             )
         }
 
@@ -86,7 +85,7 @@ fun ServiceCard(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
 
             Spacer(Modifier.height(4.dp))
@@ -97,15 +96,17 @@ fun ServiceCard(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(14.dp),
                 )
                 Spacer(Modifier.width(3.dp))
                 Text(
-                    text = if (service.averageRating > 0f)
+                    text = if (service.averageRating > 0f) {
                         "${"%.1f".format(service.averageRating)} (${service.reviewCount})"
-                    else "New",
+                    } else {
+                        "New"
+                    },
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -117,7 +118,7 @@ fun ServiceCard(
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
-                fontSize = 12.sp
+                fontSize = 12.sp,
             )
         }
     }
@@ -126,7 +127,7 @@ fun ServiceCard(
 @Composable
 private fun AvailabilityBadge(
     availability: ServiceAvailability,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val (label, color) = when (availability) {
         ServiceAvailability.AVAILABLE -> "Available" to HustleActiveGreen
@@ -138,13 +139,13 @@ private fun AvailabilityBadge(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
             .background(color.copy(alpha = 0.9f))
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
         Text(
             text = label,
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.surface
+            color = MaterialTheme.colorScheme.surface,
         )
     }
 }

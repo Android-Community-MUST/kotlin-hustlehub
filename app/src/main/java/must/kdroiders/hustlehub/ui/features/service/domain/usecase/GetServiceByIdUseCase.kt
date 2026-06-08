@@ -4,9 +4,10 @@ import must.kdroiders.hustlehub.data.model.Service
 import must.kdroiders.hustlehub.domain.repository.ServiceRepository
 import javax.inject.Inject
 
-class GetServiceByIdUseCase @Inject constructor(
-    private val repository: ServiceRepository
-) {
-    suspend operator fun invoke(serviceId: String): Result<Service> =
-        repository.getServiceById(serviceId)
-}
+class GetServiceByIdUseCase
+    @Inject
+    constructor(
+        private val repository: ServiceRepository,
+    ) {
+        suspend operator fun invoke(serviceId: String): Result<Service> = repository.getServiceById(serviceId)
+    }

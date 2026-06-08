@@ -25,7 +25,7 @@ import coil.compose.AsyncImage
 @Composable
 fun ProfileAvatar(photoUrl: String) {
     val gradientBorder = Brush.linearGradient(
-        listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.surfaceVariant)
+        listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.surfaceVariant),
     )
 
     Box(
@@ -34,14 +34,13 @@ fun ProfileAvatar(photoUrl: String) {
             .border(
                 width = 3.dp,
                 brush = gradientBorder,
-                shape = CircleShape
-            )
-            .padding(4.dp)
+                shape = CircleShape,
+            ).padding(4.dp)
             .clip(CircleShape)
             .background(
-                MaterialTheme.colorScheme.surfaceVariant
+                MaterialTheme.colorScheme.surfaceVariant,
             ),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         if (photoUrl.isNotBlank()) {
             AsyncImage(
@@ -50,7 +49,7 @@ fun ProfileAvatar(photoUrl: String) {
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(CircleShape),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
         } else {
             Icon(
@@ -58,9 +57,8 @@ fun ProfileAvatar(photoUrl: String) {
                 contentDescription = "No photo",
                 modifier = Modifier.size(48.dp),
                 tint = MaterialTheme.colorScheme
-                    .onSurfaceVariant
+                    .onSurfaceVariant,
             )
         }
     }
 }
-

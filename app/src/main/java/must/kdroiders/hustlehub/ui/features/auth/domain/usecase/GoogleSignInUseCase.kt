@@ -4,12 +4,14 @@ import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepositor
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
 import javax.inject.Inject
 
-class GoogleSignInUseCase @Inject constructor(
-    private val authRepository: AuthRepository
-) {
-    suspend operator fun invoke(idToken: String): Result<LoginResult> {
-        return runCatching {
-            authRepository.signInWithGoogle(idToken)
+class GoogleSignInUseCase
+    @Inject
+    constructor(
+        private val authRepository: AuthRepository,
+    ) {
+        suspend operator fun invoke(idToken: String): Result<LoginResult> {
+            return runCatching {
+                authRepository.signInWithGoogle(idToken)
+            }
         }
     }
-}

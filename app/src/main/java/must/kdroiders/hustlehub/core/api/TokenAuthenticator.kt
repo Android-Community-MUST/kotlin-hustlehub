@@ -29,10 +29,12 @@ import java.util.concurrent.TimeUnit
  */
 class TokenAuthenticator(
     private val firebaseAuth: FirebaseAuth?,
-    private val authManager: AuthManager
+    private val authManager: AuthManager,
 ) : Authenticator {
-
-    override fun authenticate(route: Route?, response: Response): Request? {
+    override fun authenticate(
+        route: Route?,
+        response: Response,
+    ): Request? {
         val currentUser = firebaseAuth?.currentUser ?: return null
 
         // Prevent infinite retry loops — stop after 2 attempts
@@ -49,7 +51,8 @@ class TokenAuthenticator(
 
             if (!token.isNullOrEmpty()) {
                 Timber.d("TokenAuthenticator: token refreshed successfully")
-                response.request.newBuilder()
+                response.request
+                    .newBuilder()
                     .header("Authorization", "Bearer $token")
                     .build()
             } else {

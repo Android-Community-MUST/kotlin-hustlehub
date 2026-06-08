@@ -29,22 +29,20 @@ import androidx.compose.ui.unit.sp
 // Analytics / Earnings tabs
 
 @Composable
-fun ProfileBottomTabs(
-    modifier: Modifier = Modifier
-) {
+fun ProfileBottomTabs(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         TabButton(
             label = "Analytics",
             icon = Icons.Default.BarChart,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         TabButton(
             label = "Earnings",
             icon = Icons.Outlined.MonetizationOn,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -53,7 +51,7 @@ fun ProfileBottomTabs(
 fun TabButton(
     label: String,
     icon: ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
@@ -62,29 +60,27 @@ fun TabButton(
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(vertical = 14.dp),
-        contentAlignment = Alignment.Center
+                shape = RoundedCornerShape(16.dp),
+            ).padding(vertical = 14.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
                 tint = MaterialTheme.colorScheme
-                    .onSurfaceVariant
+                    .onSurfaceVariant,
             )
             Spacer(Modifier.width(8.dp))
             Text(
                 text = label,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }
 }
-

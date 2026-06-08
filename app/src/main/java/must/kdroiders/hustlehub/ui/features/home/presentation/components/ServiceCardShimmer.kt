@@ -33,21 +33,21 @@ fun ServiceCardShimmer(modifier: Modifier = Modifier) {
         targetValue = 1000f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 1000),
-            repeatMode = RepeatMode.Restart
+            repeatMode = RepeatMode.Restart,
         ),
-        label = "shimmer_x"
+        label = "shimmer_x",
     )
 
     val shimmerColors = listOf(
         MaterialTheme.colorScheme.surfaceVariant,
         MaterialTheme.colorScheme.surface,
-        MaterialTheme.colorScheme.surfaceVariant
+        MaterialTheme.colorScheme.surfaceVariant,
     )
 
     val brush = Brush.linearGradient(
         colors = shimmerColors,
         start = Offset(translateX, 0f),
-        end = Offset(translateX + 300f, 300f)
+        end = Offset(translateX + 300f, 300f),
     )
 
     Column(
@@ -56,7 +56,7 @@ fun ServiceCardShimmer(modifier: Modifier = Modifier) {
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
             .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         // Image placeholder
         Box(
@@ -64,7 +64,7 @@ fun ServiceCardShimmer(modifier: Modifier = Modifier) {
                 .fillMaxWidth()
                 .height(140.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(brush)
+                .background(brush),
         )
         // Provider name placeholder
         Box(
@@ -72,7 +72,7 @@ fun ServiceCardShimmer(modifier: Modifier = Modifier) {
                 .width(100.dp)
                 .height(12.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .background(brush)
+                .background(brush),
         )
         // Title placeholder
         Box(
@@ -80,7 +80,7 @@ fun ServiceCardShimmer(modifier: Modifier = Modifier) {
                 .width(160.dp)
                 .height(14.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .background(brush)
+                .background(brush),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             // Rating placeholder
@@ -89,7 +89,7 @@ fun ServiceCardShimmer(modifier: Modifier = Modifier) {
                     .width(60.dp)
                     .height(12.dp)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(brush)
+                    .background(brush),
             )
             // Price placeholder
             Box(
@@ -97,7 +97,7 @@ fun ServiceCardShimmer(modifier: Modifier = Modifier) {
                     .width(80.dp)
                     .height(12.dp)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(brush)
+                    .background(brush),
             )
         }
         // Badge placeholder
@@ -106,7 +106,7 @@ fun ServiceCardShimmer(modifier: Modifier = Modifier) {
                 .width(70.dp)
                 .height(20.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .background(brush)
+                .background(brush),
         )
         Spacer(Modifier.height(4.dp))
     }
