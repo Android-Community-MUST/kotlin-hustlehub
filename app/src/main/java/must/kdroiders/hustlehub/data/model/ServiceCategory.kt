@@ -10,5 +10,5 @@ enum class ServiceCategory(val label: String) {
     FASHION("Fashion"),
     PHOTOGRAPHY("Photography"),
     DESIGN("Design"),
-    OTHER("Other")
+    OTHER("Other"),
 }

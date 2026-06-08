@@ -31,14 +31,14 @@ fun EmptyStateView(
     description: String,
     modifier: Modifier = Modifier,
     icon: ImageVector = Icons.Default.Inbox,
-    action: (@Composable () -> Unit)? = null
+    action: (@Composable () -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         // Icon inside a tinted circle background
         Box(
@@ -46,15 +46,15 @@ fun EmptyStateView(
                 .size(88.dp)
                 .background(
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                    shape = CircleShape
+                    shape = CircleShape,
                 ),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(40.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.primary,
             )
         }
 
@@ -65,7 +65,7 @@ fun EmptyStateView(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
 
         Spacer(Modifier.height(10.dp))
@@ -75,7 +75,7 @@ fun EmptyStateView(
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
         )
 
         if (action != null) {
@@ -94,7 +94,7 @@ fun EmptyStateViewPreview() {
             description = "You're all clear. Add your first task and start getting things done.",
             action = {
                 HustleButton(text = "Add Task", onClick = {})
-            }
+            },
         )
     }
 }

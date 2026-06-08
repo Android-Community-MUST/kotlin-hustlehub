@@ -3,7 +3,7 @@ package must.kdroiders.hustlehub.data.model
 enum class UserRole {
     PROVIDER,
     CUSTOMER,
-    BOTH
+    BOTH,
 }
 
 data class User(
@@ -18,5 +18,5 @@ data class User(
     val bio: String = "",
     val isVerified: Boolean = false,
     val isOnline: Boolean = true,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
 )

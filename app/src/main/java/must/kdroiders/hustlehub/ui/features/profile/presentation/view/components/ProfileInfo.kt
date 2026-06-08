@@ -1,6 +1,5 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,23 +24,23 @@ fun ProfileInfo(
     name: String,
     phone: String,
     campusLocation: String,
-    bio: String
+    bio: String,
 ) {
     Text(
         text = name.ifBlank { "User" },
         fontSize = 22.sp,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground,
-        textAlign = TextAlign.Center
+        textAlign = TextAlign.Center,
     )
-    
+
     if (bio.isNotBlank()) {
         Spacer(Modifier.height(6.dp))
         Text(
             text = bio,
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 
@@ -53,13 +51,13 @@ fun ProfileInfo(
                 imageVector = Icons.Default.Phone,
                 contentDescription = null,
                 modifier = Modifier.size(14.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.primary,
             )
             Spacer(Modifier.width(6.dp))
             Text(
                 text = phone,
                 fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -70,13 +68,13 @@ fun ProfileInfo(
             imageVector = Icons.Default.LocationOn,
             contentDescription = null,
             modifier = Modifier.size(14.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.width(4.dp))
         Text(
             text = campusLocation.ifBlank { "Campus" },
             fontSize = 13.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

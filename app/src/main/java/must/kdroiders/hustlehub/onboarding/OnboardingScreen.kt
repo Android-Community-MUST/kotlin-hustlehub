@@ -54,7 +54,7 @@ private data class OnboardingSlide(
     val icon: ImageVector,
     val titleTop: String,
     val titleHighlight: String,
-    val description: String
+    val description: String,
 )
 
 private val slides = listOf(
@@ -64,7 +64,7 @@ private val slides = listOf(
         titleHighlight = "Organised",
         description = "Find laundry, salon, tutoring, food " +
             "and more from verified Meru University " +
-            "students. No WhatsApp groups."
+            "students. No WhatsApp groups.",
     ),
     OnboardingSlide(
         icon = Icons.Filled.Forum,
@@ -72,7 +72,7 @@ private val slides = listOf(
         titleHighlight = "Chat",
         description = "Find the services you need and " +
             "message providers directly. " +
-            "Fast, easy, campus-first."
+            "Fast, easy, campus-first.",
     ),
     OnboardingSlide(
         icon = Icons.Filled.Build,
@@ -80,8 +80,8 @@ private val slides = listOf(
         titleHighlight = "Hustle",
         description = "Create your service profile, " +
             "showcase your skills, and start " +
-            "earning on campus."
-    )
+            "earning on campus.",
+    ),
 )
 
 // main composable
@@ -89,10 +89,10 @@ private val slides = listOf(
 @Composable
 fun OnboardingScreen(
     onboardingViewModel: OnboardingViewModel = hiltViewModel(),
-    onFinished: () -> Unit = {}
+    onFinished: () -> Unit = {},
 ) {
     val pagerState = rememberPagerState(
-        pageCount = { slides.size }
+        pageCount = { slides.size },
     )
     val scope = rememberCoroutineScope()
     val isLastPage = pagerState.currentPage == slides.lastIndex
@@ -111,10 +111,10 @@ fun OnboardingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background),
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             // top bar
             Row(
@@ -122,20 +122,20 @@ fun OnboardingScreen(
                     .fillMaxWidth()
                     .statusBarsPadding()
                     .padding(horizontal = 8.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 if (!isFirstPage) {
                     TextButton(onClick = {
                         scope.launch {
                             pagerState.animateScrollToPage(
-                                pagerState.currentPage - 1
+                                pagerState.currentPage - 1,
                             )
                         }
                     }) {
                         Text(
                             "Back",
                             color = MaterialTheme.colorScheme
-                                .onSurfaceVariant
+                                .onSurfaceVariant,
                         )
                     }
                 } else {
@@ -147,7 +147,7 @@ fun OnboardingScreen(
                         Text(
                             "Skip",
                             color = MaterialTheme.colorScheme
-                                .onSurfaceVariant
+                                .onSurfaceVariant,
                         )
                     }
                 }
@@ -158,7 +158,7 @@ fun OnboardingScreen(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(0.50f)
+                    .weight(0.50f),
             ) { page ->
                 HeroSection(slide = slides[page])
             }
@@ -172,16 +172,15 @@ fun OnboardingScreen(
                         MaterialTheme.colorScheme.surface,
                         RoundedCornerShape(
                             topStart = 28.dp,
-                            topEnd = 28.dp
-                        )
-                    )
-                    .padding(horizontal = 28.dp)
-                    .padding(top = 32.dp, bottom = 16.dp)
+                            topEnd = 28.dp,
+                        ),
+                    ).padding(horizontal = 28.dp)
+                    .padding(top = 32.dp, bottom = 16.dp),
             ) {
                 // title + description
                 Crossfade(
                     targetState = pagerState.currentPage,
-                    label = "slideText"
+                    label = "slideText",
                 ) { page ->
                     val slide = slides[page]
                     Column {
@@ -190,18 +189,19 @@ fun OnboardingScreen(
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme
-                                .onSurface
+                                .onSurface,
                         )
                         Text(
                             text = slide.titleHighlight,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography
-                                .headlineMedium.copy(
+                                .headlineMedium
+                                .copy(
                                     brush = Brush.linearGradient(
-                                        listOf(primary, tertiary)
-                                    )
-                                )
+                                        listOf(primary, tertiary),
+                                    ),
+                                ),
                         )
                         Spacer(Modifier.height(16.dp))
                         Text(
@@ -209,7 +209,7 @@ fun OnboardingScreen(
                             fontSize = 14.sp,
                             lineHeight = 21.sp,
                             color = MaterialTheme.colorScheme
-                                .onSurfaceVariant
+                                .onSurfaceVariant,
                         )
                     }
                 }
@@ -219,30 +219,35 @@ fun OnboardingScreen(
                 // page dots
                 PageIndicator(
                     pagerState = pagerState,
-                    pageCount = slides.size
+                    pageCount = slides.size,
                 )
 
                 Spacer(Modifier.height(24.dp))
 
                 // next / get started
                 HustleButton(
-                    text = if (isLastPage) "Get Started"
-                    else "Next",
-                    icon = if (!isLastPage)
+                    text = if (isLastPage) {
+                        "Get Started"
+                    } else {
+                        "Next"
+                    },
+                    icon = if (!isLastPage) {
                         Icons.AutoMirrored.Filled.ArrowForward
-                    else null,
+                    } else {
+                        null
+                    },
                     onClick = {
                         if (isLastPage) {
                             onComplete()
                         } else {
                             scope.launch {
                                 pagerState.animateScrollToPage(
-                                    pagerState.currentPage + 1
+                                    pagerState.currentPage + 1,
                                 )
                             }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(Modifier.height(32.dp))
@@ -256,7 +261,7 @@ fun OnboardingScreen(
 @Composable
 private fun HeroSection(
     slide: OnboardingSlide,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val primary = MaterialTheme.colorScheme.primary
     val tertiary = MaterialTheme.colorScheme.tertiary
@@ -264,7 +269,7 @@ private fun HeroSection(
 
     Box(
         modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         // glow behind icon
         Box(
@@ -276,11 +281,11 @@ private fun HeroSection(
                         colors = listOf(
                             primary.copy(alpha = 0.45f),
                             tertiary.copy(alpha = 0.15f),
-                            background.copy(alpha = 0f)
-                        )
+                            background.copy(alpha = 0f),
+                        ),
                     ),
-                    shape = CircleShape
-                )
+                    shape = CircleShape,
+                ),
         )
 
         // icon in rounded square
@@ -289,18 +294,17 @@ private fun HeroSection(
                 .size(88.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(primary.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = slide.icon,
                 contentDescription = null,
                 modifier = Modifier.size(44.dp),
-                tint = primary
+                tint = primary,
             )
         }
     }
 }
-
 
 // page dots
 
@@ -308,27 +312,32 @@ private fun HeroSection(
 private fun PageIndicator(
     pagerState: PagerState,
     pageCount: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         repeat(pageCount) { index ->
             val isSelected =
                 pagerState.currentPage == index
 
             val width by animateDpAsState(
-                targetValue = if (isSelected) 24.dp
-                else 8.dp,
-                label = "dotWidth"
+                targetValue = if (isSelected) {
+                    24.dp
+                } else {
+                    8.dp
+                },
+                label = "dotWidth",
             )
             val color by animateColorAsState(
-                targetValue = if (isSelected)
+                targetValue = if (isSelected) {
                     MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.outlineVariant,
-                label = "dotColor"
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant
+                },
+                label = "dotColor",
             )
 
             Box(
@@ -336,7 +345,7 @@ private fun PageIndicator(
                     .height(8.dp)
                     .width(width)
                     .clip(CircleShape)
-                    .background(color)
+                    .background(color),
             )
         }
     }
@@ -349,26 +358,26 @@ private fun PageIndicator(
 private fun OnboardingPreview() {
     HustleHubTheme(
         darkTheme = true,
-        dynamicColor = false
+        dynamicColor = false,
     ) {
         val slide = slides[0]
         val primary = MaterialTheme.colorScheme.primary
         val tertiary = MaterialTheme.colorScheme.tertiary
         val pagerState = rememberPagerState(
-            pageCount = { 3 }
+            pageCount = { 3 },
         )
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    MaterialTheme.colorScheme.background
-                )
+                    MaterialTheme.colorScheme.background,
+                ),
         ) {
             Column(Modifier.fillMaxSize()) {
                 Box(
                     Modifier.weight(0.50f),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     HeroSection(slide = slide)
                 }
@@ -380,43 +389,43 @@ private fun OnboardingPreview() {
                             MaterialTheme.colorScheme.surface,
                             RoundedCornerShape(
                                 topStart = 28.dp,
-                                topEnd = 28.dp
-                            )
-                        )
-                        .padding(
+                                topEnd = 28.dp,
+                            ),
+                        ).padding(
                             horizontal = 28.dp,
-                            vertical = 32.dp
-                        )
+                            vertical = 32.dp,
+                        ),
                 ) {
                     Text(
                         slide.titleTop,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme
-                            .onSurface
+                            .onSurface,
                     )
                     Text(
                         slide.titleHighlight,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography
-                            .headlineMedium.copy(
+                            .headlineMedium
+                            .copy(
                                 brush = Brush.linearGradient(
-                                    listOf(primary, tertiary)
-                                )
-                            )
+                                    listOf(primary, tertiary),
+                                ),
+                            ),
                     )
                     Spacer(Modifier.height(16.dp))
                     Text(
                         slide.description,
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme
-                            .onSurfaceVariant
+                            .onSurfaceVariant,
                     )
                     Spacer(Modifier.weight(1f))
                     PageIndicator(
                         pagerState = pagerState,
-                        pageCount = 3
+                        pageCount = 3,
                     )
                     Spacer(Modifier.height(24.dp))
                     HustleButton(
@@ -424,7 +433,7 @@ private fun OnboardingPreview() {
                         icon = Icons.AutoMirrored.Filled
                             .ArrowForward,
                         onClick = {},
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(32.dp))
                 }

@@ -6,12 +6,13 @@ import must.kdroiders.hustlehub.datastore.UserPreferences
 import javax.inject.Inject
 
 @HiltViewModel
-class OnboardingViewModel @Inject constructor(
-    private val userPreferences: UserPreferences
-) : ViewModel() {
-
-    // suspend so caller can await before navigating
-    suspend fun completeOnboarding() {
-        userPreferences.setFirstLaunchComplete()
+class OnboardingViewModel
+    @Inject
+    constructor(
+        private val userPreferences: UserPreferences,
+    ) : ViewModel() {
+        // suspend so caller can await before navigating
+        suspend fun completeOnboarding() {
+            userPreferences.setFirstLaunchComplete()
+        }
     }
-}

@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -34,7 +34,6 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.view.EmailVerifica
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
-import must.kdroiders.hustlehub.ui.features.portfolio.presentation.view.PortfolioUploadScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.CreateServiceScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServicesScreen
@@ -61,9 +60,7 @@ import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsS
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun HustleHubNav(
-    onGoogleSignInClick: () -> Unit
-) {
+fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
     val backstack = rememberNavBackStack(Splash)
     val motionScheme = MaterialTheme.motionScheme
     val slideSpec = motionScheme.defaultSpatialSpec<IntOffset>()
@@ -75,15 +72,19 @@ fun HustleHubNav(
     val activity = context as? ComponentActivity
     val authStateViewModel: AuthStateViewModel? = if (activity != null) {
         hiltViewModel<AuthStateViewModel>(viewModelStoreOwner = activity)
-    } else null
+    } else {
+        null
+    }
 
     authStateViewModel?.let { vm ->
         val authState by vm.authState.collectAsState()
         LaunchedEffect(authState) {
             // Only react after Splash has completed (don't interrupt the splash auth check)
             val currentTop = backstack.lastOrNull()
-            val isInAuthFlow = currentTop is Splash || currentTop is Login ||
-                currentTop is SignUp || currentTop is EmailVerification ||
+            val isInAuthFlow = currentTop is Splash ||
+                currentTop is Login ||
+                currentTop is SignUp ||
+                currentTop is EmailVerification ||
                 currentTop is Onboarding
 
             if (authState == AuthState.Unauthenticated && !isInAuthFlow) {
@@ -92,7 +93,6 @@ fun HustleHubNav(
             }
         }
     }
-
 
     NavDisplay(
         backStack = backstack,
@@ -106,7 +106,6 @@ fun HustleHubNav(
                 (slideOutHorizontally(slideSpec) { it } + fadeOut(fadeSpec))
         },
         entryProvider = entryProvider {
-
             // Splash
             entry<Splash> {
                 SplashScreen(
@@ -154,7 +153,7 @@ fun HustleHubNav(
                         backstack.add(EmailVerification(email = email))
                     },
                     onGoogleSignInClick = onGoogleSignInClick,
-                    loginViewModel = loginViewModel
+                    loginViewModel = loginViewModel,
                 )
             }
 
@@ -164,7 +163,7 @@ fun HustleHubNav(
                     onVerified = {
                         backstack.clear()
                         backstack.add(Login(email = key.email))
-                    }
+                    },
                 )
             }
 
@@ -176,7 +175,7 @@ fun HustleHubNav(
                     },
                     onSignUpSuccess = { email ->
                         backstack.add(EmailVerification(email = email))
-                    }
+                    },
                 )
             }
 
@@ -203,25 +202,17 @@ fun HustleHubNav(
             // Main shell
             entry<MainShell> {
                 MainShellScreen(
-                    onNavigateToPortfolio = { serviceId -> backstack.add(PortfolioUpload(serviceId)) },
                     onNavigateToProfileSetup = { backstack.add(ProfileSetup) },
                     onNavigateToSettings = { backstack.add(Settings) },
                     onNavigateToCreateService = { backstack.add(CreateService()) },
-                    onNavigateToMyServices = { backstack.add(MyServices) }
-                )
-            }
-
-            // Standalone screens
-            entry<PortfolioUpload> { key ->
-                PortfolioUploadScreen(
-                    serviceId = key.serviceId,
-                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) }
+                    onNavigateToMyServices = { backstack.add(MyServices) },
+                    onNavigateToEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
                 )
             }
 
             entry<Settings> {
                 SettingsScreen(
-                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) }
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                 )
             }
 
@@ -230,7 +221,7 @@ fun HustleHubNav(
                 CreateServiceScreen(
                     serviceId = key.serviceId,
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
-                    onSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) }
+                    onSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                 )
             }
 
@@ -240,7 +231,6 @@ fun HustleHubNav(
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onCreateService = { backstack.add(CreateService()) },
                     onEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
-                    onNavigateToPortfolio = { serviceId -> backstack.add(PortfolioUpload(serviceId)) }
                 )
             }
 
@@ -249,7 +239,7 @@ fun HustleHubNav(
                     Text(
                         text = "Chat – ${key.chatId}",
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = MaterialTheme.colorScheme.onBackground,
                     )
                 }
             }

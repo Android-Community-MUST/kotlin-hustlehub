@@ -13,11 +13,11 @@ data class UpdateProfileRequest(
     val bio: String? = null,
     val avatarUrl: String? = null,
     val phone: String? = null,
-    val campusLocation: String? = null
+    val campusLocation: String? = null,
 )
 
 data class OnlineStatusRequest(
-    val isOnline: Boolean
+    val isOnline: Boolean,
 )
 
 interface UserApiService {
@@ -26,17 +26,17 @@ interface UserApiService {
 
     @PUT("users/me")
     suspend fun updateMe(
-        @Body request: UpdateProfileRequest
+        @Body request: UpdateProfileRequest,
     ): ApiResponse<UserResponseDto>
 
     @GET("users/{id}")
     suspend fun getById(
-        @Path("id") id: String
+        @Path("id") id: String,
     ): ApiResponse<UserResponseDto>
 
     /** Returns 204 No Content on success. */
     @PUT("users/me/status")
     suspend fun updateOnlineStatus(
-        @Body request: OnlineStatusRequest
+        @Body request: OnlineStatusRequest,
     ): Response<Unit>
 }

@@ -25,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,7 +36,7 @@ fun ProfileIdentityCard(
     displayName: String,
     username: String,
     avatarUrl: String,
-    onEditClick: () -> Unit
+    onEditClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -45,7 +44,7 @@ fun ProfileIdentityCard(
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 16.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         // Avatar with online dot
         Box(modifier = Modifier.size(56.dp)) {
@@ -54,21 +53,21 @@ fun ProfileIdentityCard(
                     .size(56.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 if (avatarUrl.isNotBlank()) {
                     AsyncImage(
                         model = avatarUrl,
                         contentDescription = "Avatar",
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(28.dp),
                     )
                 }
             }
@@ -79,7 +78,7 @@ fun ProfileIdentityCard(
                     .align(Alignment.BottomEnd)
                     .clip(CircleShape)
                     .background(HustleActiveGreen)
-                    .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
+                    .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
             )
         }
 
@@ -90,13 +89,13 @@ fun ProfileIdentityCard(
                 text = displayName.ifBlank { "Hustler" },
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Spacer(Modifier.height(2.dp))
             Text(
                 text = username.ifBlank { "@hustler" },
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
         }
 
@@ -105,7 +104,7 @@ fun ProfileIdentityCard(
                 imageVector = Icons.Default.Edit,
                 contentDescription = "Edit profile",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
         }
     }

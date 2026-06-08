@@ -2,15 +2,14 @@ package must.kdroiders.hustlehub.navigation
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import androidx.compose.animation.togetherWith
 import must.kdroiders.hustlehub.ui.features.chat.ChatScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.HomeScreen
 import must.kdroiders.hustlehub.ui.features.map.MapScreen
@@ -23,8 +22,8 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScr
  * Tab switching **replaces** the first element rather than pushing, keeping the stack
  * at depth 1 for tabs — this matches how apps like YouTube and Gmail work.
  *
- * Navigation into detail screens (e.g. [PortfolioUpload]) is delegated back up to the
- * root back-stack via [onNavigateToPortfolio].
+ * Navigation into detail screens is delegated back up to the
+ * root back-stack.
  *
  * Architecture (within this shell):
  * ```
@@ -35,11 +34,11 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScr
  */
 @Composable
 fun MainShellScreen(
-    onNavigateToPortfolio: (serviceId: String) -> Unit = {},
     onNavigateToProfileSetup: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToCreateService: () -> Unit = {},
     onNavigateToMyServices: () -> Unit = {},
+    onNavigateToEditService: (serviceId: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val innerBackstack = rememberNavBackStack(BottomHome)
@@ -68,15 +67,16 @@ fun MainShellScreen(
             transitionSpec = { fadeIn() togetherWith fadeOut() },
             popTransitionSpec = { fadeIn() togetherWith fadeOut() },
             entryProvider = entryProvider {
-                entry<BottomHome>    { HomeScreen() }
-                entry<BottomMap>     { MapScreen() }
-                entry<BottomChat>    { ChatScreen() }
+                entry<BottomHome> { HomeScreen() }
+                entry<BottomMap> { MapScreen() }
+                entry<BottomChat> { ChatScreen() }
                 entry<BottomProfile> {
                     ProfileScreen(
                         onEditClick = onNavigateToProfileSetup,
                         onAddNewServiceClick = onNavigateToCreateService,
-                        onManageServicesClick = onNavigateToMyServices,
-                        onSettingsClick = onNavigateToSettings
+                        onServiceClick = onNavigateToEditService,
+                        onNavigateToMyServices = onNavigateToMyServices,
+                        onSettingsClick = onNavigateToSettings,
                     )
                 }
             },

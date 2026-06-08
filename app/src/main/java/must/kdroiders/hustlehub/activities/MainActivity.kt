@@ -31,7 +31,6 @@ import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     private val loginViewModel: LoginViewModel by viewModels()
 
     // For older Android versions (below API 34)
@@ -58,11 +57,11 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             HustleHubTheme(
-                darkTheme = false
+                darkTheme = false,
             ) {
                 // Navigation 3 — pass the google sign in flow callback down
                 HustleHubNav(
-                    onGoogleSignInClick = launchCredentialFlow
+                    onGoogleSignInClick = launchCredentialFlow,
                 )
             }
         }
@@ -70,7 +69,8 @@ class MainActivity : ComponentActivity() {
 
     private fun initializeLegacyGoogleSignIn() {
         try {
-            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            val gso = GoogleSignInOptions
+                .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.google_web_client_id))
                 .requestEmail()
                 .build()
@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
             googleSignInClient = GoogleSignIn.getClient(this, gso)
 
             signInLauncher = registerForActivityResult(
-                ActivityResultContracts.StartActivityForResult()
+                ActivityResultContracts.StartActivityForResult(),
             ) { result ->
                 handleLegacySignInResult(result.data)
             }
@@ -130,13 +130,15 @@ class MainActivity : ComponentActivity() {
             try {
                 val credentialManager = CredentialManager.create(this@MainActivity)
 
-                val googleIdOption = GetGoogleIdOption.Builder()
+                val googleIdOption = GetGoogleIdOption
+                    .Builder()
                     .setFilterByAuthorizedAccounts(false)
                     .setServerClientId(getString(R.string.google_web_client_id))
                     .setAutoSelectEnabled(false)
                     .build()
 
-                val request = GetCredentialRequest.Builder()
+                val request = GetCredentialRequest
+                    .Builder()
                     .addCredentialOption(googleIdOption)
                     .build()
 
@@ -157,7 +159,6 @@ class MainActivity : ComponentActivity() {
                         Timber.d("Google sign in success via CredentialManager")
                     })
                 }
-
             } catch (e: GetCredentialException) {
                 Timber.e(e, "CredentialManager GetCredentialException")
             } catch (e: GoogleIdTokenParsingException) {

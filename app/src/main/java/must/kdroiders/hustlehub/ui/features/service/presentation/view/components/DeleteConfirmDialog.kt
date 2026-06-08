@@ -11,7 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 fun DeleteConfirmDialog(
     serviceName: String,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -19,14 +19,14 @@ fun DeleteConfirmDialog(
             Text(
                 text = "Delete Service",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         },
         text = {
             Text(
                 text = "Are you sure you want to delete \"$serviceName\"? This action cannot be undone.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
         confirmButton = {
@@ -34,7 +34,7 @@ fun DeleteConfirmDialog(
                 Text(
                     text = "Delete",
                     color = MaterialTheme.colorScheme.error,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
         },
@@ -43,6 +43,6 @@ fun DeleteConfirmDialog(
                 Text("Cancel")
             }
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surface,
     )
 }

@@ -2,9 +2,9 @@ package must.kdroiders.hustlehub.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
 import must.kdroiders.hustlehub.core.api.PageResponse
+import must.kdroiders.hustlehub.data.remote.dto.AvailabilityRequest
 import must.kdroiders.hustlehub.data.remote.dto.CreateServiceRequest
 import must.kdroiders.hustlehub.data.remote.dto.ServiceResponse
-import must.kdroiders.hustlehub.data.remote.dto.AvailabilityRequest
 import must.kdroiders.hustlehub.data.remote.dto.UpdateServiceRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -15,32 +15,31 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ServiceApiService {
-
     @POST("services")
     suspend fun createService(
-        @Body request: CreateServiceRequest
+        @Body request: CreateServiceRequest,
     ): ApiResponse<ServiceResponse>
 
     @GET("services/{serviceId}")
     suspend fun getServiceById(
-        @Path("serviceId") serviceId: String
+        @Path("serviceId") serviceId: String,
     ): ApiResponse<ServiceResponse>
 
     @PUT("services/{serviceId}")
     suspend fun updateService(
         @Path("serviceId") serviceId: String,
-        @Body request: UpdateServiceRequest
+        @Body request: UpdateServiceRequest,
     ): ApiResponse<ServiceResponse>
 
     @DELETE("services/{serviceId}")
     suspend fun deleteService(
-        @Path("serviceId") serviceId: String
+        @Path("serviceId") serviceId: String,
     ): ApiResponse<Unit>
 
     @PUT("services/{serviceId}/availability")
     suspend fun updateAvailability(
         @Path("serviceId") serviceId: String,
-        @Body request: AvailabilityRequest
+        @Body request: AvailabilityRequest,
     ): ApiResponse<ServiceResponse>
 
     @GET("services/me")
@@ -51,6 +50,6 @@ interface ServiceApiService {
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20,
         @Query("category") category: String? = null,
-        @Query("query") query: String? = null
+        @Query("query") query: String? = null,
     ): ApiResponse<PageResponse<ServiceResponse>>
 }

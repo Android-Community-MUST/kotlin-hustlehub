@@ -10,11 +10,13 @@ import javax.inject.Inject
  * ViewModels never hold a direct reference to [AuthRepository] just for
  * logout, keeping the dependency graph clean.
  */
-class SignOutUseCase @Inject constructor(
-    private val authRepository: AuthRepository
-) {
-    /** Calls [AuthRepository.logout] to sign the user out immediately. */
-    operator fun invoke() {
-        authRepository.logout()
+class SignOutUseCase
+    @Inject
+    constructor(
+        private val authRepository: AuthRepository,
+    ) {
+        /** Calls [AuthRepository.logout] to sign the user out immediately. */
+        operator fun invoke() {
+            authRepository.logout()
+        }
     }
-}

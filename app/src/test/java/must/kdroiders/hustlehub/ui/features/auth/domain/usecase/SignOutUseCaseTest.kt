@@ -10,7 +10,6 @@ import org.junit.Test
  * Verifies that [SignOutUseCase] delegates to [AuthRepository.logout].
  */
 class SignOutUseCaseTest {
-
     private lateinit var authRepository: AuthRepository
     private lateinit var signOutUseCase: SignOutUseCase
 

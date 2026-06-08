@@ -25,10 +25,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -60,12 +60,11 @@ import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.viewModel.ProfileSetupEvent
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.viewModel.ProfileSetupViewModel
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileSetupScreen(
     viewModel: ProfileSetupViewModel = hiltViewModel(),
-    onSetupComplete: () -> Unit = {}
+    onSetupComplete: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -84,13 +83,13 @@ fun ProfileSetupScreen(
 
     // ---- Photo picker launchers ----
     val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
         uri?.let { viewModel.onPhotoSelected(it) }
     }
 
     val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
+        contract = ActivityResultContracts.TakePicturePreview(),
     ) { _ ->
         // TakePicturePreview returns a thumbnail Bitmap.
         // For production, use TakePicture with a
@@ -106,7 +105,7 @@ fun ProfileSetupScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background),
     ) {
         Column(
             modifier = Modifier
@@ -115,25 +114,26 @@ fun ProfileSetupScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
                 .padding(top = 24.dp, bottom = 40.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // ---- Header ----
             Text(
                 text = "Set Up Your",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground,
             )
             Text(
                 text = "Profile",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography
-                    .headlineMedium.copy(
+                    .headlineMedium
+                    .copy(
                         brush = Brush.linearGradient(
-                            listOf(primary, tertiary)
-                        )
-                    )
+                            listOf(primary, tertiary),
+                        ),
+                    ),
             )
 
             Spacer(Modifier.height(8.dp))
@@ -142,7 +142,7 @@ fun ProfileSetupScreen(
                 text = "Tell us a bit about yourself",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme
-                    .onSurfaceVariant
+                    .onSurfaceVariant,
             )
 
             Spacer(Modifier.height(32.dp))
@@ -154,24 +154,22 @@ fun ProfileSetupScreen(
                     .clip(CircleShape)
                     .background(
                         MaterialTheme.colorScheme
-                            .surfaceVariant
-                    )
-                    .border(
+                            .surfaceVariant,
+                    ).border(
                         width = 3.dp,
                         brush = Brush.linearGradient(
-                            listOf(primary, tertiary)
+                            listOf(primary, tertiary),
                         ),
-                        shape = CircleShape
-                    )
-                    .clickable { showPhotoSheet = true },
-                contentAlignment = Alignment.Center
+                        shape = CircleShape,
+                    ).clickable { showPhotoSheet = true },
+                contentAlignment = Alignment.Center,
             ) {
                 if (state.photoUri != null) {
                     AsyncImage(
                         model = state.photoUri,
                         contentDescription = "Profile photo",
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
                     )
                 } else {
                     Icon(
@@ -179,7 +177,7 @@ fun ProfileSetupScreen(
                         contentDescription = "Add photo",
                         modifier = Modifier.size(48.dp),
                         tint = MaterialTheme.colorScheme
-                            .onSurfaceVariant
+                            .onSurfaceVariant,
                     )
                 }
 
@@ -190,15 +188,16 @@ fun ProfileSetupScreen(
                             .fillMaxSize()
                             .background(
                                 MaterialTheme.colorScheme
-                                    .scrim.copy(alpha = 0.5f)
+                                    .scrim
+                                    .copy(alpha = 0.5f),
                             ),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(32.dp),
                             color = MaterialTheme
                                 .colorScheme.primary,
-                            strokeWidth = 3.dp
+                            strokeWidth = 3.dp,
                         )
                     }
                 }
@@ -209,7 +208,7 @@ fun ProfileSetupScreen(
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme
                     .onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp),
             )
 
             Spacer(Modifier.height(28.dp))
@@ -221,7 +220,7 @@ fun ProfileSetupScreen(
                 label = "Full Name",
                 leadingIcon = Icons.Default.Person,
                 placeholder = "Enter your name",
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(Modifier.height(16.dp))
@@ -233,7 +232,7 @@ fun ProfileSetupScreen(
                 label = "Phone Number",
                 leadingIcon = Icons.Default.Phone,
                 placeholder = "e.g. 0712345678",
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(Modifier.height(16.dp))
@@ -245,7 +244,7 @@ fun ProfileSetupScreen(
                 label = "Short Bio",
                 leadingIcon = Icons.Default.Info,
                 placeholder = "e.g. Graphic Designer, Electrician",
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(Modifier.height(16.dp))
@@ -257,14 +256,14 @@ fun ProfileSetupScreen(
                 label = "Campus Location / Residence",
                 leadingIcon = Icons.Default.Home,
                 placeholder = "e.g. Hostel A, Off-campus",
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(Modifier.height(24.dp))
 
             // ---- Error Message ----
             AnimatedVisibility(
-                visible = state.errorMessage != null
+                visible = state.errorMessage != null,
             ) {
                 Text(
                     text = state.errorMessage ?: "",
@@ -272,19 +271,22 @@ fun ProfileSetupScreen(
                     style = MaterialTheme.typography
                         .bodySmall,
                     modifier = Modifier
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = 12.dp),
                 )
             }
 
             // ---- Save Button ----
             HustleButton(
-                text = if (state.isSaving) "Saving..."
-                else "Complete Setup",
+                text = if (state.isSaving) {
+                    "Saving..."
+                } else {
+                    "Complete Setup"
+                },
                 onClick = { viewModel.saveProfile() },
                 loading = state.isSaving,
-                enabled = !state.isSaving
-                    && !state.isUploadingPhoto,
-                modifier = Modifier.fillMaxWidth()
+                enabled = !state.isSaving &&
+                    !state.isUploadingPhoto,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -297,18 +299,18 @@ fun ProfileSetupScreen(
             },
             sheetState = sheetState,
             containerColor = MaterialTheme
-                .colorScheme.surface
+                .colorScheme.surface,
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp)
+                    .padding(24.dp),
             ) {
                 Text(
                     text = "Choose Photo",
                     style = MaterialTheme.typography
                         .titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
 
                 Spacer(Modifier.height(20.dp))
@@ -325,29 +327,28 @@ fun ProfileSetupScreen(
                                 sheetState.hide()
                                 showPhotoSheet = false
                             }
-                        }
-                        .padding(16.dp),
+                        }.padding(16.dp),
                     verticalAlignment =
-                        Alignment.CenterVertically
+                        Alignment.CenterVertically,
                 ) {
                     Icon(
                         imageVector =
                             Icons.Default.PhotoLibrary,
                         contentDescription = "Gallery",
-                        tint = primary
+                        tint = primary,
                     )
                     Spacer(Modifier.width(16.dp))
                     Column {
                         Text(
                             "Gallery",
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
                         )
                         Text(
                             "Pick from your photos",
                             fontSize = 12.sp,
                             color = MaterialTheme
                                 .colorScheme
-                                .onSurfaceVariant
+                                .onSurfaceVariant,
                         )
                     }
                 }
@@ -365,29 +366,28 @@ fun ProfileSetupScreen(
                                 sheetState.hide()
                                 showPhotoSheet = false
                             }
-                        }
-                        .padding(16.dp),
+                        }.padding(16.dp),
                     verticalAlignment =
-                        Alignment.CenterVertically
+                        Alignment.CenterVertically,
                 ) {
                     Icon(
                         imageVector =
                             Icons.Default.CameraAlt,
                         contentDescription = "Camera",
-                        tint = primary
+                        tint = primary,
                     )
                     Spacer(Modifier.width(16.dp))
                     Column {
                         Text(
                             "Camera",
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
                         )
                         Text(
                             "Take a new photo",
                             fontSize = 12.sp,
                             color = MaterialTheme
                                 .colorScheme
-                                .onSurfaceVariant
+                                .onSurfaceVariant,
                         )
                     }
                 }
@@ -397,5 +397,3 @@ fun ProfileSetupScreen(
         }
     }
 }
-
-

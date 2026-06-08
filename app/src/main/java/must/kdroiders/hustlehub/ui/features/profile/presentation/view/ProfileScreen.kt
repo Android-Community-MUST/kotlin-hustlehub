@@ -19,10 +19,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.data.model.UserRole
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleCard
@@ -45,29 +45,31 @@ fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
     onEditClick: () -> Unit = {},
     onAddNewServiceClick: () -> Unit = {},
-    onManageServicesClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {}
+    onServiceClick: (serviceId: String) -> Unit = {},
+    onNavigateToMyServices: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
 ) {
     val state by profileViewModel.uiState.collectAsState()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background),
     ) {
         when {
             state.isLoading -> LoadingState()
             state.error != null -> ErrorState(
                 message = state.error!!,
-                onRetry = profileViewModel::retry
+                onRetry = profileViewModel::retry,
             )
             else -> ProfileContent(
                 state = state,
                 onEditClick = onEditClick,
                 onToggleService = profileViewModel::toggleServiceActive,
                 onAddNewServiceClick = onAddNewServiceClick,
-                onManageServicesClick = onManageServicesClick,
-                onSettingsClick = onSettingsClick
+                onServiceClick = onServiceClick,
+                onNavigateToMyServices = onNavigateToMyServices,
+                onSettingsClick = onSettingsClick,
             )
         }
     }
@@ -81,8 +83,9 @@ private fun ProfileContent(
     onEditClick: () -> Unit,
     onToggleService: (String) -> Unit,
     onAddNewServiceClick: () -> Unit,
-    onManageServicesClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {}
+    onServiceClick: (serviceId: String) -> Unit = {},
+    onNavigateToMyServices: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
 ) {
     val user = state.user ?: return
 
@@ -92,14 +95,14 @@ private fun ProfileContent(
             .statusBarsPadding(),
         contentPadding = PaddingValues(
             top = 16.dp,
-            bottom = 100.dp
-        )
+            bottom = 100.dp,
+        ),
     ) {
         // Header
         item(key = "header") {
             ProfileHeader(
                 onEditClick = onEditClick,
-                onSettingsClick = onSettingsClick
+                onSettingsClick = onSettingsClick,
             )
         }
 
@@ -109,17 +112,17 @@ private fun ProfileContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 ProfileAvatar(
-                    photoUrl = user.profilePhotoUrl
+                    photoUrl = user.profilePhotoUrl,
                 )
                 Spacer(Modifier.height(12.dp))
                 ProfileInfo(
                     name = user.name,
                     phone = user.phone,
                     campusLocation = user.campusLocation,
-                    bio = user.bio
+                    bio = user.bio,
                 )
             }
         }
@@ -132,8 +135,8 @@ private fun ProfileContent(
                 serviceCount = state.services.size,
                 reviewCount = state.reviewCount,
                 modifier = Modifier.padding(
-                    horizontal = 16.dp
-                )
+                    horizontal = 16.dp,
+                ),
             )
         }
 
@@ -143,8 +146,8 @@ private fun ProfileContent(
             ProfileBadges(
                 badges = state.badges,
                 modifier = Modifier.padding(
-                    horizontal = 16.dp
-                )
+                    horizontal = 16.dp,
+                ),
             )
         }
 
@@ -153,30 +156,30 @@ private fun ProfileContent(
                 Spacer(Modifier.height(16.dp))
                 HustleCard(
                     variant = HustleCardVariant.Elevated,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 ) {
                     Column(
                         modifier = Modifier.fillMaxWidth().padding(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
                             text = "Earn Money on HustleHub!",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
                             text = "Complete your provider profile to list your services, show your portfolio, and receive booking requests from fellow students.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
                         )
                         Spacer(Modifier.height(12.dp))
                         HustleButton(
                             text = "Become a Service Provider",
                             onClick = onEditClick,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
                 }
@@ -188,26 +191,27 @@ private fun ProfileContent(
             Spacer(Modifier.height(24.dp))
             ServicesHeader(
                 onAddNewServiceClick = onAddNewServiceClick,
-                onManageServicesClick = onManageServicesClick,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                onManageServicesClick = onNavigateToMyServices,
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
             Spacer(Modifier.height(12.dp))
         }
 
-        // Service cards
+        // Service cards — each tappable to manage that specific service
         items(
             items = state.services,
-            key = { it.id }
+            key = { it.id },
         ) { service ->
             ServiceCard(
                 service = service,
+                onClick = { onServiceClick(service.id) },
                 onToggle = {
                     onToggleService(service.id)
                 },
                 modifier = Modifier.padding(
                     horizontal = 16.dp,
-                    vertical = 6.dp
-                )
+                    vertical = 6.dp,
+                ),
             )
         }
 
@@ -216,10 +220,9 @@ private fun ProfileContent(
             Spacer(Modifier.height(20.dp))
             ProfileBottomTabs(
                 modifier = Modifier.padding(
-                    horizontal = 16.dp
-                )
+                    horizontal = 16.dp,
+                ),
             )
         }
     }
 }
-

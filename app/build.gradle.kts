@@ -19,7 +19,7 @@ fun keysProperty(
 ): String {
     val props = Properties()
     val file = File(rootProject.projectDir, "keys.properties")
-    if (file.exists()) FileInputStream(file).use {props.load(it)}
+    if (file.exists()) FileInputStream(file).use { props.load(it) }
     return props.getProperty(key, defaults)
 }
 
@@ -53,7 +53,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -165,5 +165,4 @@ dependencies {
 
     // Detekt formatting rules
     detektPlugins(libs.detekt.formatting)
-
 }

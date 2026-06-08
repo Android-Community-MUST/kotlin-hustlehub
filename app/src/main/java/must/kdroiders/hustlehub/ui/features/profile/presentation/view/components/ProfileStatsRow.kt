@@ -36,28 +36,28 @@ fun ProfileStatsRow(
     hustleScore: Float,
     serviceCount: Int,
     reviewCount: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         StatCard(
             value = hustleScore.toString(),
             label = "HUSTLE\nSCORE",
             icon = Icons.Default.Star,
             iconTint = HustleWarningAmber,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         StatCard(
             value = serviceCount.toString(),
             label = "SERVICES",
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         StatCard(
             value = reviewCount.toString(),
             label = "REVIEWS",
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -68,27 +68,27 @@ fun StatCard(
     label: String,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
-    iconTint: Color = HustleWarningAmber
+    iconTint: Color = HustleWarningAmber,
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
             .padding(vertical = 16.dp, horizontal = 8.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = value,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme
-                        .onSurface
+                        .onSurface,
                 )
                 if (icon != null) {
                     Spacer(Modifier.width(4.dp))
@@ -96,7 +96,7 @@ fun StatCard(
                         imageVector = icon,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
-                        tint = iconTint
+                        tint = iconTint,
                     )
                 }
             }
@@ -108,9 +108,8 @@ fun StatCard(
                 color = MaterialTheme.colorScheme
                     .onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                lineHeight = 14.sp
+                lineHeight = 14.sp,
             )
         }
     }
 }
-

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
@@ -48,11 +47,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 @Composable
 fun SplashScreen(
     splashViewModel: SplashViewModel = hiltViewModel(),
-    onNavigate: (SplashDestination) -> Unit = {}
+    onNavigate: (SplashDestination) -> Unit = {},
 ) {
     val destination by splashViewModel.destination.collectAsState()
     val motionScheme = MaterialTheme.motionScheme
-
 
     // --- Motion specs from MaterialTheme ---
     // Spatial: for scale/position — expressive spring with natural overshoot
@@ -75,9 +73,9 @@ fun SplashScreen(
         targetValue = 0.6f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 1800, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "glowAlpha"
+        label = "glowAlpha",
     )
 
     // Progress bar fill — infinite, so stays as manual tween
@@ -86,9 +84,9 @@ fun SplashScreen(
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 1500, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
+            repeatMode = RepeatMode.Restart,
         ),
-        label = "shimmer"
+        label = "shimmer",
     )
 
     // Sequenced entrance using MotionScheme specs
@@ -119,12 +117,12 @@ fun SplashScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(background)
+            .background(background),
     ) {
         // Centered content
         Column(
             modifier = Modifier.align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Icon + glow
             Box(contentAlignment = Alignment.Center) {
@@ -139,11 +137,11 @@ fun SplashScreen(
                                 colors = listOf(
                                     primary.copy(alpha = 0.5f),
                                     tertiary.copy(alpha = 0.2f),
-                                    background.copy(alpha = 0f)
-                                )
+                                    background.copy(alpha = 0f),
+                                ),
                             ),
-                            shape = RoundedCornerShape(50)
-                        )
+                            shape = RoundedCornerShape(50),
+                        ),
                 )
 
                 // Lightning bolt icon
@@ -157,7 +155,7 @@ fun SplashScreen(
                             scaleX = iconScale.value
                             scaleY = iconScale.value
                         },
-                    tint = primary
+                    tint = primary,
                 )
             }
 
@@ -170,7 +168,7 @@ fun SplashScreen(
                 fontWeight = FontWeight.Bold,
                 color = onBackground,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.graphicsLayer { alpha = textAlpha.value }
+                modifier = Modifier.graphicsLayer { alpha = textAlpha.value },
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -181,7 +179,7 @@ fun SplashScreen(
                 fontSize = 14.sp,
                 color = onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.graphicsLayer { alpha = textAlpha.value }
+                modifier = Modifier.graphicsLayer { alpha = textAlpha.value },
             )
         }
 
@@ -190,27 +188,17 @@ fun SplashScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 48.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Gradient progress bar
+            // Linear Wavy Progress Indicator
             Box(
-                modifier = Modifier
-                    .graphicsLayer { alpha = barAlpha.value }
-                    .width(200.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(onBackground.copy(alpha = 0.1f))
+                modifier = Modifier.graphicsLayer { alpha = barAlpha.value },
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(fraction = shimmerProgress.coerceIn(0f, 1f))
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(primary, tertiary)
-                            )
-                        )
+                LinearWavyProgressIndicator(
+                    modifier = Modifier.width(200.dp),
+                    color = primary,
+                    trackColor = primary.copy(alpha = 0.12f),
+                    waveSpeed = 15.dp,
                 )
             }
 
@@ -220,13 +208,13 @@ fun SplashScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.graphicsLayer { alpha = footerAlpha.value }
+                modifier = Modifier.graphicsLayer { alpha = footerAlpha.value },
             ) {
                 Icon(
                     imageVector = Icons.Filled.VerifiedUser,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = onSurfaceVariant
+                    tint = onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
@@ -234,7 +222,7 @@ fun SplashScreen(
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
                     color = onSurfaceVariant,
-                    letterSpacing = 1.sp
+                    letterSpacing = 1.sp,
                 )
             }
         }

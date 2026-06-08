@@ -23,35 +23,38 @@ import javax.inject.Inject
  * @returns [Result.failure] with a user-friendly message if Firebase account creation fails.
  *          Backend registration failure is logged but does not fail the use case.
  */
-class SignUpUseCase @Inject constructor(
-    private val authRepository: AuthRepository,
-    private val userRepository: UserRepository
-) {
-    suspend operator fun invoke(
-        name: String,
-        email: String,
-        password: String
-    ): Result<LoginResult> = runCatching {
-        // Step 1 — Firebase account creation
-        val loginResult = authRepository.signUp(name, email, password)
+class SignUpUseCase
+    @Inject
+    constructor(
+        private val authRepository: AuthRepository,
+        private val userRepository: UserRepository,
+    ) {
+        suspend operator fun invoke(
+            name: String,
+            email: String,
+            password: String,
+        ): Result<LoginResult> =
+            runCatching {
+                // Step 1 — Firebase account creation
+                val loginResult = authRepository.signUp(name, email, password)
 
-        // Step 2 — Backend registration (non-blocking for the happy path)
-        val firebaseUser = loginResult.user
-        val newUser = User(
-            id = firebaseUser.uid,
-            name = name,
-            email = email,
-            role = UserRole.CUSTOMER,
-            profilePhotoUrl = firebaseUser.photoUrl?.toString() ?: "",
-            isVerified = false
-        )
-        val saveResult = userRepository.saveUserProfile(newUser)
-        saveResult.onFailure { e ->
-            // Log but don't fail sign-up — the user is created in Firebase.
-            // Backend registration can be retried on next splash load.
-            Timber.e(e, "Backend registration failed for uid=%s — will retry on next launch", firebaseUser.uid)
-        }
+                // Step 2 — Backend registration (non-blocking for the happy path)
+                val firebaseUser = loginResult.user
+                val newUser = User(
+                    id = firebaseUser.uid,
+                    name = name,
+                    email = email,
+                    role = UserRole.CUSTOMER,
+                    profilePhotoUrl = firebaseUser.photoUrl?.toString() ?: "",
+                    isVerified = false,
+                )
+                val saveResult = userRepository.saveUserProfile(newUser)
+                saveResult.onFailure { e ->
+                    // Log but don't fail sign-up — the user is created in Firebase.
+                    // Backend registration can be retried on next splash load.
+                    Timber.e(e, "Backend registration failed for uid=%s — will retry on next launch", firebaseUser.uid)
+                }
 
-        loginResult
+                loginResult
+            }
     }
-}

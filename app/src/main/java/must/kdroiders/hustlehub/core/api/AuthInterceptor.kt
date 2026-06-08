@@ -8,7 +8,7 @@ import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 class AuthInterceptor(
-    private val firebaseAuth: FirebaseAuth?
+    private val firebaseAuth: FirebaseAuth?,
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
@@ -29,7 +29,8 @@ class AuthInterceptor(
         val token = fetchTokenWithFallback()
 
         return if (!token.isNullOrEmpty()) {
-            val newRequest = originalRequest.newBuilder()
+            val newRequest = originalRequest
+                .newBuilder()
                 .header("Authorization", "Bearer $token")
                 .build()
             chain.proceed(newRequest)
@@ -62,4 +63,3 @@ class AuthInterceptor(
         }
     }
 }
-
