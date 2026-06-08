@@ -35,19 +35,22 @@ import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.data.model.ServiceCategory
 
 @Composable
-fun SectionLabel(text: String, required: Boolean = false) {
+fun SectionLabel(
+    text: String,
+    required: Boolean = false,
+) {
     Row(modifier = Modifier.padding(bottom = 6.dp)) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
         )
         if (required) {
             Text(
                 text = " *",
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.error
+                color = MaterialTheme.colorScheme.error,
             )
         }
     }
@@ -58,7 +61,7 @@ fun CategoryDropdown(
     selected: ServiceCategory?,
     onSelect: (ServiceCategory) -> Unit,
     hasError: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val categories = ServiceCategory.entries.filter { it != ServiceCategory.ALL }
@@ -71,46 +74,54 @@ fun CategoryDropdown(
                 .background(MaterialTheme.colorScheme.surface)
                 .border(
                     width = 1.dp,
-                    color = if (hasError) MaterialTheme.colorScheme.error
-                    else MaterialTheme.colorScheme.outline,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .clickable { expanded = true }
+                    color = if (hasError) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.outline
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                ).clickable { expanded = true }
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = selected?.label ?: "Select category",
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (selected != null) MaterialTheme.colorScheme.onSurface
-                else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (selected != null) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
             )
             Icon(
                 imageVector = Icons.Default.ExpandMore,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
+            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant),
         ) {
             categories.forEach { category ->
                 DropdownMenuItem(
                     text = {
                         Text(
                             text = category.label,
-                            color = if (category == selected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurface
+                            color = if (category == selected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
                         )
                     },
                     onClick = {
                         onSelect(category)
                         expanded = false
-                    }
+                    },
                 )
             }
         }
@@ -118,7 +129,11 @@ fun CategoryDropdown(
 }
 
 @Composable
-fun TagChip(label: String, onRemove: () -> Unit, modifier: Modifier = Modifier) {
+fun TagChip(
+    label: String,
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
@@ -126,17 +141,16 @@ fun TagChip(label: String, onRemove: () -> Unit, modifier: Modifier = Modifier) 
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(20.dp)
-            )
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(20.dp),
+            ).padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
             text = label,
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onPrimaryContainer,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
         Icon(
             imageVector = Icons.Default.Close,
@@ -144,7 +158,7 @@ fun TagChip(label: String, onRemove: () -> Unit, modifier: Modifier = Modifier) 
             tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
             modifier = Modifier
                 .size(14.dp)
-                .clickable { onRemove() }
+                .clickable { onRemove() },
         )
     }
 }
@@ -154,14 +168,14 @@ fun ErrorText(error: String?) {
     AnimatedVisibility(
         visible = !error.isNullOrEmpty(),
         enter = fadeIn(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()),
-        exit = fadeOut(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec())
+        exit = fadeOut(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()),
     ) {
         error?.let {
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                modifier = Modifier.padding(start = 4.dp, top = 4.dp),
             )
         }
     }

@@ -73,8 +73,11 @@ fun HustleTextField(
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
-    val visualTransformation = if (isPassword && !passwordVisible)
-        PasswordVisualTransformation() else VisualTransformation.None
+    val visualTransformation = if (isPassword && !passwordVisible) {
+        PasswordVisualTransformation()
+    } else {
+        VisualTransformation.None
+    }
 
     val successColor = MaterialTheme.colorScheme.tertiary
     val motionScheme = MaterialTheme.motionScheme
@@ -86,7 +89,7 @@ fun HustleTextField(
             else -> MaterialTheme.colorScheme.primary
         },
         animationSpec = motionScheme.fastEffectsSpec(),
-        label = "focusedBorder"
+        label = "focusedBorder",
     )
 
     val unfocusedBorderColor by animateColorAsState(
@@ -96,29 +99,33 @@ fun HustleTextField(
             else -> MaterialTheme.colorScheme.outline
         },
         animationSpec = motionScheme.fastEffectsSpec(),
-        label = "unfocusedBorder"
+        label = "unfocusedBorder",
     )
 
     val actualTrailingIcon: @Composable (() -> Unit)? = when {
-        isPassword -> ({
-            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+        isPassword -> (
+            {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        )
+
+        isSuccess -> (
+            {
                 Icon(
-                    imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                    contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Valid",
                     modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = successColor,
                 )
             }
-        })
-
-        isSuccess -> ({
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = "Valid",
-                modifier = Modifier.size(20.dp),
-                tint = successColor
-            )
-        })
+        )
 
         trailingIcon != null -> trailingIcon
         else -> null
@@ -134,7 +141,7 @@ fun HustleTextField(
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
                     )
                 }
             },
@@ -143,7 +150,7 @@ fun HustleTextField(
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     )
                 }
             },
@@ -159,7 +166,7 @@ fun HustleTextField(
                             isError -> MaterialTheme.colorScheme.error
                             isSuccess -> successColor
                             else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        },
                     )
                 }
             },
@@ -182,24 +189,24 @@ fun HustleTextField(
                 cursorColor = MaterialTheme.colorScheme.primary,
                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            )
+            ),
         )
 
         // Animated helper / error message
         AnimatedVisibility(
             visible = isError && errorText != null,
             enter = expandVertically(motionScheme.fastSpatialSpec()) + fadeIn(motionScheme.fastEffectsSpec()),
-            exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.fastEffectsSpec())
+            exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.fastEffectsSpec()),
         ) {
             Row(
                 modifier = Modifier.padding(start = 12.dp, top = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = null,
                     modifier = Modifier.size(13.dp),
-                    tint = MaterialTheme.colorScheme.error
+                    tint = MaterialTheme.colorScheme.error,
                 )
                 Spacer(Modifier.width(4.dp))
                 Text(
@@ -207,7 +214,7 @@ fun HustleTextField(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.2.sp
+                    letterSpacing = 0.2.sp,
                 )
             }
         }
@@ -224,7 +231,7 @@ fun HustleTextFieldPreview() {
                 onValueChange = {},
                 label = "Username",
                 leadingIcon = Icons.Default.Person,
-                placeholder = "Enter your username"
+                placeholder = "Enter your username",
             )
             Spacer(Modifier.padding(8.dp))
             HustleTextField(
@@ -233,7 +240,7 @@ fun HustleTextFieldPreview() {
                 label = "Email",
                 leadingIcon = Icons.Default.Email,
                 isError = true,
-                errorText = "Please enter a valid email address"
+                errorText = "Please enter a valid email address",
             )
             Spacer(Modifier.padding(8.dp))
             HustleTextField(
@@ -241,7 +248,7 @@ fun HustleTextFieldPreview() {
                 onValueChange = {},
                 label = "Email",
                 leadingIcon = Icons.Default.Email,
-                isSuccess = true
+                isSuccess = true,
             )
             Spacer(Modifier.padding(8.dp))
             HustleTextField(
@@ -249,7 +256,7 @@ fun HustleTextFieldPreview() {
                 onValueChange = {},
                 label = "Password",
                 leadingIcon = Icons.Default.Lock,
-                isPassword = true
+                isPassword = true,
             )
         }
     }

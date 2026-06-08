@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,14 +43,14 @@ fun PortfolioSlots(
     onRemoveExisting: (Int) -> Unit,
     onRemoveNew: (Int) -> Unit,
     maxSlots: Int = 3,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val totalFilled = existingUrls.size + newUris.size
     FlowRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
-        maxItemsInEachRow = 3
+        maxItemsInEachRow = 3,
     ) {
         // Render maxSlots slots
         for (slotIndex in 0 until maxSlots) {
@@ -60,19 +59,19 @@ fun PortfolioSlots(
                     slotIndex < existingUrls.size -> {
                         FilledSlot(
                             model = existingUrls[slotIndex],
-                            onRemove = { onRemoveExisting(slotIndex) }
+                            onRemove = { onRemoveExisting(slotIndex) },
                         )
                     }
                     slotIndex < existingUrls.size + newUris.size -> {
                         val uriIndex = slotIndex - existingUrls.size
                         FilledSlot(
                             model = newUris[uriIndex],
-                            onRemove = { onRemoveNew(uriIndex) }
+                            onRemove = { onRemoveNew(uriIndex) },
                         )
                     }
                     else -> {
                         EmptySlot(
-                            onClick = if (totalFilled < maxSlots) onAddClick else null
+                            onClick = if (totalFilled < maxSlots) onAddClick else null,
                         )
                     }
                 }
@@ -82,17 +81,20 @@ fun PortfolioSlots(
 }
 
 @Composable
-private fun FilledSlot(model: Any, onRemove: () -> Unit) {
+private fun FilledSlot(
+    model: Any,
+    onRemove: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(12.dp)),
     ) {
         AsyncImage(
             model = model,
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
         )
         // Remove button
         Box(
@@ -103,13 +105,13 @@ private fun FilledSlot(model: Any, onRemove: () -> Unit) {
                 .clip(CircleShape)
                 .background(Color.Black.copy(alpha = 0.6f))
                 .clickable { onRemove() },
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Remove",
                 tint = Color.White,
-                modifier = Modifier.size(14.dp)
+                modifier = Modifier.size(14.dp),
             )
         }
     }
@@ -124,30 +126,31 @@ private fun EmptySlot(onClick: (() -> Unit)?) {
             .border(
                 width = 1.5.dp,
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(12.dp)
-            )
-            .background(MaterialTheme.colorScheme.surface)
+                shape = RoundedCornerShape(12.dp),
+            ).background(MaterialTheme.colorScheme.surface)
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "Add image",
-                tint = if (onClick != null)
+                tint = if (onClick != null) {
                     MaterialTheme.colorScheme.onSurfaceVariant
-                else
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-                modifier = Modifier.size(24.dp)
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                },
+                modifier = Modifier.size(24.dp),
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = "Add",
                 fontSize = 12.sp,
-                color = if (onClick != null)
+                color = if (onClick != null) {
                     MaterialTheme.colorScheme.onSurfaceVariant
-                else
+                } else {
                     MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                },
             )
         }
     }

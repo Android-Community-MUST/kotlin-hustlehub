@@ -15,7 +15,6 @@ import org.junit.Before
 import org.junit.Test
 
 class StorageRepositoryTest {
-
     private lateinit var mockStorage: FirebaseStorage
     private lateinit var mockReference: StorageReference
     private lateinit var repository: StorageRepository
@@ -52,7 +51,7 @@ class StorageRepositoryTest {
         every { mockDownloadUrlTask.result } returns mockUri
         every { mockUri.toString() } returns publicUrl
 
-        val results = repository.uploadPortfolioImage(serviceId, imageBytes).toList()
+            val results = repository.uploadPortfolioImage(serviceId, imageBytes).toList()
 
         assertEquals(2, results.size)
         assertTrue(results[0] is UploadResult.Progress)

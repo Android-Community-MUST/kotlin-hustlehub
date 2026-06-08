@@ -1,10 +1,10 @@
 package must.kdroiders.hustlehub.ui.features.auth
 
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.Runs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -36,7 +36,6 @@ class MainDispatcherRule : TestWatcher() {
 }
 
 class SignUpViewModelTest {
-
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -166,21 +165,22 @@ class SignUpViewModelTest {
     }
 
     @Test
-    fun `signUp persists user to DataStore on success`() = runTest {
-        coEvery { mockSignUpUseCase(any(), any(), any()) } returns Result.success(mockk(relaxed = true))
-        coEvery { mockUserPreferences.writeUser(any()) } just Runs
+    fun `signUp persists user to DataStore on success`() =
+        runTest {
+            coEvery { mockSignUpUseCase(any(), any(), any()) } returns Result.success(mockk(relaxed = true))
+            coEvery { mockUserPreferences.writeUser(any()) } just Runs
 
-        viewModel.onNameChanged("John Doe")
-        viewModel.onEmailChanged("john@must.ac.ke")
-        viewModel.onPasswordChanged("Password123!")
-        viewModel.onConfirmPasswordChanged("Password123!")
+            viewModel.onNameChanged("John Doe")
+            viewModel.onEmailChanged("john@must.ac.ke")
+            viewModel.onPasswordChanged("Password123!")
+            viewModel.onConfirmPasswordChanged("Password123!")
 
-        viewModel.signUp {}
-        
-        advanceUntilIdle()
+            viewModel.signUp {}
 
-        coVerify { mockUserPreferences.writeUser(any()) }
-    }
+            advanceUntilIdle()
+
+            coVerify { mockUserPreferences.writeUser(any()) }
+        }
 
     @Test
     fun `signUp succeeds with valid student email domain`() {
@@ -213,7 +213,7 @@ class SignUpViewModelTest {
         viewModel.signUp {}
         assertEquals(
             "An account with this email already exists. Try logging in instead.",
-            viewModel.uiState.value.signUpError
+            viewModel.uiState.value.signUpError,
         )
     }
 }

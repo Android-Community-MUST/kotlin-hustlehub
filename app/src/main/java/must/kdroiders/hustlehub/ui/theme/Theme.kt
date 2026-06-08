@@ -83,7 +83,7 @@ private val DarkColorScheme = darkColorScheme(
 fun HustleHubTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false, // kept false to enforce brand palette
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -100,7 +100,7 @@ fun HustleHubTheme(
             typography = Typography,
             shapes = HustleShapes,
             motionScheme = MotionScheme.expressive(),
-            content = content
+            content = content,
         )
     }
 }

@@ -19,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.data.model.ServiceCategory
@@ -29,7 +28,7 @@ import must.kdroiders.hustlehub.data.model.ServiceCategory
 fun CategoryChipRow(
     selected: ServiceCategory,
     onSelected: (ServiceCategory) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberScrollState()
     Row(
@@ -37,13 +36,13 @@ fun CategoryChipRow(
             .fillMaxWidth()
             .horizontalScroll(scrollState)
             .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         ServiceCategory.entries.forEach { category ->
             CategoryChip(
                 category = category,
                 isSelected = selected == category,
-                onClick = { onSelected(category) }
+                onClick = { onSelected(category) },
             )
         }
     }
@@ -53,15 +52,15 @@ fun CategoryChipRow(
 fun CategoryChip(
     category: ServiceCategory,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val bgColor by animateColorAsState(
         targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-        label = "chipBg"
+        label = "chipBg",
     )
     val textColor by animateColorAsState(
         targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-        label = "chipText"
+        label = "chipText",
     )
 
     val label = category.label
@@ -72,13 +71,13 @@ fun CategoryChip(
             .background(bgColor)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            color = textColor
+            color = textColor,
         )
     }
 }

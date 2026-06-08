@@ -11,8 +11,8 @@ import must.kdroiders.hustlehub.core.api.TokenAuthenticator
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.data.remote.MediaApiService
 import must.kdroiders.hustlehub.data.remote.ServiceApiService
-import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.data.remote.UserApiService
+import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -22,7 +22,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
     @Provides
     @Singleton
     fun provideAuthInterceptor(firebaseAuth: FirebaseAuth?): AuthInterceptor {
@@ -33,7 +32,7 @@ object NetworkModule {
     @Singleton
     fun provideTokenAuthenticator(
         firebaseAuth: FirebaseAuth?,
-        authManager: AuthManager
+        authManager: AuthManager,
     ): TokenAuthenticator {
         return TokenAuthenticator(firebaseAuth, authManager)
     }
@@ -42,9 +41,10 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator
+        tokenAuthenticator: TokenAuthenticator,
     ): OkHttpClient {
-        return OkHttpClient.Builder()
+        return OkHttpClient
+            .Builder()
             .addInterceptor(authInterceptor)
             .authenticator(tokenAuthenticator)
             .connectTimeout(15, TimeUnit.SECONDS)
@@ -56,7 +56,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
+        return Retrofit
+            .Builder()
             .baseUrl(BuildConfig.BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())

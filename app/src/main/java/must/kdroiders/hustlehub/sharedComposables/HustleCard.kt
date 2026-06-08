@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 
@@ -50,7 +49,7 @@ fun HustleCard(
     variant: HustleCardVariant = HustleCardVariant.Elevated,
     onClick: (() -> Unit)? = null,
     contentPadding: PaddingValues = PaddingValues(20.dp),
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -59,12 +58,15 @@ fun HustleCard(
     val scale by animateFloatAsState(
         targetValue = if (isPressed && onClick != null) 0.985f else 1f,
         animationSpec = motionScheme.fastSpatialSpec(),
-        label = "cardScale"
+        label = "cardScale",
     )
 
     val cardModifier = modifier
         .fillMaxWidth()
-        .graphicsLayer { scaleX = scale; scaleY = scale }
+        .graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        }
 
     when (variant) {
         HustleCardVariant.Surface -> {
@@ -76,9 +78,9 @@ fun HustleCard(
                 interactionSource = interactionSource,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             ) {
                 Box(Modifier.padding(contentPadding)) { content() }
             }
@@ -93,13 +95,13 @@ fun HustleCard(
                 interactionSource = interactionSource,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ),
                 elevation = CardDefaults.cardElevation(
                     defaultElevation = 2.dp,
                     pressedElevation = 6.dp,
-                    hoveredElevation = 4.dp
-                )
+                    hoveredElevation = 4.dp,
+                ),
             ) {
                 Box(Modifier.padding(contentPadding)) { content() }
             }
@@ -114,13 +116,13 @@ fun HustleCard(
                 interactionSource = interactionSource,
                 border = BorderStroke(
                     width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant
+                    color = MaterialTheme.colorScheme.outlineVariant,
                 ),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             ) {
                 Box(Modifier.padding(contentPadding)) { content() }
             }
@@ -135,9 +137,9 @@ fun HustleCard(
                 interactionSource = interactionSource,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             ) {
                 Box(Modifier.padding(contentPadding)) { content() }
             }
@@ -156,7 +158,7 @@ fun HustleCardPreview() {
                 Text(
                     "Clickable with press scale animation.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -166,7 +168,7 @@ fun HustleCardPreview() {
                 Text(
                     "Clean border, no shadow.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -176,7 +178,7 @@ fun HustleCardPreview() {
                 Text(
                     "Uses surfaceVariant for secondary sections.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

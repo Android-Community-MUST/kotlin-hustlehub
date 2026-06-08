@@ -25,14 +25,14 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
-import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.SignUpViewModel
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.components.PasswordStrengthIndicator
+import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.SignUpViewModel
 
 @Composable
 fun SignUpScreen(
     onNavigateToLogin: () -> Unit,
     onSignUpSuccess: (email: String) -> Unit,
-    signUpViewModel: SignUpViewModel = hiltViewModel()
+    signUpViewModel: SignUpViewModel = hiltViewModel(),
 ) {
     val uiState by signUpViewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
@@ -43,19 +43,19 @@ fun SignUpScreen(
             .padding(24.dp)
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Text(
             text = "Create Account",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 8.dp),
         )
         Text(
             text = "Join HustleHub with your student email",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 32.dp)
+            modifier = Modifier.padding(bottom = 32.dp),
         )
 
         HustleTextField(
@@ -68,7 +68,7 @@ fun SignUpScreen(
             leadingIcon = Icons.Default.Person,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
-                imeAction = ImeAction.Next
+                imeAction = ImeAction.Next,
             ),
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -83,9 +83,9 @@ fun SignUpScreen(
             errorText = uiState.emailError,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
+                imeAction = ImeAction.Next,
             ),
-            leadingIcon = Icons.Default.Email
+            leadingIcon = Icons.Default.Email,
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -99,9 +99,9 @@ fun SignUpScreen(
             isPassword = true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Next
-                ),
-            leadingIcon = Icons.Default.Lock
+                imeAction = ImeAction.Next,
+            ),
+            leadingIcon = Icons.Default.Lock,
         )
         if (uiState.password.isNotEmpty()) {
             PasswordStrengthIndicator(strength = uiState.passwordStrength)
@@ -117,7 +117,7 @@ fun SignUpScreen(
             errorText = uiState.confirmPasswordError,
             isPassword = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            leadingIcon = Icons.Default.Lock
+            leadingIcon = Icons.Default.Lock,
         )
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -125,7 +125,7 @@ fun SignUpScreen(
             text = "Sign Up",
             onClick = { signUpViewModel.signUp(onSignUpSuccess) },
             modifier = Modifier.fillMaxWidth(),
-            loading = uiState.isLoading
+            loading = uiState.isLoading,
         )
 
         uiState.signUpError?.let {
@@ -133,7 +133,7 @@ fun SignUpScreen(
             Text(
                 text = it,
                 color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
             )
         }
 
@@ -154,7 +154,7 @@ fun SignUpScreen(
                 annotatedString.getStringAnnotations(tag = "login", start = offset, end = offset).firstOrNull()?.let {
                     onNavigateToLogin()
                 }
-            }
+            },
         )
     }
 }

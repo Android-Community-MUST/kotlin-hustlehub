@@ -35,14 +35,14 @@ import androidx.compose.ui.unit.sp
 fun HomeTopBar(
     initials: String,
     notificationCount: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         // Logo + wordmark
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -52,14 +52,14 @@ fun HomeTopBar(
                     .clip(RoundedCornerShape(10.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF7C4DFF))
-                        )
+                            colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF7C4DFF)),
+                        ),
                     ),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "H",
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
                 )
             }
             Spacer(Modifier.width(10.dp))
@@ -67,14 +67,14 @@ fun HomeTopBar(
                 text = "HustleHub",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
 
         // Right icons
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // Notification bell with badge
             BadgedBox(
@@ -82,28 +82,28 @@ fun HomeTopBar(
                     if (notificationCount > 0) {
                         Badge(
                             containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onSurface
+                            contentColor = MaterialTheme.colorScheme.onSurface,
                         ) {
                             Text(
                                 text = notificationCount.toString(),
-                                fontSize = 9.sp
+                                fontSize = 9.sp,
                             )
                         }
                     }
-                }
+                },
             ) {
                 IconButton(
                     onClick = { /* TODO: navigate to notifications */ },
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Notifications,
                         contentDescription = "Notifications",
                         tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }
@@ -116,19 +116,18 @@ fun HomeTopBar(
                     .border(
                         width = 2.dp,
                         brush = Brush.linearGradient(
-                            colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF7C4DFF))
+                            colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF7C4DFF)),
                         ),
-                        shape = CircleShape
-                    )
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                        shape = CircleShape,
+                    ).background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable { /* TODO: navigate to profile */ },
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = initials,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
