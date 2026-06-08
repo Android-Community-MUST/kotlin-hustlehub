@@ -41,12 +41,12 @@ import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 @Composable
 fun TopHustlersRow(
     hustlers: List<TopHustler>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(items = hustlers, key = { it.id }) { hustler ->
             TopHustlerCard(hustler = hustler)
@@ -57,7 +57,7 @@ fun TopHustlersRow(
 @Composable
 fun TopHustlerCard(
     hustler: TopHustler,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
@@ -65,7 +65,7 @@ fun TopHustlerCard(
             .height(240.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .clickable { /* TODO: navigate to service detail */ }
+            .clickable { /* TODO: navigate to service detail */ },
     ) {
         // Hero image (placeholder gradient when no URL)
         Box(
@@ -79,9 +79,9 @@ fun TopHustlerCard(
                             ServiceCategory.TUTORING -> listOf(Color(0xFF1A237E), Color(0xFF0D47A1))
                             ServiceCategory.DESIGN -> listOf(Color(0xFF004D40), Color(0xFF006064))
                             else -> listOf(Color(0xFF1B5E20), Color(0xFF33691E))
-                        }
-                    )
-                )
+                        },
+                    ),
+                ),
         ) {
             // Load actual image if URL provided
             if (hustler.imageUrl.isNotBlank()) {
@@ -89,7 +89,7 @@ fun TopHustlerCard(
                     model = hustler.imageUrl,
                     contentDescription = hustler.serviceTitle,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
 
@@ -100,14 +100,14 @@ fun TopHustlerCard(
                     .padding(8.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(Color.Black.copy(alpha = 0.55f))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = null,
                         tint = HustleWarningAmber,
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(12.dp),
                     )
                     Spacer(Modifier.width(3.dp))
                     Text(
@@ -115,7 +115,7 @@ fun TopHustlerCard(
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 11.sp
+                        fontSize = 11.sp,
                     )
                 }
             }
@@ -126,14 +126,14 @@ fun TopHustlerCard(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 6.dp)
+                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 6.dp),
         ) {
             Text(
                 text = hustler.category.label,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 11.sp
+                fontSize = 11.sp,
             )
             Text(
                 text = hustler.serviceTitle,
@@ -142,14 +142,14 @@ fun TopHustlerCard(
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                fontSize = 13.sp
+                fontSize = 13.sp,
             )
             Spacer(Modifier.height(2.dp))
             Text(
                 text = hustler.priceLabel,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp
+                fontSize = 11.sp,
             )
         }
     }

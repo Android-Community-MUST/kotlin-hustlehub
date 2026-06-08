@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,23 +40,23 @@ fun LoadingIndicator(
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(900, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "alpha"
+        label = "alpha",
     )
 
     Box(
         modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
             CircularWavyProgressIndicator(
                 modifier = Modifier.size(52.dp),
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
             )
             if (message != null) {
                 Spacer(Modifier.height(20.dp))
@@ -66,7 +66,7 @@ fun LoadingIndicator(
                     fontWeight = FontWeight.Medium,
                     letterSpacing = 0.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.alpha(alpha)
+                    modifier = Modifier.alpha(alpha),
                 )
             }
         }

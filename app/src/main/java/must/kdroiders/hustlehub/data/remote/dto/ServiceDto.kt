@@ -16,7 +16,7 @@ data class ServiceResponse(
     val location: LocationDto?,
     val distanceMeters: Double?,
     val createdAt: String,
-    val updatedAt: String
+    val updatedAt: String,
 )
 
 data class CreateServiceRequest(
@@ -27,7 +27,7 @@ data class CreateServiceRequest(
     val maxPrice: Int,
     val openToBarter: Boolean,
     val tags: List<String>,
-    val location: LocationDto? = null
+    val location: LocationDto? = null,
 )
 
 data class UpdateServiceRequest(
@@ -38,15 +38,15 @@ data class UpdateServiceRequest(
     val maxPrice: Int?,
     val openToBarter: Boolean?,
     val tags: List<String>?,
-    val location: LocationDto? = null
+    val location: LocationDto? = null,
 )
 
 data class AvailabilityRequest(
-    val availability: String
+    val availability: String,
 )
 
 data class LocationDto(
     val lat: Double?,
     val lng: Double?,
-    val label: String?
+    val label: String?,
 )

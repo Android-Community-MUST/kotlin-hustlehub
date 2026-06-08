@@ -14,7 +14,7 @@ data class ProfileUiState(
     val reviewCount: Int = 0,
     val badges: List<Badge> = emptyList(),
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
 )
 
 /**
@@ -22,12 +22,12 @@ data class ProfileUiState(
  */
 data class Badge(
     val label: String,
-    val type: BadgeType = BadgeType.DEFAULT
+    val type: BadgeType = BadgeType.DEFAULT,
 )
 
 enum class BadgeType {
     GOLD,
     GREEN,
     BLUE,
-    DEFAULT
+    DEFAULT,
 }

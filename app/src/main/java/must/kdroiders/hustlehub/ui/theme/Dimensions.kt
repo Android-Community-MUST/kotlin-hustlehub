@@ -27,7 +27,7 @@ data class Dimensions(
     val spacing16: Dp = 16.dp,
     val spacing24: Dp = 24.dp,
     val spacing32: Dp = 32.dp,
-    val spacing48: Dp = 48.dp
+    val spacing48: Dp = 48.dp,
 )
 
 // Shared singleton — never changes at runtime

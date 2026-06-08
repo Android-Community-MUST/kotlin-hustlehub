@@ -11,7 +11,7 @@ data class MediaUploadResponse(
     val mediaId: String,
     val url: String,
     val thumbnailUrl: String?,
-    val type: String
+    val type: String,
 )
 
 interface MediaApiService {
@@ -20,6 +20,6 @@ interface MediaApiService {
     suspend fun uploadImage(
         @Part file: MultipartBody.Part,
         @Part("type") type: RequestBody,
-        @Part("entityId") entityId: RequestBody? = null
+        @Part("entityId") entityId: RequestBody? = null,
     ): ApiResponse<MediaUploadResponse>
 }

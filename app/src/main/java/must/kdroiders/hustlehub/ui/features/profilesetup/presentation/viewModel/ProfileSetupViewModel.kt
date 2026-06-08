@@ -32,7 +32,7 @@ data class ProfileSetupState(
     val photoUrl: String = "",
     val isUploadingPhoto: Boolean = false,
     val isSaving: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 )
 
 /**
@@ -45,162 +45,162 @@ sealed interface ProfileSetupEvent {
 }
 
 @HiltViewModel
-class ProfileSetupViewModel @Inject constructor(
-    private val firebaseAuth: FirebaseAuth?,
-    private val userRepository: UserRepository,
-    private val syncUserProfileUseCase: SyncUserProfileUseCase
-) : ViewModel() {
+class ProfileSetupViewModel
+    @Inject
+    constructor(
+        private val firebaseAuth: FirebaseAuth?,
+        private val userRepository: UserRepository,
+        private val syncUserProfileUseCase: SyncUserProfileUseCase,
+    ) : ViewModel() {
+        private val _state = MutableStateFlow(ProfileSetupState())
+        val state: StateFlow<ProfileSetupState> = _state.asStateFlow()
 
-    private val _state = MutableStateFlow(ProfileSetupState())
-    val state: StateFlow<ProfileSetupState> = _state.asStateFlow()
+        private val _events = MutableSharedFlow<ProfileSetupEvent>()
+        val events: SharedFlow<ProfileSetupEvent> = _events.asSharedFlow()
 
-    private val _events = MutableSharedFlow<ProfileSetupEvent>()
-    val events: SharedFlow<ProfileSetupEvent> = _events.asSharedFlow()
-
-    init {
-        // Pre-fill name from Firebase Auth if available
-        val currentUser = firebaseAuth?.currentUser
-        _state.update {
-            it.copy(
-                name = currentUser?.displayName ?: ""
-            )
-        }
-    }
-
-    // ---- form field updates ----
-
-    fun onNameChange(value: String) {
-        _state.update { it.copy(name = value) }
-    }
-
-    fun onPhoneChange(value: String) {
-        _state.update { it.copy(phone = value) }
-    }
-
-    fun onBioChange(value: String) {
-        _state.update { it.copy(bio = value) }
-    }
-
-    fun onCampusLocationChange(value: String) {
-        _state.update { it.copy(campusLocation = value) }
-    }
-
-    // ---- photo handling ----
-
-    /**
-     * Called when user picks a photo from camera or gallery.
-     * Immediately starts uploading in the background.
-     */
-    fun onPhotoSelected(uri: Uri) {
-        val userId = firebaseAuth?.currentUser?.uid ?: return
-
-        _state.update {
-            it.copy(
-                photoUri = uri,
-                isUploadingPhoto = true,
-                errorMessage = null
-            )
-        }
-
-        viewModelScope.launch {
-            userRepository.uploadProfilePhoto(userId, uri)
-                .onSuccess { downloadUrl ->
-                    _state.update {
-                        it.copy(
-                            photoUrl = downloadUrl,
-                            isUploadingPhoto = false
-                        )
-                    }
-                    Timber.d("Photo uploaded: $downloadUrl")
-                }
-                .onFailure { e ->
-                    _state.update {
-                        it.copy(
-                            isUploadingPhoto = false,
-                            errorMessage =
-                                "Photo upload failed: ${e.message}"
-                        )
-                    }
-                }
-        }
-    }
-
-    // ---- save profile ----
-
-    fun saveProfile() {
-        val currentState = _state.value
-        val userId = firebaseAuth?.currentUser?.uid
-        val email = firebaseAuth?.currentUser?.email ?: ""
-
-        // Validation
-        if (userId == null) {
-            _state.update {
-                it.copy(errorMessage = "You must be logged in")
-            }
-            return
-        }
-        if (currentState.name.isBlank()) {
-            _state.update {
-                it.copy(errorMessage = "Name is required")
-            }
-            return
-        }
-        if (currentState.phone.isBlank()) {
-            _state.update {
-                it.copy(errorMessage = "Phone number is required")
-            }
-            return
-        }
-        if (currentState.campusLocation.isBlank()) {
+        init {
+            // Pre-fill name from Firebase Auth if available
+            val currentUser = firebaseAuth?.currentUser
             _state.update {
                 it.copy(
-                    errorMessage = "Campus Location/Residence is required"
+                    name = currentUser?.displayName ?: "",
                 )
             }
-            return
         }
-        if (currentState.isUploadingPhoto) {
+
+        // ---- form field updates ----
+
+        fun onNameChange(value: String) {
+            _state.update { it.copy(name = value) }
+        }
+
+        fun onPhoneChange(value: String) {
+            _state.update { it.copy(phone = value) }
+        }
+
+        fun onBioChange(value: String) {
+            _state.update { it.copy(bio = value) }
+        }
+
+        fun onCampusLocationChange(value: String) {
+            _state.update { it.copy(campusLocation = value) }
+        }
+
+        // ---- photo handling ----
+
+        /**
+         * Called when user picks a photo from camera or gallery.
+         * Immediately starts uploading in the background.
+         */
+        fun onPhotoSelected(uri: Uri) {
+            val userId = firebaseAuth?.currentUser?.uid ?: return
+
             _state.update {
                 it.copy(
-                    errorMessage = "Please wait for photo upload"
+                    photoUri = uri,
+                    isUploadingPhoto = true,
+                    errorMessage = null,
                 )
             }
-            return
-        }
 
-        _state.update {
-            it.copy(isSaving = true, errorMessage = null)
-        }
-
-        val user = User(
-            id = userId,
-            name = currentState.name,
-            email = email,
-            phone = currentState.phone,
-            campusLocation = currentState.campusLocation,
-            bio = currentState.bio,
-            profilePhotoUrl = currentState.photoUrl
-        )
-
-        viewModelScope.launch {
-            syncUserProfileUseCase(user)
-                .onSuccess {
-                    _state.update { it.copy(isSaving = false) }
-                    _events.emit(ProfileSetupEvent.ProfileSaved)
-                }
-                .onFailure { e ->
-                    _state.update {
-                        it.copy(
-                            isSaving = false,
-                            errorMessage =
-                                "Save failed: ${e.message}"
-                        )
+            viewModelScope.launch {
+                userRepository
+                    .uploadProfilePhoto(userId, uri)
+                    .onSuccess { downloadUrl ->
+                        _state.update {
+                            it.copy(
+                                photoUrl = downloadUrl,
+                                isUploadingPhoto = false,
+                            )
+                        }
+                        Timber.d("Photo uploaded: $downloadUrl")
+                    }.onFailure { e ->
+                        _state.update {
+                            it.copy(
+                                isUploadingPhoto = false,
+                                errorMessage =
+                                    "Photo upload failed: ${e.message}",
+                            )
+                        }
                     }
+            }
+        }
+
+        // ---- save profile ----
+
+        fun saveProfile() {
+            val currentState = _state.value
+            val userId = firebaseAuth?.currentUser?.uid
+            val email = firebaseAuth?.currentUser?.email ?: ""
+
+            // Validation
+            if (userId == null) {
+                _state.update {
+                    it.copy(errorMessage = "You must be logged in")
                 }
+                return
+            }
+            if (currentState.name.isBlank()) {
+                _state.update {
+                    it.copy(errorMessage = "Name is required")
+                }
+                return
+            }
+            if (currentState.phone.isBlank()) {
+                _state.update {
+                    it.copy(errorMessage = "Phone number is required")
+                }
+                return
+            }
+            if (currentState.campusLocation.isBlank()) {
+                _state.update {
+                    it.copy(
+                        errorMessage = "Campus Location/Residence is required",
+                    )
+                }
+                return
+            }
+            if (currentState.isUploadingPhoto) {
+                _state.update {
+                    it.copy(
+                        errorMessage = "Please wait for photo upload",
+                    )
+                }
+                return
+            }
+
+            _state.update {
+                it.copy(isSaving = true, errorMessage = null)
+            }
+
+            val user = User(
+                id = userId,
+                name = currentState.name,
+                email = email,
+                phone = currentState.phone,
+                campusLocation = currentState.campusLocation,
+                bio = currentState.bio,
+                profilePhotoUrl = currentState.photoUrl,
+            )
+
+            viewModelScope.launch {
+                syncUserProfileUseCase(user)
+                    .onSuccess {
+                        _state.update { it.copy(isSaving = false) }
+                        _events.emit(ProfileSetupEvent.ProfileSaved)
+                    }.onFailure { e ->
+                        _state.update {
+                            it.copy(
+                                isSaving = false,
+                                errorMessage =
+                                    "Save failed: ${e.message}",
+                            )
+                        }
+                    }
+            }
+        }
+
+        fun clearError() {
+            _state.update { it.copy(errorMessage = null) }
         }
     }
-
-    fun clearError() {
-        _state.update { it.copy(errorMessage = null) }
-    }
-}

@@ -12,7 +12,6 @@ import com.google.firebase.auth.FirebaseAuthException
  * Error codes: https://firebase.google.com/docs/auth/admin/errors
  */
 object FirebaseAuthErrorMapper {
-
     /**
      * Maps a [Throwable] to a human-friendly message.
      *
@@ -41,7 +40,8 @@ object FirebaseAuthErrorMapper {
                     "No account found with this email. Please sign up first."
 
                 "ERROR_WRONG_PASSWORD",
-                "ERROR_INVALID_CREDENTIAL" ->
+                "ERROR_INVALID_CREDENTIAL",
+                ->
                     "Incorrect password. Please try again or reset your password."
 
                 "ERROR_USER_DISABLED" ->
@@ -59,7 +59,8 @@ object FirebaseAuthErrorMapper {
 
                 // Token / session errors
                 "ERROR_USER_TOKEN_EXPIRED",
-                "ERROR_INVALID_USER_TOKEN" ->
+                "ERROR_INVALID_USER_TOKEN",
+                ->
                     "Your session has expired. Please log in again."
 
                 "ERROR_REQUIRES_RECENT_LOGIN" ->

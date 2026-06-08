@@ -2,15 +2,14 @@ package must.kdroiders.hustlehub.navigation
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import androidx.compose.animation.togetherWith
 import must.kdroiders.hustlehub.ui.features.chat.ChatScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.HomeScreen
 import must.kdroiders.hustlehub.ui.features.map.MapScreen
@@ -68,16 +67,16 @@ fun MainShellScreen(
             transitionSpec = { fadeIn() togetherWith fadeOut() },
             popTransitionSpec = { fadeIn() togetherWith fadeOut() },
             entryProvider = entryProvider {
-                entry<BottomHome>    { HomeScreen() }
-                entry<BottomMap>     { MapScreen() }
-                entry<BottomChat>    { ChatScreen() }
+                entry<BottomHome> { HomeScreen() }
+                entry<BottomMap> { MapScreen() }
+                entry<BottomChat> { ChatScreen() }
                 entry<BottomProfile> {
                     ProfileScreen(
                         onEditClick = onNavigateToProfileSetup,
                         onAddNewServiceClick = onNavigateToCreateService,
                         onServiceClick = onNavigateToEditService,
                         onNavigateToMyServices = onNavigateToMyServices,
-                        onSettingsClick = onNavigateToSettings
+                        onSettingsClick = onNavigateToSettings,
                     )
                 }
             },

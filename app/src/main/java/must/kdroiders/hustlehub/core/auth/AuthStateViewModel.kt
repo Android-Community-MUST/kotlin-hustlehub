@@ -19,14 +19,15 @@ import javax.inject.Inject
  * [AuthState.Authenticated] or [AuthState.Unauthenticated] as Firebase notifies the listener.
  */
 @HiltViewModel
-class AuthStateViewModel @Inject constructor(
-    authManager: AuthManager
-) : ViewModel() {
-
-    val authState: StateFlow<AuthState> = authManager.authState
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-            initialValue = AuthState.Loading
-        )
-}
+class AuthStateViewModel
+    @Inject
+    constructor(
+        authManager: AuthManager,
+    ) : ViewModel() {
+        val authState: StateFlow<AuthState> = authManager.authState
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+                initialValue = AuthState.Loading,
+            )
+    }

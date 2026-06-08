@@ -10,32 +10,30 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.data.local.dao.ServiceDao
-import must.kdroiders.hustlehub.data.model.User
-import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
-import must.kdroiders.hustlehub.ui.features.auth.data.repository.AuthRepositoryImpl
-import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
+import must.kdroiders.hustlehub.data.remote.MediaApiService
+import must.kdroiders.hustlehub.data.remote.ServiceApiService
+import must.kdroiders.hustlehub.data.remote.UserApiService
+import must.kdroiders.hustlehub.data.repository.ServiceRepositoryImpl
 import must.kdroiders.hustlehub.data.repository.StorageRepository
 import must.kdroiders.hustlehub.data.repository.StorageRepositoryImpl
 import must.kdroiders.hustlehub.data.repository.UserRepository
 import must.kdroiders.hustlehub.data.repository.UserRepositoryImpl
-import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
-import must.kdroiders.hustlehub.data.remote.UserApiService
-import must.kdroiders.hustlehub.data.remote.MediaApiService
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
-import must.kdroiders.hustlehub.core.auth.AuthManager
-import must.kdroiders.hustlehub.data.remote.ServiceApiService
-import must.kdroiders.hustlehub.data.repository.ServiceRepositoryImpl
 import must.kdroiders.hustlehub.domain.repository.ServiceRepository
+import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
+import must.kdroiders.hustlehub.ui.features.auth.data.repository.AuthRepositoryImpl
+import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
 import timber.log.Timber
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
     @Provides
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth? {
@@ -44,7 +42,7 @@ object AppModule {
         } catch (e: IllegalStateException) {
             Timber.w(
                 e,
-                "Firebase not initialized — running without auth"
+                "Firebase not initialized — running without auth",
             )
             null
         }
@@ -52,9 +50,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAuthRepository(
-        firebaseAuth: FirebaseAuth?
-    ): AuthRepository {
+    fun provideAuthRepository(firebaseAuth: FirebaseAuth?): AuthRepository {
         return if (firebaseAuth != null) {
             AuthRepositoryImpl(firebaseAuth)
         } else {
@@ -62,24 +58,19 @@ object AppModule {
         }
     }
 
-
     @Provides
     @Singleton
-    fun provideStorageRepository(
-        mediaApiService: MediaApiService,
-    ): StorageRepository = StorageRepositoryImpl(mediaApiService)
+    fun provideStorageRepository(mediaApiService: MediaApiService): StorageRepository = StorageRepositoryImpl(mediaApiService)
 
     @Provides
     @Singleton
     fun provideDataStore(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): DataStore<Preferences> = context.dataStore
 
     @Provides
     @Singleton
-    fun provideUserPreferences(
-        dataStore: DataStore<Preferences>
-    ): UserPreferences = UserPreferences(dataStore)
+    fun provideUserPreferences(dataStore: DataStore<Preferences>): UserPreferences = UserPreferences(dataStore)
 
     @Provides
     @Singleton
@@ -87,7 +78,7 @@ object AppModule {
         @ApplicationContext context: Context,
         authApiService: AuthApiService,
         userApiService: UserApiService,
-        mediaApiService: MediaApiService
+        mediaApiService: MediaApiService,
     ): UserRepository {
         return UserRepositoryImpl(context, authApiService, userApiService, mediaApiService)
     }
@@ -95,12 +86,14 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAppDatabase(
-        @ApplicationContext context: Context
-    ): AppDatabase = Room.databaseBuilder(
-        context.applicationContext,
-        AppDatabase::class.java,
-        "hustlehub.db"
-    ).build()
+        @ApplicationContext context: Context,
+    ): AppDatabase =
+        Room
+            .databaseBuilder(
+                context.applicationContext,
+                AppDatabase::class.java,
+                "hustlehub.db",
+            ).build()
 
     @Provides
     @Singleton
@@ -111,30 +104,34 @@ object AppModule {
     fun provideServiceRepository(
         serviceApiService: ServiceApiService,
         serviceDao: ServiceDao,
-        authManager: AuthManager
+        authManager: AuthManager,
     ): ServiceRepository {
         return ServiceRepositoryImpl(serviceApiService, serviceDao, authManager)
     }
 }
 
 private class NoopAuthRepository : AuthRepository {
-    override suspend fun login(email: String, password: String): LoginResult =
-        throw IllegalStateException("Firebase not initialized")
+    override suspend fun login(
+        email: String,
+        password: String,
+    ): LoginResult = throw IllegalStateException("Firebase not initialized")
 
-    override suspend fun signUp(name: String, email: String, password: String): LoginResult =
-        throw IllegalStateException("Firebase not initialized")
+    override suspend fun signUp(
+        name: String,
+        email: String,
+        password: String,
+    ): LoginResult = throw IllegalStateException("Firebase not initialized")
 
-    override suspend fun signInWithGoogle(idToken: String): LoginResult =
-        throw IllegalStateException("Firebase not initialized")
+    override suspend fun signInWithGoogle(idToken: String): LoginResult = throw IllegalStateException("Firebase not initialized")
 
-    override suspend fun sendOtp(email: String) =
-        throw IllegalStateException("Firebase not initialized")
+    override suspend fun sendOtp(email: String) = throw IllegalStateException("Firebase not initialized")
 
-    override suspend fun verifyOtp(email: String, otp: String) =
-        throw IllegalStateException("Firebase not initialized")
+    override suspend fun verifyOtp(
+        email: String,
+        otp: String,
+    ) = throw IllegalStateException("Firebase not initialized")
 
-    override suspend fun resendOtp(email: String) =
-        throw IllegalStateException("Firebase not initialized")
+    override suspend fun resendOtp(email: String) = throw IllegalStateException("Firebase not initialized")
 
     override fun getCurrentUser() = null
 

@@ -31,14 +31,14 @@ fun ErrorView(
     modifier: Modifier = Modifier,
     title: String = "Something went wrong",
     icon: ImageVector = Icons.Rounded.ErrorOutline,
-    onRetry: (() -> Unit)? = null
+    onRetry: (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         // Icon inside an error-tinted circle
         Box(
@@ -46,15 +46,15 @@ fun ErrorView(
                 .size(88.dp)
                 .background(
                     color = MaterialTheme.colorScheme.error.copy(alpha = 0.08f),
-                    shape = CircleShape
+                    shape = CircleShape,
                 ),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(40.dp),
-                tint = MaterialTheme.colorScheme.error
+                tint = MaterialTheme.colorScheme.error,
             )
         }
 
@@ -65,7 +65,7 @@ fun ErrorView(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
 
         Spacer(Modifier.height(10.dp))
@@ -75,7 +75,7 @@ fun ErrorView(
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
         )
 
         if (onRetry != null) {
@@ -83,7 +83,7 @@ fun ErrorView(
             HustleButton(
                 text = "Try Again",
                 onClick = onRetry,
-                variant = HustleButtonVariant.Outlined
+                variant = HustleButtonVariant.Outlined,
             )
         }
     }
@@ -96,7 +96,7 @@ fun ErrorViewPreview() {
         ErrorView(
             title = "Connection Failed",
             message = "We couldn't reach the server. Check your connection and try again.",
-            onRetry = {}
+            onRetry = {},
         )
     }
 }

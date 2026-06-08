@@ -30,7 +30,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,7 +58,7 @@ import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit = {},
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -67,7 +66,7 @@ fun SettingsScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is SettingsEvent.LoggedOut -> onBack()          // parent nav graph pops to Login
+                is SettingsEvent.LoggedOut -> onBack() // parent nav graph pops to Login
                 else -> { /* TODO: handle sub-screen navigation */ }
             }
         }
@@ -77,7 +76,7 @@ fun SettingsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding()
+            .statusBarsPadding(),
     ) {
         // Top bar
         SettingsTopBar(onBack = onBack)
@@ -87,7 +86,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
         ) {
             Spacer(Modifier.height(16.dp))
 
@@ -96,7 +95,7 @@ fun SettingsScreen(
                 displayName = state.displayName,
                 username = state.username,
                 avatarUrl = state.avatarUrl,
-                onEditClick = viewModel::onEditProfileClicked
+                onEditClick = viewModel::onEditProfileClicked,
             )
 
             Spacer(Modifier.height(28.dp))
@@ -110,14 +109,14 @@ fun SettingsScreen(
                     label = "Verification Status",
                     subtitle = if (state.isVerified) "Verified Student" else "Not Verified",
                     subtitleColor = if (state.isVerified) HustleActiveGreen else MaterialTheme.colorScheme.error,
-                    onClick = viewModel::onVerificationClicked
+                    onClick = viewModel::onVerificationClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.CreditCard,
                     label = "Payment Methods",
                     trailing = state.paymentMethod,
-                    onClick = viewModel::onPaymentMethodsClicked
+                    onClick = viewModel::onPaymentMethodsClicked,
                 )
             }
 
@@ -130,20 +129,20 @@ fun SettingsScreen(
                 SettingsRowNavigate(
                     icon = Icons.Default.Notifications,
                     label = "Notifications",
-                    onClick = viewModel::onNotificationsClicked
+                    onClick = viewModel::onNotificationsClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.Lock,
                     label = "Privacy & Security",
-                    onClick = viewModel::onPrivacyClicked
+                    onClick = viewModel::onPrivacyClicked,
                 )
                 SettingsDivider()
                 SettingsRowToggle(
                     icon = Icons.Default.DarkMode,
                     label = "Dark Mode",
                     checked = state.isDarkMode,
-                    onCheckedChange = viewModel::onDarkModeToggled
+                    onCheckedChange = viewModel::onDarkModeToggled,
                 )
             }
 
@@ -156,13 +155,13 @@ fun SettingsScreen(
                 SettingsRowExternalLink(
                     icon = Icons.AutoMirrored.Filled.Help,
                     label = "Help Center",
-                    onClick = viewModel::onHelpCenterClicked
+                    onClick = viewModel::onHelpCenterClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.ReportProblem,
                     label = "Report a Problem",
-                    onClick = viewModel::onReportProblemClicked
+                    onClick = viewModel::onReportProblemClicked,
                 )
             }
 
@@ -171,7 +170,7 @@ fun SettingsScreen(
             // Log Out button
             LogOutButton(
                 isLoading = state.isLoggingOut,
-                onClick = viewModel::onLogOutClicked
+                onClick = viewModel::onLogOutClicked,
             )
 
             Spacer(Modifier.height(16.dp))
@@ -179,7 +178,7 @@ fun SettingsScreen(
             // Delete Account link
             Box(
                 modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "Delete Account",
@@ -189,7 +188,7 @@ fun SettingsScreen(
                     modifier = Modifier
                         .clip(RoundedCornerShape(4.dp))
                         .clickable { viewModel.onDeleteAccountClicked() }
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
             }
 
@@ -198,13 +197,13 @@ fun SettingsScreen(
             // App version footer
             Box(
                 modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "HustleHub v${state.appVersion} (Build ${state.buildNumber})",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline,
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
                 )
             }
 
@@ -221,21 +220,21 @@ private fun SettingsScreenPreview() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .statusBarsPadding()
+                .statusBarsPadding(),
         ) {
             SettingsTopBar(onBack = {})
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 16.dp),
             ) {
                 Spacer(Modifier.height(16.dp))
                 ProfileIdentityCard(
                     displayName = "Juma Kamau",
                     username = "@UoN_Hustler",
                     avatarUrl = "",
-                    onEditClick = {}
+                    onEditClick = {},
                 )
                 Spacer(Modifier.height(28.dp))
                 SettingsSectionLabel("ACCOUNT")
@@ -246,14 +245,14 @@ private fun SettingsScreenPreview() {
                         label = "Verification Status",
                         subtitle = "Verified Student",
                         subtitleColor = HustleActiveGreen,
-                        onClick = {}
+                        onClick = {},
                     )
                     SettingsDivider()
                     SettingsRowNavigate(
                         icon = Icons.Default.CreditCard,
                         label = "Payment Methods",
                         trailing = "M-Pesa",
-                        onClick = {}
+                        onClick = {},
                     )
                 }
                 Spacer(Modifier.height(24.dp))
@@ -263,20 +262,20 @@ private fun SettingsScreenPreview() {
                     SettingsRowNavigate(
                         icon = Icons.Default.Notifications,
                         label = "Notifications",
-                        onClick = {}
+                        onClick = {},
                     )
                     SettingsDivider()
                     SettingsRowNavigate(
                         icon = Icons.Default.Lock,
                         label = "Privacy & Security",
-                        onClick = {}
+                        onClick = {},
                     )
                     SettingsDivider()
                     SettingsRowToggle(
                         icon = Icons.Default.DarkMode,
                         label = "Dark Mode",
                         checked = true,
-                        onCheckedChange = {}
+                        onCheckedChange = {},
                     )
                 }
                 Spacer(Modifier.height(24.dp))
@@ -286,13 +285,13 @@ private fun SettingsScreenPreview() {
                     SettingsRowExternalLink(
                         icon = Icons.AutoMirrored.Filled.Help,
                         label = "Help Center",
-                        onClick = {}
+                        onClick = {},
                     )
                     SettingsDivider()
                     SettingsRowNavigate(
                         icon = Icons.Default.ReportProblem,
                         label = "Report a Problem",
-                        onClick = {}
+                        onClick = {},
                     )
                 }
                 Spacer(Modifier.height(32.dp))
@@ -303,7 +302,7 @@ private fun SettingsScreenPreview() {
                         "Delete Account",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textDecoration = TextDecoration.Underline
+                        textDecoration = TextDecoration.Underline,
                     )
                 }
                 Spacer(Modifier.height(16.dp))
@@ -312,7 +311,7 @@ private fun SettingsScreenPreview() {
                         "HustleHub v2.4.0 (Build 2045)",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline,
-                        fontSize = 11.sp
+                        fontSize = 11.sp,
                     )
                 }
                 Spacer(Modifier.height(32.dp))

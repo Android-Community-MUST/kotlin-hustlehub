@@ -38,16 +38,16 @@ import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 @Composable
 fun ProfileBadges(
     badges: List<Badge>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        contentPadding = PaddingValues(horizontal = 0.dp)
+        contentPadding = PaddingValues(horizontal = 0.dp),
     ) {
         items(
             items = badges,
-            key = { it.label }
+            key = { it.label },
         ) { badge ->
             BadgeChip(badge = badge)
         }
@@ -60,8 +60,9 @@ fun BadgeChip(badge: Badge) {
         BadgeType.GOLD -> HustleBadgeGold to HustleWarningAmber
         BadgeType.GREEN -> HustleBadgeGreen to HustleActiveGreen
         BadgeType.BLUE -> HustleBadgeBlue to MaterialTheme.colorScheme.surfaceVariant
-        BadgeType.DEFAULT -> MaterialTheme.colorScheme.surfaceVariant to
-            MaterialTheme.colorScheme.onSurfaceVariant
+        BadgeType.DEFAULT ->
+            MaterialTheme.colorScheme.surfaceVariant to
+                MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     val icon = when (badge.type) {
@@ -78,27 +79,25 @@ fun BadgeChip(badge: Badge) {
             .border(
                 width = 1.dp,
                 color = textColor.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(20.dp)
-            )
-            .padding(
+                shape = RoundedCornerShape(20.dp),
+            ).padding(
                 horizontal = 14.dp,
-                vertical = 8.dp
+                vertical = 8.dp,
             ),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(14.dp),
-            tint = textColor
+            tint = textColor,
         )
         Spacer(Modifier.width(6.dp))
         Text(
             text = badge.label,
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
-            color = textColor
+            color = textColor,
         )
     }
 }
-

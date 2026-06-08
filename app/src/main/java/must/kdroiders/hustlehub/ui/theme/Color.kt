@@ -3,21 +3,21 @@ package must.kdroiders.hustlehub.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Brand / Primary
-val HustlePrimaryBlue = Color(0xFF1E88E5)    // Main brand/action color
-val HustleLinkBlue = Color(0xFF2563EB)        // Clickable text — Sign Up, Forgot password
+val HustlePrimaryBlue = Color(0xFF1E88E5) // Main brand/action color
+val HustleLinkBlue = Color(0xFF2563EB) // Clickable text — Sign Up, Forgot password
 
 // Light mode surfaces
 val HustleLightBackground = Color(0xFFF5F7FA) // Page background (very light grey)
-val HustleWhite = Color(0xFFFFFFFF)           // Cards, inputs, Google button
+val HustleWhite = Color(0xFFFFFFFF) // Cards, inputs, Google button
 
 // Text
-val HustleDarkNavy = Color(0xFF0F172A)        // Strong title text — "Hustle" wordmark
-val HustleMediumGrey = Color(0xFF6B7280)      // Subtitle text — "Login to your account"
-val HustleHintGrey = Color(0xFF9CA3AF)        // Placeholder — Email / Password fields
+val HustleDarkNavy = Color(0xFF0F172A) // Strong title text — "Hustle" wordmark
+val HustleMediumGrey = Color(0xFF6B7280) // Subtitle text — "Login to your account"
+val HustleHintGrey = Color(0xFF9CA3AF) // Placeholder — Email / Password fields
 
 // Borders & dividers
-val HustleInputBorder = Color(0xFFE5E7EB)     // Input borders / field shadows
-val HustleDividerGrey = Color(0xFFD1D5DB)     // "OR" separator lines
+val HustleInputBorder = Color(0xFFE5E7EB) // Input borders / field shadows
+val HustleDividerGrey = Color(0xFFD1D5DB) // "OR" separator lines
 
 // Dark mode surfaces
 val HustleDarkBackground = Color(0xFF0D1117)

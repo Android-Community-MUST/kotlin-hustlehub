@@ -41,19 +41,19 @@ fun AvailableNowHeader(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Box(
             modifier = Modifier
                 .size(10.dp)
                 .clip(CircleShape)
-                .background(HustleActiveGreen)
+                .background(HustleActiveGreen),
         )
         Text(
             text = "Available Now",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -61,22 +61,22 @@ fun AvailableNowHeader(modifier: Modifier = Modifier) {
 @Composable
 fun AvailableNowGrid(
     services: List<LiveService>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val rows = services.chunked(2)
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         rows.forEach { rowServices ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 rowServices.forEach { service ->
                     LiveServiceCard(
                         service = service,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
                 if (rowServices.size == 1) {
@@ -90,14 +90,14 @@ fun AvailableNowGrid(
 @Composable
 fun LiveServiceCard(
     service: LiveService,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
             .clickable { /* TODO: navigate to service detail */ }
-            .padding(bottom = 12.dp)
+            .padding(bottom = 12.dp),
     ) {
         Box(
             modifier = Modifier
@@ -105,16 +105,16 @@ fun LiveServiceCard(
                 .aspectRatio(4f / 3f)
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.surfaceVariant)
-                    )
-                )
+                        colors = listOf(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.surfaceVariant),
+                    ),
+                ),
         ) {
             if (service.imageUrl.isNotBlank()) {
                 AsyncImage(
                     model = service.imageUrl,
                     contentDescription = service.title,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
 
@@ -124,24 +124,24 @@ fun LiveServiceCard(
                     .padding(8.dp)
                     .clip(RoundedCornerShape(6.dp))
                     .background(MaterialTheme.colorScheme.onSurface)
-                    .padding(horizontal = 7.dp, vertical = 3.dp)
+                    .padding(horizontal = 7.dp, vertical = 3.dp),
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Box(
                         modifier = Modifier
                             .size(6.dp)
                             .clip(CircleShape)
-                            .background(HustleActiveGreen)
+                            .background(HustleActiveGreen),
                     )
                     Text(
                         text = "LIVE",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
-                        fontSize = 9.sp
+                        fontSize = 9.sp,
                     )
                 }
             }
@@ -151,7 +151,7 @@ fun LiveServiceCard(
         Row(
             modifier = Modifier.padding(horizontal = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = service.title,
@@ -161,7 +161,7 @@ fun LiveServiceCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
-                fontSize = 13.sp
+                fontSize = 13.sp,
             )
             Spacer(Modifier.width(4.dp))
             Text(
@@ -169,7 +169,7 @@ fun LiveServiceCard(
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.error,
-                fontSize = 12.sp
+                fontSize = 12.sp,
             )
         }
 
@@ -177,13 +177,13 @@ fun LiveServiceCard(
 
         Row(
             modifier = Modifier.padding(horizontal = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = Icons.Default.LocationOn,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(12.dp)
+                modifier = Modifier.size(12.dp),
             )
             Spacer(Modifier.width(3.dp))
             Text(
@@ -192,7 +192,7 @@ fun LiveServiceCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                fontSize = 11.sp
+                fontSize = 11.sp,
             )
         }
     }

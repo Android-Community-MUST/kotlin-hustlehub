@@ -28,19 +28,19 @@ fun LoadingState() {
 @Composable
 fun ErrorState(
     message: String,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = message,
                 color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
             )
             Spacer(Modifier.height(16.dp))
             Text(
@@ -52,8 +52,8 @@ fun ErrorState(
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(
                         horizontal = 24.dp,
-                        vertical = 10.dp
-                    )
+                        vertical = 10.dp,
+                    ),
             )
         }
     }

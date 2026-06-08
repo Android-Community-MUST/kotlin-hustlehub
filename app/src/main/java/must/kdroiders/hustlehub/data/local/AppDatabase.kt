@@ -8,9 +8,8 @@ import must.kdroiders.hustlehub.data.local.entity.ServiceEntity
 @Database(
     entities = [ServiceEntity::class],
     version = 1,
-    exportSchema = false
+    exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
-
     abstract fun serviceDao(): ServiceDao
 }

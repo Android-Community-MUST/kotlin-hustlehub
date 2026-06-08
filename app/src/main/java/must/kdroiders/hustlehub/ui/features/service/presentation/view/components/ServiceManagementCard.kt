@@ -46,22 +46,21 @@ fun ServiceManagementCard(
     onGalleryClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onAvailabilityChange: (ServiceAvailability) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Column {
-
             // Top row: icon, title, action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 // Service icon / thumbnail
                 Box(
@@ -69,21 +68,21 @@ fun ServiceManagementCard(
                         .size(48.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     if (service.iconUrl.isNotBlank()) {
                         AsyncImage(
                             model = service.iconUrl,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Crop,
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Default.Description,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
                         )
                     }
                 }
@@ -96,20 +95,20 @@ fun ServiceManagementCard(
                         text = service.title,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
                         text = service.priceRange,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
 
                 // Edit + Delete actions
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(
                         modifier = Modifier
@@ -117,13 +116,13 @@ fun ServiceManagementCard(
                             .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.primaryContainer)
                             .clickable(enabled = !isUpdating, onClick = onEditClick),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit service",
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(18.dp),
                         )
                     }
 
@@ -133,13 +132,13 @@ fun ServiceManagementCard(
                             .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.secondaryContainer)
                             .clickable(enabled = !isUpdating, onClick = onGalleryClick),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Default.PhotoLibrary,
                             contentDescription = "Manage gallery",
                             tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(18.dp),
                         )
                     }
 
@@ -149,13 +148,13 @@ fun ServiceManagementCard(
                             .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.errorContainer)
                             .clickable(enabled = !isUpdating, onClick = onDeleteClick),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete service",
                             tint = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(18.dp),
                         )
                     }
                 }
@@ -168,12 +167,15 @@ fun ServiceManagementCard(
             // Stats row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 StatItem(
                     label = "Rating",
-                    value = if (service.averageRating > 0f)
-                        "%.1f".format(service.averageRating) else "—"
+                    value = if (service.averageRating > 0f) {
+                        "%.1f".format(service.averageRating)
+                    } else {
+                        "—"
+                    },
                 )
                 StatItem(label = "Reviews", value = service.reviewCount.toString())
             }
@@ -195,14 +197,14 @@ fun ServiceManagementCard(
                 text = "Availability",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 6.dp)
+                modifier = Modifier.padding(bottom = 6.dp),
             )
 
             Box(contentAlignment = Alignment.CenterStart) {
                 AvailabilityChipSelector(
                     current = service.availability,
                     onSelect = onAvailabilityChange,
-                    enabled = !isUpdating
+                    enabled = !isUpdating,
                 )
                 if (isUpdating) {
                     CircularProgressIndicator(
@@ -210,7 +212,7 @@ fun ServiceManagementCard(
                             .size(18.dp)
                             .align(Alignment.CenterEnd),
                         strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
@@ -219,18 +221,21 @@ fun ServiceManagementCard(
 }
 
 @Composable
-private fun StatItem(label: String, value: String) {
+private fun StatItem(
+    label: String,
+    value: String,
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = value,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -241,12 +246,12 @@ private fun MiniTagChip(label: String) {
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 8.dp, vertical = 3.dp)
+            .padding(horizontal = 8.dp, vertical = 3.dp),
     ) {
         Text(
             text = label,
             fontSize = 11.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

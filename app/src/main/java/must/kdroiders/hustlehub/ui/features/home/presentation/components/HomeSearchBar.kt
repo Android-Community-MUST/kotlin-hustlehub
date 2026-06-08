@@ -20,14 +20,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun HomeSearchBar(
     query: String,
     onQueryChanged: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
@@ -35,13 +34,13 @@ fun HomeSearchBar(
             .clip(RoundedCornerShape(25.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = Icons.Default.Search,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(10.dp))
         Text(
@@ -52,8 +51,8 @@ fun HomeSearchBar(
                 .weight(1f)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { /* TODO: open search screen */ }
+                    indication = null,
+                ) { /* TODO: open search screen */ },
         )
         Spacer(Modifier.width(8.dp))
         // AI badge has been removed

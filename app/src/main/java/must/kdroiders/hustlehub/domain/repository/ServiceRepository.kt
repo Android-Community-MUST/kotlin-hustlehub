@@ -6,7 +6,6 @@ import must.kdroiders.hustlehub.data.model.ServiceAvailability
 import must.kdroiders.hustlehub.data.model.ServiceCategory
 
 interface ServiceRepository {
-
     suspend fun createService(
         title: String,
         category: ServiceCategory,
@@ -14,7 +13,7 @@ interface ServiceRepository {
         minPrice: Int,
         maxPrice: Int,
         openToBarter: Boolean,
-        tags: List<String>
+        tags: List<String>,
     ): Result<Service>
 
     suspend fun getServiceById(serviceId: String): Result<Service>
@@ -27,14 +26,14 @@ interface ServiceRepository {
         minPrice: Int? = null,
         maxPrice: Int? = null,
         openToBarter: Boolean? = null,
-        tags: List<String>? = null
+        tags: List<String>? = null,
     ): Result<Service>
 
     suspend fun deleteService(serviceId: String): Result<Unit>
 
     suspend fun updateAvailability(
         serviceId: String,
-        availability: ServiceAvailability
+        availability: ServiceAvailability,
     ): Result<Service>
 
     suspend fun getMyServices(): Result<List<Service>>
@@ -43,6 +42,6 @@ interface ServiceRepository {
         page: Int = 0,
         size: Int = 20,
         category: ServiceCategory? = null,
-        query: String? = null
+        query: String? = null,
     ): Result<PageResponse<Service>>
 }

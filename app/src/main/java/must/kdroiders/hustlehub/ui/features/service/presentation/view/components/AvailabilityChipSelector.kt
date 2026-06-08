@@ -32,32 +32,32 @@ fun AvailabilityChipSelector(
     current: ServiceAvailability,
     onSelect: (ServiceAvailability) -> Unit,
     enabled: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         AvailabilityChip(
             label = "Available",
             dotColor = HustleActiveGreen,
             selected = current == ServiceAvailability.AVAILABLE,
             enabled = enabled,
-            onClick = { onSelect(ServiceAvailability.AVAILABLE) }
+            onClick = { onSelect(ServiceAvailability.AVAILABLE) },
         )
         AvailabilityChip(
             label = "Busy",
             dotColor = HustleWarningAmber,
             selected = current == ServiceAvailability.BUSY,
             enabled = enabled,
-            onClick = { onSelect(ServiceAvailability.BUSY) }
+            onClick = { onSelect(ServiceAvailability.BUSY) },
         )
         AvailabilityChip(
             label = "Offline",
             dotColor = HustleOfflineGray,
             selected = current == ServiceAvailability.OFFLINE,
             enabled = enabled,
-            onClick = { onSelect(ServiceAvailability.OFFLINE) }
+            onClick = { onSelect(ServiceAvailability.OFFLINE) },
         )
     }
 }
@@ -68,12 +68,13 @@ private fun AvailabilityChip(
     dotColor: Color,
     selected: Boolean,
     enabled: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
-    val bgColor = if (selected)
+    val bgColor = if (selected) {
         dotColor.copy(alpha = 0.15f)
-    else
+    } else {
         MaterialTheme.colorScheme.surfaceVariant
+    }
 
     val borderColor = if (selected) dotColor else Color.Transparent
 
@@ -85,7 +86,7 @@ private fun AvailabilityChip(
             .clickable(enabled = enabled) { onClick() }
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         // Dot indicator
         androidx.compose.foundation.Canvas(modifier = Modifier.size(8.dp)) {
@@ -95,7 +96,7 @@ private fun AvailabilityChip(
             text = label,
             fontSize = 12.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (selected) dotColor else MaterialTheme.colorScheme.onSurfaceVariant
+            color = if (selected) dotColor else MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

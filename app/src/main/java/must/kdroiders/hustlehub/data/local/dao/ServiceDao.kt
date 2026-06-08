@@ -8,7 +8,6 @@ import must.kdroiders.hustlehub.data.local.entity.ServiceEntity
 
 @Dao
 interface ServiceDao {
-
     /** Returns all cached services ordered by most recently updated. */
     @Query("SELECT * FROM cached_services ORDER BY lastUpdated DESC")
     suspend fun getAllServices(): List<ServiceEntity>

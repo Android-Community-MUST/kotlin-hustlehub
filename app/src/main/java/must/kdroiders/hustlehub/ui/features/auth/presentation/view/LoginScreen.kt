@@ -56,7 +56,7 @@ fun LoginScreen(
     onNavigateToSignUp: () -> Unit,
     onNavigateToEmailVerification: (email: String) -> Unit,
     onGoogleSignInClick: () -> Unit,
-    loginViewModel: LoginViewModel = hiltViewModel()
+    loginViewModel: LoginViewModel = hiltViewModel(),
 ) {
     val uiState by loginViewModel.uiState.collectAsState()
 
@@ -68,7 +68,6 @@ fun LoginScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-
         // Decorative background
         LoginBackground()
 
@@ -78,7 +77,7 @@ fun LoginScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
             Spacer(Modifier.height(72.dp))
 
@@ -88,7 +87,7 @@ fun LoginScreen(
             Image(
                 painter = painterResource(id = logoResId),
                 contentDescription = "HustleHub Logo",
-                modifier = Modifier.size(92.dp)
+                modifier = Modifier.size(92.dp),
             )
 
             Spacer(Modifier.height(16.dp))
@@ -103,7 +102,7 @@ fun LoginScreen(
                         append("Hub")
                     }
                 },
-                style = MaterialTheme.typography.headlineLarge
+                style = MaterialTheme.typography.headlineLarge,
             )
 
             Spacer(Modifier.height(6.dp))
@@ -111,7 +110,7 @@ fun LoginScreen(
             Text(
                 text = "Login to your account",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             Spacer(Modifier.height(36.dp))
@@ -124,9 +123,9 @@ fun LoginScreen(
                 leadingIcon = Icons.Default.Email,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
+                    imeAction = ImeAction.Next,
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(Modifier.height(16.dp))
@@ -138,7 +137,7 @@ fun LoginScreen(
                 placeholder = "Password",
                 isPassword = true,
                 leadingIcon = Icons.Default.Lock,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(Modifier.height(4.dp))
@@ -150,7 +149,7 @@ fun LoginScreen(
                         text = "Forgot password?",
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
                     )
                 }
             }
@@ -162,7 +161,7 @@ fun LoginScreen(
                     text = err,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(Modifier.height(8.dp))
             }
@@ -175,11 +174,11 @@ fun LoginScreen(
                 onClick = {
                     loginViewModel.login(
                         onSuccess = { hasProfile -> onLoginSuccess(hasProfile) },
-                        onEmailNotVerified = onNavigateToEmailVerification
+                        onEmailNotVerified = onNavigateToEmailVerification,
                     )
                 },
                 loading = uiState.isLoading,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(Modifier.height(28.dp))
@@ -187,21 +186,21 @@ fun LoginScreen(
             // OR divider
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 HorizontalDivider(
                     modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.outlineVariant
+                    color = MaterialTheme.colorScheme.outlineVariant,
                 )
                 Text(
                     text = "  OR  ",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    letterSpacing = 1.sp
+                    letterSpacing = 1.sp,
                 )
                 HorizontalDivider(
                     modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.outlineVariant
+                    color = MaterialTheme.colorScheme.outlineVariant,
                 )
             }
 
@@ -214,7 +213,7 @@ fun LoginScreen(
                 variant = HustleButtonVariant.Outlined,
                 painter = painterResource(id = R.drawable.google),
                 iconSize = 22.dp,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(Modifier.height(36.dp))
@@ -224,16 +223,16 @@ fun LoginScreen(
                 withStyle(
                     SpanStyle(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                    )
+                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                    ),
                 ) { append("Don't have an account?  ") }
                 pushStringAnnotation("signup", "signup")
                 withStyle(
                     SpanStyle(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                    )
+                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                    ),
                 ) { append("Sign Up") }
                 pop()
             }
@@ -244,7 +243,7 @@ fun LoginScreen(
                         .getStringAnnotations("signup", offset, offset)
                         .firstOrNull()
                         ?.let { onNavigateToSignUp() }
-                }
+                },
             )
 
             Spacer(Modifier.height(48.dp))
@@ -256,9 +255,9 @@ fun LoginScreen(
 @Composable
 private fun LoginBackground() {
     val blobColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
-    val dotColor  = MaterialTheme.colorScheme.primary.copy(alpha = 0.58f)
-    val bgColor   = MaterialTheme.colorScheme.background
-    val density   = LocalDensity.current
+    val dotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.58f)
+    val bgColor = MaterialTheme.colorScheme.background
+    val density = LocalDensity.current
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         val w = size.width
@@ -274,15 +273,21 @@ private fun LoginBackground() {
             moveTo(0f, h * 0.88f)
             // Curve 1: horizontal exit → gentle trough
             cubicTo(
-                w * 0.12f, h * 0.88f,
-                w * 0.32f, h * 0.94f,
-                w * 0.45f, h * 0.92f
+                w * 0.12f,
+                h * 0.88f,
+                w * 0.32f,
+                h * 0.94f,
+                w * 0.45f,
+                h * 0.92f,
             )
             // Curve 2: C1-continuous (reflected control) → rises to right end
             cubicTo(
-                w * 0.58f, h * 0.90f,
-                w * 0.85f, h * 0.84f,
-                w,         h * 0.85f
+                w * 0.58f,
+                h * 0.90f,
+                w * 0.85f,
+                h * 0.84f,
+                w,
+                h * 0.85f,
             )
             lineTo(w, h)
             lineTo(0f, h)
@@ -291,7 +296,7 @@ private fun LoginBackground() {
         drawPath(wavePath, blobColor)
 
         // Top-right dot grid (5 rows x 6 cols)
-        val dotR   = 3.0f
+        val dotR = 3.0f
         val dotGap = 18f
         val gx = w - 6 * dotGap - 20f
         val gy = with(density) { 50.dp.toPx() }
@@ -300,7 +305,7 @@ private fun LoginBackground() {
                 drawCircle(
                     color = dotColor,
                     radius = dotR,
-                    center = Offset(gx + col * dotGap, gy + row * dotGap)
+                    center = Offset(gx + col * dotGap, gy + row * dotGap),
                 )
             }
         }

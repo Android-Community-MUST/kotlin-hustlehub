@@ -64,7 +64,7 @@ fun RatingBar(
                 Modifier.semantics {
                     contentDescription = "Rating: ${"%.1f".format(rating)} out of $starCount stars"
                 }
-            }
+            },
         ),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically,
