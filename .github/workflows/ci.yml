@@ -37,6 +37,23 @@ jobs:
       - name: Create local.properties
         run: echo "sdk.dir=$ANDROID_HOME" > local.properties
 
+      - name: Create mock google-services.json
+        run: |
+          cat << 'EOF' > app/google-services.json
+          {
+            "project_info": { "project_number": "123", "project_id": "mock-project" },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:123:android:abc",
+                  "android_client_info": { "package_name": "must.kdroiders.hustlehub" }
+                },
+                "api_key": [{ "current_key": "mock-key" }]
+              }
+            ]
+          }
+          EOF
+
       - name: Run Code Quality Checks (ktlint & detekt)
         run: ./gradlew ktlintCheck detekt --no-daemon
 
