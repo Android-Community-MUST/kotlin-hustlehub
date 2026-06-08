@@ -159,8 +159,8 @@ Uses **Navigation 3** (`androidx.navigation3`) exclusively — no legacy `NavCon
 
 ## Git Conventions
 
-- **Branches**: `main` → `develop` → `feature/<name>`  
-- **All PRs target `develop`**, never `main` directly.
+- **Branches**: `main` → `dev` → `feature/<name>`  
+- **All PRs target `dev`**, never `main` directly.
 - **Conventional Commits**: `feat(auth):`, `fix(chat):`, `refactor(core):`, `test(discovery):`, `docs:`, `chore:`
 - **PR naming**: `[FEATURE] Add AI search screen` / `[FIX] Chat scroll position bug`
 - Run `./gradlew ktlintCheck detekt test` before opening a PR.
