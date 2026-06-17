@@ -46,6 +46,7 @@ sealed interface SettingsEvent {
     data object AccountDeleted : SettingsEvent
     data object NavigateToNotifications : SettingsEvent
     data object NavigateToPrivacy : SettingsEvent
+    data object NavigateToChangePassword : SettingsEvent
     data object NavigateToVerification : SettingsEvent
     data object NavigateToPayments : SettingsEvent
     data object NavigateToHelp : SettingsEvent
@@ -106,6 +107,7 @@ class SettingsViewModel
         fun onPaymentMethodsClicked() = emit(SettingsEvent.NavigateToPayments)
         fun onNotificationsClicked() = emit(SettingsEvent.NavigateToNotifications)
         fun onPrivacyClicked() = emit(SettingsEvent.NavigateToPrivacy)
+        fun onChangePasswordClicked() = emit(SettingsEvent.NavigateToChangePassword)
         fun onHelpCenterClicked() = emit(SettingsEvent.NavigateToHelp)
         fun onReportProblemClicked() = emit(SettingsEvent.NavigateToReport)
 

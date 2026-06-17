@@ -1,6 +1,9 @@
 package must.kdroiders.hustlehub.ui.features.auth.data.repository
 
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.tasks.await
@@ -203,5 +206,56 @@ class AuthRepositoryImpl
         /** Signs the current user out of Firebase Auth. */
         override fun logout() {
             firebaseAuth.signOut()
+        }
+
+        /** Sends a password reset email to the given email address. */
+        override suspend fun sendPasswordResetEmail(email: String) {
+            try {
+                firebaseAuth.sendPasswordResetEmail(email).await()
+                Timber.d("Password reset email sent to %s", email)
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to send password reset email")
+                throw Exception(FirebaseAuthErrorMapper.map(e), e)
+            }
+        }
+
+        /**
+         * Changes the currently signed-in user's password.
+         * Re-authenticates the user with their current password before updating to the new password.
+         */
+        override suspend fun changePassword(
+            currentPassword: String,
+            newPassword: String,
+        ): Result<Unit> {
+            return try {
+                val user = firebaseAuth.currentUser
+                    ?: return Result.failure(Exception("User not logged in"))
+
+                val email = user.email
+                    ?: return Result.failure(Exception("Email not found for current user"))
+
+                if (currentPassword == newPassword) {
+                    return Result.failure(Exception("New password cannot be the same as the current password"))
+                }
+
+                // Create the credential
+                val credential = EmailAuthProvider.getCredential(email, currentPassword)
+
+                // Re-authenticate to ensure the session is fresh and the current password is correct
+                user.reauthenticate(credential).await()
+
+                // Update to the new password
+                user.updatePassword(newPassword).await()
+
+                Result.success(Unit)
+            } catch (e: FirebaseAuthInvalidUserException) {
+                Result.failure(Exception("User account is disabled or deleted."))
+            } catch (e: FirebaseAuthInvalidCredentialsException) {
+                Result.failure(Exception("Incorrect current password."))
+            } catch (e: Exception) {
+                // Catch all other Firebase exceptions (e.g. network errors, weak password)
+                // and safely return them as a Result.failure instead of crashing.
+                Result.failure(e)
+            }
         }
     }
