@@ -30,6 +30,7 @@ import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthState
+import must.kdroiders.hustlehub.ui.features.auth.presentation.view.ChangePasswordScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.EmailVerificationScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
@@ -212,6 +213,13 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
 
             entry<Settings> {
                 SettingsScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    onNavigateToChangePassword = { backstack.add(ChangePassword) },
+                )
+            }
+
+            entry<ChangePassword> {
+                ChangePasswordScreen(
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                 )
             }

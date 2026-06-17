@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.auth.presentation.view
 
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -20,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,10 +30,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -59,6 +65,8 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
 ) {
     val uiState by loginViewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    var showForgotPasswordDialog by remember { mutableStateOf(false) }
 
     // Prefill email if passed from navigation (e.g. after registration or email verification)
     LaunchedEffect(prefilledEmail) {
@@ -144,7 +152,7 @@ fun LoginScreen(
 
             // Forgot password — right-aligned
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                TextButton(onClick = { /* TODO: forgot password navigation */ }) {
+                TextButton(onClick = { showForgotPasswordDialog = true }) {
                     Text(
                         text = "Forgot password?",
                         color = MaterialTheme.colorScheme.primary,
@@ -247,6 +255,41 @@ fun LoginScreen(
             )
 
             Spacer(Modifier.height(48.dp))
+        }
+
+        if (showForgotPasswordDialog) {
+            AlertDialog(
+                onDismissRequest = { showForgotPasswordDialog = false },
+                title = { Text("Reset Password") },
+                text = {
+                    Text(
+                        "Send a password reset email to ${if (uiState.email.isNotBlank()) uiState.email else "your email address"}?",
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showForgotPasswordDialog = false
+                            loginViewModel.sendPasswordResetEmail(
+                                email = uiState.email,
+                                onSuccess = {
+                                    Toast.makeText(context, "Password reset email sent to ${uiState.email}", Toast.LENGTH_LONG).show()
+                                },
+                                onError = { err ->
+                                    Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                                },
+                            )
+                        },
+                    ) {
+                        Text("Send")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showForgotPasswordDialog = false }) {
+                        Text("Cancel")
+                    }
+                },
+            )
         }
     }
 }

@@ -24,6 +24,11 @@ interface AuthRepository {
         otp: String,
     )
     suspend fun resendOtp(email: String)
+    suspend fun sendPasswordResetEmail(email: String)
+    suspend fun changePassword(
+        currentPassword: String,
+        newPassword: String,
+    ): Result<Unit>
     fun getCurrentUser(): FirebaseUser?
     fun logout()
 }
