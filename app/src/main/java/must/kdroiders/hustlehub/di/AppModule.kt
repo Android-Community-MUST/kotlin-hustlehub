@@ -133,6 +133,13 @@ private class NoopAuthRepository : AuthRepository {
 
     override suspend fun resendOtp(email: String) = throw IllegalStateException("Firebase not initialized")
 
+    override suspend fun sendPasswordResetEmail(email: String) = throw IllegalStateException("Firebase not initialized")
+
+    override suspend fun changePassword(
+        currentPassword: String,
+        newPassword: String,
+    ): Result<Unit> = throw IllegalStateException("Firebase not initialized")
+
     override fun getCurrentUser() = null
 
     override fun logout() {}

@@ -58,6 +58,7 @@ import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit = {},
+    onNavigateToChangePassword: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -67,6 +68,7 @@ fun SettingsScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is SettingsEvent.LoggedOut -> onBack() // parent nav graph pops to Login
+                is SettingsEvent.NavigateToChangePassword -> onNavigateToChangePassword()
                 else -> { /* TODO: handle sub-screen navigation */ }
             }
         }
@@ -136,6 +138,12 @@ fun SettingsScreen(
                     icon = Icons.Default.Lock,
                     label = "Privacy & Security",
                     onClick = viewModel::onPrivacyClicked,
+                )
+                SettingsDivider()
+                SettingsRowNavigate(
+                    icon = Icons.Default.Lock,
+                    label = "Change Password",
+                    onClick = viewModel::onChangePasswordClicked,
                 )
                 SettingsDivider()
                 SettingsRowToggle(

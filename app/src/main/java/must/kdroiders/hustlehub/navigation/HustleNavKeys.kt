@@ -64,6 +64,10 @@ data object BottomProfile : NavKey
 
 // Detail / full-screen keys  (pushed over the shell)
 
+/** Change Password screen */
+@Serializable
+data object ChangePassword : NavKey
+
 /**
  * Individual chat conversation.
  * Carries the [chatId] so the detail pane can load the correct thread.

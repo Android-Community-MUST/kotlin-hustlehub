@@ -19,6 +19,7 @@ import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.CheckUserProfileUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.GoogleSignInUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.LoginUseCase
+import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SendPasswordResetEmailUseCase
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -36,6 +37,7 @@ class LoginViewModel
         private val loginUseCase: LoginUseCase,
         private val googleSignInUseCase: GoogleSignInUseCase,
         private val checkUserProfileUseCase: CheckUserProfileUseCase,
+        private val sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase,
         private val userRepository: UserRepository,
         private val userPreferences: UserPreferences,
         private val firebaseAuth: FirebaseAuth?,
@@ -159,6 +161,35 @@ class LoginViewModel
                                 errorMessage = e.message ?: "Google sign-in failed. Please try again.",
                             )
                         }
+                    },
+                )
+            }
+        }
+
+        fun sendPasswordResetEmail(
+            email: String,
+            onSuccess: () -> Unit,
+            onError: (String) -> Unit,
+        ) {
+            if (email.isBlank()) {
+                onError("Please enter your email address first.")
+                return
+            }
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                sendPasswordResetEmailUseCase(email).fold(
+                    onSuccess = {
+                        _uiState.update { it.copy(isLoading = false) }
+                        onSuccess()
+                    },
+                    onFailure = { e ->
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = e.message ?: "Failed to send reset email.",
+                            )
+                        }
+                        onError(e.message ?: "Failed to send reset email.")
                     },
                 )
             }
