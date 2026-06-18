@@ -12,10 +12,15 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.data.local.AppDatabase
+import must.kdroiders.hustlehub.data.local.dao.ConversationDao
+import must.kdroiders.hustlehub.data.local.dao.MessageDao
 import must.kdroiders.hustlehub.data.local.dao.ServiceDao
+import must.kdroiders.hustlehub.data.remote.ChatWebSocketService
+import must.kdroiders.hustlehub.data.remote.ConversationApiService
 import must.kdroiders.hustlehub.data.remote.MediaApiService
 import must.kdroiders.hustlehub.data.remote.ServiceApiService
 import must.kdroiders.hustlehub.data.remote.UserApiService
+import must.kdroiders.hustlehub.data.repository.ChatRepositoryImpl
 import must.kdroiders.hustlehub.data.repository.ServiceRepositoryImpl
 import must.kdroiders.hustlehub.data.repository.StorageRepository
 import must.kdroiders.hustlehub.data.repository.StorageRepositoryImpl
@@ -23,6 +28,7 @@ import must.kdroiders.hustlehub.data.repository.UserRepository
 import must.kdroiders.hustlehub.data.repository.UserRepositoryImpl
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
+import must.kdroiders.hustlehub.domain.repository.ChatRepository
 import must.kdroiders.hustlehub.domain.repository.ServiceRepository
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.repository.AuthRepositoryImpl
@@ -93,11 +99,21 @@ object AppModule {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "hustlehub.db",
-            ).build()
+            )
+            .fallbackToDestructiveMigration()
+            .build()
 
     @Provides
     @Singleton
     fun provideServiceDao(db: AppDatabase): ServiceDao = db.serviceDao()
+
+    @Provides
+    @Singleton
+    fun provideConversationDao(db: AppDatabase): ConversationDao = db.conversationDao()
+
+    @Provides
+    @Singleton
+    fun provideMessageDao(db: AppDatabase): MessageDao = db.messageDao()
 
     @Provides
     @Singleton
@@ -107,6 +123,22 @@ object AppModule {
         authManager: AuthManager,
     ): ServiceRepository {
         return ServiceRepositoryImpl(serviceApiService, serviceDao, authManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideChatRepository(
+        conversationApiService: ConversationApiService,
+        chatWebSocketService: ChatWebSocketService,
+        conversationDao: ConversationDao,
+        messageDao: MessageDao,
+    ): ChatRepository {
+        return ChatRepositoryImpl(
+            conversationApiService,
+            chatWebSocketService,
+            conversationDao,
+            messageDao
+        )
     }
 }
 

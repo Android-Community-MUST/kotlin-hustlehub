@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
+import must.kdroiders.hustlehub.data.remote.dto.VoiceUploadResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.Multipart
@@ -22,4 +23,11 @@ interface MediaApiService {
         @Part("type") type: RequestBody,
         @Part("entityId") entityId: RequestBody? = null,
     ): ApiResponse<MediaUploadResponse>
+
+    @Multipart
+    @POST("media/upload/voice")
+    suspend fun uploadVoiceNote(
+        @Part file: MultipartBody.Part,
+        @Part("conversationId") conversationId: RequestBody,
+    ): ApiResponse<VoiceUploadResponse>
 }
