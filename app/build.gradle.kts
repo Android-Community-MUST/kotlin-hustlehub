@@ -95,6 +95,7 @@ dependencies {
     // Hilt Dependency Injection
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    ksp(libs.kotlin.metadata.jvm)
 
     // Room Database
     implementation(libs.androidx.room.runtime)
