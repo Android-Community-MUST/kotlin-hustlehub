@@ -1,8 +1,8 @@
-package must.kdroiders.hustlehub.data.local.entity
+package must.kdroiders.hustlehub.feature.chat.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import must.kdroiders.hustlehub.data.model.Conversation
+import must.kdroiders.hustlehub.feature.chat.domain.model.Conversation
 
 @Entity(tableName = "conversations")
 data class ConversationEntity(

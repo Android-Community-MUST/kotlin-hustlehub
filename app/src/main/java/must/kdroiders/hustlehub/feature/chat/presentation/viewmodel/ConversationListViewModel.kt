@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.features.chat
+package must.kdroiders.hustlehub.feature.chat.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.data.model.Conversation
-import must.kdroiders.hustlehub.domain.repository.ChatRepository
+import must.kdroiders.hustlehub.feature.chat.domain.model.Conversation
+import must.kdroiders.hustlehub.feature.chat.domain.repository.ChatRepository
 import javax.inject.Inject
 
 data class ConversationListUiState(

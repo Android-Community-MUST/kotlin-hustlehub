@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.features.chat
+package must.kdroiders.hustlehub.feature.chat.presentation.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -44,7 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import must.kdroiders.hustlehub.data.model.Conversation
+import must.kdroiders.hustlehub.feature.chat.domain.model.Conversation
+import must.kdroiders.hustlehub.feature.chat.presentation.viewmodel.ConversationListViewModel
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 
 @OptIn(ExperimentalMaterial3Api::class)

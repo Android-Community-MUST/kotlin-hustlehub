@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.features.chat
+package must.kdroiders.hustlehub.feature.chat.presentation.view
 
 import android.Manifest
 import android.content.Context
@@ -82,8 +82,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.ui.features.chat.audio.VoiceRecorder
-import must.kdroiders.hustlehub.ui.features.chat.components.MessageBubble
+import must.kdroiders.hustlehub.feature.chat.presentation.audio.VoiceRecorder
+import must.kdroiders.hustlehub.feature.chat.presentation.components.MessageBubble
+import must.kdroiders.hustlehub.feature.chat.presentation.viewmodel.ChatDetailViewModel
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.remote
+package must.kdroiders.hustlehub.feature.chat.data.remote
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
@@ -6,9 +6,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.BuildConfig
-import must.kdroiders.hustlehub.data.remote.dto.MessageResponse
-import must.kdroiders.hustlehub.data.remote.dto.SendMessageRequest
-import must.kdroiders.hustlehub.data.remote.dto.TypingIndicator
+import must.kdroiders.hustlehub.feature.chat.data.remote.dto.MessageResponse
+import must.kdroiders.hustlehub.feature.chat.data.remote.dto.SendMessageRequest
+import must.kdroiders.hustlehub.feature.chat.data.remote.dto.TypingIndicator
 import okhttp3.OkHttpClient
 import org.hildan.krossbow.stomp.StompClient
 import org.hildan.krossbow.stomp.StompSession

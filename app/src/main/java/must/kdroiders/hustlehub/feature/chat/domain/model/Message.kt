@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.model
+package must.kdroiders.hustlehub.feature.chat.domain.model
 
 enum class MessageType {
     TEXT, VOICE, IMAGE, LOCATION, SERVICE_CARD

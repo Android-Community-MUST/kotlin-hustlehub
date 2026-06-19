@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.model
+package must.kdroiders.hustlehub.feature.chat.domain.model
 
 data class Conversation(
     val id: String,

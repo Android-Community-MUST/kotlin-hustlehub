@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.remote.dto
+package must.kdroiders.hustlehub.feature.chat.data.remote.dto
 
 data class ConversationResponse(
     val id: String,

@@ -1,10 +1,10 @@
-package must.kdroiders.hustlehub.data.local.dao
+package must.kdroiders.hustlehub.feature.chat.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
-import must.kdroiders.hustlehub.data.local.entity.MessageEntity
+import must.kdroiders.hustlehub.feature.chat.data.local.entity.MessageEntity
 
 @Dao
 interface MessageDao {

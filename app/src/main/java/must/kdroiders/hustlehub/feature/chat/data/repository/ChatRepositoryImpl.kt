@@ -1,24 +1,24 @@
-package must.kdroiders.hustlehub.data.repository
+package must.kdroiders.hustlehub.feature.chat.data.repository
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
-import must.kdroiders.hustlehub.data.local.dao.ConversationDao
-import must.kdroiders.hustlehub.data.local.dao.MessageDao
-import must.kdroiders.hustlehub.data.local.entity.toDomain
-import must.kdroiders.hustlehub.data.local.entity.toEntity
-import must.kdroiders.hustlehub.data.model.Conversation
-import must.kdroiders.hustlehub.data.model.Message
-import must.kdroiders.hustlehub.data.model.MessageType
-import must.kdroiders.hustlehub.data.remote.ChatWebSocketService
-import must.kdroiders.hustlehub.data.remote.ConversationApiService
-import must.kdroiders.hustlehub.data.remote.dto.ConversationResponse
-import must.kdroiders.hustlehub.data.remote.dto.CreateConversationRequest
-import must.kdroiders.hustlehub.data.remote.dto.MessageResponse
-import must.kdroiders.hustlehub.data.remote.dto.SendMessageRequest
-import must.kdroiders.hustlehub.domain.repository.ChatRepository
+import must.kdroiders.hustlehub.feature.chat.data.local.dao.ConversationDao
+import must.kdroiders.hustlehub.feature.chat.data.local.dao.MessageDao
+import must.kdroiders.hustlehub.feature.chat.data.local.entity.toDomain
+import must.kdroiders.hustlehub.feature.chat.data.local.entity.toEntity
+import must.kdroiders.hustlehub.feature.chat.domain.model.Conversation
+import must.kdroiders.hustlehub.feature.chat.domain.model.Message
+import must.kdroiders.hustlehub.feature.chat.domain.model.MessageType
+import must.kdroiders.hustlehub.feature.chat.data.remote.ChatWebSocketService
+import must.kdroiders.hustlehub.feature.chat.data.remote.ConversationApiService
+import must.kdroiders.hustlehub.feature.chat.data.remote.dto.ConversationResponse
+import must.kdroiders.hustlehub.feature.chat.data.remote.dto.CreateConversationRequest
+import must.kdroiders.hustlehub.feature.chat.data.remote.dto.MessageResponse
+import must.kdroiders.hustlehub.feature.chat.data.remote.dto.SendMessageRequest
+import must.kdroiders.hustlehub.feature.chat.domain.repository.ChatRepository
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -190,8 +190,8 @@ private fun ConversationResponse.toDomainModel(): Conversation =
         createdAt = createdAt,
     )
 
-private fun ConversationResponse.toEntity(): must.kdroiders.hustlehub.data.local.entity.ConversationEntity =
-    must.kdroiders.hustlehub.data.local.entity.ConversationEntity(
+private fun ConversationResponse.toEntity(): must.kdroiders.hustlehub.feature.chat.data.local.entity.ConversationEntity =
+    must.kdroiders.hustlehub.feature.chat.data.local.entity.ConversationEntity(
         id = id,
         otherUserId = otherUserId,
         otherUserName = otherUserName,
@@ -219,8 +219,8 @@ private fun MessageResponse.toDomainModel(): Message =
         readAt = readAt,
     )
 
-private fun MessageResponse.toEntity(): must.kdroiders.hustlehub.data.local.entity.MessageEntity =
-    must.kdroiders.hustlehub.data.local.entity.MessageEntity(
+private fun MessageResponse.toEntity(): must.kdroiders.hustlehub.feature.chat.data.local.entity.MessageEntity =
+    must.kdroiders.hustlehub.feature.chat.data.local.entity.MessageEntity(
         id = id,
         conversationId = conversationId,
         senderId = senderId,

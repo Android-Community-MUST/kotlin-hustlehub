@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.features.chat.components
+package must.kdroiders.hustlehub.feature.chat.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,9 +41,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.google.gson.Gson
-import must.kdroiders.hustlehub.data.model.Message
-import must.kdroiders.hustlehub.data.model.MessageType
-import must.kdroiders.hustlehub.ui.features.chat.audio.PlayerState
+import must.kdroiders.hustlehub.feature.chat.domain.model.Message
+import must.kdroiders.hustlehub.feature.chat.domain.model.MessageType
+import must.kdroiders.hustlehub.feature.chat.presentation.audio.PlayerState
 
 @Composable
 fun MessageBubble(

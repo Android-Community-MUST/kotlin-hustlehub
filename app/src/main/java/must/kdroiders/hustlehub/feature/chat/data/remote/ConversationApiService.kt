@@ -1,10 +1,10 @@
-package must.kdroiders.hustlehub.data.remote
+package must.kdroiders.hustlehub.feature.chat.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
 import must.kdroiders.hustlehub.core.api.PageResponse
-import must.kdroiders.hustlehub.data.remote.dto.ConversationResponse
-import must.kdroiders.hustlehub.data.remote.dto.CreateConversationRequest
-import must.kdroiders.hustlehub.data.remote.dto.MessageResponse
+import must.kdroiders.hustlehub.feature.chat.data.remote.dto.ConversationResponse
+import must.kdroiders.hustlehub.feature.chat.data.remote.dto.CreateConversationRequest
+import must.kdroiders.hustlehub.feature.chat.data.remote.dto.MessageResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST

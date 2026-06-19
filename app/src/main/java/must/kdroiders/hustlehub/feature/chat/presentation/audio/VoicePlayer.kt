@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.features.chat.audio
+package must.kdroiders.hustlehub.feature.chat.presentation.audio
 
 import android.media.MediaPlayer
 import kotlinx.coroutines.CoroutineScope

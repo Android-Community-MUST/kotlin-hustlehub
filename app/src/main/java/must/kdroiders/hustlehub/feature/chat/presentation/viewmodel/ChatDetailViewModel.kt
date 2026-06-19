@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.features.chat
+package must.kdroiders.hustlehub.feature.chat.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,14 +15,14 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import must.kdroiders.hustlehub.data.local.dao.ConversationDao
-import must.kdroiders.hustlehub.data.model.Message
-import must.kdroiders.hustlehub.data.model.MessageType
-import must.kdroiders.hustlehub.data.remote.ChatWebSocketService
+import must.kdroiders.hustlehub.feature.chat.data.local.dao.ConversationDao
+import must.kdroiders.hustlehub.feature.chat.domain.model.Message
+import must.kdroiders.hustlehub.feature.chat.domain.model.MessageType
+import must.kdroiders.hustlehub.feature.chat.data.remote.ChatWebSocketService
 import must.kdroiders.hustlehub.data.remote.MediaApiService
-import must.kdroiders.hustlehub.domain.repository.ChatRepository
-import must.kdroiders.hustlehub.ui.features.chat.audio.PlayerState
-import must.kdroiders.hustlehub.ui.features.chat.audio.VoicePlayer
+import must.kdroiders.hustlehub.feature.chat.domain.repository.ChatRepository
+import must.kdroiders.hustlehub.feature.chat.presentation.audio.PlayerState
+import must.kdroiders.hustlehub.feature.chat.presentation.audio.VoicePlayer
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -242,7 +242,7 @@ class ChatDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 chatWebSocketService.sendTypingIndicator(
-                    must.kdroiders.hustlehub.data.remote.dto.TypingIndicator(
+                    must.kdroiders.hustlehub.feature.chat.data.remote.dto.TypingIndicator(
                         conversationId = id,
                         senderId = "", // Filled by server
                         isTyping = isTyping,

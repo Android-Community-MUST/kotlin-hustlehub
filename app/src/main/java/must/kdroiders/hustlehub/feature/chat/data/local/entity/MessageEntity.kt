@@ -1,9 +1,9 @@
-package must.kdroiders.hustlehub.data.local.entity
+package must.kdroiders.hustlehub.feature.chat.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import must.kdroiders.hustlehub.data.model.Message
-import must.kdroiders.hustlehub.data.model.MessageType
+import must.kdroiders.hustlehub.feature.chat.domain.model.Message
+import must.kdroiders.hustlehub.feature.chat.domain.model.MessageType
 
 @Entity(tableName = "messages")
 data class MessageEntity(
