@@ -39,6 +39,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginVie
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.CreateServiceScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServicesScreen
+import must.kdroiders.hustlehub.feature.chat.presentation.view.ChatDetailScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
 
 /**
@@ -209,6 +210,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     onNavigateToCreateService = { backstack.add(CreateService()) },
                     onNavigateToMyServices = { backstack.add(MyServices) },
                     onNavigateToEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
+                    onNavigateToChatDetail = { chatId -> backstack.add(ChatDetail(chatId = chatId)) },
                 )
             }
 
@@ -244,13 +246,11 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
             }
 
             entry<ChatDetail> { key ->
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "Chat – ${key.chatId}",
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
-                }
+                ChatDetailScreen(
+                    conversationId = key.chatId,
+                    onBackClick = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    onNavigateToServiceDetail = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
+                )
             }
         },
     )
