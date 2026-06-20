@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
@@ -97,6 +98,11 @@ class ChatDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 chatRepository.connectWebSocket(conversationId)
+                    .retryWhen { cause, attempt ->
+                        Timber.e(cause, "WebSocket disconnected, retrying (attempt $attempt)...")
+                        kotlinx.coroutines.delay(kotlin.math.min(2000L * (attempt + 1), 10000L))
+                        true // Always retry
+                    }
                     .catch { e -> Timber.e(e, "Error in WebSocket messages flow") }
                     .launchIn(viewModelScope)
 

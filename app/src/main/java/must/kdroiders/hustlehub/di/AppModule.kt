@@ -132,12 +132,14 @@ object AppModule {
         chatWebSocketService: ChatWebSocketService,
         conversationDao: ConversationDao,
         messageDao: MessageDao,
+        firebaseAuth: FirebaseAuth?,
     ): ChatRepository {
         return ChatRepositoryImpl(
             conversationApiService,
             chatWebSocketService,
             conversationDao,
-            messageDao
+            messageDao,
+            firebaseAuth
         )
     }
 }

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -167,10 +168,11 @@ fun MessageBubble(
                     )
                     if (isCurrentUser) {
                         Spacer(modifier = Modifier.width(4.dp))
-                        val receiptIcon = if (message.readAt != null) {
-                            Icons.Default.DoneAll
-                        } else {
-                            Icons.Default.Done
+                        val isPending = message.id.startsWith("temp_")
+                        val receiptIcon = when {
+                            isPending -> androidx.compose.material.icons.Icons.Default.Schedule
+                            message.readAt != null -> Icons.Default.DoneAll
+                            else -> Icons.Default.Done
                         }
                         Icon(
                             imageVector = receiptIcon,

@@ -23,12 +23,18 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.google.firebase.auth.FirebaseAuth
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import java.util.UUID
+
 @Singleton
 class ChatRepositoryImpl @Inject constructor(
     private val conversationApiService: ConversationApiService,
     private val chatWebSocketService: ChatWebSocketService,
     private val conversationDao: ConversationDao,
     private val messageDao: MessageDao,
+    private val firebaseAuth: FirebaseAuth?,
 ) : ChatRepository {
 
     override fun getConversations(): Flow<List<Conversation>> {
@@ -110,12 +116,48 @@ class ChatRepositoryImpl @Inject constructor(
     ): Result<Unit> =
         withContext(Dispatchers.IO) {
             try {
+                // Optimistic UI Update: Create a temporary message
+                val tempId = "temp_${UUID.randomUUID()}"
+                val currentUserId = firebaseAuth?.currentUser?.uid ?: ""
+                val currentTimestamp = java.time.Instant.now().toString()
+                
+                // Embed localId into metadata
+                val gson = Gson()
+                val metadataJson = if (metadata != null) {
+                    try {
+                        gson.fromJson(metadata, JsonObject::class.java).apply {
+                            addProperty("localId", tempId)
+                        }
+                    } catch (e: Exception) {
+                        JsonObject().apply { addProperty("localId", tempId) }
+                    }
+                } else {
+                    JsonObject().apply { addProperty("localId", tempId) }
+                }
+                val newMetadataString = gson.toJson(metadataJson)
+
+                val tempMessage = Message(
+                    id = tempId,
+                    conversationId = conversationId,
+                    senderId = currentUserId,
+                    type = type,
+                    content = content,
+                    mediaUrl = mediaUrl,
+                    thumbnailUrl = null,
+                    metadata = newMetadataString,
+                    timestamp = currentTimestamp,
+                    deliveredAt = null,
+                    readAt = null,
+                )
+                
+                messageDao.upsert(tempMessage.toEntity())
+
                 val request = SendMessageRequest(
                     conversationId = conversationId,
                     type = type.name,
                     content = content,
                     mediaUrl = mediaUrl,
-                    metadata = metadata,
+                    metadata = newMetadataString,
                 )
                 chatWebSocketService.sendMessage(request)
                 Result.success(Unit)
@@ -145,6 +187,9 @@ class ChatRepositoryImpl @Inject constructor(
         }
 
     override suspend fun connectWebSocket(conversationId: String): Flow<Message> {
+        // Ensure WebSocket is connected
+        chatWebSocketService.connect()
+        
         // We connect the WebSocket session, subscribe to the conversation flow,
         // and whenever a new message is received, we:
         // 1. Map to domain model
@@ -154,6 +199,23 @@ class ChatRepositoryImpl @Inject constructor(
             .map { it.toDomainModel() }
             .onEach { message ->
                 withContext(Dispatchers.IO) {
+                    val gson = Gson()
+                    
+                    // Remove optimistic message if this is the real one from the server
+                    if (message.senderId == firebaseAuth?.currentUser?.uid) {
+                        try {
+                            if (message.metadata != null) {
+                                val metaObj = gson.fromJson(message.metadata, JsonObject::class.java)
+                                if (metaObj.has("localId")) {
+                                    val localId = metaObj.get("localId").asString
+                                    messageDao.deleteById(localId)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Timber.e(e, "Error processing localId from metadata")
+                        }
+                    }
+
                     messageDao.upsert(message.toEntity())
                     val cachedConv = conversationDao.getById(conversationId)
                     if (cachedConv != null) {
