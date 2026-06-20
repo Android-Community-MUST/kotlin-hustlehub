@@ -180,6 +180,8 @@ fun HustleTextField(
             shape = TextFieldShape,
             textStyle = MaterialTheme.typography.bodyLarge,
             colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                 focusedBorderColor = focusedBorderColor,
                 unfocusedBorderColor = unfocusedBorderColor,
                 errorBorderColor = MaterialTheme.colorScheme.error,
