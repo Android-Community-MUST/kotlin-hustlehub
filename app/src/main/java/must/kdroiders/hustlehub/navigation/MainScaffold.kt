@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import must.kdroiders.hustlehub.navigation.ServiceDetail
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.HomeScreen
 import must.kdroiders.hustlehub.ui.features.map.MapScreen
@@ -40,6 +41,7 @@ fun MainShellScreen(
     onNavigateToMyServices: () -> Unit = {},
     onNavigateToEditService: (serviceId: String) -> Unit = {},
     onNavigateToChatDetail: (String) -> Unit = {},
+    onNavigateToServiceDetail: (serviceId: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val innerBackstack = rememberNavBackStack(BottomHome)
@@ -68,7 +70,11 @@ fun MainShellScreen(
             transitionSpec = { fadeIn() togetherWith fadeOut() },
             popTransitionSpec = { fadeIn() togetherWith fadeOut() },
             entryProvider = entryProvider {
-                entry<BottomHome> { HomeScreen() }
+                entry<BottomHome> {
+                    HomeScreen(
+                        onNavigateToServiceDetail = onNavigateToServiceDetail,
+                    )
+                }
                 entry<BottomMap> { MapScreen() }
                 entry<BottomChat> {
                     ChatScreen(

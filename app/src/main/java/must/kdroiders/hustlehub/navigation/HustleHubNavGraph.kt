@@ -204,6 +204,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     onNavigateToMyServices = { backstack.add(MyServices) },
                     onNavigateToEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
                     onNavigateToChatDetail = { chatId -> backstack.add(ChatDetail(chatId = chatId)) },
+                    onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
                 )
             }
 
@@ -242,8 +243,15 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 ChatDetailScreen(
                     conversationId = key.chatId,
                     onBackClick = { if (backstack.size > 1) backstack.remove(backstack.last()) },
-                    onNavigateToServiceDetail = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
+                    onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
                 )
+            }
+
+            // Service detail — full provider profile, portfolio & reviews.
+            // TODO(sprint-4): Replace this stub with the real ServiceDetailScreen.
+            entry<ServiceDetail> { _ ->
+                // Placeholder: pop back to the discovery feed until ServiceDetailScreen is built.
+                if (backstack.size > 1) backstack.remove(backstack.last())
             }
         },
     )
