@@ -15,7 +15,7 @@ data class ConversationResponse(
 
 data class CreateConversationRequest(
     val otherUserId: String,
-    val serviceId: String,
+    val serviceId: String? = null,
 )
 
 data class MessageResponse(
@@ -52,4 +52,10 @@ data class VoiceUploadResponse(
     val url: String,
     val durationSeconds: Int,
     val type: String,
+)
+
+data class UserPresence(
+    val uid: String,
+    val online: Boolean,
+    val lastSeenAt: String? = null,
 )

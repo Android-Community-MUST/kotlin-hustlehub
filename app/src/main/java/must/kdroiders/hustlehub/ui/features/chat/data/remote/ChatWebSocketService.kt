@@ -33,11 +33,14 @@ class ChatWebSocketService @Inject constructor(
             val currentUser = firebaseAuth?.currentUser ?: throw IllegalStateException("User not logged in")
             val token = currentUser.getIdToken(false).await().token ?: throw IllegalStateException("Could not get Firebase token")
             
-            val wsUrl = "${BuildConfig.WS_BASE_URL}?token=$token"
+            val wsUrl = BuildConfig.WS_BASE_URL
             val webSocketClient = OkHttpWebSocketClient(okHttpClient)
             val stompClient = StompClient(webSocketClient)
             
-            stompSession = stompClient.connect(wsUrl)
+            stompSession = stompClient.connect(
+                url = wsUrl,
+                customStompConnectHeaders = mapOf("token" to token)
+            )
             Timber.d("Connected to STOMP WebSocket server")
         } catch (e: Exception) {
             Timber.e(e, "Error connecting to STOMP WebSocket server")
@@ -58,6 +61,14 @@ class ChatWebSocketService @Inject constructor(
         val destination = "/topic/conversation/$conversationId/typing"
         return session.subscribe(StompSubscribeHeaders(destination)).map { frame ->
             gson.fromJson(frame.bodyAsText, TypingIndicator::class.java)
+        }
+    }
+
+    suspend fun subscribeToPresence(otherUserId: String): Flow<must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence> {
+        val session = stompSession ?: throw IllegalStateException("STOMP session not initialized")
+        val destination = "/topic/user/$otherUserId/presence"
+        return session.subscribe(StompSubscribeHeaders(destination)).map { frame ->
+            gson.fromJson(frame.bodyAsText, must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence::class.java)
         }
     }
 

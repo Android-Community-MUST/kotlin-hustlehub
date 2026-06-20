@@ -83,9 +83,13 @@ import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoiceRecorder
+import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSeparator
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.MessageBubble
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ChatDetailViewModel
 import java.io.File
+import java.time.Instant
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -248,16 +252,20 @@ fun ChatDetailScreen(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
-                            val subtitle = if (state.isTyping) "typing..." else "online"
+                            val subtitle = when {
+                                state.isTyping -> "typing..."
+                                state.isOtherUserOnline -> "online"
+                                else -> "offline"
+                            }
                             Text(
                                 text = subtitle,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = if (state.isTyping) {
+                                color = if (state.isTyping || state.isOtherUserOnline) {
                                     MaterialTheme.colorScheme.primary
                                 } else {
                                     MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                                 },
-                                fontWeight = if (state.isTyping) FontWeight.Bold else FontWeight.Normal,
+                                fontWeight = if (state.isTyping || state.isOtherUserOnline) FontWeight.Bold else FontWeight.Normal,
                             )
                         }
                     }
@@ -301,8 +309,35 @@ fun ChatDetailScreen(
                     itemsIndexed(
                         items = reversedMessages,
                         key = { _, msg -> msg.id },
-                    ) { _, message ->
+                    ) { index, message ->
                         val isSelf = message.senderId == state.currentUserId
+                        
+                        // Because messages are reversed (newest first, index 0), 
+                        // the previous message chronologically is at index + 1
+                        val prevMessage = if (index < reversedMessages.size - 1) reversedMessages[index + 1] else null
+                        
+                        var showDateSeparator = false
+                        if (prevMessage == null) {
+                            showDateSeparator = true
+                        } else {
+                            try {
+                                val currentInstant = Instant.parse(message.timestamp)
+                                val prevInstant = Instant.parse(prevMessage.timestamp)
+                                val currentDate = currentInstant.atZone(ZoneId.systemDefault()).toLocalDate()
+                                val prevDate = prevInstant.atZone(ZoneId.systemDefault()).toLocalDate()
+                                
+                                if (ChronoUnit.DAYS.between(prevDate, currentDate) > 0) {
+                                    showDateSeparator = true
+                                }
+                            } catch (e: Exception) {
+                                // Ignore parse errors
+                            }
+                        }
+
+                        if (showDateSeparator) {
+                            DateSeparator(dateString = message.timestamp)
+                        }
+
                         MessageBubble(
                             message = message,
                             isCurrentUser = isSelf,

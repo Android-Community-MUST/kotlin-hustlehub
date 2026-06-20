@@ -169,6 +169,10 @@ class ChatRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun subscribeToPresence(otherUserId: String): Flow<must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence> {
+        return chatWebSocketService.subscribeToPresence(otherUserId)
+    }
+
     override suspend fun disconnectWebSocket() {
         chatWebSocketService.disconnect()
     }

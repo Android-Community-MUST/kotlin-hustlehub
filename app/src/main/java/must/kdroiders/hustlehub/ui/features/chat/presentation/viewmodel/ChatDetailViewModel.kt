@@ -36,6 +36,7 @@ data class ChatDetailUiState(
     val otherUserName: String = "",
     val otherUserAvatar: String? = null,
     val isTyping: Boolean = false,
+    val isOtherUserOnline: Boolean = false,
     val isLoading: Boolean = false,
     val playerState: PlayerState = PlayerState(),
     val error: String? = null,
@@ -110,6 +111,19 @@ class ChatDetailViewModel @Inject constructor(
                     }
                     .catch { e -> Timber.e(e, "Error in WebSocket typing flow") }
                     .launchIn(viewModelScope)
+                    
+                // Subscribe to other user's presence if we know who they are
+                viewModelScope.launch(Dispatchers.IO) {
+                    val cached = conversationDao.getById(conversationId)
+                    cached?.otherUserId?.let { uid ->
+                        chatRepository.subscribeToPresence(uid)
+                            .onEach { presence ->
+                                _uiState.update { it.copy(isOtherUserOnline = presence.online) }
+                            }
+                            .catch { e -> Timber.e(e, "Error in WebSocket presence flow") }
+                            .launchIn(viewModelScope)
+                    }
+                }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to initialize WebSocket")
             }

@@ -34,5 +34,7 @@ interface ChatRepository {
 
     suspend fun connectWebSocket(conversationId: String): Flow<Message>
 
+    suspend fun subscribeToPresence(otherUserId: String): Flow<must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence>
+
     suspend fun disconnectWebSocket()
 }
