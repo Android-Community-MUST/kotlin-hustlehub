@@ -1,12 +1,12 @@
-package must.kdroiders.hustlehub.data.repository
+package must.kdroiders.hustlehub.ui.features.service.data.repository
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.api.PageResponse
 import must.kdroiders.hustlehub.core.auth.AuthManager
-import must.kdroiders.hustlehub.data.local.dao.ServiceDao
-import must.kdroiders.hustlehub.data.local.entity.toDomain
-import must.kdroiders.hustlehub.data.local.entity.toEntity
+import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
+import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toDomain
+import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toEntity
 import must.kdroiders.hustlehub.data.model.Service
 import must.kdroiders.hustlehub.data.model.ServiceAvailability
 import must.kdroiders.hustlehub.data.model.ServiceCategory
@@ -15,19 +15,24 @@ import must.kdroiders.hustlehub.data.remote.dto.AvailabilityRequest
 import must.kdroiders.hustlehub.data.remote.dto.CreateServiceRequest
 import must.kdroiders.hustlehub.data.remote.dto.ServiceResponse
 import must.kdroiders.hustlehub.data.remote.dto.UpdateServiceRequest
-import must.kdroiders.hustlehub.domain.repository.ServiceRepository
+import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import timber.log.Timber
 
 // Cache TTL — entries older than this are evicted before each read
 private const val CACHE_TTL_MS = 30 * 60 * 1_000L
 
+/**
+ * Concrete implementation of [ServiceRepository].
+ *
+ * Coordinates between the HustleHub REST backend ([ServiceApiService]) and
+ * the local Room cache ([ServiceDao]). Room is the single source of truth for
+ * the UI; data flows from cache first, refreshed from remote on each call.
+ */
 class ServiceRepositoryImpl(
     private val apiService: ServiceApiService,
     private val serviceDao: ServiceDao,
     private val authManager: AuthManager,
 ) : ServiceRepository {
-    // Create
-
     override suspend fun createService(
         title: String,
         category: ServiceCategory,
@@ -62,8 +67,6 @@ class ServiceRepositoryImpl(
             }
         }
 
-    // Read single
-
     override suspend fun getServiceById(serviceId: String): Result<Service> =
         withContext(Dispatchers.IO) {
             try {
@@ -86,8 +89,6 @@ class ServiceRepositoryImpl(
                 }
             }
         }
-
-    // Update
 
     override suspend fun updateService(
         serviceId: String,
@@ -123,8 +124,6 @@ class ServiceRepositoryImpl(
             }
         }
 
-    // Delete
-
     override suspend fun deleteService(serviceId: String): Result<Unit> =
         withContext(Dispatchers.IO) {
             try {
@@ -140,8 +139,6 @@ class ServiceRepositoryImpl(
                 Result.failure(e)
             }
         }
-
-    // Availability toggle
 
     override suspend fun updateAvailability(
         serviceId: String,
@@ -163,12 +160,9 @@ class ServiceRepositoryImpl(
             }
         }
 
-    // My services — cache-first
-
     override suspend fun getMyServices(): Result<List<Service>> =
         withContext(Dispatchers.IO) {
             val now = System.currentTimeMillis()
-
             // Evict anything older than 30 minutes before serving cache
             serviceDao.deleteStaleEntries(now - CACHE_TTL_MS)
 
@@ -194,8 +188,6 @@ class ServiceRepositoryImpl(
                 }
             }
         }
-
-    // Browse / discovery — cache-first
 
     override suspend fun browseServices(
         page: Int,
@@ -258,8 +250,7 @@ class ServiceRepositoryImpl(
         }
 }
 
-// DTO → Domain mapper
-
+// DTO → Domain mapper (private to this file)
 private fun ServiceResponse.toDomainModel(): Service =
     Service(
         id = serviceId,

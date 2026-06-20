@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.data.model.User
 import must.kdroiders.hustlehub.data.model.UserRole
-import must.kdroiders.hustlehub.data.repository.UserRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import timber.log.Timber
 import javax.inject.Inject

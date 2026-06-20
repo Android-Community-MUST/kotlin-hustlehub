@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.repository
+package must.kdroiders.hustlehub.ui.features.profile.data.repository
 
 import android.content.Context
 import android.net.Uri
@@ -9,6 +9,8 @@ import must.kdroiders.hustlehub.data.remote.MediaApiService
 import must.kdroiders.hustlehub.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.RegisterRequest
+import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -16,17 +18,12 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface UserRepository {
-    suspend fun uploadProfilePhoto(
-        userId: String,
-        imageUri: Uri,
-    ): Result<String>
-
-    suspend fun saveUserProfile(user: User): Result<User>
-    suspend fun getUserProfile(userId: String): Result<User?>
-    suspend fun hasUserProfile(userId: String): Result<Boolean>
-}
-
+/**
+ * Concrete implementation of [UserRepository].
+ *
+ * Coordinates profile reads/writes between the HustleHub REST backend
+ * and the Supabase media service.
+ */
 @Singleton
 class UserRepositoryImpl
     @Inject
@@ -56,7 +53,7 @@ class UserRepositoryImpl
                     throw Exception(response.message)
                 }
             }.onFailure { e ->
-                Timber.e(e, "Failed to upload profile photo")
+                Timber.e(e, "UserRepositoryImpl: failed to upload profile photo")
             }
 
         override suspend fun saveUserProfile(user: User): Result<User> =
@@ -72,42 +69,25 @@ class UserRepositoryImpl
                 )
                 val response = authApiService.register(request)
                 if (response.success && response.data != null) {
-                    val dto = response.data
-                    User(
-                        id = dto.firebaseUid,
-                        uuid = dto.id,
-                        name = dto.name,
-                        email = dto.email,
-                        phone = dto.phone ?: "",
-                        campusLocation = dto.campusLocation ?: "",
-                        role = try {
-                            UserRole.valueOf(dto.role)
-                        } catch (_: Exception) {
-                            UserRole.CUSTOMER
-                        },
-                        profilePhotoUrl = dto.avatarUrl ?: "",
-                        bio = dto.bio ?: "",
-                        isVerified = dto.verified,
-                        isOnline = dto.active,
-                    )
+                    response.data.toDomain()
                 } else {
                     throw Exception(response.message)
                 }
             }.recoverCatching { e ->
                 if (e is retrofit2.HttpException) {
                     when (e.code()) {
+                        // 409 Conflict = user already exists → treat as success
                         409 -> {
-                            // Backend returned 409 Conflict = user already exists → treat as success
-                            Timber.d("User already registered in backend (HTTP 409) — treating as success")
+                            Timber.d("UserRepositoryImpl: user already registered (HTTP 409) — treating as success")
                             user
                         }
                         else -> {
-                            Timber.e(e, "Failed to save user profile (HTTP ${e.code()})")
+                            Timber.e(e, "UserRepositoryImpl: failed to save profile (HTTP ${e.code()})")
                             throw e
                         }
                     }
                 } else {
-                    Timber.e(e, "Failed to save user profile")
+                    Timber.e(e, "UserRepositoryImpl: failed to save user profile")
                     throw e
                 }
             }
@@ -116,29 +96,12 @@ class UserRepositoryImpl
             runCatching {
                 val response = userApiService.getMe()
                 if (response.success && response.data != null) {
-                    val dto = response.data
-                    User(
-                        id = dto.firebaseUid,
-                        uuid = dto.id,
-                        name = dto.name,
-                        email = dto.email,
-                        phone = dto.phone ?: "",
-                        campusLocation = dto.campusLocation ?: "",
-                        role = try {
-                            UserRole.valueOf(dto.role)
-                        } catch (_: Exception) {
-                            UserRole.CUSTOMER
-                        },
-                        profilePhotoUrl = dto.avatarUrl ?: "",
-                        bio = dto.bio ?: "",
-                        isVerified = dto.verified,
-                        isOnline = dto.active,
-                    )
+                    response.data.toDomain()
                 } else {
                     null
                 }
             }.onFailure { e ->
-                Timber.e(e, "Failed to get user profile")
+                Timber.e(e, "UserRepositoryImpl: failed to get user profile")
             }
 
         override suspend fun hasUserProfile(userId: String): Result<Boolean> =
@@ -146,13 +109,29 @@ class UserRepositoryImpl
                 val response = userApiService.getMe()
                 response.success && response.data != null
             }.recoverCatching { e ->
-                // HTTP 403 or 404 means the profile doesn't exist yet — not an error
+                // HTTP 403/404 means the profile doesn't exist yet — not a fatal error
                 if (e is retrofit2.HttpException && (e.code() == 403 || e.code() == 404)) {
-                    Timber.d("No backend profile found for user (HTTP ${e.code()}) — assuming new user")
+                    Timber.d("UserRepositoryImpl: no backend profile found (HTTP ${e.code()}) — assuming new user")
                     false
                 } else {
-                    Timber.e(e, "Failed to check user profile")
+                    Timber.e(e, "UserRepositoryImpl: failed to check user profile")
                     throw e
                 }
             }
     }
+
+// DTO → Domain mapper (private to this file)
+private fun UserResponseDto.toDomain(): User =
+    User(
+        id = firebaseUid,
+        uuid = id,
+        name = name,
+        email = email,
+        phone = phone ?: "",
+        campusLocation = campusLocation ?: "",
+        role = runCatching { UserRole.valueOf(role) }.getOrDefault(UserRole.CUSTOMER),
+        profilePhotoUrl = avatarUrl ?: "",
+        bio = bio ?: "",
+        isVerified = verified,
+        isOnline = active,
+    )

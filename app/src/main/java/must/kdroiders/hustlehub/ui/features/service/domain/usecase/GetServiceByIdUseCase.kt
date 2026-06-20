@@ -1,7 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.service.domain.usecase
 
 import must.kdroiders.hustlehub.data.model.Service
-import must.kdroiders.hustlehub.domain.repository.ServiceRepository
+import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import javax.inject.Inject
 
 class GetServiceByIdUseCase

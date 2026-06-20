@@ -1,7 +1,7 @@
 package must.kdroiders.hustlehub.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
-import must.kdroiders.hustlehub.feature.chat.data.remote.dto.VoiceUploadResponse
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.VoiceUploadResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.Multipart

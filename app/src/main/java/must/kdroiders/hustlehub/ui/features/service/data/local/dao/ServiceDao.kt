@@ -1,10 +1,10 @@
-package must.kdroiders.hustlehub.data.local.dao
+package must.kdroiders.hustlehub.ui.features.service.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import must.kdroiders.hustlehub.data.local.entity.ServiceEntity
+import must.kdroiders.hustlehub.ui.features.service.data.local.entity.ServiceEntity
 
 @Dao
 interface ServiceDao {

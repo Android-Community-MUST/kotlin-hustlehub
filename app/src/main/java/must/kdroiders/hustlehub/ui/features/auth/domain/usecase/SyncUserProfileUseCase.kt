@@ -1,7 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.auth.domain.usecase
 
 import must.kdroiders.hustlehub.data.model.User
-import must.kdroiders.hustlehub.data.repository.UserRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import javax.inject.Inject
 
 class SyncUserProfileUseCase

@@ -2,7 +2,7 @@ package must.kdroiders.hustlehub.ui.features.auth.domain.usecase
 
 import must.kdroiders.hustlehub.data.model.User
 import must.kdroiders.hustlehub.data.model.UserRole
-import must.kdroiders.hustlehub.data.repository.UserRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
 import timber.log.Timber

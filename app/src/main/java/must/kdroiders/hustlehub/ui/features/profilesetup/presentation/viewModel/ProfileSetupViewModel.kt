@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.data.model.User
-import must.kdroiders.hustlehub.data.repository.UserRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SyncUserProfileUseCase
 import timber.log.Timber
 import javax.inject.Inject

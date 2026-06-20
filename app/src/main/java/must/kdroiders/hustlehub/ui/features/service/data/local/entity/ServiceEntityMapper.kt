@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.local.entity
+package must.kdroiders.hustlehub.ui.features.service.data.local.entity
 
 import must.kdroiders.hustlehub.data.model.Service
 import must.kdroiders.hustlehub.data.model.ServiceAvailability

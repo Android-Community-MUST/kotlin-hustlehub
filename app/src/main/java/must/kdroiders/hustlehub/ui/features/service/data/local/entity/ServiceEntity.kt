@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.local.entity
+package must.kdroiders.hustlehub.ui.features.service.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
