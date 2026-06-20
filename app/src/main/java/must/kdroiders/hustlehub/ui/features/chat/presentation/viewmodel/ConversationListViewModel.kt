@@ -20,37 +20,38 @@ data class ConversationListUiState(
 )
 
 @HiltViewModel
-class ConversationListViewModel @Inject constructor(
-    private val chatRepository: ChatRepository,
-) : ViewModel() {
+class ConversationListViewModel
+    @Inject
+    constructor(
+        private val chatRepository: ChatRepository,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(ConversationListUiState())
+        val uiState: StateFlow<ConversationListUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow(ConversationListUiState())
-    val uiState: StateFlow<ConversationListUiState> = _uiState.asStateFlow()
+        init {
+            observeConversations()
+            refreshConversations()
+        }
 
-    init {
-        observeConversations()
-        refreshConversations()
-    }
+        private fun observeConversations() {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true) }
+                chatRepository.getConversations().collect { conversations ->
+                    _uiState.update { it.copy(conversations = conversations, isLoading = false) }
+                }
+            }
+        }
 
-    private fun observeConversations() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            chatRepository.getConversations().collect { conversations ->
-                _uiState.update { it.copy(conversations = conversations, isLoading = false) }
+        fun refreshConversations() {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isRefreshing = true, error = null) }
+                chatRepository
+                    .refreshConversations()
+                    .onSuccess {
+                        _uiState.update { it.copy(isRefreshing = false) }
+                    }.onFailure { error ->
+                        _uiState.update { it.copy(isRefreshing = false, error = error.message ?: "Failed to refresh") }
+                    }
             }
         }
     }
-
-    fun refreshConversations() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isRefreshing = true, error = null) }
-            chatRepository.refreshConversations()
-                .onSuccess {
-                    _uiState.update { it.copy(isRefreshing = false) }
-                }
-                .onFailure { error ->
-                    _uiState.update { it.copy(isRefreshing = false, error = error.message ?: "Failed to refresh") }
-                }
-        }
-    }
-}

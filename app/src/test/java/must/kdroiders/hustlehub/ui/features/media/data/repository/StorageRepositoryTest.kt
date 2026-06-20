@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.repository
+package must.kdroiders.hustlehub.ui.features.media.data.repository
 
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -7,6 +7,8 @@ import kotlinx.coroutines.test.runTest
 import must.kdroiders.hustlehub.core.api.ApiResponse
 import must.kdroiders.hustlehub.data.remote.MediaApiService
 import must.kdroiders.hustlehub.data.remote.MediaUploadResponse
+import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
+import must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before

@@ -20,12 +20,15 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun DateSeparator(dateString: String, modifier: Modifier = Modifier) {
+fun DateSeparator(
+    dateString: String,
+    modifier: Modifier = Modifier,
+) {
     val displayDate = try {
         val instant = Instant.parse(dateString)
         val zonedDateTime = instant.atZone(ZoneId.systemDefault())
         val now = Instant.now().atZone(ZoneId.systemDefault())
-        
+
         when (ChronoUnit.DAYS.between(zonedDateTime.toLocalDate(), now.toLocalDate())) {
             0L -> "Today"
             1L -> "Yesterday"

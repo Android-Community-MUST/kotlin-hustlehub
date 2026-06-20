@@ -20,77 +20,79 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ChatWebSocketService @Inject constructor(
-    private val okHttpClient: OkHttpClient,
-    private val firebaseAuth: FirebaseAuth?,
-) {
-    private var stompSession: StompSession? = null
-    private val gson = Gson()
+class ChatWebSocketService
+    @Inject
+    constructor(
+        private val okHttpClient: OkHttpClient,
+        private val firebaseAuth: FirebaseAuth?,
+    ) {
+        private var stompSession: StompSession? = null
+        private val gson = Gson()
 
-    suspend fun connect() {
-        if (stompSession != null) return
-        try {
-            val currentUser = firebaseAuth?.currentUser ?: throw IllegalStateException("User not logged in")
-            val token = currentUser.getIdToken(false).await().token ?: throw IllegalStateException("Could not get Firebase token")
-            
-            val wsUrl = BuildConfig.WS_BASE_URL
-            val webSocketClient = OkHttpWebSocketClient(okHttpClient)
-            val stompClient = StompClient(webSocketClient)
-            
-            stompSession = stompClient.connect(
-                url = wsUrl,
-                customStompConnectHeaders = mapOf("token" to token)
-            )
-            Timber.d("Connected to STOMP WebSocket server")
-        } catch (e: Exception) {
-            Timber.e(e, "Error connecting to STOMP WebSocket server")
-            throw e
+        suspend fun connect() {
+            if (stompSession != null) return
+            try {
+                val currentUser = firebaseAuth?.currentUser ?: throw IllegalStateException("User not logged in")
+                val token = currentUser.getIdToken(false).await().token ?: throw IllegalStateException("Could not get Firebase token")
+
+                val wsUrl = BuildConfig.WS_BASE_URL
+                val webSocketClient = OkHttpWebSocketClient(okHttpClient)
+                val stompClient = StompClient(webSocketClient)
+
+                stompSession = stompClient.connect(
+                    url = wsUrl,
+                    customStompConnectHeaders = mapOf("token" to token),
+                )
+                Timber.d("Connected to STOMP WebSocket server")
+            } catch (e: Exception) {
+                Timber.e(e, "Error connecting to STOMP WebSocket server")
+                throw e
+            }
+        }
+
+        suspend fun subscribeToConversation(conversationId: String): Flow<MessageResponse> {
+            val session = stompSession ?: throw IllegalStateException("STOMP session not initialized")
+            val destination = "/topic/conversation/$conversationId"
+            return session.subscribe(StompSubscribeHeaders(destination)).map { frame ->
+                gson.fromJson(frame.bodyAsText, MessageResponse::class.java)
+            }
+        }
+
+        suspend fun subscribeToTyping(conversationId: String): Flow<TypingIndicator> {
+            val session = stompSession ?: throw IllegalStateException("STOMP session not initialized")
+            val destination = "/topic/conversation/$conversationId/typing"
+            return session.subscribe(StompSubscribeHeaders(destination)).map { frame ->
+                gson.fromJson(frame.bodyAsText, TypingIndicator::class.java)
+            }
+        }
+
+        suspend fun subscribeToPresence(otherUserId: String): Flow<must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence> {
+            val session = stompSession ?: throw IllegalStateException("STOMP session not initialized")
+            val destination = "/topic/user/$otherUserId/presence"
+            return session.subscribe(StompSubscribeHeaders(destination)).map { frame ->
+                gson.fromJson(frame.bodyAsText, must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence::class.java)
+            }
+        }
+
+        suspend fun sendMessage(request: SendMessageRequest) {
+            val session = stompSession ?: throw IllegalStateException("STOMP session not initialized")
+            val payloadJson = gson.toJson(request)
+            session.sendText("/app/chat.send", payloadJson)
+        }
+
+        suspend fun sendTypingIndicator(indicator: TypingIndicator) {
+            val session = stompSession ?: throw IllegalStateException("STOMP session not initialized")
+            val payloadJson = gson.toJson(indicator)
+            session.sendText("/app/chat.typing", payloadJson)
+        }
+
+        suspend fun disconnect() {
+            try {
+                stompSession?.disconnect()
+                stompSession = null
+                Timber.d("Disconnected STOMP session")
+            } catch (e: Exception) {
+                Timber.e(e, "Error disconnecting STOMP session")
+            }
         }
     }
-
-    suspend fun subscribeToConversation(conversationId: String): Flow<MessageResponse> {
-        val session = stompSession ?: throw IllegalStateException("STOMP session not initialized")
-        val destination = "/topic/conversation/$conversationId"
-        return session.subscribe(StompSubscribeHeaders(destination)).map { frame ->
-            gson.fromJson(frame.bodyAsText, MessageResponse::class.java)
-        }
-    }
-
-    suspend fun subscribeToTyping(conversationId: String): Flow<TypingIndicator> {
-        val session = stompSession ?: throw IllegalStateException("STOMP session not initialized")
-        val destination = "/topic/conversation/$conversationId/typing"
-        return session.subscribe(StompSubscribeHeaders(destination)).map { frame ->
-            gson.fromJson(frame.bodyAsText, TypingIndicator::class.java)
-        }
-    }
-
-    suspend fun subscribeToPresence(otherUserId: String): Flow<must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence> {
-        val session = stompSession ?: throw IllegalStateException("STOMP session not initialized")
-        val destination = "/topic/user/$otherUserId/presence"
-        return session.subscribe(StompSubscribeHeaders(destination)).map { frame ->
-            gson.fromJson(frame.bodyAsText, must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence::class.java)
-        }
-    }
-
-    suspend fun sendMessage(request: SendMessageRequest) {
-        val session = stompSession ?: throw IllegalStateException("STOMP session not initialized")
-        val payloadJson = gson.toJson(request)
-        session.sendText("/app/chat.send", payloadJson)
-    }
-
-    suspend fun sendTypingIndicator(indicator: TypingIndicator) {
-        val session = stompSession ?: throw IllegalStateException("STOMP session not initialized")
-        val payloadJson = gson.toJson(indicator)
-        session.sendText("/app/chat.typing", payloadJson)
-    }
-
-    suspend fun disconnect() {
-        try {
-            stompSession?.disconnect()
-            stompSession = null
-            Timber.d("Disconnected STOMP session")
-        } catch (e: Exception) {
-            Timber.e(e, "Error disconnecting STOMP session")
-        }
-    }
-}

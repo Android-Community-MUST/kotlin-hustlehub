@@ -22,7 +22,7 @@ class VoicePlayer {
     private var mediaPlayer: MediaPlayer? = null
     private val _playerState = MutableStateFlow(PlayerState())
     val playerState: StateFlow<PlayerState> = _playerState.asStateFlow()
-    
+
     private val scope = CoroutineScope(Dispatchers.Main)
     private var updateJob: Job? = null
 

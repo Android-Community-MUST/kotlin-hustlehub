@@ -7,9 +7,9 @@ import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 
 interface ChatRepository {
     fun getConversations(): Flow<List<Conversation>>
-    
+
     suspend fun refreshConversations(): Result<Unit>
-    
+
     suspend fun getOrCreateConversation(
         otherUserId: String,
         serviceId: String,

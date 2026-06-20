@@ -13,8 +13,8 @@ import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.data.model.Service
 import must.kdroiders.hustlehub.data.model.ServiceCategory
-import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import timber.log.Timber
 import javax.inject.Inject
 

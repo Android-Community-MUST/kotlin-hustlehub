@@ -4,9 +4,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.api.PageResponse
 import must.kdroiders.hustlehub.core.auth.AuthManager
-import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
-import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toDomain
-import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toEntity
 import must.kdroiders.hustlehub.data.model.Service
 import must.kdroiders.hustlehub.data.model.ServiceAvailability
 import must.kdroiders.hustlehub.data.model.ServiceCategory
@@ -15,6 +12,9 @@ import must.kdroiders.hustlehub.data.remote.dto.AvailabilityRequest
 import must.kdroiders.hustlehub.data.remote.dto.CreateServiceRequest
 import must.kdroiders.hustlehub.data.remote.dto.ServiceResponse
 import must.kdroiders.hustlehub.data.remote.dto.UpdateServiceRequest
+import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
+import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toDomain
+import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toEntity
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import timber.log.Timber
 

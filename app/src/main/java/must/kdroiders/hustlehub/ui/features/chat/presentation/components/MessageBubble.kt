@@ -243,7 +243,7 @@ private fun VoiceMessageContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 val durationText = formatDuration(
-                    if (isPlayingThis) playerState.currentPositionMs else 0
+                    if (isPlayingThis) playerState.currentPositionMs else 0,
                 )
                 val totalDurationText = parseVoiceDurationFromMetadata(message.metadata)
                 Text(

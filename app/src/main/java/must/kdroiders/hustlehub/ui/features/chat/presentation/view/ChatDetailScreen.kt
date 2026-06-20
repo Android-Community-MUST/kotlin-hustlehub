@@ -1,7 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.view
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
@@ -14,9 +13,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -202,7 +201,7 @@ fun ChatDetailScreen(
             onLocationSelected = { lat, lng, label ->
                 viewModel.sendLocationMessage(lat, lng, label)
                 showLocationDialog = false
-            }
+            },
         )
     }
 
@@ -311,11 +310,11 @@ fun ChatDetailScreen(
                         key = { _, msg -> msg.id },
                     ) { index, message ->
                         val isSelf = message.senderId == state.currentUserId
-                        
-                        // Because messages are reversed (newest first, index 0), 
+
+                        // Because messages are reversed (newest first, index 0),
                         // the previous message chronologically is at index + 1
                         val prevMessage = if (index < reversedMessages.size - 1) reversedMessages[index + 1] else null
-                        
+
                         var showDateSeparator = false
                         if (prevMessage == null) {
                             showDateSeparator = true
@@ -325,7 +324,7 @@ fun ChatDetailScreen(
                                 val prevInstant = Instant.parse(prevMessage.timestamp)
                                 val currentDate = currentInstant.atZone(ZoneId.systemDefault()).toLocalDate()
                                 val prevDate = prevInstant.atZone(ZoneId.systemDefault()).toLocalDate()
-                                
+
                                 if (ChronoUnit.DAYS.between(prevDate, currentDate) > 0) {
                                     showDateSeparator = true
                                 }
@@ -406,7 +405,7 @@ fun ChatDetailScreen(
                         onClick = {
                             imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                             showAttachmentMenu = false
-                        }
+                        },
                     )
                     AttachmentOption(
                         icon = Icons.Default.LocationOn,
@@ -414,7 +413,7 @@ fun ChatDetailScreen(
                         onClick = {
                             showLocationDialog = true
                             showAttachmentMenu = false
-                        }
+                        },
                     )
                 }
             }
@@ -442,7 +441,7 @@ fun ChatDetailScreen(
                                 modifier = Modifier
                                     .size(8.dp)
                                     .clip(CircleShape)
-                                    .background(Color.Red)
+                                    .background(Color.Red),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
@@ -525,7 +524,7 @@ fun ChatDetailScreen(
                             onClick = {
                                 val hasPermission = ContextCompat.checkSelfPermission(
                                     context,
-                                    Manifest.permission.RECORD_AUDIO
+                                    Manifest.permission.RECORD_AUDIO,
                                 ) == PackageManager.PERMISSION_GRANTED
 
                                 if (hasPermission) {
@@ -664,7 +663,7 @@ private fun LocationSelectorDialog(
             IconButton(onClick = onDismiss) {
                 Text("Cancel", color = MaterialTheme.colorScheme.primary)
             }
-        }
+        },
     )
 }
 
