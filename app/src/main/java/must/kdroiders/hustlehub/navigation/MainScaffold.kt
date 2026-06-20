@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import must.kdroiders.hustlehub.ui.features.chat.ChatScreen
+import must.kdroiders.hustlehub.feature.chat.presentation.view.ChatScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.HomeScreen
 import must.kdroiders.hustlehub.ui.features.map.MapScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScreen
@@ -39,6 +39,7 @@ fun MainShellScreen(
     onNavigateToCreateService: () -> Unit = {},
     onNavigateToMyServices: () -> Unit = {},
     onNavigateToEditService: (serviceId: String) -> Unit = {},
+    onNavigateToChatDetail: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val innerBackstack = rememberNavBackStack(BottomHome)
@@ -69,7 +70,11 @@ fun MainShellScreen(
             entryProvider = entryProvider {
                 entry<BottomHome> { HomeScreen() }
                 entry<BottomMap> { MapScreen() }
-                entry<BottomChat> { ChatScreen() }
+                entry<BottomChat> {
+                    ChatScreen(
+                        onNavigateToChatDetail = onNavigateToChatDetail,
+                    )
+                }
                 entry<BottomProfile> {
                     ProfileScreen(
                         onEditClick = onNavigateToProfileSetup,
