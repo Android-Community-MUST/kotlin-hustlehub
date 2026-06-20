@@ -105,7 +105,7 @@ must.kdroiders.hustlehub/
 └── util/                # ImageUtils
 ```
 
-> The target architecture in `.agents/rules.md` places all features under `feature/<name>/` with full `data/domain/presentation` sub-splits. Currently only `auth` and `profile` have partial domain layers; other features will migrate to this structure as they are built out.
+> The target architecture in `.agents/rules.md` places all features under `feature/<name>/` with full `data/domain/presentation` sub-splits. Currently `auth`, `profile`, and `chat` have full domain/data/presentation splits; other features will migrate to this structure as they are built out.
 
 ---
 
