@@ -60,17 +60,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFirebaseStorage(): FirebaseStorage? {
-        return try {
-            FirebaseStorage.getInstance()
-        } catch (e: IllegalStateException) {
-            Timber.w(
-                e,
-                "Firebase not initialized — running without storage"
-            )
-            null
-        }
-    }
+    fun provideStorageRepository(mediaApiService: MediaApiService): StorageRepository = StorageRepositoryImpl(mediaApiService)
 
     @Provides
     @Singleton

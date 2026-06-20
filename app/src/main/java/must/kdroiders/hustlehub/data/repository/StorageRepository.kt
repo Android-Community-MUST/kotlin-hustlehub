@@ -1,10 +1,12 @@
 package must.kdroiders.hustlehub.data.repository
 
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.tasks.await
-import java.util.UUID
+import must.kdroiders.hustlehub.data.remote.MediaApiService
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import timber.log.Timber
 import javax.inject.Inject
 
 sealed class UploadResult {
@@ -14,34 +16,72 @@ sealed class UploadResult {
     data class Error(val message: String) : UploadResult()
 }
 
-class StorageRepository @Inject constructor(
-    private val firebaseStorage: FirebaseStorage?
-) {
+/**
+ * Contract for uploading portfolio images to the HustleHub backend media API.
+ * The backend stores the file in Firebase Storage and returns the public URL.
+ */
+interface StorageRepository {
     /**
-     * Uploads a compressed image byte array to Firebase Storage.
-     * @param serviceId The ID of the service this portfolio image belongs to.
-     * @param imageBytes The compressed JPEG byte array of the image.
-     * @return Flow emitting progress and final result url.
+     * Uploads a compressed image byte array to POST /api/v1/media/upload.
+     *
+     * @param serviceId The service UUID this image belongs to. Pass empty string if
+     *                  not yet associated with a specific service (entityId is optional
+     *                  per the API contract).
+     * @param imageBytes Compressed JPEG byte array — must be ≤ 500 KB.
+     * @return Flow emitting [UploadResult.Progress] during upload, then
+     *         [UploadResult.Success] with the returned URL, or [UploadResult.Error].
      */
-    fun uploadPortfolioImage(serviceId: String, imageBytes: ByteArray): Flow<UploadResult> = flow {
-        emit(UploadResult.Progress(0f))
-
-        if (firebaseStorage == null) {
-            emit(UploadResult.Error("Firebase Storage is not initialized"))
-            return@flow
-        }
-
-        try {
-            val imageId = UUID.randomUUID().toString()
-            val path = "services/$serviceId/portfolio/$imageId.jpg"
-            val storageRef = firebaseStorage.reference.child(path)
-
-            storageRef.putBytes(imageBytes).await()
-            val downloadUrl = storageRef.downloadUrl.await().toString()
-
-            emit(UploadResult.Success(downloadUrl))
-        } catch (e: Exception) {
-            emit(UploadResult.Error(e.message ?: "Unknown error occurred during upload"))
-        }
-    }
+    fun uploadPortfolioImage(
+        serviceId: String,
+        imageBytes: ByteArray,
+    ): Flow<UploadResult>
 }
+
+class StorageRepositoryImpl
+    @Inject
+    constructor(
+        private val mediaApiService: MediaApiService,
+    ) : StorageRepository {
+        private companion object {
+            private const val MIME_JPEG = "image/jpeg"
+            private const val MIME_TEXT = "text/plain"
+            private const val UPLOAD_TYPE_PORTFOLIO = "PORTFOLIO"
+            private const val FILENAME_PREFIX = "portfolio_"
+            private const val FILENAME_SUFFIX = ".jpg"
+            private const val TAG = "StorageRepository"
+        }
+
+        override fun uploadPortfolioImage(
+            serviceId: String,
+            imageBytes: ByteArray,
+        ): Flow<UploadResult> =
+            flow {
+                emit(UploadResult.Progress(0f))
+
+                try {
+                    val requestFile = imageBytes.toRequestBody(MIME_JPEG.toMediaTypeOrNull())
+                    val fileName = "$FILENAME_PREFIX${System.currentTimeMillis()}$FILENAME_SUFFIX"
+                    val body = MultipartBody.Part.createFormData("file", fileName, requestFile)
+
+                    val typeBody = UPLOAD_TYPE_PORTFOLIO.toRequestBody(MIME_TEXT.toMediaTypeOrNull())
+                    // entityId is optional — only send if a real serviceId is provided
+                    val entityIdBody = serviceId
+                        .takeIf { it.isNotBlank() }
+                        ?.toRequestBody(MIME_TEXT.toMediaTypeOrNull())
+
+                    emit(UploadResult.Progress(0.5f))
+
+                    val response = mediaApiService.uploadImage(body, typeBody, entityIdBody)
+                    if (response.success && response.data != null) {
+                        Timber.d("$TAG: upload success → ${response.data.url}")
+                        emit(UploadResult.Success(response.data.url))
+                    } else {
+                        Timber.w("$TAG: upload rejected → ${response.message}")
+                        emit(UploadResult.Error(response.message))
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "$TAG: upload failed")
+                    emit(UploadResult.Error(e.message ?: "Unknown error during upload"))
+                }
+            }
+    }
