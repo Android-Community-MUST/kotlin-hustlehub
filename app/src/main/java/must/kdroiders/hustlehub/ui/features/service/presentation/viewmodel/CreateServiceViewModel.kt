@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.data.model.ServiceAvailability
 import must.kdroiders.hustlehub.data.model.ServiceCategory
-import must.kdroiders.hustlehub.domain.repository.ServiceRepository
+import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import timber.log.Timber
 import javax.inject.Inject

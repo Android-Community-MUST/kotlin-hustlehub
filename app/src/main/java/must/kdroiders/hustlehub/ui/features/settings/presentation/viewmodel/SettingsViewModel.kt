@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.data.local.dao.ServiceDao
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignOutUseCase
+import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
 import timber.log.Timber
 import javax.inject.Inject
 

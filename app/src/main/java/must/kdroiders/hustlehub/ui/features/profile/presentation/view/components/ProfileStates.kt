@@ -62,27 +62,27 @@ fun ErrorState(
                     modifier = Modifier.size(40.dp),
                 )
             }
-            
+
             Spacer(Modifier.height(24.dp))
-            
+
             Text(
                 text = "Oops! Something went wrong",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
             )
-            
+
             Spacer(Modifier.height(8.dp))
-            
+
             Text(
                 text = message,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
             )
-            
+
             Spacer(Modifier.height(32.dp))
-            
+
             HustleButton(
                 text = "Try Again",
                 onClick = onRetry,
@@ -91,4 +91,3 @@ fun ErrorState(
         }
     }
 }
-

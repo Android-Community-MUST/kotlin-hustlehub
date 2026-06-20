@@ -221,7 +221,7 @@ See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for full guidelines.
 - [x] Design system + shared composables
 - [ ] Service creation & discovery feed
 - [ ] AI-powered search
-- [ ] Real-time messaging (WebSocket)
+- [x] Real-time messaging (WebSocket)
 - [ ] Campus map with provider pins
 - [ ] Ratings & reviews
 - [ ] Beta launch (500 users)

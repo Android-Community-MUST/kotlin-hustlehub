@@ -6,19 +6,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.NavKey
@@ -34,12 +28,11 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.view.ChangePasswor
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.EmailVerificationScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
-
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
+import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatDetailScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.CreateServiceScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServicesScreen
-import must.kdroiders.hustlehub.feature.chat.presentation.view.ChatDetailScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
 
 /**

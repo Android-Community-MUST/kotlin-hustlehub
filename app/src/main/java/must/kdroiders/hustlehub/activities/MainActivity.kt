@@ -11,6 +11,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.lifecycleScope
@@ -57,7 +58,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             HustleHubTheme(
-                darkTheme = false,
+                darkTheme = isSystemInDarkTheme(),
             ) {
                 // Navigation 3 — pass the google sign in flow callback down
                 HustleHubNav(

@@ -14,12 +14,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.data.model.User
 import must.kdroiders.hustlehub.data.model.UserRole
-import must.kdroiders.hustlehub.data.repository.UserRepository
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.CheckUserProfileUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.GoogleSignInUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.LoginUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SendPasswordResetEmailUseCase
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import timber.log.Timber
 import javax.inject.Inject
 
