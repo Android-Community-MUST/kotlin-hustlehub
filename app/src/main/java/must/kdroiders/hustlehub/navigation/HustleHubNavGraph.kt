@@ -30,6 +30,8 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatDetailScreen
+import must.kdroiders.hustlehub.ui.features.home.presentation.view.AiSearchScreen
+import must.kdroiders.hustlehub.ui.features.home.presentation.view.SearchScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.CreateServiceScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServicesScreen
@@ -205,6 +207,8 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     onNavigateToEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
                     onNavigateToChatDetail = { chatId -> backstack.add(ChatDetail(chatId = chatId)) },
                     onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
+                    onNavigateToSearch = { backstack.add(must.kdroiders.hustlehub.navigation.SearchScreen) },
+                    onNavigateToAiSearch = { backstack.add(must.kdroiders.hustlehub.navigation.AiSearchScreen) },
                 )
             }
 
@@ -250,8 +254,21 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
             // Service detail — full provider profile, portfolio & reviews.
             // TODO(sprint-4): Replace this stub with the real ServiceDetailScreen.
             entry<ServiceDetail> { _ ->
-                // Placeholder: pop back to the discovery feed until ServiceDetailScreen is built.
                 if (backstack.size > 1) backstack.remove(backstack.last())
+            }
+
+            entry<must.kdroiders.hustlehub.navigation.SearchScreen> {
+                SearchScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
+                )
+            }
+
+            entry<must.kdroiders.hustlehub.navigation.AiSearchScreen> {
+                AiSearchScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
+                )
             }
         },
     )

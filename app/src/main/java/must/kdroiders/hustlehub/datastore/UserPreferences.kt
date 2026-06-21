@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -49,6 +50,9 @@ class UserPreferences
             val USER_ROLE = stringPreferencesKey("user_role")
             val USER_AVATAR_URL = stringPreferencesKey("user_avatar_url")
             val USER_UUID = stringPreferencesKey("user_uuid")
+            val RECENT_SEARCHES = stringSetPreferencesKey("recent_searches")
+            /** Maximum number of recent searches to persist. Oldest entry is evicted when full. */
+            const val MAX_RECENT_SEARCHES = 10
         }
 
         // Reads
@@ -145,6 +149,76 @@ class UserPreferences
                 Timber.d("User cleared from DataStore")
             } catch (e: IOException) {
                 Timber.e(e, "Error clearing user from DataStore")
+            }
+        }
+
+        /**
+         * Emits the list of the user's recent search queries, most recent first.
+         * Returns an empty list if no history is stored.
+         */
+        val recentSearches: Flow<List<String>> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading recent searches")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs ->
+                // StringSet has no guaranteed order; we encode insertion order as
+                // "index:value" so we can restore recency after reading from DataStore.
+                prefs[RECENT_SEARCHES]
+                    ?.mapNotNull { entry ->
+                        val idx = entry.substringBefore(':').toIntOrNull() ?: return@mapNotNull null
+                        val value = entry.substringAfter(':')
+                        idx to value
+                    }
+                    ?.sortedByDescending { it.first }
+                    ?.map { it.second }
+                    ?: emptyList()
+            }
+
+        /**
+         * Saves [query] to recent searches, evicting the oldest entry when the list
+         * exceeds [MAX_RECENT_SEARCHES]. Duplicate entries are deduplicated (existing
+         * entry is removed and the query is re-inserted at the front).
+         */
+        suspend fun addRecentSearch(query: String) {
+            if (query.isBlank()) return
+            try {
+                dataStore.edit { prefs ->
+                    val existing = prefs[RECENT_SEARCHES]?.toMutableSet() ?: mutableSetOf()
+                    // Parse current entries: "idx:value"
+                    val parsed = existing
+                        .mapNotNull { entry ->
+                            val idx = entry.substringBefore(':').toIntOrNull() ?: return@mapNotNull null
+                            idx to entry.substringAfter(':')
+                        }
+                        .toMutableList()
+
+                    // Remove any existing entry for this query (dedup)
+                    parsed.removeAll { it.second == query }
+
+                    // Assign a new index higher than the current max
+                    val nextIdx = (parsed.maxOfOrNull { it.first } ?: 0) + 1
+                    parsed.add(nextIdx to query)
+
+                    // Evict oldest entries beyond the cap
+                    val trimmed = parsed.sortedByDescending { it.first }.take(MAX_RECENT_SEARCHES)
+
+                    prefs[RECENT_SEARCHES] = trimmed.map { "${it.first}:${it.second}" }.toSet()
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error saving recent search")
+            }
+        }
+
+        /** Clears all recent search history. */
+        suspend fun clearRecentSearches() {
+            try {
+                dataStore.edit { prefs -> prefs.remove(RECENT_SEARCHES) }
+            } catch (e: IOException) {
+                Timber.e(e, "Error clearing recent searches")
             }
         }
     }

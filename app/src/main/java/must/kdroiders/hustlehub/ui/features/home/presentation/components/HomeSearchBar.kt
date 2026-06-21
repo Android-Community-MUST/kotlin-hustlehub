@@ -29,16 +29,18 @@ import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.R
 
 /**
- * Discovery screen search bar with an ✨ AI trigger chip.
+ * Non-editable search bar displayed on the Home/Discovery screen.
  *
- * The [onAiSearchClick] callback is a placeholder; the dedicated AI Search screen
- * will be wired up in a future issue when its bottom-tab is implemented.
+ * This is a styled button, not an actual text field. Tapping anywhere on the
+ * bar (except the AI chip) navigates to [SearchScreen] where real editing occurs.
+ * This mirrors the UX pattern used by Google Maps, Airbnb, and similar apps.
  */
 @Composable
 fun HomeSearchBar(
     query: String,
     onQueryChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onSearchClick: () -> Unit = {},
     onAiSearchClick: () -> Unit = {},
 ) {
     Row(
@@ -69,7 +71,8 @@ fun HomeSearchBar(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                ) { /* TODO: open dedicated search screen */ }
+                    onClick = onSearchClick,
+                )
                 .testTag("home_search_field"),
         )
         Spacer(Modifier.width(8.dp))

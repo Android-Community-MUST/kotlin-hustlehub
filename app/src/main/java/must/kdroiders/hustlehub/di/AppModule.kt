@@ -14,6 +14,7 @@ import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.data.remote.MediaApiService
 import must.kdroiders.hustlehub.data.remote.ServiceApiService
+import must.kdroiders.hustlehub.data.remote.DiscoveryApiService
 import must.kdroiders.hustlehub.data.remote.UserApiService
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
@@ -34,6 +35,8 @@ import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserReposi
 import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
 import must.kdroiders.hustlehub.ui.features.service.data.repository.ServiceRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
+import must.kdroiders.hustlehub.ui.features.home.data.repository.AiSearchRepositoryImpl
+import must.kdroiders.hustlehub.ui.features.home.domain.repository.AiSearchRepository
 import timber.log.Timber
 import javax.inject.Singleton
 
@@ -141,6 +144,12 @@ object AppModule {
             firebaseAuth,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideAiSearchRepository(
+        discoveryApiService: DiscoveryApiService,
+    ): AiSearchRepository = AiSearchRepositoryImpl(discoveryApiService)
 }
 
 private class NoopAuthRepository : AuthRepository {
