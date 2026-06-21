@@ -9,6 +9,7 @@ import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.core.api.AuthInterceptor
 import must.kdroiders.hustlehub.core.api.TokenAuthenticator
 import must.kdroiders.hustlehub.core.auth.AuthManager
+import must.kdroiders.hustlehub.data.remote.DiscoveryApiService
 import must.kdroiders.hustlehub.data.remote.MediaApiService
 import must.kdroiders.hustlehub.data.remote.ServiceApiService
 import must.kdroiders.hustlehub.data.remote.UserApiService
@@ -94,4 +95,9 @@ object NetworkModule {
     fun provideConversationApiService(retrofit: Retrofit): ConversationApiService {
         return retrofit.create(ConversationApiService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideDiscoveryApiService(retrofit: Retrofit): DiscoveryApiService =
+        retrofit.create(DiscoveryApiService::class.java)
 }

@@ -89,3 +89,18 @@ data class CreateService(val serviceId: String? = null) : NavKey
 /** Full-screen management list of the current user's own services. */
 @Serializable
 data object MyServices : NavKey
+
+/** Full-screen search with filters, sort, and recent suggestions. */
+@Serializable
+data object SearchScreen : NavKey
+
+/** AI-powered natural language search screen. */
+@Serializable
+data object AiSearchScreen : NavKey
+
+/**
+ * Service detail screen — shows a provider's full profile, portfolio, and reviews.
+ * Only [serviceId] is passed; the destination ViewModel fetches the full data.
+ */
+@Serializable
+data class ServiceDetail(val serviceId: String) : NavKey

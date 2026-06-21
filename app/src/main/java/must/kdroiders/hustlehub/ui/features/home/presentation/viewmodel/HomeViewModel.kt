@@ -27,6 +27,8 @@ data class HomeUiState(
     val notificationCount: Int = 0,
     // Paginated real services from backend
     val services: List<Service> = emptyList(),
+    /** Top 5 highest-rated services derived from the loaded list — powers the Featured row. */
+    val featuredServices: List<Service> = emptyList(),
     val isLoadingServices: Boolean = false,
     val isRefreshing: Boolean = false,
     val isLoadingMore: Boolean = false,
@@ -102,8 +104,16 @@ class HomeViewModel
                                 (current.services + pageResponse.content).distinctBy { it.id }
                             }
 
+                            // Derive top 5 rated services for the Featured row.
+                            // Only services with at least one review qualify.
+                            val featured = merged
+                                .filter { it.averageRating > 0f }
+                                .sortedByDescending { it.averageRating }
+                                .take(5)
+
                             current.copy(
                                 services = merged,
+                                featuredServices = featured,
                                 isLoadingServices = false,
                                 isRefreshing = false,
                                 isLoadingMore = false,

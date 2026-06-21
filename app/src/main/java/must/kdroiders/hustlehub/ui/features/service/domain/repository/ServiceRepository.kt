@@ -55,14 +55,32 @@ interface ServiceRepository {
     suspend fun getMyServices(): Result<List<Service>>
 
     /**
-     * Returns a paginated page of browsable services, optionally filtered by
-     * [category] and/or a free-text [query].
-     * Falls back to the Room cache on the first page if the network is unavailable.
+     * Returns a paginated page of browsable services, optionally filtered by category,
+     * availability, rating, price, and location. Falls back to the Room cache on page 0
+     * if the network is unavailable.
      */
     suspend fun browseServices(
         page: Int = 0,
         size: Int = 20,
         category: ServiceCategory? = null,
         query: String? = null,
+        availability: ServiceAvailability? = null,
+        minRating: Double? = null,
+        maxPrice: Int? = null,
+        lat: Double? = null,
+        lng: Double? = null,
+        radiusKm: Double? = null,
+        sortBy: String? = null,
+    ): Result<PageResponse<Service>>
+
+    /**
+     * Full-text keyword search — hits GET /discovery/search?q=.
+     * Results sorted by avgRating descending on the server.
+     * No cache fallback (text search results are highly volatile).
+     */
+    suspend fun searchServices(
+        query: String,
+        page: Int = 0,
+        size: Int = 20,
     ): Result<PageResponse<Service>>
 }

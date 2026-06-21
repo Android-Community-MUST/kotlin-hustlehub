@@ -51,5 +51,24 @@ interface ServiceApiService {
         @Query("size") size: Int = 20,
         @Query("category") category: String? = null,
         @Query("query") query: String? = null,
+        @Query("availability") availability: String? = null,
+        @Query("minRating") minRating: Double? = null,
+        @Query("maxPrice") maxPrice: Int? = null,
+        @Query("lat") lat: Double? = null,
+        @Query("lng") lng: Double? = null,
+        @Query("radiusKm") radiusKm: Double? = null,
+        @Query("sortBy") sortBy: String? = null,
+    ): ApiResponse<PageResponse<ServiceResponse>>
+
+    /**
+     * Full-text keyword search across service titles, descriptions, and tags.
+     * Maps to GET /api/v1/discovery/search — separate from the filtered browse endpoint.
+     * Results are always sorted by avgRating descending.
+     */
+    @GET("discovery/search")
+    suspend fun searchServices(
+        @Query("q") query: String,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20,
     ): ApiResponse<PageResponse<ServiceResponse>>
 }

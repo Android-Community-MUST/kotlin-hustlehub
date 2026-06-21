@@ -194,6 +194,13 @@ class ServiceRepositoryImpl(
         size: Int,
         category: ServiceCategory?,
         query: String?,
+        availability: ServiceAvailability?,
+        minRating: Double?,
+        maxPrice: Int?,
+        lat: Double?,
+        lng: Double?,
+        radiusKm: Double?,
+        sortBy: String?,
     ): Result<PageResponse<Service>> =
         withContext(Dispatchers.IO) {
             val now = System.currentTimeMillis()
@@ -206,11 +213,17 @@ class ServiceRepositoryImpl(
                     size = size,
                     category = categoryStr,
                     query = query,
+                    availability = availability?.name,
+                    minRating = minRating,
+                    maxPrice = maxPrice,
+                    lat = lat,
+                    lng = lng,
+                    radiusKm = radiusKm,
+                    sortBy = sortBy,
                 )
                 if (response.success && response.data != null) {
                     val pageData = response.data
                     val services = pageData.content.map { it.toDomainModel() }
-                    // Cache the discovered services (page 0 only to avoid stale pagination)
                     if (page == 0) serviceDao.upsertAll(services.map { it.toEntity(now) })
                     Result.success(
                         PageResponse(
@@ -225,7 +238,6 @@ class ServiceRepositoryImpl(
                     Result.failure(Exception(response.message))
                 }
             } catch (e: Exception) {
-                // Serve cache for first page only
                 Timber.w(e, "browseServices network miss, serving cache (page $page)")
                 if (page == 0) {
                     val cached = serviceDao.getAllServices()
@@ -246,6 +258,35 @@ class ServiceRepositoryImpl(
                 } else {
                     Result.failure(e)
                 }
+            }
+        }
+
+    override suspend fun searchServices(
+        query: String,
+        page: Int,
+        size: Int,
+    ): Result<PageResponse<Service>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.searchServices(query = query, page = page, size = size)
+                if (response.success && response.data != null) {
+                    val pageData = response.data
+                    val services = pageData.content.map { it.toDomainModel() }
+                    Result.success(
+                        PageResponse(
+                            content = services,
+                            page = pageData.page,
+                            size = pageData.size,
+                            totalElements = pageData.totalElements,
+                            totalPages = pageData.totalPages,
+                        ),
+                    )
+                } else {
+                    Result.failure(Exception(response.message))
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "searchServices failed for query='$query'")
+                Result.failure(e)
             }
         }
 }
