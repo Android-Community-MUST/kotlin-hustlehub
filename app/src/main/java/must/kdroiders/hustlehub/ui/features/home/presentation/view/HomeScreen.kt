@@ -64,6 +64,8 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
     onNavigateToServiceDetail: (serviceId: String) -> Unit = {},
+    onNavigateToSearch: () -> Unit = {},
+    onNavigateToAiSearch: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
     val gridState = rememberLazyGridState()
@@ -148,6 +150,8 @@ fun HomeScreen(
                     HomeSearchBar(
                         query = state.searchQuery,
                         onQueryChanged = viewModel::onSearchQueryChanged,
+                        onSearchClick = onNavigateToSearch,
+                        onAiSearchClick = onNavigateToAiSearch,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 4.dp),
@@ -168,7 +172,7 @@ fun HomeScreen(
                     item(key = "featured_header", span = { GridItemSpan(maxLineSpan) }) {
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "⭐ Featured",
+                            text = "Featured",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
