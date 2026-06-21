@@ -108,7 +108,7 @@ class SplashViewModel
                                                 )
                                                 val saveResult = userRepository.saveUserProfile(defaultUser)
                                                 saveResult.onFailure { saveException ->
-                                                    if (saveException is retrofit2.HttpException) {
+                                                    if (saveException is retrofit2.HttpException && (saveException.code() == 401 || saveException.code() == 403)) {
                                                         firebaseAuth?.signOut()
                                                         targetDestination = SplashDestination.Login
                                                     } else {
@@ -118,7 +118,10 @@ class SplashViewModel
                                             }
                                         }.onFailure { e ->
                                             if (e is retrofit2.HttpException) {
-                                                if (e.code() == 404 || e.code() == 403 || e.code() == 401) {
+                                                if (e.code() == 401 || e.code() == 403) {
+                                                    firebaseAuth?.signOut()
+                                                    targetDestination = SplashDestination.Login
+                                                } else if (e.code() == 404) {
                                                     val defaultUser = User(
                                                         id = currentUser.uid,
                                                         name = currentUser.displayName ?: "Student",
@@ -132,13 +135,16 @@ class SplashViewModel
                                                         isOnline = true,
                                                     )
                                                     val saveResult = userRepository.saveUserProfile(defaultUser)
-                                                    saveResult.onFailure {
-                                                        firebaseAuth?.signOut()
-                                                        targetDestination = SplashDestination.Login
+                                                    saveResult.onFailure { saveException ->
+                                                        if (saveException is retrofit2.HttpException && (saveException.code() == 401 || saveException.code() == 403)) {
+                                                            firebaseAuth?.signOut()
+                                                            targetDestination = SplashDestination.Login
+                                                        } else {
+                                                            targetDestination = SplashDestination.Home
+                                                        }
                                                     }
                                                 } else {
-                                                    firebaseAuth?.signOut()
-                                                    targetDestination = SplashDestination.Login
+                                                    targetDestination = SplashDestination.Home
                                                 }
                                             } else {
                                                 targetDestination = SplashDestination.Home
