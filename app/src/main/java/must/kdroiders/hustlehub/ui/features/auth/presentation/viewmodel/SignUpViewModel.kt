@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignUpUseCase
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -171,7 +172,7 @@ class SignUpViewModel
                                 val firebaseUser = result.user
                                 // Build a minimal User from the Firebase record — the full backend
                                 // profile will be fetched after email verification.
-                                val user = must.kdroiders.hustlehub.data.model.User(
+                                val user = User(
                                     id = firebaseUser.uid,
                                     name = _uiState.value.name,
                                     email = _uiState.value.email,

@@ -1,6 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.home.domain.model
 
-import must.kdroiders.hustlehub.data.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 
 data class TopHustler(
     val id: String,

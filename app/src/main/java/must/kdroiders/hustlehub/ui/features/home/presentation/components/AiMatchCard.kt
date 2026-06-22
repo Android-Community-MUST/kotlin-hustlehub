@@ -23,7 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import must.kdroiders.hustlehub.data.remote.AiSearchMatch
+import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchMatch
 import kotlin.math.roundToInt
 
 /**

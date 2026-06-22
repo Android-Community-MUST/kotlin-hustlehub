@@ -31,8 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import must.kdroiders.hustlehub.data.model.ServiceAvailability
-import must.kdroiders.hustlehub.data.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SearchFilters
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SortOrder
 

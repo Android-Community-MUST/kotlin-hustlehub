@@ -1,7 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel
 
 import android.net.Uri
-import must.kdroiders.hustlehub.data.model.Service
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 
 data class MyServicesUiState(
     val services: List<Service> = emptyList(),

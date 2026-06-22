@@ -65,7 +65,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
-import must.kdroiders.hustlehub.data.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SearchFilters
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SortOrder
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.EmptyServicesView

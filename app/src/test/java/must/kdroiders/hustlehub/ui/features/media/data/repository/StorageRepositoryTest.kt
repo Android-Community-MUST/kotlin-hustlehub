@@ -5,8 +5,8 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import must.kdroiders.hustlehub.core.api.ApiResponse
-import must.kdroiders.hustlehub.data.remote.MediaApiService
-import must.kdroiders.hustlehub.data.remote.MediaUploadResponse
+import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaUploadResponse
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult
 import org.junit.Assert.assertEquals

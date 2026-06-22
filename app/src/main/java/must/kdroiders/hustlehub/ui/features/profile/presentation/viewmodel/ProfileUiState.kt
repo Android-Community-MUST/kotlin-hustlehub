@@ -1,7 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel
 
-import must.kdroiders.hustlehub.data.model.Service
-import must.kdroiders.hustlehub.data.model.User
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 
 /**
  * Immutable UI state for the Profile screen.

@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.data.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.DeleteServiceUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.UpdateAvailabilityUseCase

@@ -1,8 +1,8 @@
 package must.kdroiders.hustlehub.ui.features.service.data.local.entity
 
-import must.kdroiders.hustlehub.data.model.Service
-import must.kdroiders.hustlehub.data.model.ServiceAvailability
-import must.kdroiders.hustlehub.data.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import org.json.JSONArray
 
 /** Converts a cached [ServiceEntity] back to the domain [Service] model. */

@@ -2,7 +2,7 @@ package must.kdroiders.hustlehub.ui.features.media.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import must.kdroiders.hustlehub.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
