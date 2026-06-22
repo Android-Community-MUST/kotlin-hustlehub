@@ -1,7 +1,8 @@
 package must.kdroiders.hustlehub.ui.features.profile.domain.repository
 
 import android.net.Uri
-import must.kdroiders.hustlehub.data.model.User
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 
 /**
  * Contract for profile-related operations: photo upload, saving, and fetching.
@@ -42,4 +43,31 @@ interface UserRepository {
      * @return [Result.success] with `true` if profile exists, `false` if not.
      */
     suspend fun hasUserProfile(userId: String): Result<Boolean>
+
+    /**
+     * Fetches the public profile of any provider by their backend UUID.
+     * Maps to GET /api/v1/users/{userId}.
+     */
+    suspend fun getProviderProfile(providerId: String): Result<User?>
+
+    /**
+     * Fetches all services listed by a specific provider.
+     * Maps to GET /api/v1/services?providerId={providerId} once available;
+     * currently uses GET /api/v1/discovery/services filtered by providerId.
+     */
+    suspend fun getServicesByProvider(providerId: String): Result<List<Service>>
+
+    /**
+     * Updates the currently authenticated user's profile.
+     * Wraps PUT /api/v1/users/me.
+     *
+     * @param avatarUrl Pass a new photo URL after uploading via [uploadProfilePhoto]; pass null to leave unchanged.
+     */
+    suspend fun updateProfile(
+        name: String,
+        bio: String,
+        phone: String,
+        campusLocation: String,
+        avatarUrl: String? = null,
+    ): Result<User>
 }
