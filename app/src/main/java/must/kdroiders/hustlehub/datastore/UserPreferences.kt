@@ -12,8 +12,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import must.kdroiders.hustlehub.data.model.User
-import must.kdroiders.hustlehub.data.model.UserRole
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject

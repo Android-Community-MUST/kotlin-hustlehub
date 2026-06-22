@@ -46,6 +46,7 @@ fun MainShellScreen(
     onNavigateToServiceDetail: (serviceId: String) -> Unit = {},
     onNavigateToSearch: () -> Unit = {},
     onNavigateToAiSearch: () -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val innerBackstack = rememberNavBackStack(BottomHome)
@@ -78,6 +79,7 @@ fun MainShellScreen(
                     HomeScreen(
                         onNavigateToServiceDetail = onNavigateToServiceDetail,
                         onNavigateToSearch = onNavigateToSearch,
+                        onNavigateToAiSearch = onNavigateToAiSearch,
                     )
                 }
                 entry<BottomMap> { MapScreen() }
@@ -88,7 +90,7 @@ fun MainShellScreen(
                 }
                 entry<BottomProfile> {
                     ProfileScreen(
-                        onEditClick = onNavigateToProfileSetup,
+                        onEditClick = onNavigateToEditProfile,
                         onAddNewServiceClick = onNavigateToCreateService,
                         onServiceClick = onNavigateToEditService,
                         onNavigateToMyServices = onNavigateToMyServices,

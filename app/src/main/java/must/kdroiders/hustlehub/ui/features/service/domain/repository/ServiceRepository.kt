@@ -1,9 +1,10 @@
 package must.kdroiders.hustlehub.ui.features.service.domain.repository
 
 import must.kdroiders.hustlehub.core.api.PageResponse
-import must.kdroiders.hustlehub.data.model.Service
-import must.kdroiders.hustlehub.data.model.ServiceAvailability
-import must.kdroiders.hustlehub.data.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 
 /**
  * Contract for all service listing operations: create, read, update, delete,
@@ -83,4 +84,22 @@ interface ServiceRepository {
         page: Int = 0,
         size: Int = 20,
     ): Result<PageResponse<Service>>
+
+    /** Returns paginated reviews for a service. Maps to GET /api/v1/services/{serviceId}/reviews. */
+    suspend fun getServiceReviews(
+        serviceId: String,
+        page: Int = 0,
+        size: Int = 10,
+    ): Result<PageResponse<Review>>
+
+    /**
+     * Submits a review for a service. The backend returns HTTP 409 if the current user
+     * has already reviewed this service (one review per user per service constraint).
+     */
+    suspend fun submitReview(
+        serviceId: String,
+        rating: Int,
+        comment: String? = null,
+        isAnonymous: Boolean = false,
+    ): Result<Review>
 }

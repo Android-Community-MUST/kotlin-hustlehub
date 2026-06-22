@@ -12,10 +12,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.data.local.AppDatabase
-import must.kdroiders.hustlehub.data.remote.MediaApiService
-import must.kdroiders.hustlehub.data.remote.ServiceApiService
-import must.kdroiders.hustlehub.data.remote.DiscoveryApiService
-import must.kdroiders.hustlehub.data.remote.UserApiService
+import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
+import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
+import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
@@ -88,9 +88,11 @@ object AppModule {
         authApiService: AuthApiService,
         userApiService: UserApiService,
         mediaApiService: MediaApiService,
+        serviceApiService: ServiceApiService,
     ): UserRepository {
-        return UserRepositoryImpl(context, authApiService, userApiService, mediaApiService)
+        return UserRepositoryImpl(context, authApiService, userApiService, mediaApiService, serviceApiService)
     }
+
 
     @Provides
     @Singleton

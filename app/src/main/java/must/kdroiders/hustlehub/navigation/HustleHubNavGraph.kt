@@ -32,9 +32,13 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginVie
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatDetailScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.AiSearchScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.SearchScreen
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.EditProfileScreen
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProviderProfileScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.CreateServiceScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServicesScreen
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.ServiceDetailScreen
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.WriteReviewScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
 
 /**
@@ -209,8 +213,10 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
                     onNavigateToSearch = { backstack.add(must.kdroiders.hustlehub.navigation.SearchScreen) },
                     onNavigateToAiSearch = { backstack.add(must.kdroiders.hustlehub.navigation.AiSearchScreen) },
+                    onNavigateToEditProfile = { backstack.add(EditProfile) },
                 )
             }
+
 
             entry<Settings> {
                 SettingsScreen(
@@ -251,10 +257,42 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 )
             }
 
-            // Service detail — full provider profile, portfolio & reviews.
-            // TODO(sprint-4): Replace this stub with the real ServiceDetailScreen.
-            entry<ServiceDetail> { _ ->
-                if (backstack.size > 1) backstack.remove(backstack.last())
+            // Service detail — full provider profile, portfolio and reviews.
+            entry<ServiceDetail> { key ->
+                ServiceDetailScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    onNavigateToChat = { providerId -> backstack.add(ChatDetail(chatId = providerId)) },
+                    onNavigateToProviderProfile = { providerId -> backstack.add(ProviderProfile(providerId = providerId)) },
+                    onNavigateToWriteReview = { serviceId, providerId ->
+                        backstack.add(WriteReview(serviceId = serviceId, providerId = providerId))
+                    },
+                )
+            }
+
+            // Provider public profile
+            entry<ProviderProfile> { key ->
+                ProviderProfileScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    onNavigateToChat = { providerId -> backstack.add(ChatDetail(chatId = providerId)) },
+                    onNavigateToEditProfile = { backstack.add(EditProfile) },
+                    onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
+                )
+            }
+
+            // Edit own profile
+            entry<EditProfile> {
+                EditProfileScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    onSaveSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                )
+            }
+
+            // Write review
+            entry<WriteReview> { _ ->
+                WriteReviewScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    onSubmitSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                )
             }
 
             entry<must.kdroiders.hustlehub.navigation.SearchScreen> {
