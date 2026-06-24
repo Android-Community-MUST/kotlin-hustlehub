@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
@@ -54,11 +56,27 @@ import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.sharedComposables.RatingBar
 import must.kdroiders.hustlehub.sharedComposables.SectionHeader
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.AvailabilityBadge
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.CategoryBadge
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.FullScreenImageViewer
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.PortfolioGallery
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewCard
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewSummaryCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailUiState
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailViewModel
+
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,99 +89,119 @@ fun ServiceDetailScreen(
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit = { _, _ -> },
 ) {
     val state by serviceDetailViewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(serviceId) {
         serviceDetailViewModel.initialize(serviceId)
     }
 
     var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
-    var showMenu by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = state.service?.title ?: "Service Detail",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { /* Share intent */ }) {
-                        Icon(Icons.Default.Share, contentDescription = "Share")
-                    }
-                    Box {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "More options")
-                        }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false },
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Report service") },
-                                onClick = { showMenu = false },
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
-            )
-        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (!state.isLoading && state.error == null && !state.isOwnService) {
-                Surface(shadowElevation = 8.dp) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 16.dp,
+                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .navigationBarsPadding()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        if (!state.isOwnService) {
-                            HustleButton(
-                                text = "Write Review",
-                                onClick = {
-                                    val service = state.service ?: return@HustleButton
-                                    onNavigateToWriteReview(service.id, service.providerId)
-                                },
-                                modifier = Modifier.weight(1f),
+                        Column {
+                            Text(
+                                text = "STARTING AT",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "KES ${state.service?.priceRange ?: ""} +",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
+
                         HustleButton(
                             text = "Message Provider",
-                            onClick = {
-                                state.service?.providerId?.let { onNavigateToChat(it) }
-                            },
-                            modifier = Modifier.weight(1f),
+                            onClick = { state.service?.providerId?.let { onNavigateToChat(it) } },
+                            modifier = Modifier.width(200.dp),
                         )
                     }
                 }
             }
         },
     ) { innerPadding ->
-        when {
-            state.isLoading -> LoadingIndicator(modifier = Modifier.padding(innerPadding).fillMaxSize())
-            state.error != null -> ErrorView(
-                message = state.error ?: "Unknown error",
-                onRetry = serviceDetailViewModel::retry,
-                modifier = Modifier.padding(innerPadding).fillMaxSize(),
-            )
-            else -> ServiceDetailContent(
-                state = state,
-                contentPadding = innerPadding,
-                onImageClick = { url -> fullScreenImageUrl = url },
-                onProviderClick = { state.service?.providerId?.let { onNavigateToProviderProfile(it) } },
-            )
+        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+            when {
+                state.isLoading -> LoadingIndicator(modifier = Modifier.fillMaxSize())
+                state.error != null -> ErrorView(
+                    message = state.error ?: "Unknown error",
+                    onRetry = serviceDetailViewModel::retry,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                else -> ServiceDetailContent(
+                    state = state,
+                    contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 24.dp),
+                    onImageClick = { url -> fullScreenImageUrl = url },
+                    onProviderClick = { state.service?.providerId?.let { onNavigateToProviderProfile(it) } },
+                )
+            }
+
+            // Top Action Buttons overlaid on image
+            if (!state.isLoading && state.error == null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(WindowInsets.statusBars.asPaddingValues())
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    // Back Button
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.3f)),
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White,
+                        )
+                    }
+
+                    // Share and Bookmark
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        IconButton(
+                            onClick = { scope.launch { snackbarHostState.showSnackbar("Share feature coming soon!") } },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.Black.copy(alpha = 0.3f)),
+                        ) {
+                            Icon(Icons.Default.Share, contentDescription = "Share", tint = Color.White)
+                        }
+                        IconButton(
+                            onClick = { scope.launch { snackbarHostState.showSnackbar("Bookmark feature coming soon!") } },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.Black.copy(alpha = 0.3f)),
+                        ) {
+                            Icon(Icons.Default.BookmarkBorder, contentDescription = "Save", tint = Color.White)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -186,52 +224,133 @@ private fun ServiceDetailContent(
     val provider = state.provider
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding(),
-            bottom = contentPadding.calculateBottomPadding() + 16.dp,
-        ),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = contentPadding,
     ) {
-        // Portfolio gallery
-        if (service.portfolio.isNotEmpty()) {
-            item(key = "gallery") {
-                PortfolioGallery(
-                    imageUrls = service.portfolio,
-                    onImageClick = onImageClick,
+        // Hero Image Header
+        item(key = "hero_image") {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(350.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+            ) {
+                if (service.portfolio.isNotEmpty()) {
+                    AsyncImage(
+                        model = service.portfolio.first(),
+                        contentDescription = "Service Hero Image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+
+                // Scrim to fade into the background
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    MaterialTheme.colorScheme.background.copy(alpha = 0.4f),
+                                    MaterialTheme.colorScheme.background,
+                                ),
+                                startY = 300f,
+                            ),
+                        ),
                 )
-                Spacer(Modifier.height(16.dp))
             }
         }
 
-        // Provider info row
-        item(key = "provider_info") {
+        // Title and Header Badges
+        item(key = "header_info") {
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(bottom = 12.dp),
+                ) {
+                    AvailabilityBadge(availability = service.availability)
+                    CategoryBadge(category = service.category)
+                }
+
+                Text(
+                    text = service.title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                
+                Spacer(Modifier.height(8.dp))
+
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = "KES ",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 2.dp),
+                    )
+                    Text(
+                        text = service.priceRange,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+            Spacer(Modifier.height(24.dp))
+        }
+
+        // Provider Card
+        item(key = "provider_card") {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
                     .clickable(onClick = onProviderClick)
-                    .padding(horizontal = 16.dp),
+                    .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                AsyncImage(
-                    model = provider?.profilePhotoUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                )
+                // Avatar with Verified badge
+                Box(contentAlignment = Alignment.BottomEnd) {
+                    AsyncImage(
+                        model = provider?.profilePhotoUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                    )
+                    if (provider?.isVerified == true) {
+                        Box(
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.background),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Default.Verified,
+                                contentDescription = "Verified",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(14.dp),
+                            )
+                        }
+                    }
+                }
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = provider?.name ?: "Loading…",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
                     )
                     provider?.campusLocation?.takeIf { it.isNotBlank() }?.let { location ->
+                        Spacer(Modifier.height(4.dp))
                         Text(
                             text = location,
                             style = MaterialTheme.typography.bodySmall,
@@ -240,88 +359,90 @@ private fun ServiceDetailContent(
                     }
                 }
 
-                AvailabilityBadge(availability = service.availability)
+                // Mini stats block
+                Column(horizontalAlignment = Alignment.End) {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "%.1f".format(service.averageRating),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(text = "⭐", style = MaterialTheme.typography.labelSmall)
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "${state.totalReviewCount} jobs done",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
-            Spacer(Modifier.height(16.dp))
-        }
-
-        // Rating + price
-        item(key = "rating_price") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                RatingBar(rating = service.averageRating, starSize = 18.dp)
-                Text(
-                    text = "%.1f".format(service.averageRating),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    text = "· ${state.totalReviewCount} reviews",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.weight(1f))
-                Text(
-                    text = "KES ${service.priceRange}",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(32.dp))
         }
 
         // About section
         if (service.description.isNotBlank()) {
             item(key = "about_header") {
-                SectionHeader(title = "About", modifier = Modifier.padding(horizontal = 16.dp))
-                Spacer(Modifier.height(6.dp))
+                SectionHeader(title = "About Service", modifier = Modifier.padding(horizontal = 20.dp))
+                Spacer(Modifier.height(12.dp))
             }
             item(key = "about_body") {
                 Text(
                     text = service.description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
+                    modifier = Modifier.padding(horizontal = 20.dp),
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(32.dp))
             }
         }
 
-        // Tags
-        if (service.tags.isNotEmpty()) {
-            item(key = "tags") {
-                Text(
-                    text = service.tags.joinToString("  ") { "#${it}" },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+        // Portfolio
+        if (service.portfolio.isNotEmpty()) {
+            item(key = "portfolio_header") {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    SectionHeader(title = "Portfolio")
+                    TextButton(onClick = { /* Full gallery view later */ }) {
+                        Text("View All", style = MaterialTheme.typography.labelLarge)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+            item(key = "portfolio_row") {
+                PortfolioGallery(
+                    imageUrls = service.portfolio,
+                    onImageClick = onImageClick,
+                    modifier = Modifier.padding(horizontal = 20.dp),
                 )
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(32.dp))
             }
         }
 
-        // Reviews header
+        // Reviews section
         item(key = "reviews_header") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Reviews (${state.totalReviewCount})",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            Spacer(Modifier.height(12.dp))
+            SectionHeader(title = "Reviews", modifier = Modifier.padding(horizontal = 20.dp))
+            Spacer(Modifier.height(16.dp))
+        }
+        
+        item(key = "reviews_summary") {
+            ReviewSummaryCard(
+                averageRating = service.averageRating,
+                totalReviews = state.totalReviewCount,
+                modifier = Modifier.padding(horizontal = 20.dp),
+            )
+            Spacer(Modifier.height(24.dp))
         }
 
         if (state.reviews.isEmpty()) {
@@ -330,24 +451,23 @@ private fun ServiceDetailContent(
                     text = "No reviews yet. Be the first to leave one!",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }
         } else {
             items(items = state.reviews, key = { it.id }) { review ->
                 ReviewCard(
                     review = review,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }
 
             if (state.totalReviewCount > state.reviews.size) {
                 item(key = "see_all") {
-                    TextButton(
-                        onClick = {},
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                    ) {
-                        Text("See all ${state.totalReviewCount} reviews")
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        TextButton(onClick = {}) {
+                            Text("See all ${state.totalReviewCount} reviews")
+                        }
                     }
                 }
             }
