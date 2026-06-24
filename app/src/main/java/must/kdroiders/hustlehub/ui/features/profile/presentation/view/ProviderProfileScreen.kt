@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -47,13 +48,18 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.Provi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProviderProfileScreen(
-    viewModel: ProviderProfileViewModel = hiltViewModel(),
+    providerId: String,
+    providerProfileViewModel: ProviderProfileViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
     onNavigateToChat: (providerId: String) -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToServiceDetail: (serviceId: String) -> Unit = {},
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by providerProfileViewModel.uiState.collectAsState()
+
+    LaunchedEffect(providerId) {
+        providerProfileViewModel.initialize(providerId)
+    }
 
     Scaffold(
         topBar = {
@@ -108,8 +114,8 @@ fun ProviderProfileScreen(
         when {
             state.isLoading -> LoadingIndicator(modifier = Modifier.padding(innerPadding).fillMaxSize())
             state.error != null -> ErrorView(
-                message = state.error!!,
-                onRetry = viewModel::retry,
+                message = state.error ?: "Unknown error",
+                onRetry = providerProfileViewModel::retry,
                 modifier = Modifier.padding(innerPadding).fillMaxSize(),
             )
             else -> {

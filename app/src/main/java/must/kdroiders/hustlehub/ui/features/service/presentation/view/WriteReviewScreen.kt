@@ -43,12 +43,17 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.Write
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WriteReviewScreen(
+    serviceId: String,
     viewModel: WriteReviewViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
     onSubmitSuccess: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(serviceId) {
+        viewModel.initialize(serviceId)
+    }
 
     LaunchedEffect(state.submitSuccess) {
         if (state.submitSuccess) {

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -35,6 +34,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,13 +63,19 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.Servi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServiceDetailScreen(
-    viewModel: ServiceDetailViewModel = hiltViewModel(),
+    serviceId: String,
+    serviceDetailViewModel: ServiceDetailViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
     onNavigateToChat: (providerId: String) -> Unit = {},
     onNavigateToProviderProfile: (providerId: String) -> Unit = {},
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit = { _, _ -> },
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by serviceDetailViewModel.uiState.collectAsState()
+
+    LaunchedEffect(serviceId) {
+        serviceDetailViewModel.initialize(serviceId)
+    }
+
     var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
     var showMenu by remember { mutableStateOf(false) }
 
@@ -148,8 +154,8 @@ fun ServiceDetailScreen(
         when {
             state.isLoading -> LoadingIndicator(modifier = Modifier.padding(innerPadding).fillMaxSize())
             state.error != null -> ErrorView(
-                message = state.error!!,
-                onRetry = viewModel::retry,
+                message = state.error ?: "Unknown error",
+                onRetry = serviceDetailViewModel::retry,
                 modifier = Modifier.padding(innerPadding).fillMaxSize(),
             )
             else -> ServiceDetailContent(
@@ -225,9 +231,9 @@ private fun ServiceDetailContent(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    if (!provider?.campusLocation.isNullOrBlank()) {
+                    provider?.campusLocation?.takeIf { it.isNotBlank() }?.let { location ->
                         Text(
-                            text = provider!!.campusLocation,
+                            text = location,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

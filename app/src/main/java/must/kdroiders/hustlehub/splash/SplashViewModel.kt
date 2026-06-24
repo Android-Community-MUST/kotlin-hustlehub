@@ -93,28 +93,7 @@ class SplashViewModel
                                     hasProfileResult
                                         .onSuccess { hasProfile ->
                                             if (!hasProfile) {
-                                                val defaultUser = User(
-                                                    id = currentUser.uid,
-                                                    name = currentUser.displayName ?: "Student",
-                                                    email = currentUser.email ?: "",
-                                                    phone = "",
-                                                    campusLocation = "",
-                                                    role = UserRole.CUSTOMER,
-                                                    profilePhotoUrl = currentUser.photoUrl?.toString()
-                                                        ?: "",
-                                                    bio = "",
-                                                    isVerified = false,
-                                                    isOnline = true,
-                                                )
-                                                val saveResult = userRepository.saveUserProfile(defaultUser)
-                                                saveResult.onFailure { saveException ->
-                                                    if (saveException is retrofit2.HttpException && (saveException.code() == 401 || saveException.code() == 403)) {
-                                                        firebaseAuth?.signOut()
-                                                        targetDestination = SplashDestination.Login
-                                                    } else {
-                                                        targetDestination = SplashDestination.Home
-                                                    }
-                                                }
+                                                targetDestination = SplashDestination.ProfileSetup
                                             }
                                         }.onFailure { e ->
                                             if (e is retrofit2.HttpException) {
@@ -122,32 +101,8 @@ class SplashViewModel
                                                     firebaseAuth?.signOut()
                                                     targetDestination = SplashDestination.Login
                                                 } else if (e.code() == 404) {
-                                                    val defaultUser = User(
-                                                        id = currentUser.uid,
-                                                        name = currentUser.displayName ?: "Student",
-                                                        email = currentUser.email ?: "",
-                                                        phone = "",
-                                                        campusLocation = "",
-                                                        role = UserRole.CUSTOMER,
-                                                        profilePhotoUrl = currentUser.photoUrl?.toString() ?: "",
-                                                        bio = "",
-                                                        isVerified = false,
-                                                        isOnline = true,
-                                                    )
-                                                    val saveResult = userRepository.saveUserProfile(defaultUser)
-                                                    saveResult.onFailure { saveException ->
-                                                        if (saveException is retrofit2.HttpException && (saveException.code() == 401 || saveException.code() == 403)) {
-                                                            firebaseAuth?.signOut()
-                                                            targetDestination = SplashDestination.Login
-                                                        } else {
-                                                            targetDestination = SplashDestination.Home
-                                                        }
-                                                    }
-                                                } else {
-                                                    targetDestination = SplashDestination.Home
+                                                    targetDestination = SplashDestination.ProfileSetup
                                                 }
-                                            } else {
-                                                targetDestination = SplashDestination.Home
                                             }
                                         }
                                     targetDestination

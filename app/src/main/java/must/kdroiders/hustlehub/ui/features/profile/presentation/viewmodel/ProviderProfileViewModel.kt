@@ -20,28 +20,30 @@ import javax.inject.Inject
 class ProviderProfileViewModel
     @Inject
     constructor(
-        savedStateHandle: SavedStateHandle,
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
         private val getServicesByProviderUseCase: GetServicesByProviderUseCase,
         private val authRepository: AuthRepository,
     ) : ViewModel() {
-        private val providerId: String = checkNotNull(savedStateHandle["providerId"])
+        private var providerId: String? = null
 
         private val _uiState = MutableStateFlow(ProviderProfileUiState())
         val uiState: StateFlow<ProviderProfileUiState> = _uiState.asStateFlow()
 
-        init {
+        fun initialize(id: String) {
+            if (providerId == id) return
+            providerId = id
             load()
         }
 
         fun load() {
+            val id = providerId ?: return
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
 
                 val currentUid = authRepository.getCurrentUser()?.uid
 
-                val profileDeferred = async { getProviderProfileUseCase(providerId) }
-                val servicesDeferred = async { getServicesByProviderUseCase(providerId) }
+                val profileDeferred = async { getProviderProfileUseCase(id) }
+                val servicesDeferred = async { getServicesByProviderUseCase(id) }
 
                 val profileResult = profileDeferred.await()
                 val servicesResult = servicesDeferred.await()
@@ -75,7 +77,7 @@ class ProviderProfileViewModel
                             )
                         }
                     }.onFailure { e ->
-                        Timber.e(e, "ProviderProfileViewModel: failed to load provider id=$providerId")
+                        Timber.e(e, "ProviderProfileViewModel: failed to load provider id=$id")
                         _uiState.update { it.copy(isLoading = false, error = "Failed to load provider profile.") }
                     }
             }

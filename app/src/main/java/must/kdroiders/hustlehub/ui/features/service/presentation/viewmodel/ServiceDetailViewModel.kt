@@ -22,29 +22,31 @@ import javax.inject.Inject
 class ServiceDetailViewModel
     @Inject
     constructor(
-        savedStateHandle: SavedStateHandle,
         private val getServiceByIdUseCase: GetServiceByIdUseCase,
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
         private val getServiceReviewsUseCase: GetServiceReviewsUseCase,
         private val authRepository: AuthRepository,
     ) : ViewModel() {
-        private val serviceId: String = checkNotNull(savedStateHandle["serviceId"])
+        private var serviceId: String? = null
 
         private val _uiState = MutableStateFlow(ServiceDetailUiState())
         val uiState: StateFlow<ServiceDetailUiState> = _uiState.asStateFlow()
 
-        init {
+        fun initialize(id: String) {
+            if (serviceId == id) return
+            serviceId = id
             load()
         }
 
         fun load() {
+            val id = serviceId ?: return
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
 
                 val currentUid = authRepository.getCurrentUser()?.uid
 
-                val serviceDeferred = async { getServiceByIdUseCase(serviceId) }
-                val reviewsDeferred = async { getServiceReviewsUseCase(serviceId, page = 0, size = 5) }
+                val serviceDeferred = async { getServiceByIdUseCase(id) }
+                val reviewsDeferred = async { getServiceReviewsUseCase(id, page = 0, size = 5) }
 
                 val serviceResult = serviceDeferred.await()
                 val reviewsResult = reviewsDeferred.await()
@@ -68,7 +70,7 @@ class ServiceDetailViewModel
                             )
                         }
                     }.onFailure { e ->
-                        Timber.e(e, "ServiceDetailViewModel: failed to load service id=$serviceId")
+                        Timber.e(e, "ServiceDetailViewModel: failed to load service id=$id")
                         _uiState.update { it.copy(isLoading = false, error = "Failed to load service details.") }
                     }
             }

@@ -260,6 +260,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
             // Service detail — full provider profile, portfolio and reviews.
             entry<ServiceDetail> { key ->
                 ServiceDetailScreen(
+                    serviceId = key.serviceId,
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onNavigateToChat = { providerId -> backstack.add(ChatDetail(chatId = providerId)) },
                     onNavigateToProviderProfile = { providerId -> backstack.add(ProviderProfile(providerId = providerId)) },
@@ -272,6 +273,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
             // Provider public profile
             entry<ProviderProfile> { key ->
                 ProviderProfileScreen(
+                    providerId = key.providerId,
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onNavigateToChat = { providerId -> backstack.add(ChatDetail(chatId = providerId)) },
                     onNavigateToEditProfile = { backstack.add(EditProfile) },
@@ -288,8 +290,9 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
             }
 
             // Write review
-            entry<WriteReview> { _ ->
+            entry<WriteReview> { key ->
                 WriteReviewScreen(
+                    serviceId = key.serviceId,
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onSubmitSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                 )

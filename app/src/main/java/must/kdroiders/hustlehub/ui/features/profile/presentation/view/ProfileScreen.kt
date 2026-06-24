@@ -59,7 +59,7 @@ fun ProfileScreen(
         when {
             state.isLoading -> LoadingState()
             state.error != null -> ErrorState(
-                message = state.error!!,
+                message = state.error ?: "Unknown error",
                 onRetry = profileViewModel::retry,
             )
             else -> ProfileContent(

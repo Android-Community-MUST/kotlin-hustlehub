@@ -217,7 +217,7 @@ class CreateServiceViewModel
                     serviceRepository.updateService(
                         serviceId = snapshot,
                         title = state.title.trim(),
-                        category = state.category!!,
+                        category = state.category ?: ServiceCategory.OTHER,
                         description = state.description.trim().ifEmpty { null },
                         minPrice = minPrice,
                         maxPrice = maxPrice,
@@ -227,7 +227,7 @@ class CreateServiceViewModel
                 } else {
                     serviceRepository.createService(
                         title = state.title.trim(),
-                        category = state.category!!,
+                        category = state.category ?: ServiceCategory.OTHER,
                         description = state.description.trim().ifEmpty { null },
                         minPrice = minPrice,
                         maxPrice = maxPrice,

@@ -17,13 +17,16 @@ import javax.inject.Inject
 class WriteReviewViewModel
     @Inject
     constructor(
-        savedStateHandle: SavedStateHandle,
         private val submitReviewUseCase: SubmitReviewUseCase,
     ) : ViewModel() {
-        private val serviceId: String = checkNotNull(savedStateHandle["serviceId"])
+        private var serviceId: String? = null
 
         private val _uiState = MutableStateFlow(WriteReviewUiState())
         val uiState: StateFlow<WriteReviewUiState> = _uiState.asStateFlow()
+
+        fun initialize(id: String) {
+            serviceId = id
+        }
 
         fun onRatingChanged(rating: Int) = _uiState.update { it.copy(rating = rating) }
 
@@ -38,6 +41,7 @@ class WriteReviewViewModel
         fun clearError() = _uiState.update { it.copy(error = null) }
 
         fun submit() {
+            val sid = serviceId ?: return
             val state = _uiState.value
             if (!state.canSubmit) return
 
@@ -45,14 +49,14 @@ class WriteReviewViewModel
                 _uiState.update { it.copy(isSubmitting = true, error = null) }
 
                 submitReviewUseCase(
-                    serviceId = serviceId,
+                    serviceId = sid,
                     rating = state.rating,
                     comment = state.comment.trim().takeIf { it.isNotBlank() },
                     isAnonymous = state.isAnonymous,
                 ).onSuccess {
                     _uiState.update { it.copy(isSubmitting = false, submitSuccess = true) }
                 }.onFailure { e ->
-                    Timber.e(e, "WriteReviewViewModel: submit failed for serviceId=$serviceId")
+                    Timber.e(e, "WriteReviewViewModel: submit failed for serviceId=$sid")
                     _uiState.update { it.copy(isSubmitting = false, error = e.message ?: "Failed to submit review.") }
                 }
             }
