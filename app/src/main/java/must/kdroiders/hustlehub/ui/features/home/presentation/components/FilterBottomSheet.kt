@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SearchFilters
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SortOrder
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
@@ -63,15 +64,33 @@ fun FilterBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 24.dp)
                 .navigationBarsPadding(),
         ) {
-            Text(
-                text = "Filters",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(Modifier.height(20.dp))
+            // Header row with title and reset
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Filter Results",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                TextButton(
+                    onClick = onReset,
+                    modifier = Modifier.testTag("filter_reset_button"),
+                ) {
+                    Text(
+                        "Reset",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            Spacer(Modifier.height(24.dp))
 
             // Category multi-select chips
             FilterSectionLabel("Category")
@@ -110,8 +129,20 @@ fun FilterBottomSheet(
             )
             Spacer(Modifier.height(20.dp))
 
-            // Max price slider
-            FilterSectionLabel("Max Price: ${if (draft.maxPrice >= 5000) "Any" else "KES ${draft.maxPrice}"}")
+            // Max price slider section
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FilterSectionLabel("PRICE RANGE")
+                Text(
+                    text = if (draft.maxPrice >= 5000) "Any" else "KES 0 - ${draft.maxPrice}",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
             Slider(
                 value = draft.maxPrice.toFloat(),
                 onValueChange = { onDraftChanged(draft.copy(maxPrice = it.toInt())) },
@@ -121,15 +152,23 @@ fun FilterBottomSheet(
                     .fillMaxWidth()
                     .testTag("filter_price_slider"),
             )
-            Spacer(Modifier.height(20.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("0", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("5k+", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Spacer(Modifier.height(32.dp))
 
             // Availability segmented button
-            FilterSectionLabel("Availability")
+            FilterSectionLabel("AVAILABILITY")
             val availabilityOptions = listOf(null, ServiceAvailability.AVAILABLE, ServiceAvailability.BUSY)
             val availabilityLabels = listOf("All", "Available", "Busy")
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(48.dp)
                     .testTag("filter_availability"),
             ) {
                 availabilityOptions.forEachIndexed { index, option ->
@@ -137,11 +176,11 @@ fun FilterBottomSheet(
                         selected = draft.availability == option,
                         onClick = { onDraftChanged(draft.copy(availability = option)) },
                         shape = SegmentedButtonDefaults.itemShape(index, availabilityOptions.size),
-                        label = { Text(availabilityLabels[index]) },
+                        label = { Text(availabilityLabels[index], fontWeight = FontWeight.SemiBold) },
                     )
                 }
             }
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(32.dp))
 
             // Sort order segmented button
             FilterSectionLabel("Sort By")
@@ -160,29 +199,19 @@ fun FilterBottomSheet(
                 }
             }
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(40.dp))
 
-            // Action buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
+            // Action button (Show Results)
+            Button(
+                onClick = onApply,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .testTag("filter_apply_button"),
             ) {
-                TextButton(
-                    onClick = onReset,
-                    modifier = Modifier.testTag("filter_reset_button"),
-                ) {
-                    Text("Reset")
-                }
-                Spacer(Modifier.width(8.dp))
-                Button(
-                    onClick = onApply,
-                    modifier = Modifier.testTag("filter_apply_button"),
-                ) {
-                    Text("Apply Filters")
-                }
+                Text("Show Results", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(32.dp))
         }
     }
 }

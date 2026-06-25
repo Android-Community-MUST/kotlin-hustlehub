@@ -301,6 +301,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 SearchScreen(
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
+                    onNavigateToChat = { providerId -> backstack.add(ChatDetail(chatId = providerId)) },
                 )
             }
 
