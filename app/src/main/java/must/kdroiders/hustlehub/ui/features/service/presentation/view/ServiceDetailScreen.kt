@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -374,7 +375,12 @@ private fun ServiceDetailContent(
                             fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.width(4.dp))
-                        Text(text = "⭐", style = MaterialTheme.typography.labelSmall)
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Rating",
+                            tint = Color(0xFFFFC107),
+                            modifier = Modifier.size(14.dp),
+                        )
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(

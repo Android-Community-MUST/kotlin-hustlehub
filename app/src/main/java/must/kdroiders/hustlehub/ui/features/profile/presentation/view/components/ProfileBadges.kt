@@ -14,7 +14,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -58,18 +61,18 @@ fun ProfileBadges(
 fun BadgeChip(badge: Badge) {
     val (bgColor, textColor) = when (badge.type) {
         BadgeType.GOLD -> HustleBadgeGold to HustleWarningAmber
-        BadgeType.GREEN -> HustleBadgeGreen to HustleActiveGreen
-        BadgeType.BLUE -> HustleBadgeBlue to MaterialTheme.colorScheme.surfaceVariant
+        BadgeType.GREEN -> HustleBadgeGreen.copy(alpha = 0.2f) to HustleActiveGreen
+        BadgeType.BLUE -> HustleBadgeBlue.copy(alpha = 0.2f) to HustleBadgeBlue
         BadgeType.DEFAULT ->
             MaterialTheme.colorScheme.surfaceVariant to
                 MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    val icon = when (badge.type) {
-        BadgeType.GOLD -> Icons.Default.Star
-        BadgeType.GREEN -> Icons.Default.Star
-        BadgeType.BLUE -> Icons.Default.Star
-        BadgeType.DEFAULT -> Icons.Default.Star
+    val icon = when (badge.label) {
+        "Top Rated" -> Icons.Default.WorkspacePremium
+        "Fast Responder" -> Icons.Default.Bolt
+        "Verified Student" -> Icons.Default.Verified
+        else -> Icons.Default.Star
     }
 
     Row(

@@ -51,9 +51,13 @@ class ProfileViewModel
                             it.copy(
                                 user = user,
                                 services = servicesResult.getOrElse { emptyList() },
-                                hustleScore = 0f,
-                                reviewCount = 0,
-                                badges = emptyList(),
+                                hustleScore = 4.7f,
+                                reviewCount = 47,
+                                badges = listOf(
+                                    Badge("Top Rated", BadgeType.BLUE),
+                                    Badge("Fast Responder", BadgeType.GREEN),
+                                    Badge("Verified Student", BadgeType.BLUE)
+                                ),
                                 isLoading = false,
                                 error = null,
                             )

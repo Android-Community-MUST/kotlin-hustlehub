@@ -23,6 +23,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import kotlinx.coroutines.launch
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleCard
@@ -50,27 +56,36 @@ fun ProfileScreen(
     onSettingsClick: () -> Unit = {},
 ) {
     val state by profileViewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-    ) {
-        when {
-            state.isLoading -> LoadingState()
-            state.error != null -> ErrorState(
-                message = state.error ?: "Unknown error",
-                onRetry = profileViewModel::retry,
-            )
-            else -> ProfileContent(
-                state = state,
-                onEditClick = onEditClick,
-                onToggleService = profileViewModel::toggleServiceActive,
-                onAddNewServiceClick = onAddNewServiceClick,
-                onServiceClick = onServiceClick,
-                onNavigateToMyServices = onNavigateToMyServices,
-                onSettingsClick = onSettingsClick,
-            )
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+    ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            when {
+                state.isLoading -> LoadingState()
+                state.error != null -> ErrorState(
+                    message = state.error ?: "Unknown error",
+                    onRetry = profileViewModel::retry,
+                )
+                else -> ProfileContent(
+                    state = state,
+                    onEditClick = onEditClick,
+                    onToggleService = profileViewModel::toggleServiceActive,
+                    onAddNewServiceClick = onAddNewServiceClick,
+                    onServiceClick = onServiceClick,
+                    onNavigateToMyServices = onNavigateToMyServices,
+                    onSettingsClick = onSettingsClick,
+                    onShowSnackbar = { message ->
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(message)
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -86,6 +101,7 @@ private fun ProfileContent(
     onServiceClick: (serviceId: String) -> Unit = {},
     onNavigateToMyServices: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
+    onShowSnackbar: (String) -> Unit = {},
 ) {
     val user = state.user ?: return
 
@@ -116,6 +132,7 @@ private fun ProfileContent(
             ) {
                 ProfileAvatar(
                     photoUrl = user.profilePhotoUrl,
+                    isVerified = user.isVerified,
                 )
                 Spacer(Modifier.height(12.dp))
                 ProfileInfo(
@@ -151,40 +168,6 @@ private fun ProfileContent(
             )
         }
 
-        if (user.role == UserRole.CUSTOMER) {
-            item(key = "become_provider_banner") {
-                Spacer(Modifier.height(16.dp))
-                HustleCard(
-                    variant = HustleCardVariant.Elevated,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text(
-                            text = "Earn Money on HustleHub!",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = "Complete your provider profile to list your services, show your portfolio, and receive booking requests from fellow students.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        HustleButton(
-                            text = "Become a Service Provider",
-                            onClick = onEditClick,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                }
-            }
-        }
 
         // Services header
         item(key = "services_header") {
@@ -219,9 +202,9 @@ private fun ProfileContent(
         item(key = "bottom_tabs") {
             Spacer(Modifier.height(20.dp))
             ProfileBottomTabs(
-                modifier = Modifier.padding(
-                    horizontal = 16.dp,
-                ),
+                modifier = Modifier.padding(horizontal = 16.dp),
+                onAnalyticsClick = { onShowSnackbar("Pay for premium to access it") },
+                onEarningsClick = { onShowSnackbar("Pay for premium to access it") }
             )
         }
     }
