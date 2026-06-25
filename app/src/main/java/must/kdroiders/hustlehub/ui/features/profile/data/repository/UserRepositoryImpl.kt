@@ -188,6 +188,8 @@ private fun UserResponseDto.toDomain(): User =
         bio = bio ?: "",
         isVerified = verified,
         isOnline = active,
+        hustleScore = hustleScore ?: 0f,
+        reviewCount = reviewCount ?: 0,
     )
 
 private fun ServiceResponse.toDomainService(): Service =

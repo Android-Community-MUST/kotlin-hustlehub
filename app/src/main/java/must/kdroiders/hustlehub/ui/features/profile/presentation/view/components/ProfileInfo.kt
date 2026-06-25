@@ -34,15 +34,7 @@ fun ProfileInfo(
         textAlign = TextAlign.Center,
     )
 
-    if (bio.isNotBlank()) {
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = bio,
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-    }
+
 
     if (phone.isNotBlank()) {
         Spacer(Modifier.height(6.dp))

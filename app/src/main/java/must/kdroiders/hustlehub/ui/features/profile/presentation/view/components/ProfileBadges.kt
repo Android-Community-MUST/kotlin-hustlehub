@@ -60,9 +60,9 @@ fun ProfileBadges(
 @Composable
 fun BadgeChip(badge: Badge) {
     val (bgColor, textColor) = when (badge.type) {
-        BadgeType.GOLD -> HustleBadgeGold to HustleWarningAmber
-        BadgeType.GREEN -> HustleBadgeGreen.copy(alpha = 0.2f) to HustleActiveGreen
-        BadgeType.BLUE -> HustleBadgeBlue.copy(alpha = 0.2f) to HustleBadgeBlue
+        BadgeType.GOLD -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f) to HustleWarningAmber
+        BadgeType.GREEN -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f) to MaterialTheme.colorScheme.secondary
+        BadgeType.BLUE -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) to MaterialTheme.colorScheme.primary
         BadgeType.DEFAULT ->
             MaterialTheme.colorScheme.surfaceVariant to
                 MaterialTheme.colorScheme.onSurfaceVariant

@@ -60,8 +60,14 @@ fun ProfileScreen(
     val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
+        topBar = {
+            ProfileHeader(
+                onEditClick = onEditClick,
+                onSettingsClick = onSettingsClick,
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().statusBarsPadding(),
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
@@ -107,20 +113,12 @@ private fun ProfileContent(
 
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding(),
+            .fillMaxSize(),
         contentPadding = PaddingValues(
             top = 16.dp,
             bottom = 100.dp,
         ),
     ) {
-        // Header
-        item(key = "header") {
-            ProfileHeader(
-                onEditClick = onEditClick,
-                onSettingsClick = onSettingsClick,
-            )
-        }
 
         // Avatar + info
         item(key = "avatar") {
