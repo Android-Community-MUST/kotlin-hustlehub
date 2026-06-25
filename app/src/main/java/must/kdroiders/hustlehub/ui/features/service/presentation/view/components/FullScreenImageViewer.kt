@@ -64,14 +64,12 @@ fun FullScreenImageViewer(
                         scaleY = scale,
                         translationX = offset.x,
                         translationY = offset.y,
-                    )
-                    .pointerInput(Unit) {
+                    ).pointerInput(Unit) {
                         detectTransformGestures { _, pan, zoom, _ ->
                             scale = (scale * zoom).coerceIn(1f, 5f)
                             offset = if (scale == 1f) Offset.Zero else offset + pan
                         }
-                    }
-                    .clickable(onClick = {}), // consume click to prevent dismiss on image tap
+                    }.clickable(onClick = {}), // consume click to prevent dismiss on image tap
             )
 
             IconButton(

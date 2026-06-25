@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -65,7 +64,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
-import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SearchFilters
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SortOrder
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.EmptyServicesView
@@ -73,6 +71,7 @@ import must.kdroiders.hustlehub.ui.features.home.presentation.components.FilterB
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCardShimmer
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.SearchViewModel
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 
 private const val SEARCH_SHIMMER_COUNT = 6
 
@@ -102,7 +101,9 @@ fun SearchScreen(
     // Pagination trigger.
     val shouldLoadMore by remember {
         derivedStateOf {
-            val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val lastVisible = gridState.layoutInfo.visibleItemsInfo
+                .lastOrNull()
+                ?.index ?: 0
             val total = gridState.layoutInfo.totalItemsCount
             lastVisible >= total - 3 &&
                 !state.isLoading &&
@@ -116,7 +117,10 @@ fun SearchScreen(
     }
 
     LaunchedEffect(state.error) {
-        state.error?.let { snackbarHostState.showSnackbar(it); viewModel.clearError() }
+        state.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
     }
 
     if (state.isFilterSheetOpen) {

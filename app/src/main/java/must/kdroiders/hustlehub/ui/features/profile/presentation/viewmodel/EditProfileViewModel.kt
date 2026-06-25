@@ -38,7 +38,8 @@ class EditProfileViewModel
                     return@launch
                 }
 
-                userRepository.getUserProfile(uid)
+                userRepository
+                    .getUserProfile(uid)
                     .onSuccess { user ->
                         _uiState.update {
                             it.copy(
@@ -79,7 +80,8 @@ class EditProfileViewModel
                 val pendingUri = state.pendingAvatarUri
                 if (pendingUri != null) {
                     val uid = authRepository.getCurrentUser()?.uid ?: ""
-                    userRepository.uploadProfilePhoto(uid, Uri.parse(pendingUri))
+                    userRepository
+                        .uploadProfilePhoto(uid, Uri.parse(pendingUri))
                         .onSuccess { url -> newAvatarUrl = url }
                         .onFailure { e ->
                             Timber.e(e, "EditProfileViewModel: photo upload failed")

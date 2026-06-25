@@ -134,8 +134,10 @@ fun HomeScreen(
                     end = 12.dp,
                     bottom = 100.dp,
                 ),
-                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement
+                    .spacedBy(12.dp),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement
+                    .spacedBy(12.dp),
             ) {
                 // Header items span both columns.
 
@@ -271,4 +273,3 @@ fun HomeScreen(
         )
     }
 }
-

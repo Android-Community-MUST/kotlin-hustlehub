@@ -124,4 +124,3 @@ data object EditProfile : NavKey
  */
 @Serializable
 data class WriteReview(val serviceId: String, val providerId: String) : NavKey
-

@@ -7,6 +7,5 @@ import javax.inject.Inject
 class GetProviderProfileUseCase
     @Inject
     constructor(private val repository: UserRepository) {
-        suspend operator fun invoke(providerId: String): Result<User?> =
-            repository.getProviderProfile(providerId)
+        suspend operator fun invoke(providerId: String): Result<User?> = repository.getProviderProfile(providerId)
     }

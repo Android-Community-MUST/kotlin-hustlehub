@@ -217,7 +217,6 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 )
             }
 
-
             entry<Settings> {
                 SettingsScreen(
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },

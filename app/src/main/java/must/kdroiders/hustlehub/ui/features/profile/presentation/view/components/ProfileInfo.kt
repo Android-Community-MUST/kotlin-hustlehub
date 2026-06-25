@@ -34,8 +34,6 @@ fun ProfileInfo(
         textAlign = TextAlign.Center,
     )
 
-
-
     if (phone.isNotBlank()) {
         Spacer(Modifier.height(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {

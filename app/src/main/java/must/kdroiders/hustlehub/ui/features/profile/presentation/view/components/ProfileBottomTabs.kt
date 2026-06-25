@@ -2,10 +2,10 @@ package must.kdroiders.hustlehub.ui.features.profile.presentation.view.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,7 +18,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.clickable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,7 +32,7 @@ import androidx.compose.ui.unit.sp
 fun ProfileBottomTabs(
     modifier: Modifier = Modifier,
     onAnalyticsClick: () -> Unit = {},
-    onEarningsClick: () -> Unit = {}
+    onEarningsClick: () -> Unit = {},
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -43,13 +42,13 @@ fun ProfileBottomTabs(
             label = "Analytics",
             icon = Icons.Default.BarChart,
             modifier = Modifier.weight(1f),
-            onClick = onAnalyticsClick
+            onClick = onAnalyticsClick,
         )
         TabButton(
             label = "Earnings",
             icon = Icons.Outlined.MonetizationOn,
             modifier = Modifier.weight(1f),
-            onClick = onEarningsClick
+            onClick = onEarningsClick,
         )
     }
 }
@@ -59,7 +58,7 @@ fun TabButton(
     label: String,
     icon: ImageVector,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
 ) {
     Box(
         modifier = modifier
@@ -69,8 +68,7 @@ fun TabButton(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
                 shape = RoundedCornerShape(24.dp),
-            )
-            .clickable(onClick = onClick)
+            ).clickable(onClick = onClick)
             .padding(vertical = 18.dp, horizontal = 20.dp),
     ) {
         Row(

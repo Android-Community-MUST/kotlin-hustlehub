@@ -1,8 +1,8 @@
 package must.kdroiders.hustlehub.ui.features.profile.domain.repository
 
 import android.net.Uri
-import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 
 /**
  * Contract for profile-related operations: photo upload, saving, and fetching.

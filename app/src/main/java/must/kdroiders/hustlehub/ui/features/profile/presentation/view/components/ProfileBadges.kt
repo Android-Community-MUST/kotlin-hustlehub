@@ -30,10 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.Badge
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.BadgeType
-import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeBlue
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeGold
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeGreen
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 // Badges — horizontally scrollable chips

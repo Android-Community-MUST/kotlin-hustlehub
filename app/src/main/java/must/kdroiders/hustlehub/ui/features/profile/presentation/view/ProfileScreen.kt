@@ -13,26 +13,19 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import kotlinx.coroutines.launch
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
-import must.kdroiders.hustlehub.sharedComposables.HustleButton
-import must.kdroiders.hustlehub.sharedComposables.HustleCard
-import must.kdroiders.hustlehub.sharedComposables.HustleCardVariant
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ErrorState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.LoadingState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileAvatar
@@ -89,7 +82,7 @@ fun ProfileScreen(
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar(message)
                         }
-                    }
+                    },
                 )
             }
         }
@@ -119,7 +112,6 @@ private fun ProfileContent(
             bottom = 100.dp,
         ),
     ) {
-
         // Avatar + info
         item(key = "avatar") {
             Column(
@@ -166,7 +158,6 @@ private fun ProfileContent(
             )
         }
 
-
         // Services header
         item(key = "services_header") {
             Spacer(Modifier.height(24.dp))
@@ -202,7 +193,7 @@ private fun ProfileContent(
             ProfileBottomTabs(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 onAnalyticsClick = { onShowSnackbar("Pay for premium to access it") },
-                onEarningsClick = { onShowSnackbar("Pay for premium to access it") }
+                onEarningsClick = { onShowSnackbar("Pay for premium to access it") },
             )
         }
     }

@@ -22,8 +22,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 import must.kdroiders.hustlehub.sharedComposables.RatingBar
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

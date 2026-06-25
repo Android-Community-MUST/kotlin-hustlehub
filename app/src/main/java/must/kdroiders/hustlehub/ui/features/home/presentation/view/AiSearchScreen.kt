@@ -45,9 +45,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
-import must.kdroiders.hustlehub.ui.features.home.data.remote.QueryUnderstanding
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
+import must.kdroiders.hustlehub.ui.features.home.data.remote.QueryUnderstanding
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.AiMatchCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.AiSearchViewModel
 
@@ -69,7 +69,10 @@ fun AiSearchScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(state.error) {
-        state.error?.let { snackbarHostState.showSnackbar(it); viewModel.clearError() }
+        state.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
     }
 
     Box(
@@ -157,7 +160,7 @@ fun AiSearchScreen(
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
-                            text = "AI is temporarily unavailable — showing keyword results instead.",
+                                text = "AI is temporarily unavailable — showing keyword results instead.",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier.padding(12.dp),

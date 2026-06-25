@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.UpdateAvailabilityUseCase
 import timber.log.Timber
@@ -56,7 +56,7 @@ class ProfileViewModel
                                 badges = listOf(
                                     Badge("Top Rated", BadgeType.BLUE),
                                     Badge("Fast Responder", BadgeType.GREEN),
-                                    Badge("Verified Student", BadgeType.BLUE)
+                                    Badge("Verified Student", BadgeType.BLUE),
                                 ),
                                 isLoading = false,
                                 error = null,

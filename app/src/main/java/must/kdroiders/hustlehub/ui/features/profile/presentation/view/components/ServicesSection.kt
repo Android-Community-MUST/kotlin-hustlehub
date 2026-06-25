@@ -144,7 +144,7 @@ fun ServiceCard(
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        
+
                         // Tags inside the text column below price
                         if (service.tags.isNotEmpty()) {
                             Spacer(Modifier.height(8.dp))
@@ -196,8 +196,6 @@ fun ServiceCard(
                     )
                 }
             }
-
-
         }
     }
 }

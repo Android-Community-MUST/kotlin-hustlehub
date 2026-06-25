@@ -4,10 +4,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.api.PageResponse
 import must.kdroiders.hustlehub.core.auth.AuthManager
-import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
-import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
-import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
-import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
+import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toDomain
+import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toEntity
 import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.AvailabilityRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateReviewRequest
@@ -15,9 +14,10 @@ import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateServic
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewResponse
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ServiceResponse
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.UpdateServiceRequest
-import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
-import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toDomain
-import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toEntity
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import timber.log.Timber
 import java.time.Instant
@@ -393,4 +393,3 @@ private fun ReviewResponse.toDomain(): Review =
             Instant.parse(createdAt).toEpochMilli()
         }.getOrDefault(0L),
     )
-

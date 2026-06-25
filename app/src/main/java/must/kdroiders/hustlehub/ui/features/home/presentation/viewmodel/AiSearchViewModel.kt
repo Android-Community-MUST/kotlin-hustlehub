@@ -64,8 +64,7 @@ class AiSearchViewModel
                                 usedFallback = likelyFallback,
                             )
                         }
-                    }
-                    .onFailure { error ->
+                    }.onFailure { error ->
                         _uiState.update { it.copy(isLoading = false, error = error.message) }
                     }
             }

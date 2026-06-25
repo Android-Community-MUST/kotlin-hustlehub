@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
@@ -13,13 +12,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SearchFilters
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.SearchServicesUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import javax.inject.Inject
 
 private const val PAGE_SIZE = 20
@@ -159,8 +157,7 @@ class SearchViewModel
                                 hasMorePages = pageResponse.content.size == PAGE_SIZE,
                             )
                         }
-                    }
-                    .onFailure { error ->
+                    }.onFailure { error ->
                         _uiState.update { it.copy(isLoading = false, isLoadingMore = false, error = error.message) }
                     }
             }

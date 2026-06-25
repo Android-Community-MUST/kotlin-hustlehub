@@ -107,7 +107,10 @@ fun ReviewSummaryCard(
 /**
  * Creates a visually plausible distribution of ratings based on the average.
  */
-private fun calculateDummyDistribution(average: Float, total: Int): IntArray {
+private fun calculateDummyDistribution(
+    average: Float,
+    total: Int,
+): IntArray {
     if (total == 0) return intArrayOf(0, 0, 0, 0, 0)
 
     val dist = IntArray(5)

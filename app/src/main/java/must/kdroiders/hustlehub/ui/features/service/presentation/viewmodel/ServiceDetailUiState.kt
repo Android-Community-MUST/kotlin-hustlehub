@@ -1,8 +1,8 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel
 
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
-import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 
 data class ServiceDetailUiState(
     val service: Service? = null,
