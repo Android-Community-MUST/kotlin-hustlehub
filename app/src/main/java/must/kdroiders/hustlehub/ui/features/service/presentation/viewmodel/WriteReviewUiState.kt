@@ -7,11 +7,11 @@ data class WriteReviewUiState(
     val service: Service? = null,
     val provider: User? = null,
     val isLoadingInfo: Boolean = true,
-    
+
     val rating: Int = 0,
     val comment: String = "",
     val selectedTags: Set<String> = emptySet(),
-    
+
     val isAnonymous: Boolean = false,
     val isSubmitting: Boolean = false,
     val submitSuccess: Boolean = false,

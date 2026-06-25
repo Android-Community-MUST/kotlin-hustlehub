@@ -124,7 +124,7 @@ fun SearchServiceRow(
         Column(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.height(64.dp) // Match image height to push components apart
+            modifier = Modifier.height(64.dp), // Match image height to push components apart
         ) {
             // Price range
             Text(
@@ -133,7 +133,7 @@ fun SearchServiceRow(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
             )
-            
+
             Spacer(Modifier.weight(1f))
 
             // Chat Button
@@ -144,7 +144,7 @@ fun SearchServiceRow(
                     .clickable(onClick = onChatClick)
                     .padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = "CHAT",
@@ -156,7 +156,7 @@ fun SearchServiceRow(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(12.dp)
+                    modifier = Modifier.size(12.dp),
                 )
             }
         }

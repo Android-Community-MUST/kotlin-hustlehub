@@ -438,7 +438,7 @@ private fun ServiceDetailContent(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "Reviews",
@@ -450,7 +450,7 @@ private fun ServiceDetailContent(
                     Button(
                         onClick = { onNavigateToWriteReview(service.id, service.providerId) },
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                        modifier = Modifier.height(32.dp)
+                        modifier = Modifier.height(32.dp),
                     ) {
                         Text("Write a Review", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
                     }

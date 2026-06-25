@@ -37,25 +37,27 @@ class WriteReviewViewModel
             val id = serviceId ?: return
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoadingInfo = true, error = null) }
-                getServiceByIdUseCase(id).onSuccess { service ->
-                    getProviderProfileUseCase(service.providerId).onSuccess { provider ->
-                        _uiState.update { 
-                            it.copy(
-                                service = service, 
-                                provider = provider, 
-                                isLoadingInfo = false 
-                            ) 
-                        }
+                getServiceByIdUseCase(id)
+                    .onSuccess { service ->
+                        getProviderProfileUseCase(service.providerId)
+                            .onSuccess { provider ->
+                                _uiState.update {
+                                    it.copy(
+                                        service = service,
+                                        provider = provider,
+                                        isLoadingInfo = false,
+                                    )
+                                }
+                            }.onFailure { e ->
+                                _uiState.update {
+                                    it.copy(isLoadingInfo = false, error = "Failed to load provider profile.")
+                                }
+                            }
                     }.onFailure { e ->
-                        _uiState.update { 
-                            it.copy(isLoadingInfo = false, error = "Failed to load provider profile.") 
+                        _uiState.update {
+                            it.copy(isLoadingInfo = false, error = "Failed to load service details.")
                         }
                     }
-                }.onFailure { e ->
-                    _uiState.update { 
-                        it.copy(isLoadingInfo = false, error = "Failed to load service details.") 
-                    }
-                }
             }
         }
 

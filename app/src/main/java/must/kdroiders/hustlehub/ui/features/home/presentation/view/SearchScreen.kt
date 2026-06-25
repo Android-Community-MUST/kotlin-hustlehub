@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -37,7 +36,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -413,14 +411,14 @@ private fun ActiveFilterChipRow(
         items(items = filters.categories.toList(), key = { "cat_$it" }) { cat ->
             PremiumFilterChip(
                 label = cat,
-                onRemove = { onRemoveCategory(cat) }
+                onRemove = { onRemoveCategory(cat) },
             )
         }
         if (filters.minRating > 0f) {
             item(key = "rating") {
                 PremiumFilterChip(
                     label = "%.1f+".format(filters.minRating),
-                    onRemove = onRemoveRating
+                    onRemove = onRemoveRating,
                 )
             }
         }
@@ -428,7 +426,7 @@ private fun ActiveFilterChipRow(
             item(key = "price") {
                 PremiumFilterChip(
                     label = "< ${filters.maxPrice} KES",
-                    onRemove = onRemovePrice
+                    onRemove = onRemovePrice,
                 )
             }
         }
@@ -436,7 +434,7 @@ private fun ActiveFilterChipRow(
             item(key = "avail") {
                 PremiumFilterChip(
                     label = if (avail == ServiceAvailability.AVAILABLE) "Available" else "Busy",
-                    onRemove = onRemoveAvailability
+                    onRemove = onRemoveAvailability,
                 )
             }
         }
@@ -444,7 +442,7 @@ private fun ActiveFilterChipRow(
             item(key = "sort") {
                 PremiumFilterChip(
                     label = filters.sortOrder.label,
-                    onRemove = onRemoveSort
+                    onRemove = onRemoveSort,
                 )
             }
         }
@@ -475,7 +473,7 @@ private fun PremiumFilterChip(
             .clickable(onClick = onRemove)
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
             text = label,
@@ -487,7 +485,7 @@ private fun PremiumFilterChip(
             imageVector = Icons.Default.Close,
             contentDescription = "Remove",
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(14.dp)
+            modifier = Modifier.size(14.dp),
         )
     }
 }

@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -48,12 +47,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
@@ -133,7 +129,7 @@ fun WriteReviewScreen(
                         .background(MaterialTheme.colorScheme.surface)
                         .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
                         .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(modifier = Modifier.size(56.dp)) {
                         AsyncImage(
@@ -143,7 +139,7 @@ fun WriteReviewScreen(
                                 .fillMaxSize()
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.surfaceVariant),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Crop,
                         )
                         // Online indicator (green dot)
                         Box(
@@ -152,7 +148,7 @@ fun WriteReviewScreen(
                                 .align(Alignment.BottomEnd)
                                 .clip(CircleShape)
                                 .background(must.kdroiders.hustlehub.ui.theme.HustleSuccess)
-                                .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
+                                .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
                         )
                     }
                     Spacer(Modifier.width(16.dp))
@@ -161,25 +157,25 @@ fun WriteReviewScreen(
                             text = state.provider?.name ?: "Unknown",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
                             text = state.service?.title ?: "",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(4.dp))
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(MaterialTheme.colorScheme.secondaryContainer)
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
                         ) {
                             Text(
                                 text = "Verified Student",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
                             )
                         }
                     }
@@ -210,15 +206,15 @@ fun WriteReviewScreen(
                 text = feedbackText,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
-            
+
             if (state.rating > 0) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "You rated this service ${state.rating} stars",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -226,8 +222,11 @@ fun WriteReviewScreen(
 
             // Review Input Area
             // Review Input Area
-            val providerFirstName = state.provider?.name?.split(" ")?.firstOrNull() ?: "the provider"
-            
+            val providerFirstName = state.provider
+                ?.name
+                ?.split(" ")
+                ?.firstOrNull() ?: "the provider"
+
             HustleTextField(
                 value = state.comment,
                 onValueChange = viewModel::onCommentChanged,
@@ -237,14 +236,14 @@ fun WriteReviewScreen(
                 minLines = 5,
                 maxLines = 5,
             )
-            
+
             Spacer(Modifier.height(8.dp))
-            
+
             Text(
                 text = "Min 10 chars",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.align(Alignment.End)
+                modifier = Modifier.align(Alignment.End),
             )
 
             Spacer(Modifier.height(24.dp))
@@ -254,7 +253,7 @@ fun WriteReviewScreen(
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 availableTags.forEach { tag ->
                     val isSelected = state.selectedTags.contains(tag)
@@ -262,21 +261,22 @@ fun WriteReviewScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
                             .background(
-                                if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                                else MaterialTheme.colorScheme.surface
-                            )
-                            .border(
+                                if (isSelected) {
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                } else {
+                                    MaterialTheme.colorScheme.surface
+                                },
+                            ).border(
                                 width = 1.dp,
                                 color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                                shape = RoundedCornerShape(20.dp)
-                            )
-                            .clickable { viewModel.onTagToggled(tag) }
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                shape = RoundedCornerShape(20.dp),
+                            ).clickable { viewModel.onTagToggled(tag) }
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
                     ) {
                         Text(
                             text = tag,
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -310,30 +310,30 @@ fun WriteReviewScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                    containerColor = MaterialTheme.colorScheme.primary,
+                ),
             ) {
                 if (state.isSubmitting) {
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.dp,
                     )
                 } else {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement = Arrangement.Center,
                     ) {
                         Text(
                             text = "Submit Review",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.width(8.dp))
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
                     }
                 }
