@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -145,6 +146,7 @@ fun ServiceDetailScreen(
                     contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 24.dp),
                     onImageClick = { url -> fullScreenImageUrl = url },
                     onProviderClick = { state.service?.providerId?.let { onNavigateToProviderProfile(it) } },
+                    onNavigateToWriteReview = onNavigateToWriteReview,
                 )
             }
 
@@ -212,6 +214,7 @@ private fun ServiceDetailContent(
     contentPadding: PaddingValues,
     onImageClick: (String) -> Unit,
     onProviderClick: () -> Unit,
+    onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit,
 ) {
     val service = state.service ?: return
     val provider = state.provider
@@ -430,7 +433,29 @@ private fun ServiceDetailContent(
 
         // Reviews section
         item(key = "reviews_header") {
-            SectionHeader(title = "Reviews", modifier = Modifier.padding(horizontal = 20.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Reviews",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                if (!state.isOwnService) {
+                    Button(
+                        onClick = { onNavigateToWriteReview(service.id, service.providerId) },
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Text("Write a Review", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
             Spacer(Modifier.height(16.dp))
         }
 

@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.SubmitReviewUseCase
 import timber.log.Timber
 import javax.inject.Inject
@@ -17,6 +19,8 @@ class WriteReviewViewModel
     @Inject
     constructor(
         private val submitReviewUseCase: SubmitReviewUseCase,
+        private val getServiceByIdUseCase: GetServiceByIdUseCase,
+        private val getProviderProfileUseCase: GetProviderProfileUseCase,
     ) : ViewModel() {
         private var serviceId: String? = null
 
@@ -24,7 +28,35 @@ class WriteReviewViewModel
         val uiState: StateFlow<WriteReviewUiState> = _uiState.asStateFlow()
 
         fun initialize(id: String) {
+            if (serviceId == id) return
             serviceId = id
+            fetchDetails()
+        }
+
+        private fun fetchDetails() {
+            val id = serviceId ?: return
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoadingInfo = true, error = null) }
+                getServiceByIdUseCase(id).onSuccess { service ->
+                    getProviderProfileUseCase(service.providerId).onSuccess { provider ->
+                        _uiState.update { 
+                            it.copy(
+                                service = service, 
+                                provider = provider, 
+                                isLoadingInfo = false 
+                            ) 
+                        }
+                    }.onFailure { e ->
+                        _uiState.update { 
+                            it.copy(isLoadingInfo = false, error = "Failed to load provider profile.") 
+                        }
+                    }
+                }.onFailure { e ->
+                    _uiState.update { 
+                        it.copy(isLoadingInfo = false, error = "Failed to load service details.") 
+                    }
+                }
+            }
         }
 
         fun onRatingChanged(rating: Int) = _uiState.update { it.copy(rating = rating) }
@@ -36,6 +68,17 @@ class WriteReviewViewModel
         }
 
         fun onAnonymousToggled(value: Boolean) = _uiState.update { it.copy(isAnonymous = value) }
+
+        fun onTagToggled(tag: String) {
+            _uiState.update { state ->
+                val newTags = if (state.selectedTags.contains(tag)) {
+                    state.selectedTags - tag
+                } else {
+                    state.selectedTags + tag
+                }
+                state.copy(selectedTags = newTags)
+            }
+        }
 
         fun clearError() = _uiState.update { it.copy(error = null) }
 
