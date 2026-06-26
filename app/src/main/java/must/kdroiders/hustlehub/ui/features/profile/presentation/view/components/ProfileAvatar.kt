@@ -9,13 +9,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -23,42 +23,57 @@ import coil.compose.AsyncImage
 // Avatar — circular photo with gradient border
 
 @Composable
-fun ProfileAvatar(photoUrl: String) {
-    val gradientBorder = Brush.linearGradient(
-        listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.surfaceVariant),
-    )
+fun ProfileAvatar(
+    photoUrl: String?,
+    modifier: Modifier = Modifier,
+    isVerified: Boolean = false,
+) {
+    Box(contentAlignment = Alignment.BottomEnd, modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .border(
+                    width = 4.dp,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    shape = CircleShape,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (photoUrl.isNullOrEmpty()) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Default Avatar",
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                AsyncImage(
+                    model = photoUrl,
+                    contentDescription = "Profile Photo",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            }
+        }
 
-    Box(
-        modifier = Modifier
-            .size(110.dp)
-            .border(
-                width = 3.dp,
-                brush = gradientBorder,
-                shape = CircleShape,
-            ).padding(4.dp)
-            .clip(CircleShape)
-            .background(
-                MaterialTheme.colorScheme.surfaceVariant,
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (photoUrl.isNotBlank()) {
-            AsyncImage(
-                model = photoUrl,
-                contentDescription = "Profile photo",
+        if (isVerified) {
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop,
-            )
-        } else {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "No photo",
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme
-                    .onSurfaceVariant,
-            )
+                    .padding(bottom = 8.dp, end = 8.dp)
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Default.Verified,
+                    contentDescription = "Verified",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
         }
     }
 }

@@ -4,19 +4,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.api.PageResponse
 import must.kdroiders.hustlehub.core.auth.AuthManager
-import must.kdroiders.hustlehub.data.model.Service
-import must.kdroiders.hustlehub.data.model.ServiceAvailability
-import must.kdroiders.hustlehub.data.model.ServiceCategory
-import must.kdroiders.hustlehub.data.remote.ServiceApiService
-import must.kdroiders.hustlehub.data.remote.dto.AvailabilityRequest
-import must.kdroiders.hustlehub.data.remote.dto.CreateServiceRequest
-import must.kdroiders.hustlehub.data.remote.dto.ServiceResponse
-import must.kdroiders.hustlehub.data.remote.dto.UpdateServiceRequest
 import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
 import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toDomain
 import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toEntity
+import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.AvailabilityRequest
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateReviewRequest
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateServiceRequest
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewResponse
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ServiceResponse
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.UpdateServiceRequest
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import timber.log.Timber
+import java.time.Instant
 
 // Cache TTL — entries older than this are evicted before each read
 private const val CACHE_TTL_MS = 30 * 60 * 1_000L
@@ -41,6 +45,7 @@ class ServiceRepositoryImpl(
         maxPrice: Int,
         openToBarter: Boolean,
         tags: List<String>,
+        portfolioUrls: List<String>,
     ): Result<Service> =
         withContext(Dispatchers.IO) {
             try {
@@ -52,6 +57,7 @@ class ServiceRepositoryImpl(
                     maxPrice = maxPrice,
                     openToBarter = openToBarter,
                     tags = tags,
+                    portfolioUrls = portfolioUrls,
                 )
                 val response = apiService.createService(request)
                 if (response.success && response.data != null) {
@@ -99,6 +105,7 @@ class ServiceRepositoryImpl(
         maxPrice: Int?,
         openToBarter: Boolean?,
         tags: List<String>?,
+        portfolioUrls: List<String>?,
     ): Result<Service> =
         withContext(Dispatchers.IO) {
             try {
@@ -110,6 +117,7 @@ class ServiceRepositoryImpl(
                     maxPrice = maxPrice,
                     openToBarter = openToBarter,
                     tags = tags,
+                    portfolioUrls = portfolioUrls,
                 )
                 val response = apiService.updateService(serviceId, request)
                 if (response.success && response.data != null) {
@@ -289,6 +297,67 @@ class ServiceRepositoryImpl(
                 Result.failure(e)
             }
         }
+
+    override suspend fun getServiceReviews(
+        serviceId: String,
+        page: Int,
+        size: Int,
+    ): Result<PageResponse<Review>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getServiceReviews(serviceId, page, size)
+                if (response.success && response.data != null) {
+                    val pageData = response.data
+                    Result.success(
+                        PageResponse(
+                            content = pageData.content.map { it.toDomain() },
+                            page = pageData.page,
+                            size = pageData.size,
+                            totalElements = pageData.totalElements,
+                            totalPages = pageData.totalPages,
+                        ),
+                    )
+                } else {
+                    Result.failure(Exception(response.message))
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "getServiceReviews failed for serviceId='$serviceId'")
+                Result.failure(e)
+            }
+        }
+
+    override suspend fun submitReview(
+        serviceId: String,
+        rating: Int,
+        comment: String?,
+        isAnonymous: Boolean,
+    ): Result<Review> =
+        withContext(Dispatchers.IO) {
+            try {
+                val request = CreateReviewRequest(
+                    serviceId = serviceId,
+                    rating = rating,
+                    comment = comment,
+                    isAnonymous = isAnonymous,
+                )
+                val response = apiService.submitReview(request)
+                if (response.success && response.data != null) {
+                    Result.success(response.data.toDomain())
+                } else {
+                    Result.failure(Exception(response.message))
+                }
+            } catch (e: retrofit2.HttpException) {
+                if (e.code() == 409) {
+                    Result.failure(Exception("You have already reviewed this service."))
+                } else {
+                    Timber.w(e, "submitReview failed — HTTP ${e.code()}")
+                    Result.failure(e)
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "submitReview failed for serviceId='$serviceId'")
+                Result.failure(e)
+            }
+        }
 }
 
 // DTO → Domain mapper (private to this file)
@@ -311,4 +380,21 @@ private fun ServiceResponse.toDomainModel(): Service =
         createdAt = 0L,
         updatedAt = 0L,
         iconUrl = portfolioImages?.firstOrNull() ?: "",
+        location = location,
+    )
+
+private fun ReviewResponse.toDomain(): Review =
+    Review(
+        id = id,
+        serviceId = serviceId,
+        providerId = providerId,
+        customerId = customerId,
+        customerName = if (isAnonymous) "Anonymous" else customerName,
+        customerAvatarUrl = if (isAnonymous) "" else (customerAvatarUrl ?: ""),
+        rating = rating,
+        comment = comment,
+        isAnonymous = isAnonymous,
+        createdAt = runCatching {
+            Instant.parse(createdAt).toEpochMilli()
+        }.getOrDefault(0L),
     )

@@ -1,6 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.home.domain.model
 
-import must.kdroiders.hustlehub.data.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 
 /**
  * Immutable value object representing the user's active search filters.

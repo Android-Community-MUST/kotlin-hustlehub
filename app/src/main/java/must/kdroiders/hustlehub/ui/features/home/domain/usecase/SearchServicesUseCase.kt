@@ -1,9 +1,9 @@
 package must.kdroiders.hustlehub.ui.features.home.domain.usecase
 
 import must.kdroiders.hustlehub.core.api.PageResponse
-import must.kdroiders.hustlehub.data.model.Service
-import must.kdroiders.hustlehub.data.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SearchFilters
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import javax.inject.Inject
 

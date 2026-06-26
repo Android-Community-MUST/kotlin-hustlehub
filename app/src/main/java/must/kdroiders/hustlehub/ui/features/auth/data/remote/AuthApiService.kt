@@ -28,6 +28,8 @@ data class UserResponseDto(
     // isVerified → "verified", isActive → "active" in the JSON response.
     val verified: Boolean,
     val active: Boolean,
+    val hustleScore: Float? = null,
+    val reviewCount: Int? = null,
     val createdAt: String,
     val updatedAt: String,
 )

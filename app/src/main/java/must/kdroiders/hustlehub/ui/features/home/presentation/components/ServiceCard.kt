@@ -14,8 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,14 +24,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import must.kdroiders.hustlehub.data.model.Service
-import must.kdroiders.hustlehub.data.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
@@ -70,7 +72,7 @@ fun ServiceCard(
             AvailabilityBadge(
                 availability = service.availability,
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
+                    .align(Alignment.TopStart)
                     .padding(8.dp),
             )
         }
@@ -78,48 +80,52 @@ fun ServiceCard(
         Spacer(Modifier.height(10.dp))
 
         Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-            // Title
-            Text(
-                text = service.title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            // Rating + review count
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(14.dp),
-                )
-                Spacer(Modifier.width(3.dp))
+            // Title and Price
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top,
+            ) {
                 Text(
-                    text = if (service.averageRating > 0f) {
-                        "${"%.1f".format(service.averageRating)} (${service.reviewCount})"
-                    } else {
-                        "New"
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = service.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f).padding(end = 8.dp),
+                )
+                Text(
+                    text = "KES ${service.priceRange.split("-").first().trim()}",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 11.sp,
                 )
             }
 
             Spacer(Modifier.height(4.dp))
 
-            // Price range
-            Text(
-                text = service.priceRange,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 12.sp,
-            )
+            // Location
+            service.location?.label?.let { label ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.LocationOn,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(12.dp),
+                    )
+                    Spacer(Modifier.width(2.dp))
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 10.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
         }
     }
 }
@@ -129,23 +135,28 @@ private fun AvailabilityBadge(
     availability: ServiceAvailability,
     modifier: Modifier = Modifier,
 ) {
-    val (label, color) = when (availability) {
-        ServiceAvailability.AVAILABLE -> "Available" to HustleActiveGreen
-        ServiceAvailability.BUSY -> "Busy" to HustleWarningAmber
-        ServiceAvailability.OFFLINE -> "Offline" to HustleOfflineGray
-    }
+    if (availability != ServiceAvailability.AVAILABLE) return
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(color.copy(alpha = 0.9f))
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color.Black.copy(alpha = 0.6f))
+            .padding(horizontal = 6.dp, vertical = 4.dp),
     ) {
-        Text(
-            text = label,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.surface,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(HustleActiveGreen)
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = "LIVE",
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+            )
+        }
     }
 }

@@ -104,3 +104,23 @@ data object AiSearchScreen : NavKey
  */
 @Serializable
 data class ServiceDetail(val serviceId: String) : NavKey
+
+/**
+ * Public provider profile screen.
+ * Shows all services by [providerId] and their reputation stats.
+ * Displays an edit button instead of a message button when the viewer is the provider.
+ */
+@Serializable
+data class ProviderProfile(val providerId: String) : NavKey
+
+/** Edit own profile screen. Pre-fills current user data. */
+@Serializable
+data object EditProfile : NavKey
+
+/**
+ * Write a review for a service.
+ * Carries both [serviceId] and [providerId] so the ViewModel can submit and
+ * invalidate the correct service detail cache.
+ */
+@Serializable
+data class WriteReview(val serviceId: String, val providerId: String) : NavKey

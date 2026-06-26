@@ -34,8 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import must.kdroiders.hustlehub.data.model.Service
-import must.kdroiders.hustlehub.data.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

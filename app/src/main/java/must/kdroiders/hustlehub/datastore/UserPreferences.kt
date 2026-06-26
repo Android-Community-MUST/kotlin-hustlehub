@@ -12,8 +12,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import must.kdroiders.hustlehub.data.model.User
-import must.kdroiders.hustlehub.data.model.UserRole
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
@@ -51,6 +51,7 @@ class UserPreferences
             val USER_AVATAR_URL = stringPreferencesKey("user_avatar_url")
             val USER_UUID = stringPreferencesKey("user_uuid")
             val RECENT_SEARCHES = stringSetPreferencesKey("recent_searches")
+
             /** Maximum number of recent searches to persist. Oldest entry is evicted when full. */
             const val MAX_RECENT_SEARCHES = 10
         }
@@ -172,8 +173,7 @@ class UserPreferences
                         val idx = entry.substringBefore(':').toIntOrNull() ?: return@mapNotNull null
                         val value = entry.substringAfter(':')
                         idx to value
-                    }
-                    ?.sortedByDescending { it.first }
+                    }?.sortedByDescending { it.first }
                     ?.map { it.second }
                     ?: emptyList()
             }
@@ -193,8 +193,7 @@ class UserPreferences
                         .mapNotNull { entry ->
                             val idx = entry.substringBefore(':').toIntOrNull() ?: return@mapNotNull null
                             idx to entry.substringAfter(':')
-                        }
-                        .toMutableList()
+                        }.toMutableList()
 
                     // Remove any existing entry for this query (dedup)
                     parsed.removeAll { it.second == query }

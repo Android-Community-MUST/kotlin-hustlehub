@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.remote.dto
+package must.kdroiders.hustlehub.ui.features.service.data.remote.dto
 
 data class ServiceResponse(
     val serviceId: String,
@@ -28,6 +28,7 @@ data class CreateServiceRequest(
     val openToBarter: Boolean,
     val tags: List<String>,
     val location: LocationDto? = null,
+    val portfolioUrls: List<String> = emptyList(),
 )
 
 data class UpdateServiceRequest(
@@ -39,6 +40,7 @@ data class UpdateServiceRequest(
     val openToBarter: Boolean?,
     val tags: List<String>?,
     val location: LocationDto? = null,
+    val portfolioUrls: List<String>? = null,
 )
 
 data class AvailabilityRequest(

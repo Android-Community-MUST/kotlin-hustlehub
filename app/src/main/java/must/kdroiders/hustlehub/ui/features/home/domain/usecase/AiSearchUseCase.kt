@@ -1,7 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.home.domain.usecase
 
-import must.kdroiders.hustlehub.data.remote.AiSearchRequest
-import must.kdroiders.hustlehub.data.remote.AiSearchResponse
+import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchRequest
+import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchResponse
 import must.kdroiders.hustlehub.ui.features.home.domain.repository.AiSearchRepository
 import javax.inject.Inject
 

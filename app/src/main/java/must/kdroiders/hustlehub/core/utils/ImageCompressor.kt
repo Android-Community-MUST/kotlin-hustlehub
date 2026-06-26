@@ -54,16 +54,10 @@ object ImageCompressor {
                 // 4. Compress to ByteArray
                 val outputStream = ByteArrayOutputStream()
 
-                // Use WEBP if available (Android R+ has Lossy WEBP, earlier has standard WEBP)
-                // WEBP is generally much smaller than JPEG for the same visual quality.
-                val format = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    Bitmap.CompressFormat.WEBP_LOSSY
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    @Suppress("DEPRECATION")
-                    Bitmap.CompressFormat.WEBP
-                } else {
-                    Bitmap.CompressFormat.JPEG
-                }
+                // We MUST use JPEG because the Spring Boot backend uses Thumbnailator (ImageIO),
+                // which does not natively support WEBP files. If we send WEBP, it throws
+                // UnsupportedFormatException: No suitable ImageReader found.
+                val format = Bitmap.CompressFormat.JPEG
 
                 bitmap.compress(format, quality, outputStream)
 

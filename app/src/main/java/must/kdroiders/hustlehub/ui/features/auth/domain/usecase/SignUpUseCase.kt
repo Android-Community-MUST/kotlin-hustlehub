@@ -1,9 +1,9 @@
 package must.kdroiders.hustlehub.ui.features.auth.domain.usecase
 
-import must.kdroiders.hustlehub.data.model.User
-import must.kdroiders.hustlehub.data.model.UserRole
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import timber.log.Timber
 import javax.inject.Inject

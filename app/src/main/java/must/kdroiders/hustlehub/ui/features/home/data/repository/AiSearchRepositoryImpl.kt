@@ -1,13 +1,14 @@
 package must.kdroiders.hustlehub.ui.features.home.data.repository
 
-import must.kdroiders.hustlehub.data.remote.AiSearchRequest
-import must.kdroiders.hustlehub.data.remote.AiSearchResponse
-import must.kdroiders.hustlehub.data.remote.DiscoveryApiService
+import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchRequest
+import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchResponse
+import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
 import must.kdroiders.hustlehub.ui.features.home.domain.repository.AiSearchRepository
 import timber.log.Timber
 
 /** Cache TTL in milliseconds (5 minutes). */
 private const val CACHE_TTL_MS = 5 * 60 * 1_000L
+
 /** Maximum number of cached query results held in memory. Oldest entry is evicted when full. */
 private const val CACHE_MAX_ENTRIES = 20
 
@@ -23,7 +24,6 @@ private const val CACHE_MAX_ENTRIES = 20
 class AiSearchRepositoryImpl(
     private val discoveryApiService: DiscoveryApiService,
 ) : AiSearchRepository {
-
     // LinkedHashMap in access-order mode = LRU eviction.
     private val cache = object : LinkedHashMap<String, Pair<Long, AiSearchResponse>>(16, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Pair<Long, AiSearchResponse>>): Boolean =

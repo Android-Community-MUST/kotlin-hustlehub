@@ -2,10 +2,10 @@ package must.kdroiders.hustlehub.ui.features.profile.presentation.view.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,7 +29,11 @@ import androidx.compose.ui.unit.sp
 // Analytics / Earnings tabs
 
 @Composable
-fun ProfileBottomTabs(modifier: Modifier = Modifier) {
+fun ProfileBottomTabs(
+    modifier: Modifier = Modifier,
+    onAnalyticsClick: () -> Unit = {},
+    onEarningsClick: () -> Unit = {},
+) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -38,11 +42,13 @@ fun ProfileBottomTabs(modifier: Modifier = Modifier) {
             label = "Analytics",
             icon = Icons.Default.BarChart,
             modifier = Modifier.weight(1f),
+            onClick = onAnalyticsClick,
         )
         TabButton(
             label = "Earnings",
             icon = Icons.Outlined.MonetizationOn,
             modifier = Modifier.weight(1f),
+            onClick = onEarningsClick,
         )
     }
 }
@@ -52,34 +58,35 @@ fun TabButton(
     label: String,
     icon: ImageVector,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .clip(RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
             .border(
                 width = 1.dp,
-                color = MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(16.dp),
-            ).padding(vertical = 14.dp),
-        contentAlignment = Alignment.Center,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(24.dp),
+            ).clickable(onClick = onClick)
+            .padding(vertical = 18.dp, horizontal = 20.dp),
     ) {
         Row(
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
+            Text(
+                text = label,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme
-                    .onSurfaceVariant,
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = label,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

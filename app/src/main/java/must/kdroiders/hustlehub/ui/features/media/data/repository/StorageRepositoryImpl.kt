@@ -2,7 +2,7 @@ package must.kdroiders.hustlehub.ui.features.media.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import must.kdroiders.hustlehub.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -26,7 +26,7 @@ class StorageRepositoryImpl
         private companion object {
             private const val MIME_JPEG = "image/jpeg"
             private const val MIME_TEXT = "text/plain"
-            private const val UPLOAD_TYPE_PORTFOLIO = "PORTFOLIO"
+            private const val UPLOAD_TYPE_PORTFOLIO = "service"
             private const val FILENAME_PREFIX = "portfolio_"
             private const val FILENAME_SUFFIX = ".jpg"
             private const val TAG = "StorageRepositoryImpl"
@@ -44,11 +44,9 @@ class StorageRepositoryImpl
                     val fileName = "$FILENAME_PREFIX${System.currentTimeMillis()}$FILENAME_SUFFIX"
                     val body = MultipartBody.Part.createFormData("file", fileName, requestFile)
 
-                    val typeBody = UPLOAD_TYPE_PORTFOLIO.toRequestBody(MIME_TEXT.toMediaTypeOrNull())
-                    // entityId is optional — only send if a real serviceId is provided
-                    val entityIdBody = serviceId
-                        .takeIf { it.isNotBlank() }
-                        ?.toRequestBody(MIME_TEXT.toMediaTypeOrNull())
+                    val typeBody = MultipartBody.Part.createFormData("type", UPLOAD_TYPE_PORTFOLIO)
+                    // entityId is required for service uploads
+                    val entityIdBody = MultipartBody.Part.createFormData("entityId", serviceId.ifBlank { "unknown" })
 
                     emit(UploadResult.Progress(0.5f))
 

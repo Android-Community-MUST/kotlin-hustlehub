@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.remote
+package must.kdroiders.hustlehub.ui.features.media.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.VoiceUploadResponse
@@ -20,14 +20,14 @@ interface MediaApiService {
     @POST("media/upload")
     suspend fun uploadImage(
         @Part file: MultipartBody.Part,
-        @Part("type") type: RequestBody,
-        @Part("entityId") entityId: RequestBody? = null,
+        @Part type: MultipartBody.Part,
+        @Part entityId: MultipartBody.Part,
     ): ApiResponse<MediaUploadResponse>
 
     @Multipart
     @POST("media/upload/voice")
     suspend fun uploadVoiceNote(
         @Part file: MultipartBody.Part,
-        @Part("conversationId") conversationId: RequestBody,
+        @Part conversationId: MultipartBody.Part,
     ): ApiResponse<VoiceUploadResponse>
 }

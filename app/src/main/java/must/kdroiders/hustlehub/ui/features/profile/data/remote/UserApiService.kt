@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.remote
+package must.kdroiders.hustlehub.ui.features.profile.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto

@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -29,14 +30,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.CategoryChipRow
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.EmptyServicesView
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.FeaturedServicesRow
@@ -45,6 +54,7 @@ import must.kdroiders.hustlehub.ui.features.home.presentation.components.HomeTop
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCardShimmer
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.HomeViewModel
+import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 
 /** Number of shimmer placeholders shown while the initial page loads. */
 private const val SHIMMER_COUNT = 6
@@ -70,6 +80,7 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsState()
     val gridState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     // Detect when the user scrolls to 3 items before the end to trigger next page.
     val shouldLoadMore by remember {
@@ -134,8 +145,10 @@ fun HomeScreen(
                     end = 12.dp,
                     bottom = 100.dp,
                 ),
-                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement
+                    .spacedBy(12.dp),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement
+                    .spacedBy(12.dp),
             ) {
                 // Header items span both columns.
 
@@ -171,22 +184,43 @@ fun HomeScreen(
                 if (state.featuredServices.isNotEmpty()) {
                     item(key = "featured_header", span = { GridItemSpan(maxLineSpan) }) {
                         Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = "Featured",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(start = 4.dp),
-                        )
-                        Spacer(Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
+                            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Top Hustlers",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground,
+                            )
+                            TextButton(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar("Coming soon")
+                                    }
+                                },
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text(
+                                    text = "View All",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 12.sp,
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(2.dp))
                     }
 
                     item(key = "featured_row", span = { GridItemSpan(maxLineSpan) }) {
                         FeaturedServicesRow(
                             services = state.featuredServices,
                             onServiceClick = onNavigateToServiceDetail,
-                            // Negative horizontal padding to bleed past the grid's insets
-                            modifier = Modifier.padding(horizontal = (-12).dp),
+                            modifier = Modifier,
                         )
                         Spacer(Modifier.height(4.dp))
                     }
@@ -195,15 +229,26 @@ fun HomeScreen(
                 // Section label for the paginated service grid below.
 
                 item(key = "browse_header", span = { GridItemSpan(maxLineSpan) }) {
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = "Browse Services",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(start = 4.dp),
-                    )
                     Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.padding(start = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(HustleActiveGreen)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = "Available Now",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
                 }
 
                 // Show shimmer skeletons while the first page is in flight.
@@ -271,4 +316,3 @@ fun HomeScreen(
         )
     }
 }
-

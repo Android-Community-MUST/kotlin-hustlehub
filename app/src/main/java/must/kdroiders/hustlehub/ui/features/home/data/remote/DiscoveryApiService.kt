@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.remote
+package must.kdroiders.hustlehub.ui.features.home.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
 import retrofit2.http.Body
@@ -6,7 +6,6 @@ import retrofit2.http.POST
 
 /** Backend contract for AI-powered service discovery. */
 interface DiscoveryApiService {
-
     /**
      * Submits a natural language query to the backend, which calls Gemini internally,
      * extracts search parameters, queries the database, and returns ranked matches.
@@ -17,7 +16,9 @@ interface DiscoveryApiService {
      * POST /api/v1/discovery/ai-search
      */
     @POST("discovery/ai-search")
-    suspend fun aiSearch(@Body request: AiSearchRequest): ApiResponse<AiSearchResponse>
+    suspend fun aiSearch(
+        @Body request: AiSearchRequest,
+    ): ApiResponse<AiSearchResponse>
 }
 
 /** @property query Natural language query from the user, max 500 chars. */

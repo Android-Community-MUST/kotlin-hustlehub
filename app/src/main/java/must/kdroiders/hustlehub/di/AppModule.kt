@@ -12,10 +12,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.data.local.AppDatabase
-import must.kdroiders.hustlehub.data.remote.MediaApiService
-import must.kdroiders.hustlehub.data.remote.ServiceApiService
-import must.kdroiders.hustlehub.data.remote.DiscoveryApiService
-import must.kdroiders.hustlehub.data.remote.UserApiService
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
@@ -28,15 +24,19 @@ import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketServic
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
 import must.kdroiders.hustlehub.ui.features.chat.data.repository.ChatRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
+import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
+import must.kdroiders.hustlehub.ui.features.home.data.repository.AiSearchRepositoryImpl
+import must.kdroiders.hustlehub.ui.features.home.domain.repository.AiSearchRepository
+import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.media.data.repository.StorageRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
+import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.profile.data.repository.UserRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
+import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
 import must.kdroiders.hustlehub.ui.features.service.data.repository.ServiceRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
-import must.kdroiders.hustlehub.ui.features.home.data.repository.AiSearchRepositoryImpl
-import must.kdroiders.hustlehub.ui.features.home.domain.repository.AiSearchRepository
 import timber.log.Timber
 import javax.inject.Singleton
 
@@ -88,8 +88,9 @@ object AppModule {
         authApiService: AuthApiService,
         userApiService: UserApiService,
         mediaApiService: MediaApiService,
+        serviceApiService: ServiceApiService,
     ): UserRepository {
-        return UserRepositoryImpl(context, authApiService, userApiService, mediaApiService)
+        return UserRepositoryImpl(context, authApiService, userApiService, mediaApiService, serviceApiService)
     }
 
     @Provides
@@ -147,9 +148,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAiSearchRepository(
-        discoveryApiService: DiscoveryApiService,
-    ): AiSearchRepository = AiSearchRepositoryImpl(discoveryApiService)
+    fun provideAiSearchRepository(discoveryApiService: DiscoveryApiService): AiSearchRepository =
+        AiSearchRepositoryImpl(discoveryApiService)
 }
 
 private class NoopAuthRepository : AuthRepository {

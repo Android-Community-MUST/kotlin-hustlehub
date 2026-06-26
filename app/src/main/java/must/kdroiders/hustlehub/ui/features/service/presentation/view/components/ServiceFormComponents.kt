@@ -32,7 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import must.kdroiders.hustlehub.data.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 
 @Composable
 fun SectionLabel(

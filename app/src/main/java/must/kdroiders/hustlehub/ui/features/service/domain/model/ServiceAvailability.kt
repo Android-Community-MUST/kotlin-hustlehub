@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.model
+package must.kdroiders.hustlehub.ui.features.service.domain.model
 
 enum class ServiceAvailability {
     AVAILABLE,

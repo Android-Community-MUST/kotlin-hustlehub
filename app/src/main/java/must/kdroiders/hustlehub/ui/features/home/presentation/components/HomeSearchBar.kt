@@ -72,8 +72,7 @@ fun HomeSearchBar(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = onSearchClick,
-                )
-                .testTag("home_search_field"),
+                ).testTag("home_search_field"),
         )
         Spacer(Modifier.width(8.dp))
         // ✨ AI chip — placeholder; routes to AI Search screen (upcoming issue).
@@ -87,8 +86,7 @@ fun HomeSearchBar(
                             MaterialTheme.colorScheme.tertiary.copy(alpha = 0.9f),
                         ),
                     ),
-                )
-                .clickable(onClick = onAiSearchClick)
+                ).clickable(onClick = onAiSearchClick)
                 .padding(horizontal = 10.dp, vertical = 5.dp)
                 .testTag("home_ai_search_button"),
             verticalAlignment = Alignment.CenterVertically,

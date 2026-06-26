@@ -1,11 +1,13 @@
-package must.kdroiders.hustlehub.data.remote
+package must.kdroiders.hustlehub.ui.features.service.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
 import must.kdroiders.hustlehub.core.api.PageResponse
-import must.kdroiders.hustlehub.data.remote.dto.AvailabilityRequest
-import must.kdroiders.hustlehub.data.remote.dto.CreateServiceRequest
-import must.kdroiders.hustlehub.data.remote.dto.ServiceResponse
-import must.kdroiders.hustlehub.data.remote.dto.UpdateServiceRequest
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.AvailabilityRequest
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateReviewRequest
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateServiceRequest
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewResponse
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ServiceResponse
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.UpdateServiceRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -71,4 +73,18 @@ interface ServiceApiService {
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20,
     ): ApiResponse<PageResponse<ServiceResponse>>
+
+    /** Returns paginated reviews for a single service. Maps to GET /api/v1/services/{serviceId}/reviews. */
+    @GET("services/{serviceId}/reviews")
+    suspend fun getServiceReviews(
+        @Path("serviceId") serviceId: String,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 10,
+    ): ApiResponse<PageResponse<ReviewResponse>>
+
+    /** Submits a new review. Maps to POST /api/v1/reviews. Returns 409 on duplicate (same user + service). */
+    @POST("reviews")
+    suspend fun submitReview(
+        @Body request: CreateReviewRequest,
+    ): ApiResponse<ReviewResponse>
 }

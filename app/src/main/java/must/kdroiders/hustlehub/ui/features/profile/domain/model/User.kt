@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.data.model
+package must.kdroiders.hustlehub.ui.features.profile.domain.model
 
 enum class UserRole {
     PROVIDER,
@@ -18,5 +18,7 @@ data class User(
     val bio: String = "",
     val isVerified: Boolean = false,
     val isOnline: Boolean = true,
+    val hustleScore: Float = 0f,
+    val reviewCount: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
 )

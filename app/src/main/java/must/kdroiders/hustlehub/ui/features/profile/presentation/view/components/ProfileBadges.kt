@@ -14,7 +14,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,10 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.Badge
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.BadgeType
-import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeBlue
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeGold
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeGreen
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 // Badges — horizontally scrollable chips
@@ -57,19 +56,19 @@ fun ProfileBadges(
 @Composable
 fun BadgeChip(badge: Badge) {
     val (bgColor, textColor) = when (badge.type) {
-        BadgeType.GOLD -> HustleBadgeGold to HustleWarningAmber
-        BadgeType.GREEN -> HustleBadgeGreen to HustleActiveGreen
-        BadgeType.BLUE -> HustleBadgeBlue to MaterialTheme.colorScheme.surfaceVariant
+        BadgeType.GOLD -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f) to HustleWarningAmber
+        BadgeType.GREEN -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f) to MaterialTheme.colorScheme.secondary
+        BadgeType.BLUE -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) to MaterialTheme.colorScheme.primary
         BadgeType.DEFAULT ->
             MaterialTheme.colorScheme.surfaceVariant to
                 MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    val icon = when (badge.type) {
-        BadgeType.GOLD -> Icons.Default.Star
-        BadgeType.GREEN -> Icons.Default.Star
-        BadgeType.BLUE -> Icons.Default.Star
-        BadgeType.DEFAULT -> Icons.Default.Star
+    val icon = when (badge.label) {
+        "Top Rated" -> Icons.Default.WorkspacePremium
+        "Fast Responder" -> Icons.Default.Bolt
+        "Verified Student" -> Icons.Default.Verified
+        else -> Icons.Default.Star
     }
 
     Row(

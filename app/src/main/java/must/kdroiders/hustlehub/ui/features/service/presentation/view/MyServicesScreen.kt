@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.WorkOff
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -149,11 +150,23 @@ fun MyServicesScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    HustleButton(
-                        text = "Save Changes",
-                        onClick = viewModel::saveGallery,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    if (state.isGallerySaving) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularWavyProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    } else {
+                        HustleButton(
+                            text = "Save Changes",
+                            onClick = viewModel::saveGallery,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
             }
         }

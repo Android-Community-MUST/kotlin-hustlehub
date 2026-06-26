@@ -126,10 +126,10 @@ fun ChangePasswordScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            if (uiState.errorMessage != null) {
+            uiState.errorMessage?.let { error ->
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = uiState.errorMessage!!,
+                    text = error,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                 )

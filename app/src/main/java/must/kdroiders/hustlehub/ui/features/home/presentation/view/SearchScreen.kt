@@ -20,12 +20,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -40,7 +36,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -63,16 +58,17 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
-import must.kdroiders.hustlehub.data.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SearchFilters
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SortOrder
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.EmptyServicesView
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.FilterBottomSheet
-import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCard
+import must.kdroiders.hustlehub.ui.features.home.presentation.components.SearchServiceRow
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCardShimmer
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.SearchViewModel
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 
 private const val SEARCH_SHIMMER_COUNT = 6
 
@@ -88,11 +84,12 @@ private const val SEARCH_SHIMMER_COUNT = 6
 fun SearchScreen(
     onBack: () -> Unit,
     onNavigateToServiceDetail: (serviceId: String) -> Unit,
+    onNavigateToChat: (providerId: String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
-    val gridState = rememberLazyGridState()
+    val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
     val focusRequester = remember { FocusRequester() }
 
@@ -102,8 +99,10 @@ fun SearchScreen(
     // Pagination trigger.
     val shouldLoadMore by remember {
         derivedStateOf {
-            val lastVisible = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            val total = gridState.layoutInfo.totalItemsCount
+            val lastVisible = listState.layoutInfo.visibleItemsInfo
+                .lastOrNull()
+                ?.index ?: 0
+            val total = listState.layoutInfo.totalItemsCount
             lastVisible >= total - 3 &&
                 !state.isLoading &&
                 !state.isLoadingMore &&
@@ -111,12 +110,15 @@ fun SearchScreen(
                 state.services.isNotEmpty()
         }
     }
-    LaunchedEffect(gridState) {
+    LaunchedEffect(listState) {
         snapshotFlow { shouldLoadMore }.distinctUntilChanged().collect { if (it) viewModel.loadNextPage() }
     }
 
     LaunchedEffect(state.error) {
-        state.error?.let { snackbarHostState.showSnackbar(it); viewModel.clearError() }
+        state.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
     }
 
     if (state.isFilterSheetOpen) {
@@ -134,19 +136,16 @@ fun SearchScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            state = gridState,
+        LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .testTag("search_result_grid"),
-            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 100.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .testTag("search_result_list"),
+            contentPadding = PaddingValues(bottom = 100.dp),
         ) {
             // Top bar: back + search field + filter icon
-            item(key = "topbar", span = { GridItemSpan(maxLineSpan) }) {
+            item(key = "topbar") {
                 SearchTopBar(
                     query = state.query,
                     onQueryChanged = viewModel::onQueryChanged,
@@ -159,7 +158,7 @@ fun SearchScreen(
 
             // Active filter chips — visible only when filters differ from defaults.
             if (!state.filters.isDefault) {
-                item(key = "active_filters", span = { GridItemSpan(maxLineSpan) }) {
+                item(key = "active_filters") {
                     ActiveFilterChipRow(
                         filters = state.filters,
                         onRemoveCategory = { cat ->
@@ -192,7 +191,7 @@ fun SearchScreen(
 
             // Recent searches — shown when query is empty and history exists.
             if (state.query.isEmpty() && state.recentSearches.isNotEmpty()) {
-                item(key = "recent_header", span = { GridItemSpan(maxLineSpan) }) {
+                item(key = "recent_header") {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -211,19 +210,18 @@ fun SearchScreen(
                         }
                     }
                 }
-                item(key = "recent_searches", span = { GridItemSpan(maxLineSpan) }) {
-                    LazyColumn(
+                item(key = "recent_searches") {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height((state.recentSearches.size * 48).dp.coerceAtMost(240.dp)),
-                        userScrollEnabled = false,
                     ) {
-                        items(items = state.recentSearches, key = { it }) { term ->
+                        state.recentSearches.forEach { term ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable { viewModel.onQueryChanged(term) }
-                                    .padding(horizontal = 4.dp, vertical = 12.dp),
+                                    .padding(horizontal = 20.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Icon(
@@ -246,14 +244,14 @@ fun SearchScreen(
 
             // Shimmer placeholders during initial load.
             if (state.isLoading) {
-                items(count = SEARCH_SHIMMER_COUNT, key = { "shimmer_$it" }, span = { GridItemSpan(1) }) {
+                items(count = SEARCH_SHIMMER_COUNT, key = { "shimmer_$it" }) {
                     ServiceCardShimmer()
                 }
             }
 
             // Empty state after successful load with no results.
             if (!state.isLoading && state.services.isEmpty() && state.query.isNotEmpty()) {
-                item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
+                item(key = "empty") {
                     EmptyServicesView(
                         message = "No results for \"${state.query}\"",
                         modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
@@ -262,17 +260,18 @@ fun SearchScreen(
             }
 
             // Result cards.
-            items(items = state.services, key = { it.id }, span = { GridItemSpan(1) }) { service ->
-                ServiceCard(
+            items(items = state.services, key = { it.id }) { service ->
+                SearchServiceRow(
                     service = service,
                     onClick = { onNavigateToServiceDetail(service.id) },
+                    onChatClick = { onNavigateToChat(service.providerId) },
                     modifier = Modifier.testTag("search_card_${service.id}"),
                 )
             }
 
             // Pagination spinner.
             if (state.isLoadingMore) {
-                item(key = "loading_more", span = { GridItemSpan(maxLineSpan) }) {
+                item(key = "loading_more") {
                     Box(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         contentAlignment = Alignment.Center,
@@ -410,60 +409,40 @@ private fun ActiveFilterChipRow(
     ) {
         // Per-category chips
         items(items = filters.categories.toList(), key = { "cat_$it" }) { cat ->
-            InputChip(
-                selected = true,
-                onClick = { onRemoveCategory(cat) },
-                label = { Text(cat) },
-                trailingIcon = {
-                    Icon(Icons.Default.Close, contentDescription = "Remove", modifier = Modifier.size(14.dp))
-                },
+            PremiumFilterChip(
+                label = cat,
+                onRemove = { onRemoveCategory(cat) },
             )
         }
         if (filters.minRating > 0f) {
             item(key = "rating") {
-                InputChip(
-                    selected = true,
-                    onClick = onRemoveRating,
-                    label = { Text("%.1f+ stars".format(filters.minRating)) },
-                    trailingIcon = {
-                        Icon(Icons.Default.Close, contentDescription = "Remove", modifier = Modifier.size(14.dp))
-                    },
+                PremiumFilterChip(
+                    label = "%.1f+".format(filters.minRating),
+                    onRemove = onRemoveRating,
                 )
             }
         }
         if (filters.maxPrice < 5000) {
             item(key = "price") {
-                InputChip(
-                    selected = true,
-                    onClick = onRemovePrice,
-                    label = { Text("≤ KES ${filters.maxPrice}") },
-                    trailingIcon = {
-                        Icon(Icons.Default.Close, contentDescription = "Remove", modifier = Modifier.size(14.dp))
-                    },
+                PremiumFilterChip(
+                    label = "< ${filters.maxPrice} KES",
+                    onRemove = onRemovePrice,
                 )
             }
         }
         filters.availability?.let { avail ->
             item(key = "avail") {
-                InputChip(
-                    selected = true,
-                    onClick = onRemoveAvailability,
-                    label = { Text(if (avail == ServiceAvailability.AVAILABLE) "Available" else "Busy") },
-                    trailingIcon = {
-                        Icon(Icons.Default.Close, contentDescription = "Remove", modifier = Modifier.size(14.dp))
-                    },
+                PremiumFilterChip(
+                    label = if (avail == ServiceAvailability.AVAILABLE) "Available" else "Busy",
+                    onRemove = onRemoveAvailability,
                 )
             }
         }
         if (filters.sortOrder != SortOrder.NEWEST) {
             item(key = "sort") {
-                InputChip(
-                    selected = true,
-                    onClick = onRemoveSort,
-                    label = { Text(filters.sortOrder.label) },
-                    trailingIcon = {
-                        Icon(Icons.Default.Close, contentDescription = "Remove", modifier = Modifier.size(14.dp))
-                    },
+                PremiumFilterChip(
+                    label = filters.sortOrder.label,
+                    onRemove = onRemoveSort,
                 )
             }
         }
@@ -479,5 +458,34 @@ private fun ActiveFilterChipRow(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun PremiumFilterChip(
+    label: String,
+    onRemove: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+            .clickable(onClick = onRemove)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = label,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = "Remove",
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(14.dp),
+        )
     }
 }
