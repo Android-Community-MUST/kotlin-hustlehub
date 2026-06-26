@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetServicesByProviderUseCase
+import must.kdroiders.hustlehub.ui.features.profile.domain.util.HustleScoreCalculator
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -51,10 +52,10 @@ class ProviderProfileViewModel
                     .onSuccess { provider ->
                         val services = servicesResult.getOrElse { emptyList() }
                         val totalReviews = services.sumOf { it.reviewCount }
-                        val avgRating = services.map { it.averageRating }.average().toFloat()
+                        val avgRating = if (services.isNotEmpty()) services.map { it.averageRating }.average().toFloat() else 0f
 
-                        // Compute hustle score: (avg rating / 5) × 100, weighted by review count
-                        val hustleScore = if (totalReviews > 0) (avgRating / 5f * 100f) else 0f
+                        // Compute hustle score using Bayesian Average
+                        val hustleScore = HustleScoreCalculator.calculate(services)
 
                         // Compute badges based on thresholds
                         val badges = buildList {

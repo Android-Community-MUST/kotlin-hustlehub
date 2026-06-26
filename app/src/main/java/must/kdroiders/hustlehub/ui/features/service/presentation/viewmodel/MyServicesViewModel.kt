@@ -13,6 +13,12 @@ import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailabi
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.DeleteServiceUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.UpdateAvailabilityUseCase
+import must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import must.kdroiders.hustlehub.core.utils.ImageCompressor
+import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
+import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -23,6 +29,9 @@ class MyServicesViewModel
         private val getMyServices: GetMyServicesUseCase,
         private val deleteService: DeleteServiceUseCase,
         private val updateAvailability: UpdateAvailabilityUseCase,
+        private val storageRepository: StorageRepository,
+        private val serviceRepository: ServiceRepository,
+        @ApplicationContext private val context: Context,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(MyServicesUiState())
         val uiState: StateFlow<MyServicesUiState> = _uiState.asStateFlow()
@@ -168,26 +177,65 @@ class MyServicesViewModel
             }
         }
 
+
         fun saveGallery() {
             val serviceId = _uiState.value.selectedServiceForGallery ?: return
-            // TODO: Implement actual S3 upload and API update here in the future
-
-            _uiState.update { state ->
-                // Optimistically update the local state with the existing URLs for now
-                // (In reality, we would wait for the new URIs to be uploaded and get their remote URLs back)
-                val updatedServices = state.services.map { service ->
-                    if (service.id == serviceId) {
-                        service.copy(portfolio = state.existingPortfolioUrls)
-                    } else {
-                        service
+            val state = _uiState.value
+            
+            _uiState.update { it.copy(isGallerySaving = true, error = null) }
+            
+            viewModelScope.launch {
+                try {
+                    val uploadedUrls = mutableListOf<String>()
+                    
+                    // 1. Compress and upload new images
+                    for (uri in state.portfolioUris) {
+                        val compressedBytes = ImageCompressor.compressImage(context, uri)
+                        if (compressedBytes != null) {
+                            var finalUrl: String? = null
+                            storageRepository.uploadPortfolioImage(serviceId, compressedBytes).collect { result ->
+                                if (result is UploadResult.Success) {
+                                    finalUrl = result.url
+                                } else if (result is UploadResult.Error) {
+                                    throw Exception(result.message)
+                                }
+                            }
+                            finalUrl?.let { uploadedUrls.add(it) }
+                        }
                     }
+                    
+                    // 2. Combine surviving existing URLs and newly uploaded URLs
+                    val finalPortfolioUrls = state.existingPortfolioUrls + uploadedUrls
+                    
+                    // 3. Update the service in backend
+                    serviceRepository.updateService(
+                        serviceId = serviceId,
+                        portfolioUrls = finalPortfolioUrls
+                    )
+                        .onSuccess { updatedService ->
+                            // 4. Update the local cache
+                            _uiState.update { current ->
+                                val updatedServices = current.services.map { service ->
+                                    if (service.id == updatedService.id) updatedService else service
+                                }
+                                current.copy(
+                                    services = updatedServices,
+                                    selectedServiceForGallery = null,
+                                    existingPortfolioUrls = emptyList(),
+                                    portfolioUris = emptyList(),
+                                    isGallerySaving = false
+                                )
+                            }
+                        }
+                        .onFailure { e ->
+                            Timber.e(e, "Failed to update service portfolio")
+                            _uiState.update { it.copy(isGallerySaving = false, error = e.message ?: "Failed to update portfolio") }
+                        }
+                        
+                } catch (e: Exception) {
+                    Timber.e(e, "Error saving gallery")
+                    _uiState.update { it.copy(isGallerySaving = false, error = e.message ?: "Error saving gallery") }
                 }
-                state.copy(
-                    services = updatedServices,
-                    selectedServiceForGallery = null,
-                    existingPortfolioUrls = emptyList(),
-                    portfolioUris = emptyList(),
-                )
             }
         }
     }

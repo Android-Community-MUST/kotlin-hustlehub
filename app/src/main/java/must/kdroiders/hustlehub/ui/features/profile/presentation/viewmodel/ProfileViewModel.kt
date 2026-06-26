@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.util.HustleScoreCalculator
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.UpdateAvailabilityUseCase
@@ -47,12 +48,16 @@ class ProfileViewModel
 
                 userResult
                     .onSuccess { user ->
+                        val services = servicesResult.getOrElse { emptyList() }
+                        val calculatedReviewCount = services.sumOf { it.reviewCount }
+                        val calculatedScore = HustleScoreCalculator.calculate(services)
+                        
                         _uiState.update {
                             it.copy(
                                 user = user,
-                                services = servicesResult.getOrElse { emptyList() },
-                                hustleScore = user?.hustleScore ?: 0.0f,
-                                reviewCount = user?.reviewCount ?: 0,
+                                services = services,
+                                hustleScore = calculatedScore,
+                                reviewCount = calculatedReviewCount,
                                 badges = listOf(
                                     Badge("Top Rated", BadgeType.BLUE),
                                     Badge("Fast Responder", BadgeType.GREEN),

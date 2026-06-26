@@ -16,4 +16,5 @@ data class MyServicesUiState(
     val selectedServiceForGallery: String? = null,
     val existingPortfolioUrls: List<String> = emptyList(),
     val portfolioUris: List<Uri> = emptyList(),
+    val isGallerySaving: Boolean = false,
 )

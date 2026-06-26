@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.util.HustleScoreCalculator
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import timber.log.Timber
@@ -108,7 +109,7 @@ class HomeViewModel
                             // Only services with at least one review qualify.
                             val featured = merged
                                 .filter { it.averageRating > 0f }
-                                .sortedByDescending { it.averageRating }
+                                .sortedByDescending { HustleScoreCalculator.calculateForService(it) }
                                 .take(5)
 
                             current.copy(

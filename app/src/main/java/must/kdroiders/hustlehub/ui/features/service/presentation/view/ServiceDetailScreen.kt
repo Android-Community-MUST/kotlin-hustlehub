@@ -133,7 +133,11 @@ fun ServiceDetailScreen(
             }
         },
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
             when {
                 state.isLoading -> LoadingIndicator(modifier = Modifier.fillMaxSize())
                 state.error != null -> ErrorView(
@@ -240,20 +244,14 @@ private fun ServiceDetailContent(
                     )
                 }
 
-                // Scrim to fade into the background
+                // Curved shape at the bottom to create a bottom-sheet effect
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    MaterialTheme.colorScheme.background.copy(alpha = 0.4f),
-                                    MaterialTheme.colorScheme.background,
-                                ),
-                                startY = 300f,
-                            ),
-                        ),
+                        .fillMaxWidth()
+                        .height(32.dp)
+                        .align(Alignment.BottomCenter)
+                        .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
+                        .background(MaterialTheme.colorScheme.background)
                 )
             }
         }
@@ -293,7 +291,7 @@ private fun ServiceDetailContent(
                     )
                 }
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
         }
 
         // Provider Card
@@ -385,7 +383,7 @@ private fun ServiceDetailContent(
                     )
                 }
             }
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(24.dp))
         }
 
         // About section
@@ -402,7 +400,7 @@ private fun ServiceDetailContent(
                     lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
-                Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(16.dp))
             }
         }
 
