@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -78,8 +80,8 @@ private fun FeaturedServiceCard(
 ) {
     Box(
         modifier = modifier
-            .width(180.dp)
-            .height(240.dp)
+            .width(160.dp)
+            .height(220.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
             .clickable(onClick = onClick)
@@ -88,8 +90,7 @@ private fun FeaturedServiceCard(
         // Hero image — gradient fallback when no portfolio image is available
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(165.dp)
+                .fillMaxSize()
                 .background(
                     Brush.linearGradient(
                         colors = when (service.category) {
@@ -123,18 +124,17 @@ private fun FeaturedServiceCard(
                 )
             }
 
-            // ⭐ Rating badge overlaid on hero image
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(8.dp)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.55f))
+                    .background(Color.White.copy(alpha = 0.2f))
                     .padding(horizontal = 8.dp, vertical = 4.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.Star,
+                        imageVector = Icons.Outlined.Star,
                         contentDescription = null,
                         tint = HustleWarningAmber,
                         modifier = Modifier.size(12.dp),
@@ -144,7 +144,7 @@ private fun FeaturedServiceCard(
                         text = "%.1f".format(service.averageRating),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = Color.White,
                         fontSize = 11.sp,
                     )
                 }
@@ -156,7 +156,16 @@ private fun FeaturedServiceCard(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 6.dp),
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.6f),
+                            Color.Black.copy(alpha = 0.9f)
+                        )
+                    )
+                )
+                .padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 32.dp),
         ) {
             Text(
                 text = service.category.label,
@@ -167,20 +176,28 @@ private fun FeaturedServiceCard(
             )
             Text(
                 text = service.title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                fontSize = 13.sp,
             )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = "KES ${service.priceRange}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp,
-            )
+            Spacer(Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = "from ",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 10.sp,
+                )
+                Text(
+                    text = "KES ${service.priceRange.split("-").first().trim()}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                )
+            }
         }
     }
 }

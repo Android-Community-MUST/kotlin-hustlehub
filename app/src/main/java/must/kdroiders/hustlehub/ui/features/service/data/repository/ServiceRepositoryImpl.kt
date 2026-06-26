@@ -380,6 +380,7 @@ private fun ServiceResponse.toDomainModel(): Service =
         createdAt = 0L,
         updatedAt = 0L,
         iconUrl = portfolioImages?.firstOrNull() ?: "",
+        location = location,
     )
 
 private fun ReviewResponse.toDomain(): Review =

@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.ui.features.service.domain.model
 
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.LocationDto
 
 data class Service(
     val id: String = "",
@@ -22,4 +23,5 @@ data class Service(
     // UI-specific fallback field for existing components if needed
     // (Could be removed after fully refactoring the UI to use portfolio)
     val iconUrl: String = "",
+    val location: LocationDto? = null,
 )
