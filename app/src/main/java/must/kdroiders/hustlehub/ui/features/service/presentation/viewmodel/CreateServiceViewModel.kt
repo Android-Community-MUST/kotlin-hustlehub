@@ -12,10 +12,16 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import must.kdroiders.hustlehub.core.utils.ImageCompressor
+import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -53,10 +59,17 @@ class CreateServiceViewModel
     @Inject
     constructor(
         private val serviceRepository: ServiceRepository,
+        private val storageRepository: StorageRepository,
+        @ApplicationContext private val context: Context,
         private val getServiceById: GetServiceByIdUseCase,
     ) : ViewModel() {
         private var editServiceId: String? = null
         private var originalAvailability: ServiceAvailability = ServiceAvailability.AVAILABLE
+
+        companion object {
+            private const val MAX_PORTFOLIO_IMAGES_CREATE = 3
+            private const val MAX_PORTFOLIO_IMAGES_EDIT = 6
+        }
 
         private val _uiState = MutableStateFlow(CreateServiceUiState())
         val uiState: StateFlow<CreateServiceUiState> = _uiState.asStateFlow()
@@ -173,8 +186,13 @@ class CreateServiceViewModel
         fun onPortfolioImageAdded(uri: Uri) {
             val state = _uiState.value
             val totalCount = state.portfolioUris.size + state.existingPortfolioUrls.size
-            if (totalCount < 3) {
+            val maxAllowed = if (state.isEditMode) MAX_PORTFOLIO_IMAGES_EDIT else MAX_PORTFOLIO_IMAGES_CREATE
+            if (totalCount < maxAllowed) {
                 _uiState.update { it.copy(portfolioUris = it.portfolioUris + uri) }
+            } else {
+                val message = "You can only upload $maxAllowed images " +
+                    if (!state.isEditMode) "initially. You can add more later from the Manage screen." else "in total."
+                showTemporaryError(message)
             }
         }
 
@@ -202,6 +220,14 @@ class CreateServiceViewModel
             _uiState.value = CreateServiceUiState()
         }
 
+        private fun showTemporaryError(message: String) {
+            _uiState.update { it.copy(error = message) }
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(4000)
+                _uiState.update { if (it.error == message) it.copy(error = null) else it }
+            }
+        }
+
         fun publish() {
             if (!validate()) return
 
@@ -214,6 +240,7 @@ class CreateServiceViewModel
                 _uiState.update { it.copy(isLoading = true, error = null) }
 
                 val result = if (state.isEditMode && snapshot != null) {
+                    // Update basic details first
                     serviceRepository.updateService(
                         serviceId = snapshot,
                         title = state.title.trim(),
@@ -239,6 +266,46 @@ class CreateServiceViewModel
                 result
                     .onSuccess { savedService ->
                         val targetId = if (state.isEditMode && snapshot != null) snapshot else savedService.id
+                        
+                        // Handle Portfolio Uploads if there are new images
+                        val newUrls = mutableListOf<String>()
+                        if (state.portfolioUris.isNotEmpty()) {
+                            try {
+                                val uploadDeferreds = state.portfolioUris.map { uri ->
+                                    async {
+                                        val bytes = ImageCompressor.compressImage(context, uri)
+                                        if (bytes != null) {
+                                            // Flow usually emits once then completes for single uploads, collect first result
+                                            var url: String? = null
+                                            storageRepository.uploadPortfolioImage(targetId, bytes).collect { result ->
+                                                if (result is must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult.Success) {
+                                                    url = result.url
+                                                }
+                                            }
+                                            url
+                                        } else null
+                                    }
+                                }
+                                newUrls.addAll(uploadDeferreds.awaitAll().filterNotNull())
+                                
+                                // Now update the service with the final combined portfolio URLs
+                                val combinedUrls = state.existingPortfolioUrls + newUrls
+                                serviceRepository.updateService(
+                                    serviceId = targetId,
+                                    portfolioUrls = combinedUrls
+                                )
+                            } catch (e: Exception) {
+                                Timber.e(e, "Failed to upload portfolio images")
+                                _uiState.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        error = "Failed to upload portfolio images. Please try again.",
+                                    )
+                                }
+                                return@launch
+                            }
+                        }
+
                         val availResult = serviceRepository.updateAvailability(targetId, state.availability)
 
                         if (availResult.isFailure) {

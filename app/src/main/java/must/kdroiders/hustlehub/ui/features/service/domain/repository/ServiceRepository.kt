@@ -20,6 +20,7 @@ interface ServiceRepository {
         maxPrice: Int,
         openToBarter: Boolean,
         tags: List<String>,
+        portfolioUrls: List<String> = emptyList(),
     ): Result<Service>
 
     /**
@@ -38,6 +39,7 @@ interface ServiceRepository {
         maxPrice: Int? = null,
         openToBarter: Boolean? = null,
         tags: List<String>? = null,
+        portfolioUrls: List<String>? = null,
     ): Result<Service>
 
     /** Permanently deletes the service and removes it from the local cache. */

@@ -45,6 +45,7 @@ class ServiceRepositoryImpl(
         maxPrice: Int,
         openToBarter: Boolean,
         tags: List<String>,
+        portfolioUrls: List<String>,
     ): Result<Service> =
         withContext(Dispatchers.IO) {
             try {
@@ -56,6 +57,7 @@ class ServiceRepositoryImpl(
                     maxPrice = maxPrice,
                     openToBarter = openToBarter,
                     tags = tags,
+                    portfolioUrls = portfolioUrls,
                 )
                 val response = apiService.createService(request)
                 if (response.success && response.data != null) {
@@ -103,6 +105,7 @@ class ServiceRepositoryImpl(
         maxPrice: Int?,
         openToBarter: Boolean?,
         tags: List<String>?,
+        portfolioUrls: List<String>?,
     ): Result<Service> =
         withContext(Dispatchers.IO) {
             try {
@@ -114,6 +117,7 @@ class ServiceRepositoryImpl(
                     maxPrice = maxPrice,
                     openToBarter = openToBarter,
                     tags = tags,
+                    portfolioUrls = portfolioUrls,
                 )
                 val response = apiService.updateService(serviceId, request)
                 if (response.success && response.data != null) {
