@@ -59,19 +59,6 @@ fun CategoryBadge(
     category: ServiceCategory,
     modifier: Modifier = Modifier,
 ) {
-    val emoji = when (category) {
-        ServiceCategory.ALL -> "🔍"
-        ServiceCategory.SALON -> "🏆"
-        ServiceCategory.LAUNDRY -> "👕"
-        ServiceCategory.TUTORING -> "📚"
-        ServiceCategory.FOOD -> "🍔"
-        ServiceCategory.TECH -> "💻"
-        ServiceCategory.FASHION -> "👗"
-        ServiceCategory.PHOTOGRAPHY -> "📸"
-        ServiceCategory.DESIGN -> "🎨"
-        ServiceCategory.OTHER -> "✨"
-    }
-
     val displayLabel = category.label
 
     Row(
@@ -82,8 +69,6 @@ fun CategoryBadge(
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = emoji, style = MaterialTheme.typography.labelMedium)
-        Spacer(Modifier.width(4.dp))
         Text(
             text = displayLabel,
             style = MaterialTheme.typography.labelMedium,

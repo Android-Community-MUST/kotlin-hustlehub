@@ -25,13 +25,13 @@ import coil.compose.AsyncImage
  * If there are more than 3 images, the 3rd thumbnail displays a dark overlay with '+X' text.
  *
  * @param imageUrls Ordered list of image URLs to display.
- * @param onImageClick Called with the tapped image URL.
+ * @param onImageClick Called with the tapped image index.
  */
 @Composable
 fun PortfolioGallery(
     imageUrls: List<String>,
     modifier: Modifier = Modifier,
-    onImageClick: (url: String) -> Unit = {},
+    onImageClick: (index: Int) -> Unit = {},
 ) {
     if (imageUrls.isEmpty()) return
 
@@ -51,7 +51,7 @@ fun PortfolioGallery(
                     .aspectRatio(1f)
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable { onImageClick(url) },
+                    .clickable { onImageClick(index) },
             ) {
                 AsyncImage(
                     model = url,

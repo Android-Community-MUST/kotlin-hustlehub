@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -90,7 +92,7 @@ fun ServiceDetailScreen(
         serviceDetailViewModel.initialize(serviceId)
     }
 
-    var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
+    var fullScreenImageIndex by remember { mutableStateOf<Int?>(null) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -148,7 +150,7 @@ fun ServiceDetailScreen(
                 else -> ServiceDetailContent(
                     state = state,
                     contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 24.dp),
-                    onImageClick = { url -> fullScreenImageUrl = url },
+                    onImageClick = { index -> fullScreenImageIndex = index },
                     onProviderClick = { state.service?.providerId?.let { onNavigateToProviderProfile(it) } },
                     onNavigateToWriteReview = onNavigateToWriteReview,
                 )
@@ -204,11 +206,14 @@ fun ServiceDetailScreen(
         }
     }
 
-    fullScreenImageUrl?.let { url ->
-        FullScreenImageViewer(
-            imageUrl = url,
-            onDismiss = { fullScreenImageUrl = null },
-        )
+    fullScreenImageIndex?.let { index ->
+        state.service?.portfolio?.let { portfolio ->
+            FullScreenImageViewer(
+                imageUrls = portfolio,
+                initialIndex = index,
+                onDismiss = { fullScreenImageIndex = null },
+            )
+        }
     }
 }
 
@@ -216,7 +221,7 @@ fun ServiceDetailScreen(
 private fun ServiceDetailContent(
     state: ServiceDetailUiState,
     contentPadding: PaddingValues,
-    onImageClick: (String) -> Unit,
+    onImageClick: (Int) -> Unit,
     onProviderClick: () -> Unit,
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit,
 ) {
@@ -236,8 +241,44 @@ private fun ServiceDetailContent(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             ) {
                 if (service.portfolio.isNotEmpty()) {
-                    AsyncImage(
-                        model = service.portfolio.first(),
+                    val pagerState = rememberPagerState(pageCount = { service.portfolio.size })
+
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        AsyncImage(
+                            model = service.portfolio[page],
+                            contentDescription = "Service Hero Image ${page + 1}",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable { onImageClick(page) },
+                        )
+                    }
+
+                    // Pager Indicators
+                    if (service.portfolio.size > 1) {
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 32.dp), // Padding to keep above the curved bottom
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            repeat(service.portfolio.size) { iteration ->
+                                val color = if (pagerState.currentPage == iteration) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.5f)
+                                Box(
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(color)
+                                        .size(if (pagerState.currentPage == iteration) 8.dp else 6.dp)
+                                )
+                            }
+                        }
+                    }
+                } else if (service.iconUrl.isNotBlank()) {
+                     AsyncImage(
+                        model = service.iconUrl,
                         contentDescription = "Service Hero Image",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
@@ -260,8 +301,10 @@ private fun ServiceDetailContent(
         item(key = "header_info") {
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
                 ) {
                     AvailabilityBadge(availability = service.availability)
                     CategoryBadge(category = service.category)
