@@ -23,6 +23,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
+import must.kdroiders.hustlehub.core.utils.ImageCompressor
 
 /**
  * Concrete implementation of [UserRepository].
@@ -45,15 +46,15 @@ class UserRepositoryImpl
             imageUri: Uri,
         ): Result<String> =
             runCatching {
-                val inputStream = context.contentResolver.openInputStream(imageUri)
-                    ?: throw Exception("Failed to open input stream for Uri: $imageUri")
-                val bytes = inputStream.use { it.readBytes() }
+                val bytes = ImageCompressor.compressImage(context, imageUri)
+                    ?: throw Exception("Failed to compress image for Uri: $imageUri")
 
                 val requestFile = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull(), 0, bytes.size)
                 val filePart = MultipartBody.Part.createFormData("file", "profile_$userId.jpg", requestFile)
-                val typePart = "PROFILE_PHOTO".toRequestBody("text/plain".toMediaTypeOrNull())
+                val typePart = MultipartBody.Part.createFormData("type", "profile")
+                val entityIdPart = MultipartBody.Part.createFormData("entityId", userId)
 
-                val response = mediaApiService.uploadImage(filePart, typePart)
+                val response = mediaApiService.uploadImage(filePart, typePart, entityIdPart)
                 if (response.success && response.data != null) {
                     response.data.url
                 } else {

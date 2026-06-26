@@ -183,7 +183,7 @@ class ChatDetailViewModel
                     val response = withContext(Dispatchers.IO) {
                         val requestFile = file.readBytes().toRequestBody("audio/mp4".toMediaTypeOrNull())
                         val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
-                        val convIdBody = id.toRequestBody("text/plain".toMediaTypeOrNull())
+                        val convIdBody = MultipartBody.Part.createFormData("conversationId", id)
                         mediaApiService.uploadVoiceNote(body, convIdBody)
                     }
 
@@ -213,8 +213,8 @@ class ChatDetailViewModel
                         val requestFile = imageBytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
                         val fileName = "chat_img_${System.currentTimeMillis()}.jpg"
                         val body = MultipartBody.Part.createFormData("file", fileName, requestFile)
-                        val typeBody = "CHAT_IMAGE".toRequestBody("text/plain".toMediaTypeOrNull())
-                        val entityIdBody = id.toRequestBody("text/plain".toMediaTypeOrNull())
+                        val typeBody = MultipartBody.Part.createFormData("type", "chat")
+                        val entityIdBody = MultipartBody.Part.createFormData("entityId", id)
                         mediaApiService.uploadImage(body, typeBody, entityIdBody)
                     }
 

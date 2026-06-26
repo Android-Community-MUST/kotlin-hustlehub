@@ -20,14 +20,14 @@ interface MediaApiService {
     @POST("media/upload")
     suspend fun uploadImage(
         @Part file: MultipartBody.Part,
-        @Part("type") type: RequestBody,
-        @Part("entityId") entityId: RequestBody? = null,
+        @Part type: MultipartBody.Part,
+        @Part entityId: MultipartBody.Part,
     ): ApiResponse<MediaUploadResponse>
 
     @Multipart
     @POST("media/upload/voice")
     suspend fun uploadVoiceNote(
         @Part file: MultipartBody.Part,
-        @Part("conversationId") conversationId: RequestBody,
+        @Part conversationId: MultipartBody.Part,
     ): ApiResponse<VoiceUploadResponse>
 }
