@@ -80,7 +80,14 @@ fun ServiceDetailScreen(
     serviceId: String,
     serviceDetailViewModel: ServiceDetailViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
-    onNavigateToChat: (providerId: String) -> Unit = {},
+    onNavigateToChat: (
+        providerId: String,
+        serviceId: String,
+        serviceTitle: String,
+        serviceCategory: String,
+        servicePriceRange: String,
+        providerName: String,
+    ) -> Unit = { _, _, _, _, _, _ -> },
     onNavigateToProviderProfile: (providerId: String) -> Unit = {},
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit = { _, _ -> },
 ) {
@@ -127,7 +134,19 @@ fun ServiceDetailScreen(
 
                         HustleButton(
                             text = "Message Provider",
-                            onClick = { state.service?.providerId?.let { onNavigateToChat(it) } },
+                            onClick = {
+                                val svc = state.service
+                                if (svc != null) {
+                                    onNavigateToChat(
+                                        svc.providerId,
+                                        svc.id,
+                                        svc.title,
+                                        svc.category.name,
+                                        svc.priceRange,
+                                        state.provider?.name ?: "",
+                                    )
+                                }
+                            },
                             modifier = Modifier.width(200.dp),
                         )
                     }

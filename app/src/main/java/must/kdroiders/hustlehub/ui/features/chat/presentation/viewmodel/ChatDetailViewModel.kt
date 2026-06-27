@@ -47,6 +47,10 @@ data class ChatDetailUiState(
     val isLoading: Boolean = false,
     val playerState: PlayerState = PlayerState(),
     val error: String? = null,
+    /** True when the signed-in user is the service provider of this conversation. */
+    val isCurrentUserProvider: Boolean = false,
+    /** Prevents the auto-generated service card from being re-sent on every re-open. */
+    val serviceCardSent: Boolean = false,
 )
 
 @HiltViewModel
@@ -89,20 +93,40 @@ class ChatDetailViewModel
                 .launchIn(viewModelScope)
         }
 
-        fun initialize(conversationId: String) {
+        /**
+         * Initialises the chat conversation.
+         *
+         * The optional [serviceId] / [serviceTitle] / [serviceCategory] / [servicePriceRange] /
+         * [providerName] fields are non-null only when the screen is opened from a service listing.
+         * When present and the conversation is brand new (empty history), a SERVICE_CARD message
+         * is auto-sent once so the provider sees the request context at a glance.
+         */
+        fun initialize(
+            conversationId: String,
+            serviceId: String? = null,
+            serviceTitle: String? = null,
+            serviceCategory: String? = null,
+            servicePriceRange: String? = null,
+            providerName: String? = null,
+        ) {
             if (this.conversationId == conversationId) return
             this.conversationId = conversationId
 
-            _uiState.update { it.copy(currentUserId = firebaseAuth?.currentUser?.uid ?: "") }
+            val currentUid = firebaseAuth?.currentUser?.uid ?: ""
+            _uiState.update { it.copy(currentUserId = currentUid) }
 
             // Load cached conversation details to show other user's info in header instantly
             viewModelScope.launch(Dispatchers.IO) {
                 val cached = conversationDao.getById(conversationId)
                 if (cached != null) {
+                    // Determine if the current user is the provider:
+                    // The conversation's otherUserId is the customer, so if it isn't us, we are the provider.
+                    val isProvider = cached.otherUserId != currentUid
                     _uiState.update {
                         it.copy(
                             otherUserName = cached.otherUserName,
                             otherUserAvatar = cached.otherUserAvatar,
+                            isCurrentUserProvider = isProvider,
                         )
                     }
                 }
@@ -162,14 +186,26 @@ class ChatDetailViewModel
                 }
             }
 
-            // Load REST history page 0
-            loadHistory()
+            // Load REST history page 0, then auto-send service card if this is a brand-new thread
+            loadHistoryAndAutoCard(
+                serviceId = serviceId,
+                serviceTitle = serviceTitle,
+                serviceCategory = serviceCategory,
+                servicePriceRange = servicePriceRange,
+                providerName = providerName,
+            )
 
             // Mark as read on entry
             markAsRead()
         }
 
-        fun loadHistory() {
+        private fun loadHistoryAndAutoCard(
+            serviceId: String? = null,
+            serviceTitle: String? = null,
+            serviceCategory: String? = null,
+            servicePriceRange: String? = null,
+            providerName: String? = null,
+        ) {
             val id = conversationId ?: return
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
@@ -177,10 +213,29 @@ class ChatDetailViewModel
                     .loadMessageHistory(id, 0)
                     .onSuccess {
                         _uiState.update { it.copy(isLoading = false) }
+                        // Auto-send service card only on the very first open of a brand-new thread
+                        val noMessages = _uiState.value.messages.isEmpty()
+                        val hasServiceContext = !serviceId.isNullOrBlank() && !serviceTitle.isNullOrBlank()
+                        val cardNotYetSent = !_uiState.value.serviceCardSent
+                        if (noMessages && hasServiceContext && cardNotYetSent) {
+                            _uiState.update { it.copy(serviceCardSent = true) }
+                            sendServiceCardMessage(
+                                serviceId = serviceId!!,
+                                title = serviceTitle!!,
+                                priceRange = "KES ${servicePriceRange ?: ""}",
+                                providerName = providerName ?: "",
+                                category = serviceCategory ?: "",
+                            )
+                        }
                     }.onFailure { error ->
                         _uiState.update { it.copy(isLoading = false, error = error.message) }
                     }
             }
+        }
+
+        /** Public entry-point used by the pull-to-refresh or retry actions. */
+        fun loadHistory() {
+            loadHistoryAndAutoCard()
         }
 
         private fun markAsRead() {
@@ -284,10 +339,20 @@ class ChatDetailViewModel
             serviceId: String,
             title: String,
             priceRange: String,
+            category: String = "",
+            providerName: String = "",
         ) {
             val id = conversationId ?: return
             viewModelScope.launch {
-                val metadata = gson.toJson(mapOf("serviceId" to serviceId, "title" to title, "priceRange" to priceRange))
+                val metadata = gson.toJson(
+                    mapOf(
+                        "serviceId" to serviceId,
+                        "title" to title,
+                        "priceRange" to priceRange,
+                        "category" to category,
+                        "providerName" to providerName,
+                    ),
+                )
                 chatRepository.sendMessage(
                     conversationId = id,
                     type = MessageType.SERVICE_CARD,

@@ -28,6 +28,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -51,6 +53,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -98,6 +102,11 @@ fun ChatDetailScreen(
     onBackClick: () -> Unit,
     onNavigateToServiceDetail: (String) -> Unit,
     modifier: Modifier = Modifier,
+    serviceId: String? = null,
+    serviceTitle: String? = null,
+    serviceCategory: String? = null,
+    servicePriceRange: String? = null,
+    providerName: String? = null,
     viewModel: ChatDetailViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -117,7 +126,14 @@ fun ChatDetailScreen(
 
     // Initialize the conversation when screen loads or ID changes
     LaunchedEffect(conversationId) {
-        viewModel.initialize(conversationId)
+        viewModel.initialize(
+            conversationId = conversationId,
+            serviceId = serviceId,
+            serviceTitle = serviceTitle,
+            serviceCategory = serviceCategory,
+            servicePriceRange = servicePriceRange,
+            providerName = providerName,
+        )
     }
 
     // Show errors in snackbar
@@ -413,6 +429,45 @@ fun ChatDetailScreen(
                             showAttachmentMenu = false
                         },
                     )
+                }
+            }
+
+            // Quick Reply Templates — visible only to the provider of this conversation
+            AnimatedVisibility(visible = state.isCurrentUserProvider) {
+                val quickReplies = listOf(
+                    "Hi! I'm available",
+                    "Can we schedule a time?",
+                    "What style do you prefer?",
+                    "I'm currently busy, back later",
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    quickReplies.forEach { reply ->
+                        SuggestionChip(
+                            onClick = {
+                                viewModel.sendTextMessage(reply)
+                            },
+                            label = {
+                                Text(
+                                    text = reply,
+                                    style = MaterialTheme.typography.labelMedium,
+                                )
+                            },
+                            colors = SuggestionChipDefaults.suggestionChipColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                                labelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            ),
+                            border = SuggestionChipDefaults.suggestionChipBorder(
+                                enabled = true,
+                                borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                            ),
+                        )
+                    }
                 }
             }
 

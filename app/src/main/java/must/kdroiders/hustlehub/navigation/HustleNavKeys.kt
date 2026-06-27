@@ -70,10 +70,22 @@ data object ChangePassword : NavKey
 
 /**
  * Individual chat conversation.
- * Carries the [chatId] so the detail pane can load the correct thread.
+ *
+ * [chatId] is the conversation ID used to load the thread.
+ *
+ * The optional service fields are non-null only when the chat is opened directly
+ * from a service listing via "Message Provider". They are used to auto-generate
+ * a SERVICE_CARD message at the top of the conversation on first open.
  */
 @Serializable
-data class ChatDetail(val chatId: String) : NavKey
+data class ChatDetail(
+    val chatId: String,
+    val serviceId: String? = null,
+    val serviceTitle: String? = null,
+    val serviceCategory: String? = null,
+    val servicePriceRange: String? = null,
+    val providerName: String? = null,
+) : NavKey
 
 /** App settings screen — pushed from the Profile tab header. */
 @Serializable

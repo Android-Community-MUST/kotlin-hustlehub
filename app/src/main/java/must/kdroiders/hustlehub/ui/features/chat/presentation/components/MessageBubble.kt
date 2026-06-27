@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,12 +22,15 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Work
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -337,45 +341,97 @@ private fun ServiceCardMessageContent(
     if (serviceData != null) {
         Card(
             modifier = Modifier
-                .width(240.dp)
-                .clickable { onClick(serviceData.serviceId) },
+                .width(260.dp)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(12.dp),
+                ),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface,
             ),
             shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                // Header label
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Work,
-                        contentDescription = "Service",
+                        contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(14.dp),
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = serviceData.title,
-                        style = MaterialTheme.typography.titleSmall,
+                        text = "SERVICE REQUEST",
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.primary,
+                        letterSpacing = 0.8.sp,
                     )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = serviceData.priceRange,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary,
+
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    thickness = 0.8.dp,
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Service title
                 Text(
-                    text = "Tap to view service detail",
-                    fontSize = 11.sp,
+                    text = serviceData.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Category · Price range
+                Text(
+                    text = buildString {
+                        if (!serviceData.category.isNullOrBlank()) append("${serviceData.category} · ")
+                        append(serviceData.priceRange)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+
+                // Provider name
+                if (!serviceData.providerName.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = serviceData.providerName,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // "View Service" CTA
+                OutlinedButton(
+                    onClick = { onClick(serviceData.serviceId) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                        horizontal = 12.dp, vertical = 6.dp,
+                    ),
+                ) {
+                    Text(
+                        text = "View Service",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
     } else {
@@ -420,4 +476,10 @@ private fun parseVoiceDurationFromMetadata(metadata: String?): String {
 // Metadata structures
 private data class VoiceMetadata(val durationSeconds: Int)
 private data class LocationMetadata(val lat: Double, val lng: Double, val label: String?)
-private data class ServiceMetadata(val serviceId: String, val title: String, val priceRange: String)
+private data class ServiceMetadata(
+    val serviceId: String,
+    val title: String,
+    val priceRange: String,
+    val category: String? = null,
+    val providerName: String? = null,
+)
