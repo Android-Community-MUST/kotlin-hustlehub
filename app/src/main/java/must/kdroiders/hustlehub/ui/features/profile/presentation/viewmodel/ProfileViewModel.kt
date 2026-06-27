@@ -51,7 +51,7 @@ class ProfileViewModel
                         val services = servicesResult.getOrElse { emptyList() }
                         val calculatedReviewCount = services.sumOf { it.reviewCount }
                         val calculatedScore = HustleScoreCalculator.calculate(services)
-                        
+
                         _uiState.update {
                             it.copy(
                                 user = user,

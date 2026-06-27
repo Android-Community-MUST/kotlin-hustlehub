@@ -1,8 +1,8 @@
 package must.kdroiders.hustlehub.ui.features.service.domain.model
 
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.LocationDto
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
-import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.LocationDto
 
 data class Service(
     val id: String = "",

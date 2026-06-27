@@ -1,24 +1,24 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.utils.ImageCompressor
+import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
+import must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.DeleteServiceUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.UpdateAvailabilityUseCase
-import must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult
-import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
-import must.kdroiders.hustlehub.core.utils.ImageCompressor
-import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
-import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -177,17 +177,16 @@ class MyServicesViewModel
             }
         }
 
-
         fun saveGallery() {
             val serviceId = _uiState.value.selectedServiceForGallery ?: return
             val state = _uiState.value
-            
+
             _uiState.update { it.copy(isGallerySaving = true, error = null) }
-            
+
             viewModelScope.launch {
                 try {
                     val uploadedUrls = mutableListOf<String>()
-                    
+
                     // 1. Compress and upload new images
                     for (uri in state.portfolioUris) {
                         val compressedBytes = ImageCompressor.compressImage(context, uri)
@@ -203,16 +202,16 @@ class MyServicesViewModel
                             finalUrl?.let { uploadedUrls.add(it) }
                         }
                     }
-                    
+
                     // 2. Combine surviving existing URLs and newly uploaded URLs
                     val finalPortfolioUrls = state.existingPortfolioUrls + uploadedUrls
-                    
+
                     // 3. Update the service in backend
-                    serviceRepository.updateService(
-                        serviceId = serviceId,
-                        portfolioUrls = finalPortfolioUrls
-                    )
-                        .onSuccess { updatedService ->
+                    serviceRepository
+                        .updateService(
+                            serviceId = serviceId,
+                            portfolioUrls = finalPortfolioUrls,
+                        ).onSuccess { updatedService ->
                             // 4. Update the local cache
                             _uiState.update { current ->
                                 val updatedServices = current.services.map { service ->
@@ -223,15 +222,13 @@ class MyServicesViewModel
                                     selectedServiceForGallery = null,
                                     existingPortfolioUrls = emptyList(),
                                     portfolioUris = emptyList(),
-                                    isGallerySaving = false
+                                    isGallerySaving = false,
                                 )
                             }
-                        }
-                        .onFailure { e ->
+                        }.onFailure { e ->
                             Timber.e(e, "Failed to update service portfolio")
                             _uiState.update { it.copy(isGallerySaving = false, error = e.message ?: "Failed to update portfolio") }
                         }
-                        
                 } catch (e: Exception) {
                     Timber.e(e, "Error saving gallery")
                     _uiState.update { it.copy(isGallerySaving = false, error = e.message ?: "Error saving gallery") }

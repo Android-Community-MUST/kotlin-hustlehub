@@ -153,11 +153,11 @@ fun MyServicesScreen(
                     if (state.isGallerySaving) {
                         Box(
                             modifier = Modifier.fillMaxWidth().height(48.dp),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             CircularWavyProgressIndicator(
                                 color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(24.dp),
                             )
                         }
                     } else {

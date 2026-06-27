@@ -92,8 +92,7 @@ class ChatDetailViewModel
                 .debounce(TYPING_DEBOUNCE_MS)
                 .onEach { isTyping ->
                     sendTypingIndicator(isTyping)
-                }
-                .launchIn(viewModelScope)
+                }.launchIn(viewModelScope)
         }
 
         /**

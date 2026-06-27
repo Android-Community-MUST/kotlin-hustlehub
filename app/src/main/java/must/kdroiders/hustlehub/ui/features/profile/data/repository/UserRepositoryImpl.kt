@@ -3,6 +3,7 @@ package must.kdroiders.hustlehub.ui.features.profile.data.repository
 import android.content.Context
 import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
+import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.RegisterRequest
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto
@@ -23,7 +24,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
-import must.kdroiders.hustlehub.core.utils.ImageCompressor
 
 /**
  * Concrete implementation of [UserRepository].

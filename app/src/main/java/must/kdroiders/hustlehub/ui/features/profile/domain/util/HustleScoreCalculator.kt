@@ -18,8 +18,8 @@ object HustleScoreCalculator {
         val avgRating = services.map { it.averageRating }.average().toFloat()
 
         // Bayesian Average Formula
-        val bayesianRating = ( (totalReviews / (totalReviews + MIN_REVIEWS_TO_ESTABLISH)) * avgRating ) +
-                             ( (MIN_REVIEWS_TO_ESTABLISH / (totalReviews + MIN_REVIEWS_TO_ESTABLISH)) * PLATFORM_AVERAGE_RATING )
+        val bayesianRating = ((totalReviews / (totalReviews + MIN_REVIEWS_TO_ESTABLISH)) * avgRating) +
+            ((MIN_REVIEWS_TO_ESTABLISH / (totalReviews + MIN_REVIEWS_TO_ESTABLISH)) * PLATFORM_AVERAGE_RATING)
 
         // Convert the 1.0 - 5.0 Bayesian rating to a percentage out of 100
         val finalPercentage = (bayesianRating / 5f) * 100f
@@ -38,8 +38,8 @@ object HustleScoreCalculator {
 
         val avgRating = service.averageRating.toFloat()
 
-        val bayesianRating = ( (totalReviews / (totalReviews + MIN_REVIEWS_TO_ESTABLISH)) * avgRating ) +
-                             ( (MIN_REVIEWS_TO_ESTABLISH / (totalReviews + MIN_REVIEWS_TO_ESTABLISH)) * PLATFORM_AVERAGE_RATING )
+        val bayesianRating = ((totalReviews / (totalReviews + MIN_REVIEWS_TO_ESTABLISH)) * avgRating) +
+            ((MIN_REVIEWS_TO_ESTABLISH / (totalReviews + MIN_REVIEWS_TO_ESTABLISH)) * PLATFORM_AVERAGE_RATING)
 
         val finalPercentage = (bayesianRating / 5f) * 100f
         return kotlin.math.round(finalPercentage * 10f) / 10f

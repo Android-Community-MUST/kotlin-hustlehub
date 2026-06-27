@@ -42,7 +42,6 @@ data class PlayerState(
  *   stops the current clip first.
  */
 class VoicePlayer(private val context: Context) {
-
     private val scope = CoroutineScope(Dispatchers.Main)
     private var updateJob: Job? = null
 
@@ -50,11 +49,13 @@ class VoicePlayer(private val context: Context) {
     val playerState: StateFlow<PlayerState> = _playerState.asStateFlow()
 
     private val exoPlayer: ExoPlayer by lazy {
-        ExoPlayer.Builder(context)
+        ExoPlayer
+            .Builder(context)
             .build()
             .apply {
                 // Audio focus + BECOMING_NOISY — handled automatically by ExoPlayer
-                val audioAttributes = AudioAttributes.Builder()
+                val audioAttributes = AudioAttributes
+                    .Builder()
                     .setUsage(C.USAGE_MEDIA)
                     .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
                     .build()
@@ -176,20 +177,21 @@ class VoicePlayer(private val context: Context) {
      * Returns a local [Uri] for [url]. Downloads and caches the file on first call;
      * returns the cached file URI on subsequent calls (even across app restarts).
      */
-    private suspend fun getOrDownload(url: String): Uri = withContext(Dispatchers.IO) {
-        val cacheDir = File(context.cacheDir, "voice_cache").also { it.mkdirs() }
-        val fileName = "voice_${url.hashCode().toUInt()}.m4a"
-        val cacheFile = File(cacheDir, fileName)
+    private suspend fun getOrDownload(url: String): Uri =
+        withContext(Dispatchers.IO) {
+            val cacheDir = File(context.cacheDir, "voice_cache").also { it.mkdirs() }
+            val fileName = "voice_${url.hashCode().toUInt()}.m4a"
+            val cacheFile = File(cacheDir, fileName)
 
-        if (!cacheFile.exists()) {
-            URL(url).openStream().use { input ->
-                cacheFile.outputStream().use { output ->
-                    input.copyTo(output)
+            if (!cacheFile.exists()) {
+                URL(url).openStream().use { input ->
+                    cacheFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
                 }
             }
+            Uri.fromFile(cacheFile)
         }
-        Uri.fromFile(cacheFile)
-    }
 
     private fun startProgressUpdates() {
         stopProgressUpdates()
