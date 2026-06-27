@@ -156,6 +156,8 @@ fun MessageBubble(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 // Time and read receipt
+                // States: pending (clock) -> sent (single check) -> delivered (double check, dim)
+                //         -> read (double check, highlighted)
                 Row(
                     modifier = Modifier.align(Alignment.End),
                     verticalAlignment = Alignment.CenterVertically,
@@ -169,20 +171,29 @@ fun MessageBubble(
                     if (isCurrentUser) {
                         Spacer(modifier = Modifier.width(4.dp))
                         val isPending = message.id.startsWith("temp_")
+                        val isRead = message.readAt != null
+                        val isDelivered = message.deliveredAt != null
                         val receiptIcon = when {
-                            isPending -> androidx.compose.material.icons.Icons.Default.Schedule
-                            message.readAt != null -> Icons.Default.DoneAll
+                            isPending -> Icons.Default.Schedule
+                            isRead || isDelivered -> Icons.Default.DoneAll
                             else -> Icons.Default.Done
+                        }
+                        // Blue accent only when read; dim tint for sent/delivered
+                        val receiptTint = when {
+                            isRead -> MaterialTheme.colorScheme.tertiary
+                            else -> textColor.copy(alpha = 0.6f)
+                        }
+                        val receiptDescription = when {
+                            isPending -> "Sending"
+                            isRead -> "Read"
+                            isDelivered -> "Delivered"
+                            else -> "Sent"
                         }
                         Icon(
                             imageVector = receiptIcon,
-                            contentDescription = null,
+                            contentDescription = receiptDescription,
                             modifier = Modifier.size(12.dp),
-                            tint = if (message.readAt != null) {
-                                MaterialTheme.colorScheme.onPrimary
-                            } else {
-                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
-                            },
+                            tint = receiptTint,
                         )
                     }
                 }

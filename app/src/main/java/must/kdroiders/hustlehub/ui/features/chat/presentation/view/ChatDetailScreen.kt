@@ -86,6 +86,7 @@ import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSep
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.MessageBubble
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ChatDetailViewModel
 import java.io.File
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -134,14 +135,8 @@ fun ChatDetailScreen(
         }
     }
 
-    // Typing indicator ticker
-    LaunchedEffect(textInput) {
-        if (textInput.isNotBlank()) {
-            viewModel.sendTypingIndicator(true)
-            delay(3000)
-            viewModel.sendTypingIndicator(false)
-        }
-    }
+    // Typing indicator: delegate to ViewModel which owns debounce + auto-clear logic
+    // (no LaunchedEffect needed — the screen just forwards raw onChange events)
 
     // Image picker launcher
     val imagePicker = rememberLauncherForActivityResult(
@@ -242,7 +237,7 @@ fun ChatDetailScreen(
 
                         Spacer(modifier = Modifier.width(12.dp))
 
-                        // Name and typing status
+                        // Name and typing/presence status line
                         Column {
                             Text(
                                 text = state.otherUserName,
@@ -251,9 +246,12 @@ fun ChatDetailScreen(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
+                            val lastSeenAt = state.otherUserLastSeenAt
                             val subtitle = when {
                                 state.isTyping -> "typing..."
                                 state.isOtherUserOnline -> "online"
+                                lastSeenAt != null ->
+                                    "Last seen ${formatLastSeen(lastSeenAt)}"
                                 else -> "offline"
                             }
                             Text(
@@ -501,7 +499,10 @@ fun ChatDetailScreen(
 
                     TextField(
                         value = textInput,
-                        onValueChange = { textInput = it },
+                        onValueChange = { newText ->
+                            textInput = newText
+                            viewModel.onTypingChanged(newText)
+                        },
                         placeholder = { Text("Type a message...") },
                         modifier = Modifier
                             .weight(1f)
@@ -671,4 +672,23 @@ private fun formatSeconds(totalSeconds: Int): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return String.format("%02d:%02d", minutes, seconds)
+}
+
+/**
+ * Converts an ISO-8601 last-seen timestamp into a human-readable relative string.
+ * Examples: "just now", "5 min ago", "2 hours ago", "3 days ago".
+ */
+private fun formatLastSeen(isoString: String): String {
+    return try {
+        val then = Instant.parse(isoString)
+        val duration = Duration.between(then, Instant.now())
+        when {
+            duration.toMinutes() < 1L -> "just now"
+            duration.toMinutes() < 60L -> "${duration.toMinutes()} min ago"
+            duration.toHours() < 24L -> "${duration.toHours()} hour${if (duration.toHours() > 1L) "s" else ""} ago"
+            else -> "${duration.toDays()} day${if (duration.toDays() > 1L) "s" else ""} ago"
+        }
+    } catch (e: Exception) {
+        "a while ago"
+    }
 }

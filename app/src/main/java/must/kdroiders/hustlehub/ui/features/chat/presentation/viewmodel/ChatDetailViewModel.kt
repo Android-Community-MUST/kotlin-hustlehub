@@ -6,10 +6,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.retryWhen
@@ -38,6 +42,8 @@ data class ChatDetailUiState(
     val otherUserAvatar: String? = null,
     val isTyping: Boolean = false,
     val isOtherUserOnline: Boolean = false,
+    /** ISO-8601 string; null when user is currently online. */
+    val otherUserLastSeenAt: String? = null,
     val isLoading: Boolean = false,
     val playerState: PlayerState = PlayerState(),
     val error: String? = null,
@@ -60,6 +66,12 @@ class ChatDetailViewModel
         private val voicePlayer = VoicePlayer()
         private val gson = Gson()
 
+        // Raw typing events from the keyboard — debounced before sending over WebSocket
+        private val typingEvents = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+
+        // Cancels the auto-clear job when a new typing event arrives
+        private var typingClearJob: Job? = null
+
         init {
             // Observe voice player state changes
             viewModelScope.launch {
@@ -67,6 +79,14 @@ class ChatDetailViewModel
                     _uiState.update { it.copy(playerState = pState) }
                 }
             }
+
+            // Debounce raw typing events before sending over WebSocket
+            typingEvents
+                .debounce(TYPING_DEBOUNCE_MS)
+                .onEach { isTyping ->
+                    sendTypingIndicator(isTyping)
+                }
+                .launchIn(viewModelScope)
         }
 
         fun initialize(conversationId: String) {
@@ -126,7 +146,13 @@ class ChatDetailViewModel
                             chatRepository
                                 .subscribeToPresence(uid)
                                 .onEach { presence ->
-                                    _uiState.update { it.copy(isOtherUserOnline = presence.online) }
+                                    _uiState.update {
+                                        it.copy(
+                                            isOtherUserOnline = presence.online,
+                                            // Clear lastSeen when online; populate it when offline
+                                            otherUserLastSeenAt = if (presence.online) null else presence.lastSeenAt,
+                                        )
+                                    }
                                 }.catch { e -> Timber.e(e, "Error in WebSocket presence flow") }
                                 .launchIn(viewModelScope)
                         }
@@ -168,6 +194,9 @@ class ChatDetailViewModel
             val id = conversationId ?: return
             if (content.isBlank()) return
             viewModelScope.launch {
+                // Clear the typing indicator immediately when the message is sent
+                sendTypingIndicator(false)
+                typingClearJob?.cancel()
                 chatRepository.sendMessage(id, MessageType.TEXT, content)
             }
         }
@@ -269,6 +298,25 @@ class ChatDetailViewModel
             }
         }
 
+        /**
+         * Called from the screen whenever the text input changes.
+         * Emits to the debounce pipeline — 500ms after the last keystroke it sends
+         * isTyping=true. A 3-second auto-clear is also scheduled.
+         */
+        fun onTypingChanged(text: String) {
+            val isTyping = text.isNotBlank()
+            typingClearJob?.cancel()
+            viewModelScope.launch {
+                typingEvents.emit(isTyping)
+            }
+            if (isTyping) {
+                typingClearJob = viewModelScope.launch {
+                    delay(TYPING_CLEAR_TIMEOUT_MS)
+                    sendTypingIndicator(false)
+                }
+            }
+        }
+
         fun sendTypingIndicator(isTyping: Boolean) {
             val id = conversationId ?: return
             viewModelScope.launch {
@@ -300,5 +348,13 @@ class ChatDetailViewModel
             viewModelScope.launch {
                 chatRepository.disconnectWebSocket()
             }
+        }
+
+        private companion object {
+            /** Minimum quiet period before a typing=true event is sent to the server. */
+            const val TYPING_DEBOUNCE_MS = 500L
+
+            /** How long after the last keystroke the typing indicator is auto-cleared. */
+            const val TYPING_CLEAR_TIMEOUT_MS = 3_000L
         }
     }
