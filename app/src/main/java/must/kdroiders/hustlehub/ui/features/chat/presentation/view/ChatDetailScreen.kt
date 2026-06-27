@@ -44,7 +44,8 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -95,7 +96,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ChatDetailScreen(
     conversationId: String,
@@ -356,6 +357,7 @@ fun ChatDetailScreen(
                             isCurrentUser = isSelf,
                             playerState = state.playerState,
                             onVoicePlayClick = viewModel::playVoice,
+                            onVoiceSpeedToggle = viewModel::toggleVoicePlaybackSpeed,
                             onLocationClick = { lat, lng, label ->
                                 // Custom maps action or toast
                                 val mapUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng($label)")
@@ -372,10 +374,12 @@ fun ChatDetailScreen(
                 }
 
                 if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.TopCenter).padding(8.dp),
+                    CircularWavyProgressIndicator(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(8.dp),
                         color = MaterialTheme.colorScheme.primary,
-                        strokeWidth = 2.dp,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                     )
                 }
             }

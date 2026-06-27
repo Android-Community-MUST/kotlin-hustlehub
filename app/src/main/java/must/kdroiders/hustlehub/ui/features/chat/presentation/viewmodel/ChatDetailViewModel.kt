@@ -1,10 +1,12 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -57,6 +59,7 @@ data class ChatDetailUiState(
 class ChatDetailViewModel
     @Inject
     constructor(
+        @ApplicationContext private val context: Context,
         private val chatRepository: ChatRepository,
         private val chatWebSocketService: ChatWebSocketService,
         private val mediaApiService: MediaApiService,
@@ -67,7 +70,7 @@ class ChatDetailViewModel
         val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
 
         private var conversationId: String? = null
-        private val voicePlayer = VoicePlayer()
+        private val voicePlayer = VoicePlayer(context)
         private val gson = Gson()
 
         // Raw typing events from the keyboard — debounced before sending over WebSocket
@@ -403,13 +406,18 @@ class ChatDetailViewModel
             voicePlayer.play(url)
         }
 
+        /** Cycles the playback speed: 1.0x → 1.5x → 2.0x → 1.0x. */
+        fun toggleVoicePlaybackSpeed() {
+            voicePlayer.toggleSpeed()
+        }
+
         fun clearError() {
             _uiState.update { it.copy(error = null) }
         }
 
         override fun onCleared() {
             super.onCleared()
-            voicePlayer.stop()
+            voicePlayer.release()
             viewModelScope.launch {
                 chatRepository.disconnectWebSocket()
             }
