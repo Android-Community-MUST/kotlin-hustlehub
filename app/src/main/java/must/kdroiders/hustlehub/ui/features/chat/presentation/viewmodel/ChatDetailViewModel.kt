@@ -7,7 +7,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -23,6 +22,7 @@ import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
@@ -136,7 +136,7 @@ class ChatDetailViewModel
                 } else {
                     val result = chatRepository.getOrCreateConversation(
                         otherUserId = conversationId,
-                        serviceId = serviceId
+                        serviceId = serviceId,
                     )
                     result.fold(
                         onSuccess = { conversation ->
@@ -146,7 +146,7 @@ class ChatDetailViewModel
                         onFailure = { e ->
                             Timber.e(e, "Failed to resolve conversation, using original ID")
                             conversationId
-                        }
+                        },
                     )
                 }
 

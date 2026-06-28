@@ -27,7 +27,6 @@ import timber.log.Timber
  * requires zero changes.
  */
 object NotificationHelper {
-
     const val CHANNEL_ID = "hustlehub_messages"
     private const val CHANNEL_NAME = "Messages"
     private const val CHANNEL_DESCRIPTION = "Incoming chat message notifications"
@@ -74,7 +73,8 @@ object NotificationHelper {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
 
-            val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            val notification = NotificationCompat
+                .Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle(senderName)
                 .setContentText(messagePreview)
@@ -97,7 +97,10 @@ object NotificationHelper {
      * Call when the user opens a conversation — clears the app icon badge slot for
      * that conversation.
      */
-    fun cancelConversationNotification(context: Context, conversationId: String) {
+    fun cancelConversationNotification(
+        context: Context,
+        conversationId: String,
+    ) {
         NotificationManagerCompat.from(context).cancel(conversationId.hashCode())
     }
 
