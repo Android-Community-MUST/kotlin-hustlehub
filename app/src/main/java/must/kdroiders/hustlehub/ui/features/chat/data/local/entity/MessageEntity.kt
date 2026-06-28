@@ -18,6 +18,10 @@ data class MessageEntity(
     val timestamp: String,
     val deliveredAt: String?,
     val readAt: String?,
+    /** false for optimistic messages waiting for server echo. */
+    val isSynced: Boolean = false,
+    /** true if the send permanently failed. */
+    val isFailed: Boolean = false,
     val cachedAt: Long = System.currentTimeMillis(),
 )
 
@@ -34,6 +38,8 @@ fun MessageEntity.toDomain(): Message =
         timestamp = timestamp,
         deliveredAt = deliveredAt,
         readAt = readAt,
+        isSynced = isSynced,
+        isFailed = isFailed,
     )
 
 fun Message.toEntity(cachedAt: Long = System.currentTimeMillis()): MessageEntity =
@@ -49,5 +55,7 @@ fun Message.toEntity(cachedAt: Long = System.currentTimeMillis()): MessageEntity
         timestamp = timestamp,
         deliveredAt = deliveredAt,
         readAt = readAt,
+        isSynced = isSynced,
+        isFailed = isFailed,
         cachedAt = cachedAt,
     )

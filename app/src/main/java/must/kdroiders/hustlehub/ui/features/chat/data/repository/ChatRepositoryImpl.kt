@@ -1,13 +1,16 @@
 package must.kdroiders.hustlehub.ui.features.chat.data.repository
 
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.MessageDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toDomain
@@ -31,6 +34,7 @@ import javax.inject.Singleton
 class ChatRepositoryImpl
     @Inject
     constructor(
+        @ApplicationContext private val context: Context,
         private val conversationApiService: ConversationApiService,
         private val chatWebSocketService: ChatWebSocketService,
         private val conversationDao: ConversationDao,
@@ -150,6 +154,8 @@ class ChatRepositoryImpl
                         timestamp = currentTimestamp,
                         deliveredAt = null,
                         readAt = null,
+                        isSynced = false,
+                        isFailed = false,
                     )
 
                     messageDao.upsert(tempMessage.toEntity())
@@ -222,13 +228,37 @@ class ChatRepositoryImpl
                         messageDao.upsert(message.toEntity())
                         val cachedConv = conversationDao.getById(conversationId)
                         if (cachedConv != null) {
+                            val isFromOtherUser = message.senderId != (firebaseAuth?.currentUser?.uid ?: "")
                             conversationDao.upsert(
                                 cachedConv.copy(
                                     lastMessage = message.content,
                                     lastMessageType = message.type.name,
                                     lastMessageAt = message.timestamp,
+                                    // Only increment badge for messages from others
+                                    unreadCount = if (isFromOtherUser) {
+                                        cachedConv.unreadCount + 1
+                                    } else {
+                                        cachedConv.unreadCount
+                                    },
                                 ),
                             )
+
+                            
+                            if (isFromOtherUser) {
+                                val senderName = cachedConv.otherUserName
+                                val preview = when (message.type.name) {
+                                    "VOICE" -> "Sent a voice note"
+                                    "IMAGE" -> "Sent an image"
+                                    "LOCATION" -> "Shared a location"
+                                    else -> message.content.take(80)
+                                }
+                                NotificationHelper.postMessageNotification(
+                                    context = context,
+                                    notificationId = conversationId.hashCode(),
+                                    senderName = senderName,
+                                    messagePreview = preview,
+                                )
+                            }
                         }
                     }
                 }

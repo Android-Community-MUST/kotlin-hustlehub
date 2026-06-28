@@ -9,6 +9,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.PersonOutline
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -78,6 +80,7 @@ private val bottomTabs = listOf(
 fun HustleBottomBar(
     currentKey: NavKey,
     onTabSelected: (NavKey) -> Unit,
+    totalUnreadCount: Int = 1,
     modifier: Modifier = Modifier,
 ) {
     NavigationBar(
@@ -92,10 +95,28 @@ fun HustleBottomBar(
                 selected = selected,
                 onClick = { onTabSelected(item.key) },
                 icon = {
-                    Icon(
-                        imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                        contentDescription = item.label,
-                    )
+                    val isChatTab = item.key == BottomChat
+                    if (isChatTab && totalUnreadCount > 0) {
+                        BadgedBox(
+                            badge = {
+                                Badge {
+                                    Text(
+                                        text = if (totalUnreadCount > 99) "99+" else totalUnreadCount.toString(),
+                                    )
+                                }
+                            },
+                        ) {
+                            Icon(
+                                imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                contentDescription = item.label,
+                            )
+                        }
+                    } else {
+                        Icon(
+                            imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                            contentDescription = item.label,
+                        )
+                    }
                 },
                 label = {
                     Text(

@@ -20,4 +20,8 @@ data class Message(
     val timestamp: String,
     val deliveredAt: String? = null,
     val readAt: String? = null,
+    /** true once the server has acknowledged this message (echoed back via WebSocket). */
+    val isSynced: Boolean = true,
+    /** true if the send permanently failed (e.g. no network and retries exhausted). */
+    val isFailed: Boolean = false,
 )

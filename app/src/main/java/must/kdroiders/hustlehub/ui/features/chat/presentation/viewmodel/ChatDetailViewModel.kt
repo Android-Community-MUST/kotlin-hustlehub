@@ -7,6 +7,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -132,6 +133,9 @@ class ChatDetailViewModel
                         )
                     }
                 }
+
+                // Cancel the notification for this conversation immediately — clears the badge slot.
+                NotificationHelper.cancelConversationNotification(context, conversationId)
             }
 
             // Observe local database messages (Room is single source of truth)
