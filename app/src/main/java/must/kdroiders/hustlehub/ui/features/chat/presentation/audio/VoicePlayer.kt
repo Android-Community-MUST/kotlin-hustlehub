@@ -77,7 +77,13 @@ class VoicePlayer(private val context: Context) {
                             _playerState.update { it.copy(durationMs = dur) }
                         }
                         if (state == Player.STATE_ENDED) {
-                            stop()
+                            exoPlayer.seekTo(0)
+                            exoPlayer.pause()
+                            _playerState.update {
+                                it.copy(
+                                    currentPositionMs = 0,
+                                )
+                            }
                         }
                     }
                 })

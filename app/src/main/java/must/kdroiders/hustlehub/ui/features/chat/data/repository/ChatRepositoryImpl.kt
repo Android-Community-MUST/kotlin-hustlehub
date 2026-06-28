@@ -7,8 +7,8 @@ import com.google.gson.JsonObject
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
@@ -106,6 +106,26 @@ class ChatRepositoryImpl
                 try {
                     val response = conversationApiService.getMessages(conversationId, page, 50)
                     if (response.success && response.data != null) {
+                        val gson = Gson()
+                        val localIdsToDelete = response.data.content.mapNotNull { msg ->
+                            try {
+                                if (msg.metadata != null) {
+                                    val metaObj = gson.fromJson(msg.metadata, JsonObject::class.java)
+                                    if (metaObj.has("localId")) {
+                                        metaObj.get("localId").asString
+                                    } else {
+                                        null
+                                    }
+                                } else {
+                                    null
+                                }
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }
+                        if (localIdsToDelete.isNotEmpty()) {
+                            localIdsToDelete.forEach { messageDao.deleteById(it) }
+                        }
                         val entities = response.data.content.map { it.toEntity() }
                         messageDao.upsertAll(entities)
                         Result.success(Unit)
@@ -209,81 +229,86 @@ class ChatRepositoryImpl
                 }
             }
 
-        override suspend fun connectWebSocket(conversationId: String): Flow<Message> {
-            // Ensure WebSocket is connected
-            chatWebSocketService.connect()
+        override suspend fun connectWebSocket(conversationId: String): Flow<Message> =
+            flow {
+                try {
+                    // Ensure WebSocket is connected
+                    chatWebSocketService.connect()
 
-            // We connect the WebSocket session, subscribe to the conversation flow,
-            // and whenever a new message is received, we:
-            // 1. Map to domain model
-            // 2. Insert into the local database
-            // 3. Update the conversation unread count and last message in local database
-            return chatWebSocketService
-                .subscribeToConversation(conversationId)
-                .map { it.toDomainModel() }
-                .onEach { message ->
-                    withContext(Dispatchers.IO) {
-                        val gson = Gson()
+                    // Subscribe to conversation fresh on each collection
+                    chatWebSocketService
+                        .subscribeToConversation(conversationId)
+                        .map { it.toDomainModel() }
+                        .collect { message ->
+                            withContext(Dispatchers.IO) {
+                                val gson = Gson()
 
-                        // Remove optimistic message if this is the real one from the server
-                        if (message.senderId == firebaseAuth?.currentUser?.uid) {
-                            try {
-                                if (message.metadata != null) {
-                                    val metaObj = gson.fromJson(message.metadata, JsonObject::class.java)
-                                    if (metaObj.has("localId")) {
-                                        val localId = metaObj.get("localId").asString
-                                        messageDao.deleteById(localId)
+                                val cachedConv = conversationDao.getById(conversationId)
+                                val isFromOtherUser = cachedConv?.let { message.senderId == it.otherUserId } ?: false
+                                val isFromSelf = !isFromOtherUser
+
+                                // Remove optimistic message if this is the real one from the server
+                                if (isFromSelf) {
+                                    try {
+                                        if (message.metadata != null) {
+                                            val metaObj = gson.fromJson(message.metadata, JsonObject::class.java)
+                                            if (metaObj.has("localId")) {
+                                                val localId = metaObj.get("localId").asString
+                                                messageDao.deleteById(localId)
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        Timber.e(e, "Error processing localId from metadata")
                                     }
                                 }
-                            } catch (e: Exception) {
-                                Timber.e(e, "Error processing localId from metadata")
-                            }
-                        }
 
-                        messageDao.upsert(message.toEntity())
-                        val cachedConv = conversationDao.getById(conversationId)
-                        if (cachedConv != null) {
-                            val isFromOtherUser = message.senderId != (firebaseAuth?.currentUser?.uid ?: "")
-                            val isActive = conversationId == activeConversationId
+                                messageDao.upsert(message.toEntity())
+                                if (cachedConv != null) {
+                                    val isActive = conversationId == activeConversationId
 
-                            conversationDao.upsert(
-                                cachedConv.copy(
-                                    lastMessage = message.content,
-                                    lastMessageType = message.type.name,
-                                    lastMessageAt = message.timestamp,
-                                    // Only increment badge for messages from others if the chat is NOT active
-                                    unreadCount = if (isFromOtherUser && !isActive) {
-                                        cachedConv.unreadCount + 1
-                                    } else {
-                                        0
-                                    },
-                                ),
-                            )
+                                    conversationDao.upsert(
+                                        cachedConv.copy(
+                                            lastMessage = message.content,
+                                            lastMessageType = message.type.name,
+                                            lastMessageAt = message.timestamp,
+                                            // Only increment badge for messages from others if the chat is NOT active
+                                            unreadCount = if (isFromOtherUser && !isActive) {
+                                                cachedConv.unreadCount + 1
+                                            } else {
+                                                0
+                                            },
+                                        ),
+                                    )
 
-                            // Post a local notification for incoming messages if the chat is not active.
-                            if (isFromOtherUser && !isActive) {
-                                val senderName = cachedConv.otherUserName
-                                val preview = when (message.type.name) {
-                                    "VOICE" -> "Sent a voice note"
-                                    "IMAGE" -> "Sent an image"
-                                    "LOCATION" -> "Shared a location"
-                                    else -> message.content.take(80)
+                                    // Post a local notification for incoming messages if the chat is not active.
+                                    if (isFromOtherUser && !isActive) {
+                                        val senderName = cachedConv.otherUserName
+                                        val preview = when (message.type.name) {
+                                            "VOICE" -> "Sent a voice note"
+                                            "IMAGE" -> "Sent an image"
+                                            "LOCATION" -> "Shared a location"
+                                            else -> message.content.take(80)
+                                        }
+                                        NotificationHelper.postMessageNotification(
+                                            context = context,
+                                            notificationId = conversationId.hashCode(),
+                                            senderName = senderName,
+                                            messagePreview = preview,
+                                        )
+                                    } else if (isFromOtherUser && isActive) {
+                                        // If the conversation is currently active, mark the new message as read on the backend
+                                        // since the user is actively viewing it.
+                                        markAsRead(conversationId)
+                                    }
                                 }
-                                NotificationHelper.postMessageNotification(
-                                    context = context,
-                                    notificationId = conversationId.hashCode(),
-                                    senderName = senderName,
-                                    messagePreview = preview,
-                                )
-                            } else if (isFromOtherUser && isActive) {
-                                // If the conversation is currently active, mark the new message as read on the backend
-                                // since the user is actively viewing it.
-                                markAsRead(conversationId)
                             }
+                            emit(message)
                         }
-                    }
+                } catch (e: Exception) {
+                    chatWebSocketService.disconnect()
+                    throw e
                 }
-        }
+            }
 
         override suspend fun subscribeToPresence(
             otherUserId: String,

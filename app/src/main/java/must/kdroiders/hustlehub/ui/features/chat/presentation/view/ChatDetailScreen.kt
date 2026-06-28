@@ -324,7 +324,7 @@ fun ChatDetailScreen(
                         items = reversedMessages,
                         key = { _, msg -> msg.id },
                     ) { index, message ->
-                        val isSelf = message.senderId == state.currentUserId
+                        val isSelf = message.senderId != state.otherUserId || message.id.startsWith("temp_")
 
                         // Because messages are reversed (newest first, index 0),
                         // the previous message chronologically is at index + 1

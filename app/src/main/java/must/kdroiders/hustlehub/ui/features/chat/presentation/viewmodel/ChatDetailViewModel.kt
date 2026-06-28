@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,8 +19,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
@@ -41,6 +42,7 @@ import javax.inject.Inject
 data class ChatDetailUiState(
     val messages: List<Message> = emptyList(),
     val currentUserId: String = "",
+    val otherUserId: String = "",
     val otherUserName: String = "",
     val otherUserAvatar: String? = null,
     val isTyping: Boolean = false,
@@ -158,6 +160,7 @@ class ChatDetailViewModel
                     val isProvider = finalCached.otherUserId != currentUid
                     _uiState.update {
                         it.copy(
+                            otherUserId = finalCached.otherUserId,
                             otherUserName = finalCached.otherUserName,
                             otherUserAvatar = finalCached.otherUserAvatar,
                             isCurrentUserProvider = isProvider,
@@ -167,6 +170,7 @@ class ChatDetailViewModel
                     // Fallback to providerName if conversation isn't cached yet
                     _uiState.update {
                         it.copy(
+                            otherUserId = conversationId,
                             otherUserName = providerName ?: "User",
                             otherUserAvatar = null,
                             isCurrentUserProvider = false,
@@ -186,48 +190,53 @@ class ChatDetailViewModel
                     }
                 }
 
-                // 5. Connect WebSocket and collect incoming messages
+                // 5. Connect WebSocket and collect incoming messages with structured auto-reconnection
                 webSocketJob = launch {
-                    try {
-                        chatRepository
-                            .connectWebSocket(resolvedId)
-                            .retryWhen { cause, attempt ->
-                                Timber.e(cause, "WebSocket disconnected, retrying (attempt $attempt)...")
-                                kotlinx.coroutines.delay(kotlin.math.min(2000L * (attempt + 1), 10000L))
-                                true
-                            }.catch { e -> Timber.e(e, "Error in WebSocket messages flow") }
-                            .launchIn(this)
+                    var attempt = 0
+                    while (isActive) {
+                        try {
+                            chatWebSocketService.connect()
+                            attempt = 0 // Reset attempt count on successful connection
 
-                        // Also subscribe to typing indicators
-                        chatWebSocketService
-                            .subscribeToTyping(resolvedId)
-                            .onEach { typingIndicator ->
-                                if (typingIndicator.senderId != null) {
-                                    val isOtherUser = typingIndicator.isTyping
-                                    _uiState.update { it.copy(isTyping = isOtherUser) }
+                            coroutineScope {
+                                chatRepository
+                                    .connectWebSocket(resolvedId)
+                                    .catch { e -> Timber.e(e, "Error in WebSocket messages flow") }
+                                    .launchIn(this)
+
+                                chatWebSocketService
+                                    .subscribeToTyping(resolvedId)
+                                    .onEach { typingIndicator ->
+                                        if (typingIndicator.senderId != null) {
+                                            val isOtherUser = typingIndicator.isTyping
+                                            _uiState.update { it.copy(isTyping = isOtherUser) }
+                                        }
+                                    }.catch { e -> Timber.e(e, "Error in WebSocket typing flow") }
+                                    .launchIn(this)
+
+                                val otherUid = finalCached?.otherUserId
+                                    ?: if (resolvedId != conversationId) conversationId else null
+
+                                if (otherUid != null) {
+                                    chatRepository
+                                        .subscribeToPresence(otherUid)
+                                        .onEach { presence ->
+                                            _uiState.update {
+                                                it.copy(
+                                                    isOtherUserOnline = presence.online,
+                                                    otherUserLastSeenAt = if (presence.online) null else presence.lastSeenAt,
+                                                )
+                                            }
+                                        }.catch { e -> Timber.e(e, "Error in WebSocket presence flow") }
+                                        .launchIn(this)
                                 }
-                            }.catch { e -> Timber.e(e, "Error in WebSocket typing flow") }
-                            .launchIn(this)
-
-                        // Subscribe to other user's presence if we know who they are
-                        val otherUid = finalCached?.otherUserId
-                            ?: if (resolvedId != conversationId) conversationId else null
-
-                        if (otherUid != null) {
-                            chatRepository
-                                .subscribeToPresence(otherUid)
-                                .onEach { presence ->
-                                    _uiState.update {
-                                        it.copy(
-                                            isOtherUserOnline = presence.online,
-                                            otherUserLastSeenAt = if (presence.online) null else presence.lastSeenAt,
-                                        )
-                                    }
-                                }.catch { e -> Timber.e(e, "Error in WebSocket presence flow") }
-                                .launchIn(this)
+                            }
+                        } catch (e: Exception) {
+                            Timber.e(e, "WebSocket connection failed or disconnected, retrying...")
+                            chatWebSocketService.disconnect()
+                            attempt++
+                            kotlinx.coroutines.delay(kotlin.math.min(2000L * attempt, 10000L))
                         }
-                    } catch (e: Exception) {
-                        Timber.e(e, "Failed to initialize WebSocket")
                     }
                 }
 
@@ -322,7 +331,7 @@ class ChatDetailViewModel
                 _uiState.update { it.copy(isLoading = true) }
                 try {
                     val response = withContext(Dispatchers.IO) {
-                        val requestFile = file.readBytes().toRequestBody("audio/mp4".toMediaTypeOrNull())
+                        val requestFile = file.readBytes().toRequestBody("audio/m4a".toMediaTypeOrNull())
                         val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
                         val convIdBody = MultipartBody.Part.createFormData("conversationId", id)
                         mediaApiService.uploadVoiceNote(body, convIdBody)
