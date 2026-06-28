@@ -6,6 +6,7 @@ import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.ConversationRes
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.CreateConversationRequest
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -33,6 +34,11 @@ interface ConversationApiService {
 
     @PUT("conversations/{conversationId}/read")
     suspend fun markAsRead(
+        @Path("conversationId") conversationId: String,
+    ): ApiResponse<Unit>
+
+    @DELETE("conversations/{conversationId}")
+    suspend fun deleteConversation(
         @Path("conversationId") conversationId: String,
     ): ApiResponse<Unit>
 }

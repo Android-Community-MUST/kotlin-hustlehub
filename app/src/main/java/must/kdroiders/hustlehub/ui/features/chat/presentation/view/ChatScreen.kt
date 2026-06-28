@@ -46,6 +46,11 @@ import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ConversationListViewModel
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Delete
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,9 +127,48 @@ fun ChatScreen(
                                 items = state.conversations,
                                 key = { it.id },
                             ) { conversation ->
-                                ConversationItem(
-                                    conversation = conversation,
-                                    onClick = { onNavigateToChatDetail(conversation.id) },
+                                val dismissState = rememberSwipeToDismissBoxState(
+                                    confirmValueChange = { dismissValue ->
+                                        if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
+                                            viewModel.deleteConversation(conversation.id)
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    }
+                                )
+
+                                SwipeToDismissBox(
+                                    state = dismissState,
+                                    enableDismissFromStartToEnd = false,
+                                    enableDismissFromEndToStart = true,
+                                    backgroundContent = {
+                                        val color = when (dismissState.dismissDirection) {
+                                            SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
+                                            else -> androidx.compose.ui.graphics.Color.Transparent
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(color)
+                                                .padding(horizontal = 24.dp),
+                                            contentAlignment = Alignment.CenterEnd
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Delete Conversation",
+                                                tint = MaterialTheme.colorScheme.onErrorContainer
+                                            )
+                                        }
+                                    },
+                                    content = {
+                                        Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
+                                            ConversationItem(
+                                                conversation = conversation,
+                                                onClick = { onNavigateToChatDetail(conversation.id) },
+                                            )
+                                        }
+                                    }
                                 )
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),

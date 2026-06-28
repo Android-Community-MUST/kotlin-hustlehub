@@ -41,6 +41,13 @@ class ChatRepositoryImpl
         private val messageDao: MessageDao,
         private val firebaseAuth: FirebaseAuth?,
     ) : ChatRepository {
+        @Volatile
+        private var activeConversationId: String? = null
+
+        override fun setActiveConversation(conversationId: String?) {
+            this.activeConversationId = conversationId
+        }
+
         override fun getConversations(): Flow<List<Conversation>> {
             return conversationDao.getAll().map { entities ->
                 entities.map { it.toDomain() }
@@ -66,7 +73,7 @@ class ChatRepositoryImpl
 
         override suspend fun getOrCreateConversation(
             otherUserId: String,
-            serviceId: String,
+            serviceId: String?,
         ): Result<Conversation> =
             withContext(Dispatchers.IO) {
                 try {
@@ -107,6 +114,10 @@ class ChatRepositoryImpl
                     }
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to load message history")
+                    if (e is retrofit2.HttpException && e.code() == 404) {
+                        conversationDao.deleteById(conversationId)
+                        messageDao.deleteByConversation(conversationId)
+                    }
                     Result.failure(e)
                 }
             }
@@ -190,6 +201,10 @@ class ChatRepositoryImpl
                     }
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to mark conversation as read")
+                    if (e is retrofit2.HttpException && e.code() == 404) {
+                        conversationDao.deleteById(conversationId)
+                        messageDao.deleteByConversation(conversationId)
+                    }
                     Result.failure(e)
                 }
             }
@@ -229,22 +244,24 @@ class ChatRepositoryImpl
                         val cachedConv = conversationDao.getById(conversationId)
                         if (cachedConv != null) {
                             val isFromOtherUser = message.senderId != (firebaseAuth?.currentUser?.uid ?: "")
+                            val isActive = conversationId == activeConversationId
+
                             conversationDao.upsert(
                                 cachedConv.copy(
                                     lastMessage = message.content,
                                     lastMessageType = message.type.name,
                                     lastMessageAt = message.timestamp,
-                                    // Only increment badge for messages from others
-                                    unreadCount = if (isFromOtherUser) {
+                                    // Only increment badge for messages from others if the chat is NOT active
+                                    unreadCount = if (isFromOtherUser && !isActive) {
                                         cachedConv.unreadCount + 1
                                     } else {
-                                        cachedConv.unreadCount
+                                        0
                                     },
                                 ),
                             )
 
-                            
-                            if (isFromOtherUser) {
+                            // Post a local notification for incoming messages if the chat is not active.
+                            if (isFromOtherUser && !isActive) {
                                 val senderName = cachedConv.otherUserName
                                 val preview = when (message.type.name) {
                                     "VOICE" -> "Sent a voice note"
@@ -258,6 +275,10 @@ class ChatRepositoryImpl
                                     senderName = senderName,
                                     messagePreview = preview,
                                 )
+                            } else if (isFromOtherUser && isActive) {
+                                // If the conversation is currently active, mark the new message as read on the backend
+                                // since the user is actively viewing it.
+                                markAsRead(conversationId)
                             }
                         }
                     }
@@ -272,6 +293,26 @@ class ChatRepositoryImpl
 
         override suspend fun disconnectWebSocket() {
             chatWebSocketService.disconnect()
+        }
+
+        override suspend fun deleteConversation(conversationId: String): Result<Unit> {
+            return withContext(Dispatchers.IO) {
+                try {
+                    // 1. Delete from local database
+                    conversationDao.deleteById(conversationId)
+                    messageDao.deleteByConversation(conversationId)
+
+                    // 2. Perform the remote API delete call
+                    val response = conversationApiService.deleteConversation(conversationId)
+                    if (response.success) {
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(Exception(response.message ?: "Failed to delete conversation on server"))
+                    }
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            }
         }
     }
 

@@ -24,6 +24,9 @@ interface ConversationDao {
     @Upsert
     suspend fun upsertAll(entities: List<ConversationEntity>)
 
+    @Query("DELETE FROM conversations WHERE id = :id")
+    suspend fun deleteById(id: String)
+
     @Query("DELETE FROM conversations WHERE cachedAt < :threshold")
     suspend fun deleteStaleEntries(threshold: Long)
 }

@@ -54,4 +54,14 @@ class ConversationListViewModel
                     }
             }
         }
+
+        fun deleteConversation(conversationId: String) {
+            viewModelScope.launch {
+                chatRepository.deleteConversation(conversationId)
+                    .onFailure { error ->
+                        _uiState.update { it.copy(error = error.message ?: "Failed to delete conversation") }
+                    }
+            }
+        }
     }
+
