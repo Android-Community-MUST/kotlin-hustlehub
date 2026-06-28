@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,6 +60,7 @@ import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.PlayerState
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MessageBubble(
     message: Message,
@@ -66,6 +70,8 @@ fun MessageBubble(
     onVoiceSpeedToggle: () -> Unit,
     onLocationClick: (Double, Double, String) -> Unit,
     onServiceCardClick: (String) -> Unit,
+    onImageClick: (url: String) -> Unit = {},
+    onImageLongClick: (url: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val bubbleShape = if (isCurrentUser) {
@@ -122,14 +128,44 @@ fun MessageBubble(
 
                     MessageType.IMAGE -> {
                         val imageUrl = message.mediaUrl ?: ""
-                        AsyncImage(
-                            model = imageUrl,
-                            contentDescription = "Shared Image",
+                        val isUploading = message.id.startsWith("temp_") || imageUrl.isBlank()
+
+                        Box(
                             modifier = Modifier
-                                .size(240.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Crop,
-                        )
+                                .fillMaxWidth(0.72f)
+                                .heightIn(min = 120.dp, max = 320.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .combinedClickable(
+                                    onClick = { if (!isUploading) onImageClick(imageUrl) },
+                                    onLongClick = { if (!isUploading) onImageLongClick(imageUrl) },
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (isUploading) {
+                                // Uploading placeholder
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(180.dp)
+                                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CircularWavyProgressIndicator(
+                                        modifier = Modifier.size(36.dp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    )
+                                }
+                            } else {
+                                AsyncImage(
+                                    model = imageUrl,
+                                    contentDescription = "Shared Image",
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentScale = ContentScale.FillWidth,
+                                )
+                            }
+                        }
+
                         if (!message.content.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(

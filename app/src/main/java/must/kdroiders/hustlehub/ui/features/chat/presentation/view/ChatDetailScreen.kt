@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -36,8 +37,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mic
@@ -51,6 +54,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -61,6 +65,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -82,14 +87,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.utils.ImageCompressor
+import must.kdroiders.hustlehub.core.utils.createTempCameraFile
+import must.kdroiders.hustlehub.core.utils.saveImageToGallery
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoiceRecorder
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSeparator
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.MessageBubble
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ChatDetailViewModel
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.FullScreenImageViewer
 import java.io.File
 import java.time.Duration
 import java.time.Instant
@@ -122,6 +132,10 @@ fun ChatDetailScreen(
     var recordingFile by remember { mutableStateOf<File?>(null) }
     var showLocationDialog by remember { mutableStateOf(false) }
     var showAttachmentMenu by remember { mutableStateOf(false) }
+    // Fullscreen image viewer
+    var selectedImageUrl by remember { mutableStateOf<String?>(null) }
+    // Save-to-gallery bottom sheet
+    var imageToSave by remember { mutableStateOf<String?>(null) }
 
     val voiceRecorder = remember { VoiceRecorder(context) }
 
@@ -155,23 +169,54 @@ fun ChatDetailScreen(
     // Typing indicator: delegate to ViewModel which owns debounce + auto-clear logic
     // (no LaunchedEffect needed — the screen just forwards raw onChange events)
 
-    // Image picker launcher
+    val compressAndSendImage: (Uri) -> Unit = { uri ->
+        scope.launch {
+            try {
+                val bytes = ImageCompressor.compressImage(context, uri)
+                if (bytes != null) {
+                    viewModel.sendImageMessage(bytes)
+                } else {
+                    Toast.makeText(context, "Failed to compress image", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // Gallery image picker — compresses before upload
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { uri: Uri? ->
-        uri?.let {
-            scope.launch {
-                try {
-                    val bytes = context.contentResolver.openInputStream(uri)?.readBytes()
-                    if (bytes != null) {
-                        viewModel.sendImageMessage(bytes)
-                    } else {
-                        Toast.makeText(context, "Failed to read image data", Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(context, "Error reading image: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+        uri?.let(compressAndSendImage)
+    }
+
+    // Camera capture state — holds the temp file URI until capture completes
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+    ) { success ->
+        if (success) {
+            cameraImageUri?.let(compressAndSendImage)
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            val tempFile = createTempCameraFile(context)
+            if (tempFile != null) {
+                val uri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    tempFile,
+                )
+                cameraImageUri = uri
+                cameraLauncher.launch(uri)
             }
+        } else {
+            Toast.makeText(context, "Camera permission is required", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -215,6 +260,64 @@ fun ChatDetailScreen(
                 showLocationDialog = false
             },
         )
+    }
+
+    // Fullscreen image viewer — opens when user taps a chat image bubble
+    selectedImageUrl?.let { url ->
+        FullScreenImageViewer(
+            imageUrls = listOf(url),
+            initialIndex = 0,
+            onDismiss = { selectedImageUrl = null },
+        )
+    }
+
+    // Save-to-gallery bottom sheet — opens on long-press of a chat image bubble
+    imageToSave?.let { url ->
+        ModalBottomSheet(
+            onDismissRequest = { imageToSave = null },
+            sheetState = rememberModalBottomSheetState(),
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                    .padding(bottom = 32.dp),
+            ) {
+                Text(
+                    text = "Image Options",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable {
+                            imageToSave = null
+                            scope.launch { saveImageToGallery(context, url) }
+                        }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = "Save to Gallery",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text("Save to Gallery", fontWeight = FontWeight.Medium)
+                        Text(
+                            text = "Download this image to your photos",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
     }
 
     Scaffold(
@@ -359,7 +462,6 @@ fun ChatDetailScreen(
                             onVoicePlayClick = viewModel::playVoice,
                             onVoiceSpeedToggle = viewModel::toggleVoicePlaybackSpeed,
                             onLocationClick = { lat, lng, label ->
-                                // Custom maps action or toast
                                 val mapUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng($label)")
                                 val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, mapUri)
                                 try {
@@ -369,6 +471,8 @@ fun ChatDetailScreen(
                                 }
                             },
                             onServiceCardClick = onNavigateToServiceDetail,
+                            onImageClick = { url -> selectedImageUrl = url },
+                            onImageLongClick = { url -> imageToSave = url },
                         )
                     }
                 }
@@ -423,6 +527,30 @@ fun ChatDetailScreen(
                         onClick = {
                             imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                             showAttachmentMenu = false
+                        },
+                    )
+                    AttachmentOption(
+                        icon = Icons.Filled.CameraAlt,
+                        label = "Camera",
+                        onClick = {
+                            showAttachmentMenu = false
+                            val hasPerm = ContextCompat.checkSelfPermission(
+                                context, Manifest.permission.CAMERA,
+                            ) == PackageManager.PERMISSION_GRANTED
+                            if (hasPerm) {
+                                val tempFile = createTempCameraFile(context)
+                                if (tempFile != null) {
+                                    val uri = FileProvider.getUriForFile(
+                                        context,
+                                        "${context.packageName}.fileprovider",
+                                        tempFile,
+                                    )
+                                    cameraImageUri = uri
+                                    cameraLauncher.launch(uri)
+                                }
+                            } else {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
                         },
                     )
                     AttachmentOption(
