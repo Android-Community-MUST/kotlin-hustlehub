@@ -132,7 +132,8 @@ fun ServiceDetailScreen(
                         }
 
                         HustleButton(
-                            text = "Message Provider",
+                            text = if (state.isOwnService) "Your Service" else "DM Provider",
+                            enabled = !state.isOwnService,
                             onClick = {
                                 val svc = state.service
                                 if (svc != null) {
