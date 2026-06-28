@@ -161,11 +161,10 @@ private fun FeaturedServiceCard(
                         colors = listOf(
                             Color.Transparent,
                             Color.Black.copy(alpha = 0.6f),
-                            Color.Black.copy(alpha = 0.9f)
-                        )
-                    )
-                )
-                .padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 32.dp),
+                            Color.Black.copy(alpha = 0.9f),
+                        ),
+                    ),
+                ).padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 32.dp),
         ) {
             Text(
                 text = service.category.label,

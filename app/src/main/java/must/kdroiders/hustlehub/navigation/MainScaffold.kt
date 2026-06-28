@@ -6,7 +6,10 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
@@ -14,6 +17,7 @@ import must.kdroiders.hustlehub.navigation.AiSearchScreen
 import must.kdroiders.hustlehub.navigation.SearchScreen
 import must.kdroiders.hustlehub.navigation.ServiceDetail
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatScreen
+import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.UnreadCountViewModel
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.HomeScreen
 import must.kdroiders.hustlehub.ui.features.map.MapScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScreen
@@ -54,11 +58,16 @@ fun MainShellScreen(
     // The currently active tab key is always the last element.
     val currentKey = innerBackstack.lastOrNull() ?: BottomHome
 
+    // Observe the total unread count reactively — zero allocation per recomposition.
+    val unreadCountViewModel: UnreadCountViewModel = hiltViewModel()
+    val totalUnreadCount by unreadCountViewModel.totalUnreadCount.collectAsState(initial = 0)
+
     Scaffold(
         modifier = modifier,
         bottomBar = {
             HustleBottomBar(
                 currentKey = currentKey,
+                totalUnreadCount = totalUnreadCount,
                 onTabSelected = { destination ->
                     // Replace entire stack with the selected tab (no accumulation).
                     innerBackstack.clear()

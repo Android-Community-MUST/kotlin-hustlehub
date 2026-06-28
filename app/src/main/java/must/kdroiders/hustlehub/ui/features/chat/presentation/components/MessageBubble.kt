@@ -1,6 +1,10 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,23 +25,30 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Work
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -52,6 +63,7 @@ fun MessageBubble(
     isCurrentUser: Boolean,
     playerState: PlayerState,
     onVoicePlayClick: (String) -> Unit,
+    onVoiceSpeedToggle: () -> Unit,
     onLocationClick: (Double, Double, String) -> Unit,
     onServiceCardClick: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -134,6 +146,7 @@ fun MessageBubble(
                             textColor = textColor,
                             playerState = playerState,
                             onPlayClick = onVoicePlayClick,
+                            onSpeedToggle = onVoiceSpeedToggle,
                         )
                     }
 
@@ -156,6 +169,8 @@ fun MessageBubble(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 // Time and read receipt
+                // States: pending (clock) -> sent (single check) -> delivered (double check, dim)
+                //         -> read (double check, highlighted)
                 Row(
                     modifier = Modifier.align(Alignment.End),
                     verticalAlignment = Alignment.CenterVertically,
@@ -169,20 +184,29 @@ fun MessageBubble(
                     if (isCurrentUser) {
                         Spacer(modifier = Modifier.width(4.dp))
                         val isPending = message.id.startsWith("temp_")
+                        val isRead = message.readAt != null
+                        val isDelivered = message.deliveredAt != null
                         val receiptIcon = when {
-                            isPending -> androidx.compose.material.icons.Icons.Default.Schedule
-                            message.readAt != null -> Icons.Default.DoneAll
+                            isPending -> Icons.Default.Schedule
+                            isRead || isDelivered -> Icons.Default.DoneAll
                             else -> Icons.Default.Done
+                        }
+                        // Blue accent only when read; dim tint for sent/delivered
+                        val receiptTint = when {
+                            isRead -> MaterialTheme.colorScheme.tertiary
+                            else -> textColor.copy(alpha = 0.6f)
+                        }
+                        val receiptDescription = when {
+                            isPending -> "Sending"
+                            isRead -> "Read"
+                            isDelivered -> "Delivered"
+                            else -> "Sent"
                         }
                         Icon(
                             imageVector = receiptIcon,
-                            contentDescription = null,
+                            contentDescription = receiptDescription,
                             modifier = Modifier.size(12.dp),
-                            tint = if (message.readAt != null) {
-                                MaterialTheme.colorScheme.onPrimary
-                            } else {
-                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
-                            },
+                            tint = receiptTint,
                         )
                     }
                 }
@@ -191,75 +215,167 @@ fun MessageBubble(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun VoiceMessageContent(
     message: Message,
-    textColor: androidx.compose.ui.graphics.Color,
+    textColor: Color,
     playerState: PlayerState,
     onPlayClick: (String) -> Unit,
+    onSpeedToggle: () -> Unit,
 ) {
     val voiceUrl = message.mediaUrl ?: ""
     val isPlayingThis = playerState.isPlaying && playerState.playingUrl == voiceUrl
-    val progress = if (isPlayingThis && playerState.durationMs > 0) {
+    val isBufferingThis = playerState.isBuffering && playerState.playingUrl == voiceUrl
+    val progress = if (playerState.playingUrl == voiceUrl && playerState.durationMs > 0) {
         playerState.currentPositionMs.toFloat() / playerState.durationMs
     } else {
         0f
+    }
+
+    // Stable pseudo-random waveform bars seeded from the URL hash
+    val waveformBars = remember(voiceUrl) {
+        val seed = voiceUrl.hashCode().toLong()
+        val rng = java.util.Random(seed)
+        List(WAVEFORM_BAR_COUNT) { 0.2f + rng.nextFloat() * 0.8f }
     }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.width(240.dp),
     ) {
-        IconButton(
-            onClick = { onPlayClick(voiceUrl) },
-            colors = IconButtonDefaults.iconButtonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-            modifier = Modifier.size(36.dp),
+        // Play/Pause or Buffering spinner
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(38.dp),
         ) {
-            Icon(
-                imageVector = if (isPlayingThis) Icons.Default.Pause else Icons.Default.PlayArrow,
-                contentDescription = if (isPlayingThis) "Pause" else "Play",
-            )
+            if (isBufferingThis) {
+                CircularWavyProgressIndicator(
+                    modifier = Modifier.size(28.dp),
+                    color = textColor.copy(alpha = 0.8f),
+                    trackColor = textColor.copy(alpha = 0.15f),
+                )
+            } else {
+                IconButton(
+                    onClick = { onPlayClick(voiceUrl) },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = textColor.copy(alpha = 0.15f),
+                        contentColor = textColor,
+                    ),
+                    modifier = Modifier.size(38.dp),
+                ) {
+                    Icon(
+                        imageVector = if (isPlayingThis) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isPlayingThis) "Pause" else "Play",
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.width(8.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Slider(
-                value = progress,
-                onValueChange = {},
-                valueRange = 0f..1f,
-                colors = SliderDefaults.colors(
-                    thumbColor = textColor,
-                    activeTrackColor = textColor,
-                    inactiveTrackColor = textColor.copy(alpha = 0.3f),
-                ),
-                modifier = Modifier.height(16.dp),
+            // Waveform visualization
+            WaveformProgress(
+                bars = waveformBars,
+                progress = progress,
+                activeColor = textColor,
+                inactiveColor = textColor.copy(alpha = 0.3f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp),
             )
+
+            // Position / Total duration + speed toggle
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                val durationText = formatDuration(
-                    if (isPlayingThis) playerState.currentPositionMs else 0,
+                val posText = formatDuration(
+                    if (playerState.playingUrl == voiceUrl) playerState.currentPositionMs else 0,
                 )
-                val totalDurationText = parseVoiceDurationFromMetadata(message.metadata)
+                val totalText = if (playerState.playingUrl == voiceUrl && playerState.durationMs > 0) {
+                    formatDuration(playerState.durationMs)
+                } else {
+                    parseVoiceDurationFromMetadata(message.metadata)
+                }
                 Text(
-                    text = durationText,
+                    text = "$posText / $totalText",
                     fontSize = 10.sp,
                     color = textColor.copy(alpha = 0.7f),
                 )
-                Text(
-                    text = totalDurationText,
-                    fontSize = 10.sp,
-                    color = textColor.copy(alpha = 0.7f),
-                )
+
+                // Speed toggle — only shown while something is loaded
+                if (playerState.playingUrl == voiceUrl) {
+                    val speedLabel = when (playerState.playbackSpeed) {
+                        1.5f -> "1.5x"
+                        2.0f -> "2x"
+                        else -> "1x"
+                    }
+                    Text(
+                        text = speedLabel,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor.copy(alpha = 0.85f),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .clickable { onSpeedToggle() }
+                            .padding(horizontal = 4.dp, vertical = 2.dp),
+                    )
+                }
             }
         }
     }
 }
+
+/**
+ * Renders a horizontal row of vertical bars whose fill level reflects [progress].
+ * Bars to the left of the playhead use [activeColor]; bars to the right use [inactiveColor].
+ */
+@Composable
+private fun WaveformProgress(
+    bars: List<Float>,
+    progress: Float,
+    activeColor: Color,
+    inactiveColor: Color,
+    modifier: Modifier = Modifier,
+    barWidthDp: Dp = 3.dp,
+    gapDp: Dp = 2.dp,
+) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 150),
+        label = "waveformProgress",
+    )
+
+    Canvas(modifier = modifier) {
+        val totalBars = bars.size
+        val barWidth = barWidthDp.toPx()
+        val gap = gapDp.toPx()
+        val totalWidth = totalBars * (barWidth + gap) - gap
+        val startX = (size.width - totalWidth) / 2f
+        val midY = size.height / 2f
+        val playheadX = startX + totalWidth * animatedProgress
+
+        bars.forEachIndexed { i, amplitude ->
+            val barX = startX + i * (barWidth + gap)
+            val barHeight = amplitude * size.height
+            val color = if (barX <= playheadX) activeColor else inactiveColor
+
+            drawLine(
+                color = color,
+                start = Offset(barX + barWidth / 2f, midY - barHeight / 2f),
+                end = Offset(barX + barWidth / 2f, midY + barHeight / 2f),
+                strokeWidth = barWidth,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            )
+        }
+    }
+}
+
+private const val WAVEFORM_BAR_COUNT = 40
 
 @Composable
 private fun LocationMessageContent(
@@ -326,45 +442,98 @@ private fun ServiceCardMessageContent(
     if (serviceData != null) {
         Card(
             modifier = Modifier
-                .width(240.dp)
-                .clickable { onClick(serviceData.serviceId) },
+                .width(260.dp)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(12.dp),
+                ),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface,
             ),
             shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                // Header label
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Work,
-                        contentDescription = "Service",
+                        contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(14.dp),
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = serviceData.title,
-                        style = MaterialTheme.typography.titleSmall,
+                        text = "SERVICE REQUEST",
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.primary,
+                        letterSpacing = 0.8.sp,
                     )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = serviceData.priceRange,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary,
+
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    thickness = 0.8.dp,
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Service title
                 Text(
-                    text = "Tap to view service detail",
-                    fontSize = 11.sp,
+                    text = serviceData.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Category · Price range
+                Text(
+                    text = buildString {
+                        if (!serviceData.category.isNullOrBlank()) append("${serviceData.category} · ")
+                        append(serviceData.priceRange)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+
+                // Provider name
+                if (!serviceData.providerName.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = serviceData.providerName,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // "View Service" CTA
+                OutlinedButton(
+                    onClick = { onClick(serviceData.serviceId) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                        horizontal = 12.dp,
+                        vertical = 6.dp,
+                    ),
+                ) {
+                    Text(
+                        text = "View Service",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
     } else {
@@ -409,4 +578,10 @@ private fun parseVoiceDurationFromMetadata(metadata: String?): String {
 // Metadata structures
 private data class VoiceMetadata(val durationSeconds: Int)
 private data class LocationMetadata(val lat: Double, val lng: Double, val label: String?)
-private data class ServiceMetadata(val serviceId: String, val title: String, val priceRange: String)
+private data class ServiceMetadata(
+    val serviceId: String,
+    val title: String,
+    val priceRange: String,
+    val category: String? = null,
+    val providerName: String? = null,
+)

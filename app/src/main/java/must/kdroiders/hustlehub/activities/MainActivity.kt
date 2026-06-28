@@ -29,6 +29,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingExcept
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.navigation.HustleHubNav
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
@@ -45,6 +46,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Register notification channel early — safe to call multiple times (OS is idempotent)
+        NotificationHelper.createChannel(this)
 
         // Always initialize legacy Google Sign-In as fallback
         initializeLegacyGoogleSignIn()
@@ -75,6 +79,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Clear all chat notifications and badge when user returns to the app
+        NotificationHelper.cancelAllNotifications(this)
     }
 
     private fun initializeLegacyGoogleSignIn() {

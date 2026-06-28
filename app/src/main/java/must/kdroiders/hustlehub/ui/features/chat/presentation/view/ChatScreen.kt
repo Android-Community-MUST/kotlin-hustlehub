@@ -19,17 +19,26 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -122,9 +131,48 @@ fun ChatScreen(
                                 items = state.conversations,
                                 key = { it.id },
                             ) { conversation ->
-                                ConversationItem(
-                                    conversation = conversation,
-                                    onClick = { onNavigateToChatDetail(conversation.id) },
+                                val dismissState = rememberSwipeToDismissBoxState(
+                                    confirmValueChange = { dismissValue ->
+                                        if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
+                                            viewModel.deleteConversation(conversation.id)
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    },
+                                )
+
+                                SwipeToDismissBox(
+                                    state = dismissState,
+                                    enableDismissFromStartToEnd = false,
+                                    enableDismissFromEndToStart = true,
+                                    backgroundContent = {
+                                        val color = when (dismissState.dismissDirection) {
+                                            SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
+                                            else -> androidx.compose.ui.graphics.Color.Transparent
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(color)
+                                                .padding(horizontal = 24.dp),
+                                            contentAlignment = Alignment.CenterEnd,
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Delete Conversation",
+                                                tint = MaterialTheme.colorScheme.onErrorContainer,
+                                            )
+                                        }
+                                    },
+                                    content = {
+                                        Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
+                                            ConversationItem(
+                                                conversation = conversation,
+                                                onClick = { onNavigateToChatDetail(conversation.id) },
+                                            )
+                                        }
+                                    },
                                 )
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -198,24 +246,49 @@ private fun ConversationItem(
             )
             Spacer(modifier = Modifier.height(4.dp))
             val messageText = when (conversation.lastMessageType) {
-                "VOICE" -> "🎤 Voice note"
-                "IMAGE" -> "📷 Photo"
-                "LOCATION" -> "📍 Location"
-                "SERVICE_CARD" -> "💼 Service shared"
+                "VOICE" -> "Voice note"
+                "IMAGE" -> "Photo"
+                "LOCATION" -> "Location"
+                "SERVICE_CARD" -> "Service shared"
                 else -> conversation.lastMessage ?: "No messages yet"
             }
-            Text(
-                text = messageText,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (conversation.unreadCount > 0) {
-                    MaterialTheme.colorScheme.onBackground
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-                fontWeight = if (conversation.unreadCount > 0) FontWeight.Bold else FontWeight.Normal,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            val icon = when (conversation.lastMessageType) {
+                "VOICE" -> Icons.Default.Mic
+                "IMAGE" -> Icons.Default.Image
+                "LOCATION" -> Icons.Default.Place
+                "SERVICE_CARD" -> Icons.Default.Work
+                else -> null
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start,
+            ) {
+                if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = if (conversation.unreadCount > 0) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                }
+                Text(
+                    text = messageText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (conversation.unreadCount > 0) {
+                        MaterialTheme.colorScheme.onBackground
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    fontWeight = if (conversation.unreadCount > 0) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
 
         Spacer(modifier = Modifier.width(8.dp))

@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.Icon
@@ -34,8 +34,6 @@ import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
-import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
-import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 @Composable
 fun ServiceCard(
@@ -148,7 +146,7 @@ private fun AvailabilityBadge(
                 modifier = Modifier
                     .size(6.dp)
                     .clip(CircleShape)
-                    .background(HustleActiveGreen)
+                    .background(HustleActiveGreen),
             )
             Spacer(Modifier.width(4.dp))
             Text(

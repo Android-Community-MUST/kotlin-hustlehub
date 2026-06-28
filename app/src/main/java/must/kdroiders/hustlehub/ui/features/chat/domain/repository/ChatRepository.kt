@@ -12,7 +12,7 @@ interface ChatRepository {
 
     suspend fun getOrCreateConversation(
         otherUserId: String,
-        serviceId: String,
+        serviceId: String? = null,
     ): Result<Conversation>
 
     fun getMessages(conversationId: String): Flow<List<Message>>
@@ -37,4 +37,8 @@ interface ChatRepository {
     suspend fun subscribeToPresence(otherUserId: String): Flow<must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence>
 
     suspend fun disconnectWebSocket()
+
+    fun setActiveConversation(conversationId: String?)
+
+    suspend fun deleteConversation(conversationId: String): Result<Unit>
 }

@@ -53,7 +53,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -80,7 +79,14 @@ fun ServiceDetailScreen(
     serviceId: String,
     serviceDetailViewModel: ServiceDetailViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
-    onNavigateToChat: (providerId: String) -> Unit = {},
+    onNavigateToChat: (
+        providerId: String,
+        serviceId: String,
+        serviceTitle: String,
+        serviceCategory: String,
+        servicePriceRange: String,
+        providerName: String,
+    ) -> Unit = { _, _, _, _, _, _ -> },
     onNavigateToProviderProfile: (providerId: String) -> Unit = {},
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit = { _, _ -> },
 ) {
@@ -126,8 +132,21 @@ fun ServiceDetailScreen(
                         }
 
                         HustleButton(
-                            text = "Message Provider",
-                            onClick = { state.service?.providerId?.let { onNavigateToChat(it) } },
+                            text = if (state.isOwnService) "Your Service" else "DM Provider",
+                            enabled = !state.isOwnService,
+                            onClick = {
+                                val svc = state.service
+                                if (svc != null) {
+                                    onNavigateToChat(
+                                        svc.providerId,
+                                        svc.id,
+                                        svc.title,
+                                        svc.category.name,
+                                        svc.priceRange,
+                                        state.provider?.name ?: "",
+                                    )
+                                }
+                            },
                             modifier = Modifier.width(200.dp),
                         )
                     }
@@ -138,7 +157,7 @@ fun ServiceDetailScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.background),
         ) {
             when {
                 state.isLoading -> LoadingIndicator(modifier = Modifier.fillMaxSize())
@@ -245,7 +264,7 @@ private fun ServiceDetailContent(
 
                     HorizontalPager(
                         state = pagerState,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     ) { page ->
                         AsyncImage(
                             model = service.portfolio[page],
@@ -263,21 +282,27 @@ private fun ServiceDetailContent(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
                                 .padding(bottom = 32.dp), // Padding to keep above the curved bottom
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             repeat(service.portfolio.size) { iteration ->
-                                val color = if (pagerState.currentPage == iteration) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.5f)
+                                val color = if (pagerState.currentPage ==
+                                    iteration
+                                ) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    Color.White.copy(alpha = 0.5f)
+                                }
                                 Box(
                                     modifier = Modifier
                                         .clip(CircleShape)
                                         .background(color)
-                                        .size(if (pagerState.currentPage == iteration) 8.dp else 6.dp)
+                                        .size(if (pagerState.currentPage == iteration) 8.dp else 6.dp),
                                 )
                             }
                         }
                     }
                 } else if (service.iconUrl.isNotBlank()) {
-                     AsyncImage(
+                    AsyncImage(
                         model = service.iconUrl,
                         contentDescription = "Service Hero Image",
                         contentScale = ContentScale.Crop,
@@ -292,7 +317,7 @@ private fun ServiceDetailContent(
                         .height(32.dp)
                         .align(Alignment.BottomCenter)
                         .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
-                        .background(MaterialTheme.colorScheme.background)
+                        .background(MaterialTheme.colorScheme.background),
                 )
             }
         }

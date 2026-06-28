@@ -8,7 +8,11 @@ import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,10 +31,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
@@ -51,7 +51,7 @@ fun FullScreenImageViewer(
 ) {
     val pagerState = rememberPagerState(
         initialPage = initialIndex,
-        pageCount = { imageUrls.size }
+        pageCount = { imageUrls.size },
     )
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
@@ -65,7 +65,7 @@ fun FullScreenImageViewer(
                 .background(Color.Black)
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onTap = { onDismiss() }
+                        onTap = { onDismiss() },
                     )
                 },
         ) {
@@ -75,7 +75,7 @@ fun FullScreenImageViewer(
             ) { page ->
                 ZoomableImage(
                     imageUrl = imageUrls[page],
-                    onDismiss = onDismiss
+                    onDismiss = onDismiss,
                 )
             }
 
@@ -139,7 +139,7 @@ fun FullScreenImageViewer(
 @Composable
 private fun ZoomableImage(
     imageUrl: String,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -154,7 +154,7 @@ private fun ZoomableImage(
             .fillMaxSize()
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onTap = { onDismiss() }
+                    onTap = { onDismiss() },
                 )
             },
     ) {
@@ -169,8 +169,7 @@ private fun ZoomableImage(
                     scaleY = scale,
                     translationX = offset.x,
                     translationY = offset.y,
-                )
-                .transformable(state = transformState)
+                ).transformable(state = transformState)
                 .pointerInput(scale > 1f) {
                     if (scale > 1f) {
                         detectDragGestures { change, dragAmount ->
@@ -178,8 +177,7 @@ private fun ZoomableImage(
                             offset += dragAmount
                         }
                     }
-                }
-                .pointerInput(Unit) {
+                }.pointerInput(Unit) {
                     detectTapGestures(
                         onDoubleTap = {
                             if (scale > 1f) {
@@ -189,9 +187,9 @@ private fun ZoomableImage(
                                 scale = 2.5f
                             }
                         },
-                        onTap = { 
+                        onTap = {
                             // Consume single tap on the image so it doesn't dismiss the viewer
-                        }
+                        },
                     )
                 },
         )

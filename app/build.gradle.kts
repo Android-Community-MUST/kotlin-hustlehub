@@ -112,6 +112,10 @@ dependencies {
     implementation(libs.krossbow.stomp.core)
     implementation(libs.krossbow.websocket.okhttp)
 
+    // Media3 / ExoPlayer — voice note playback, audio focus, speed control
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.session)
+
     // Coroutines & Serialization
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)

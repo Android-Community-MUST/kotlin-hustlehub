@@ -251,6 +251,11 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
             entry<ChatDetail> { key ->
                 ChatDetailScreen(
                     conversationId = key.chatId,
+                    serviceId = key.serviceId,
+                    serviceTitle = key.serviceTitle,
+                    serviceCategory = key.serviceCategory,
+                    servicePriceRange = key.servicePriceRange,
+                    providerName = key.providerName,
                     onBackClick = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
                 )
@@ -261,7 +266,18 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 ServiceDetailScreen(
                     serviceId = key.serviceId,
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
-                    onNavigateToChat = { providerId -> backstack.add(ChatDetail(chatId = providerId)) },
+                    onNavigateToChat = { providerId, serviceId, title, category, priceRange, providerName ->
+                        backstack.add(
+                            ChatDetail(
+                                chatId = providerId,
+                                serviceId = serviceId,
+                                serviceTitle = title,
+                                serviceCategory = category,
+                                servicePriceRange = priceRange,
+                                providerName = providerName,
+                            ),
+                        )
+                    },
                     onNavigateToProviderProfile = { providerId -> backstack.add(ProviderProfile(providerId = providerId)) },
                     onNavigateToWriteReview = { serviceId, providerId ->
                         backstack.add(WriteReview(serviceId = serviceId, providerId = providerId))

@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -42,8 +44,9 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -51,6 +54,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -86,17 +91,23 @@ import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSep
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.MessageBubble
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ChatDetailViewModel
 import java.io.File
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ChatDetailScreen(
     conversationId: String,
     onBackClick: () -> Unit,
     onNavigateToServiceDetail: (String) -> Unit,
     modifier: Modifier = Modifier,
+    serviceId: String? = null,
+    serviceTitle: String? = null,
+    serviceCategory: String? = null,
+    servicePriceRange: String? = null,
+    providerName: String? = null,
     viewModel: ChatDetailViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -116,7 +127,14 @@ fun ChatDetailScreen(
 
     // Initialize the conversation when screen loads or ID changes
     LaunchedEffect(conversationId) {
-        viewModel.initialize(conversationId)
+        viewModel.initialize(
+            conversationId = conversationId,
+            serviceId = serviceId,
+            serviceTitle = serviceTitle,
+            serviceCategory = serviceCategory,
+            servicePriceRange = servicePriceRange,
+            providerName = providerName,
+        )
     }
 
     // Show errors in snackbar
@@ -134,14 +152,8 @@ fun ChatDetailScreen(
         }
     }
 
-    // Typing indicator ticker
-    LaunchedEffect(textInput) {
-        if (textInput.isNotBlank()) {
-            viewModel.sendTypingIndicator(true)
-            delay(3000)
-            viewModel.sendTypingIndicator(false)
-        }
-    }
+    // Typing indicator: delegate to ViewModel which owns debounce + auto-clear logic
+    // (no LaunchedEffect needed — the screen just forwards raw onChange events)
 
     // Image picker launcher
     val imagePicker = rememberLauncherForActivityResult(
@@ -242,7 +254,7 @@ fun ChatDetailScreen(
 
                         Spacer(modifier = Modifier.width(12.dp))
 
-                        // Name and typing status
+                        // Name and typing/presence status line
                         Column {
                             Text(
                                 text = state.otherUserName,
@@ -251,9 +263,12 @@ fun ChatDetailScreen(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
+                            val lastSeenAt = state.otherUserLastSeenAt
                             val subtitle = when {
                                 state.isTyping -> "typing..."
                                 state.isOtherUserOnline -> "online"
+                                lastSeenAt != null ->
+                                    "Last seen ${formatLastSeen(lastSeenAt)}"
                                 else -> "offline"
                             }
                             Text(
@@ -309,7 +324,7 @@ fun ChatDetailScreen(
                         items = reversedMessages,
                         key = { _, msg -> msg.id },
                     ) { index, message ->
-                        val isSelf = message.senderId == state.currentUserId
+                        val isSelf = message.senderId != state.otherUserId || message.id.startsWith("temp_")
 
                         // Because messages are reversed (newest first, index 0),
                         // the previous message chronologically is at index + 1
@@ -342,6 +357,7 @@ fun ChatDetailScreen(
                             isCurrentUser = isSelf,
                             playerState = state.playerState,
                             onVoicePlayClick = viewModel::playVoice,
+                            onVoiceSpeedToggle = viewModel::toggleVoicePlaybackSpeed,
                             onLocationClick = { lat, lng, label ->
                                 // Custom maps action or toast
                                 val mapUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng($label)")
@@ -358,10 +374,12 @@ fun ChatDetailScreen(
                 }
 
                 if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.TopCenter).padding(8.dp),
+                    CircularWavyProgressIndicator(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(8.dp),
                         color = MaterialTheme.colorScheme.primary,
-                        strokeWidth = 2.dp,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                     )
                 }
             }
@@ -415,6 +433,45 @@ fun ChatDetailScreen(
                             showAttachmentMenu = false
                         },
                     )
+                }
+            }
+
+            // Quick Reply Templates — visible only to the provider of this conversation
+            AnimatedVisibility(visible = state.isCurrentUserProvider) {
+                val quickReplies = listOf(
+                    "Hi! I'm available",
+                    "Can we schedule a time?",
+                    "What style do you prefer?",
+                    "I'm currently busy, back later",
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    quickReplies.forEach { reply ->
+                        SuggestionChip(
+                            onClick = {
+                                viewModel.sendTextMessage(reply)
+                            },
+                            label = {
+                                Text(
+                                    text = reply,
+                                    style = MaterialTheme.typography.labelMedium,
+                                )
+                            },
+                            colors = SuggestionChipDefaults.suggestionChipColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                                labelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            ),
+                            border = SuggestionChipDefaults.suggestionChipBorder(
+                                enabled = true,
+                                borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                            ),
+                        )
+                    }
                 }
             }
 
@@ -501,7 +558,10 @@ fun ChatDetailScreen(
 
                     TextField(
                         value = textInput,
-                        onValueChange = { textInput = it },
+                        onValueChange = { newText ->
+                            textInput = newText
+                            viewModel.onTypingChanged(newText)
+                        },
                         placeholder = { Text("Type a message...") },
                         modifier = Modifier
                             .weight(1f)
@@ -671,4 +731,23 @@ private fun formatSeconds(totalSeconds: Int): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return String.format("%02d:%02d", minutes, seconds)
+}
+
+/**
+ * Converts an ISO-8601 last-seen timestamp into a human-readable relative string.
+ * Examples: "just now", "5 min ago", "2 hours ago", "3 days ago".
+ */
+private fun formatLastSeen(isoString: String): String {
+    return try {
+        val then = Instant.parse(isoString)
+        val duration = Duration.between(then, Instant.now())
+        when {
+            duration.toMinutes() < 1L -> "just now"
+            duration.toMinutes() < 60L -> "${duration.toMinutes()} min ago"
+            duration.toHours() < 24L -> "${duration.toHours()} hour${if (duration.toHours() > 1L) "s" else ""} ago"
+            else -> "${duration.toDays()} day${if (duration.toDays() > 1L) "s" else ""} ago"
+        }
+    } catch (e: Exception) {
+        "a while ago"
+    }
 }

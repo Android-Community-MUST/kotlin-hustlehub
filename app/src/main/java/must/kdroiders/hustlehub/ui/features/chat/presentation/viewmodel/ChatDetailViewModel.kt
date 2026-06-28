@@ -1,21 +1,29 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
@@ -34,19 +42,27 @@ import javax.inject.Inject
 data class ChatDetailUiState(
     val messages: List<Message> = emptyList(),
     val currentUserId: String = "",
+    val otherUserId: String = "",
     val otherUserName: String = "",
     val otherUserAvatar: String? = null,
     val isTyping: Boolean = false,
     val isOtherUserOnline: Boolean = false,
+    /** ISO-8601 string; null when user is currently online. */
+    val otherUserLastSeenAt: String? = null,
     val isLoading: Boolean = false,
     val playerState: PlayerState = PlayerState(),
     val error: String? = null,
+    /** True when the signed-in user is the service provider of this conversation. */
+    val isCurrentUserProvider: Boolean = false,
+    /** Prevents the auto-generated service card from being re-sent on every re-open. */
+    val serviceCardSent: Boolean = false,
 )
 
 @HiltViewModel
 class ChatDetailViewModel
     @Inject
     constructor(
+        @ApplicationContext private val context: Context,
         private val chatRepository: ChatRepository,
         private val chatWebSocketService: ChatWebSocketService,
         private val mediaApiService: MediaApiService,
@@ -57,8 +73,18 @@ class ChatDetailViewModel
         val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
 
         private var conversationId: String? = null
-        private val voicePlayer = VoicePlayer()
+        private val voicePlayer = VoicePlayer(context)
         private val gson = Gson()
+
+        // Raw typing events from the keyboard — debounced before sending over WebSocket
+        private val typingEvents = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+
+        // Cancels the auto-clear job when a new typing event arrives
+        private var typingClearJob: Job? = null
+
+        private var messagesJob: Job? = null
+        private var webSocketJob: Job? = null
+        private var presenceJob: Job? = null
 
         init {
             // Observe voice player state changes
@@ -67,83 +93,187 @@ class ChatDetailViewModel
                     _uiState.update { it.copy(playerState = pState) }
                 }
             }
+
+            // Debounce raw typing events before sending over WebSocket
+            typingEvents
+                .debounce(TYPING_DEBOUNCE_MS)
+                .onEach { isTyping ->
+                    sendTypingIndicator(isTyping)
+                }.launchIn(viewModelScope)
         }
 
-        fun initialize(conversationId: String) {
+        /**
+         * Initialises the chat conversation.
+         *
+         * The optional [serviceId] / [serviceTitle] / [serviceCategory] / [servicePriceRange] /
+         * [providerName] fields are non-null only when the screen is opened from a service listing.
+         * When present and the conversation is brand new (empty history), a SERVICE_CARD message
+         * is auto-sent once so the provider sees the request context at a glance.
+         */
+        fun initialize(
+            conversationId: String,
+            serviceId: String? = null,
+            serviceTitle: String? = null,
+            serviceCategory: String? = null,
+            servicePriceRange: String? = null,
+            providerName: String? = null,
+        ) {
             if (this.conversationId == conversationId) return
             this.conversationId = conversationId
 
-            _uiState.update { it.copy(currentUserId = firebaseAuth?.currentUser?.uid ?: "") }
+            messagesJob?.cancel()
+            webSocketJob?.cancel()
+            presenceJob?.cancel()
 
-            // Load cached conversation details to show other user's info in header instantly
-            viewModelScope.launch(Dispatchers.IO) {
-                val cached = conversationDao.getById(conversationId)
-                if (cached != null) {
+            val currentUid = firebaseAuth?.currentUser?.uid ?: ""
+            _uiState.update { it.copy(currentUserId = currentUid, messages = emptyList()) }
+
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, error = null) }
+
+                // 1. Resolve conversation ID (the input could be a conversation ID or a provider/user ID)
+                val cached = withContext(Dispatchers.IO) { conversationDao.getById(conversationId) }
+                val resolvedId = if (cached != null) {
+                    conversationId
+                } else {
+                    val result = chatRepository.getOrCreateConversation(
+                        otherUserId = conversationId,
+                        serviceId = serviceId,
+                    )
+                    result.fold(
+                        onSuccess = { conversation ->
+                            this@ChatDetailViewModel.conversationId = conversation.id
+                            conversation.id
+                        },
+                        onFailure = { e ->
+                            Timber.e(e, "Failed to resolve conversation, using original ID")
+                            conversationId
+                        },
+                    )
+                }
+
+                chatRepository.setActiveConversation(resolvedId)
+
+                // 2. Load cached conversation details to show other user's info in header instantly
+                val finalCached = withContext(Dispatchers.IO) { conversationDao.getById(resolvedId) }
+                if (finalCached != null) {
+                    val isProvider = finalCached.otherUserId != currentUid
                     _uiState.update {
                         it.copy(
-                            otherUserName = cached.otherUserName,
-                            otherUserAvatar = cached.otherUserAvatar,
+                            otherUserId = finalCached.otherUserId,
+                            otherUserName = finalCached.otherUserName,
+                            otherUserAvatar = finalCached.otherUserAvatar,
+                            isCurrentUserProvider = isProvider,
+                        )
+                    }
+                } else {
+                    // Fallback to providerName if conversation isn't cached yet
+                    _uiState.update {
+                        it.copy(
+                            otherUserId = conversationId,
+                            otherUserName = providerName ?: "User",
+                            otherUserAvatar = null,
+                            isCurrentUserProvider = false,
                         )
                     }
                 }
-            }
 
-            // Observe local database messages (Room is single source of truth)
-            viewModelScope.launch {
-                chatRepository.getMessages(conversationId).collect { messageList ->
-                    _uiState.update { it.copy(messages = messageList) }
+                // 3. Cancel the notification for this conversation
+                withContext(Dispatchers.IO) {
+                    NotificationHelper.cancelConversationNotification(context, resolvedId)
                 }
-            }
 
-            // Connect WebSocket and collect incoming messages
-            viewModelScope.launch {
-                try {
-                    chatRepository
-                        .connectWebSocket(conversationId)
-                        .retryWhen { cause, attempt ->
-                            Timber.e(cause, "WebSocket disconnected, retrying (attempt $attempt)...")
-                            kotlinx.coroutines.delay(kotlin.math.min(2000L * (attempt + 1), 10000L))
-                            true // Always retry
-                        }.catch { e -> Timber.e(e, "Error in WebSocket messages flow") }
-                        .launchIn(viewModelScope)
+                // 4. Observe local database messages
+                messagesJob = launch {
+                    chatRepository.getMessages(resolvedId).collect { messageList ->
+                        _uiState.update { it.copy(messages = messageList) }
+                    }
+                }
 
-                    // Also subscribe to typing indicators for this conversation
-                    chatWebSocketService
-                        .subscribeToTyping(conversationId)
-                        .onEach { typingIndicator ->
-                            if (typingIndicator.senderId != null) {
-                                // Only show typing if it's the other user typing
-                                val isOtherUser = typingIndicator.isTyping
-                                _uiState.update { it.copy(isTyping = isOtherUser) }
+                // 5. Connect WebSocket and collect incoming messages with structured auto-reconnection
+                webSocketJob = launch {
+                    var attempt = 0
+                    while (isActive) {
+                        try {
+                            chatWebSocketService.connect()
+                            attempt = 0 // Reset attempt count on successful connection
+
+                            coroutineScope {
+                                chatRepository
+                                    .connectWebSocket(resolvedId)
+                                    .catch { e -> Timber.e(e, "Error in WebSocket messages flow") }
+                                    .launchIn(this)
+
+                                chatWebSocketService
+                                    .subscribeToTyping(resolvedId)
+                                    .onEach { typingIndicator ->
+                                        if (typingIndicator.senderId != null) {
+                                            val isOtherUser = typingIndicator.isTyping
+                                            _uiState.update { it.copy(isTyping = isOtherUser) }
+                                        }
+                                    }.catch { e -> Timber.e(e, "Error in WebSocket typing flow") }
+                                    .launchIn(this)
+
+                                val otherUid = finalCached?.otherUserId
+                                    ?: if (resolvedId != conversationId) conversationId else null
+
+                                if (otherUid != null) {
+                                    chatRepository
+                                        .subscribeToPresence(otherUid)
+                                        .onEach { presence ->
+                                            _uiState.update {
+                                                it.copy(
+                                                    isOtherUserOnline = presence.online,
+                                                    otherUserLastSeenAt = if (presence.online) null else presence.lastSeenAt,
+                                                )
+                                            }
+                                        }.catch { e -> Timber.e(e, "Error in WebSocket presence flow") }
+                                        .launchIn(this)
+                                }
                             }
-                        }.catch { e -> Timber.e(e, "Error in WebSocket typing flow") }
-                        .launchIn(viewModelScope)
-
-                    // Subscribe to other user's presence if we know who they are
-                    viewModelScope.launch(Dispatchers.IO) {
-                        val cached = conversationDao.getById(conversationId)
-                        cached?.otherUserId?.let { uid ->
-                            chatRepository
-                                .subscribeToPresence(uid)
-                                .onEach { presence ->
-                                    _uiState.update { it.copy(isOtherUserOnline = presence.online) }
-                                }.catch { e -> Timber.e(e, "Error in WebSocket presence flow") }
-                                .launchIn(viewModelScope)
+                        } catch (e: Exception) {
+                            Timber.e(e, "WebSocket connection failed or disconnected, retrying...")
+                            chatWebSocketService.disconnect()
+                            attempt++
+                            kotlinx.coroutines.delay(kotlin.math.min(2000L * attempt, 10000L))
                         }
                     }
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to initialize WebSocket")
                 }
+
+                // 6. Load REST history page 0, then auto-send service card if this is a brand-new thread
+                chatRepository
+                    .loadMessageHistory(resolvedId, 0)
+                    .onSuccess {
+                        _uiState.update { it.copy(isLoading = false) }
+                        val noMessages = _uiState.value.messages.isEmpty()
+                        val hasServiceContext = !serviceId.isNullOrBlank() && !serviceTitle.isNullOrBlank()
+                        val cardNotYetSent = !_uiState.value.serviceCardSent
+                        if (noMessages && hasServiceContext && cardNotYetSent) {
+                            _uiState.update { it.copy(serviceCardSent = true) }
+                            sendServiceCardMessage(
+                                serviceId = serviceId!!,
+                                title = serviceTitle!!,
+                                priceRange = "KES ${servicePriceRange ?: ""}",
+                                providerName = providerName ?: "",
+                                category = serviceCategory ?: "",
+                            )
+                        }
+                    }.onFailure { error ->
+                        _uiState.update { it.copy(isLoading = false, error = error.message) }
+                    }
+
+                // 7. Mark as read on entry
+                chatRepository.markAsRead(resolvedId)
             }
-
-            // Load REST history page 0
-            loadHistory()
-
-            // Mark as read on entry
-            markAsRead()
         }
 
-        fun loadHistory() {
+        private fun loadHistoryAndAutoCard(
+            serviceId: String? = null,
+            serviceTitle: String? = null,
+            serviceCategory: String? = null,
+            servicePriceRange: String? = null,
+            providerName: String? = null,
+        ) {
             val id = conversationId ?: return
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
@@ -151,10 +281,27 @@ class ChatDetailViewModel
                     .loadMessageHistory(id, 0)
                     .onSuccess {
                         _uiState.update { it.copy(isLoading = false) }
+                        val noMessages = _uiState.value.messages.isEmpty()
+                        val hasServiceContext = !serviceId.isNullOrBlank() && !serviceTitle.isNullOrBlank()
+                        val cardNotYetSent = !_uiState.value.serviceCardSent
+                        if (noMessages && hasServiceContext && cardNotYetSent) {
+                            _uiState.update { it.copy(serviceCardSent = true) }
+                            sendServiceCardMessage(
+                                serviceId = serviceId!!,
+                                title = serviceTitle!!,
+                                priceRange = "KES ${servicePriceRange ?: ""}",
+                                providerName = providerName ?: "",
+                                category = serviceCategory ?: "",
+                            )
+                        }
                     }.onFailure { error ->
                         _uiState.update { it.copy(isLoading = false, error = error.message) }
                     }
             }
+        }
+
+        fun loadHistory() {
+            loadHistoryAndAutoCard()
         }
 
         private fun markAsRead() {
@@ -168,6 +315,9 @@ class ChatDetailViewModel
             val id = conversationId ?: return
             if (content.isBlank()) return
             viewModelScope.launch {
+                // Clear the typing indicator immediately when the message is sent
+                sendTypingIndicator(false)
+                typingClearJob?.cancel()
                 chatRepository.sendMessage(id, MessageType.TEXT, content)
             }
         }
@@ -181,7 +331,7 @@ class ChatDetailViewModel
                 _uiState.update { it.copy(isLoading = true) }
                 try {
                     val response = withContext(Dispatchers.IO) {
-                        val requestFile = file.readBytes().toRequestBody("audio/mp4".toMediaTypeOrNull())
+                        val requestFile = file.readBytes().toRequestBody("audio/m4a".toMediaTypeOrNull())
                         val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
                         val convIdBody = MultipartBody.Part.createFormData("conversationId", id)
                         mediaApiService.uploadVoiceNote(body, convIdBody)
@@ -255,10 +405,20 @@ class ChatDetailViewModel
             serviceId: String,
             title: String,
             priceRange: String,
+            category: String = "",
+            providerName: String = "",
         ) {
             val id = conversationId ?: return
             viewModelScope.launch {
-                val metadata = gson.toJson(mapOf("serviceId" to serviceId, "title" to title, "priceRange" to priceRange))
+                val metadata = gson.toJson(
+                    mapOf(
+                        "serviceId" to serviceId,
+                        "title" to title,
+                        "priceRange" to priceRange,
+                        "category" to category,
+                        "providerName" to providerName,
+                    ),
+                )
                 chatRepository.sendMessage(
                     conversationId = id,
                     type = MessageType.SERVICE_CARD,
@@ -266,6 +426,25 @@ class ChatDetailViewModel
                     mediaUrl = null,
                     metadata = metadata,
                 )
+            }
+        }
+
+        /**
+         * Called from the screen whenever the text input changes.
+         * Emits to the debounce pipeline — 500ms after the last keystroke it sends
+         * isTyping=true. A 3-second auto-clear is also scheduled.
+         */
+        fun onTypingChanged(text: String) {
+            val isTyping = text.isNotBlank()
+            typingClearJob?.cancel()
+            viewModelScope.launch {
+                typingEvents.emit(isTyping)
+            }
+            if (isTyping) {
+                typingClearJob = viewModelScope.launch {
+                    delay(TYPING_CLEAR_TIMEOUT_MS)
+                    sendTypingIndicator(false)
+                }
             }
         }
 
@@ -290,15 +469,29 @@ class ChatDetailViewModel
             voicePlayer.play(url)
         }
 
+        /** Cycles the playback speed: 1.0x → 1.5x → 2.0x → 1.0x. */
+        fun toggleVoicePlaybackSpeed() {
+            voicePlayer.toggleSpeed()
+        }
+
         fun clearError() {
             _uiState.update { it.copy(error = null) }
         }
 
         override fun onCleared() {
             super.onCleared()
-            voicePlayer.stop()
+            chatRepository.setActiveConversation(null)
+            voicePlayer.release()
             viewModelScope.launch {
                 chatRepository.disconnectWebSocket()
             }
+        }
+
+        private companion object {
+            /** Minimum quiet period before a typing=true event is sent to the server. */
+            const val TYPING_DEBOUNCE_MS = 500L
+
+            /** How long after the last keystroke the typing indicator is auto-cleared. */
+            const val TYPING_CLEAR_TIMEOUT_MS = 3_000L
         }
     }

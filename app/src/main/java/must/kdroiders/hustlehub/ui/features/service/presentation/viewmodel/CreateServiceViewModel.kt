@@ -1,9 +1,13 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -12,16 +16,12 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
-import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -266,7 +266,7 @@ class CreateServiceViewModel
                 result
                     .onSuccess { savedService ->
                         val targetId = if (state.isEditMode && snapshot != null) snapshot else savedService.id
-                        
+
                         // Handle Portfolio Uploads if there are new images
                         val newUrls = mutableListOf<String>()
                         if (state.portfolioUris.isNotEmpty()) {
@@ -283,16 +283,18 @@ class CreateServiceViewModel
                                                 }
                                             }
                                             url
-                                        } else null
+                                        } else {
+                                            null
+                                        }
                                     }
                                 }
                                 newUrls.addAll(uploadDeferreds.awaitAll().filterNotNull())
-                                
+
                                 // Now update the service with the final combined portfolio URLs
                                 val combinedUrls = state.existingPortfolioUrls + newUrls
                                 serviceRepository.updateService(
                                     serviceId = targetId,
-                                    portfolioUrls = combinedUrls
+                                    portfolioUrls = combinedUrls,
                                 )
                             } catch (e: Exception) {
                                 Timber.e(e, "Failed to upload portfolio images")

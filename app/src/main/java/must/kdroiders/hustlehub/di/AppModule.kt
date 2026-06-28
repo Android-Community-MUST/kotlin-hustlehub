@@ -131,6 +131,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideChatRepository(
+        @ApplicationContext context: Context,
         conversationApiService: ConversationApiService,
         chatWebSocketService: ChatWebSocketService,
         conversationDao: ConversationDao,
@@ -138,6 +139,7 @@ object AppModule {
         firebaseAuth: FirebaseAuth?,
     ): ChatRepository {
         return ChatRepositoryImpl(
+            context,
             conversationApiService,
             chatWebSocketService,
             conversationDao,
