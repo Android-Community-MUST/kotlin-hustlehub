@@ -94,6 +94,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.notification.ActiveConversationTracker
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.core.utils.createTempCameraFile
 import must.kdroiders.hustlehub.core.utils.saveImageToGallery
@@ -140,6 +141,15 @@ fun ChatDetailScreen(
     var imageToSave by remember { mutableStateOf<String?>(null) }
 
     val voiceRecorder = remember { VoiceRecorder(context) }
+
+    DisposableEffect(conversationId) {
+        ActiveConversationTracker.activeConversationId = conversationId
+        onDispose {
+            if (ActiveConversationTracker.activeConversationId == conversationId) {
+                ActiveConversationTracker.activeConversationId = null
+            }
+        }
+    }
 
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var currentUserLocation by remember { mutableStateOf<android.location.Location?>(null) }

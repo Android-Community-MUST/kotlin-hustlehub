@@ -70,4 +70,11 @@ interface UserRepository {
         campusLocation: String,
         avatarUrl: String? = null,
     ): Result<User>
+
+    /**
+     * Updates the currently authenticated user's FCM token.
+     * Wraps PUT /api/v1/users/fcm-token.
+     */
+    suspend fun updateFcmToken(token: String): Result<Unit>
 }
+

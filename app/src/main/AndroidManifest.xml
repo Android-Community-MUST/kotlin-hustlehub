@@ -58,7 +58,23 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="hustlehub" />
+                <data android:host="app" />
+            </intent-filter>
         </activity>
+
+        <service
+            android:name="must.kdroiders.hustlehub.core.notification.HustleHubMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <!--
             FileProvider used to share temporary camera JPEG URIs with

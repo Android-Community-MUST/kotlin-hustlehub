@@ -46,6 +46,19 @@ class SplashViewModel
             determineDestination()
         }
 
+        private fun uploadFcmToken() {
+            viewModelScope.launch {
+                try {
+                    val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
+                    if (token.isNullOrBlank()) return@launch
+                    userRepository.updateFcmToken(token)
+                    Timber.d("Successfully updated FCM token on splash")
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to retrieve/upload FCM token on splash")
+                }
+            }
+        }
+
         private fun determineDestination() {
             viewModelScope.launch {
                 // run minimum delay and auth check in parallel
@@ -103,6 +116,9 @@ class SplashViewModel
                                                 }
                                             }
                                         }
+                                    if (targetDestination == SplashDestination.Home) {
+                                        uploadFcmToken()
+                                    }
                                     targetDestination
                                 } else {
                                     SplashDestination.Login

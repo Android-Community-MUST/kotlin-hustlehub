@@ -31,6 +31,8 @@ import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.navigation.HustleHubNav
+import must.kdroiders.hustlehub.navigation.MainNavigationViewModel
+import must.kdroiders.hustlehub.navigation.DeepLinkAction
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 import timber.log.Timber
@@ -38,10 +40,17 @@ import timber.log.Timber
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val loginViewModel: LoginViewModel by viewModels()
+    private val mainNavigationViewModel: MainNavigationViewModel by viewModels()
 
     // For older Android versions (below API 34)
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var signInLauncher: ActivityResultLauncher<Intent>
+
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        Timber.d("POST_NOTIFICATIONS permission granted: $isGranted")
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +58,14 @@ class MainActivity : ComponentActivity() {
 
         // Register notification channel early — safe to call multiple times (OS is idempotent)
         NotificationHelper.createChannel(this)
+
+        // Request notifications permission on Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val permission = android.Manifest.permission.POST_NOTIFICATIONS
+            if (checkSelfPermission(permission) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestNotificationPermissionLauncher.launch(permission)
+            }
+        }
 
         // Always initialize legacy Google Sign-In as fallback
         initializeLegacyGoogleSignIn()
@@ -76,6 +93,35 @@ class MainActivity : ComponentActivity() {
                     HustleHubNav(
                         onGoogleSignInClick = launchCredentialFlow,
                     )
+                }
+            }
+        }
+
+        handleIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        val uri = intent?.data ?: return
+        val path = uri.path
+        if (uri.scheme == "hustlehub" && uri.host == "app") {
+            when {
+                path?.contains("chat") == true -> {
+                    val conversationId = uri.getQueryParameter("conversationId")
+                    if (!conversationId.isNullOrBlank()) {
+                        mainNavigationViewModel.triggerDeepLink(DeepLinkAction.OpenChat(conversationId))
+                    }
+                }
+                path?.contains("profile") == true -> {
+                    mainNavigationViewModel.triggerDeepLink(DeepLinkAction.OpenProfile)
+                }
+                path?.contains("inquiries") == true -> {
+                    mainNavigationViewModel.triggerDeepLink(DeepLinkAction.OpenChatList)
                 }
             }
         }

@@ -20,6 +20,7 @@ import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SendPasswordRese
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
+import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -91,6 +92,19 @@ class LoginViewModel
             }
         }
 
+        private fun uploadFcmToken() {
+            viewModelScope.launch {
+                try {
+                    val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
+                    if (token.isNullOrBlank()) return@launch
+                    userRepository.updateFcmToken(token)
+                    Timber.d("Successfully updated FCM token after login")
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to retrieve/upload FCM token after login")
+                }
+            }
+        }
+
         fun login(
             onSuccess: (hasProfile: Boolean) -> Unit,
             onEmailNotVerified: (email: String) -> Unit,
@@ -105,6 +119,7 @@ class LoginViewModel
                         if (result.isEmailVerified) {
                             val hasProfile = hasProfile(result.user)
                             persistUser(result.user)
+                            uploadFcmToken()
                             _uiState.update { it.copy(isLoading = false) }
                             onSuccess(hasProfile)
                         } else {
@@ -150,6 +165,7 @@ class LoginViewModel
 
                         val hasProfile = hasProfile(result.user)
                         persistUser(result.user)
+                        uploadFcmToken()
                         _uiState.update { it.copy(isLoading = false) }
                         _navigateToHome.tryEmit(hasProfile)
                         onSuccess(hasProfile)

@@ -96,6 +96,40 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
         }
     }
 
+    val mainNavigationViewModel: MainNavigationViewModel? = if (activity != null) {
+        hiltViewModel<MainNavigationViewModel>(viewModelStoreOwner = activity)
+    } else {
+        null
+    }
+
+    LaunchedEffect(mainNavigationViewModel) {
+        mainNavigationViewModel?.deepLinkEvent?.collect { action ->
+            if (action is DeepLinkAction.OpenChat) {
+                val currentTop = backstack.lastOrNull()
+                if (currentTop is ChatDetail && currentTop.chatId == action.conversationId) {
+                    return@collect
+                }
+                // Make sure MainShell is present under ChatDetail
+                if (backstack.none { it is MainShell }) {
+                    backstack.clear()
+                    backstack.add(MainShell)
+                }
+                backstack.add(ChatDetail(chatId = action.conversationId))
+            } else {
+                // For other actions (OpenProfile, OpenChatList), make sure we return to MainShell
+                if (backstack.none { it is MainShell }) {
+                    backstack.clear()
+                    backstack.add(MainShell)
+                } else {
+                    // Pop any detail screens on top of MainShell
+                    while (backstack.isNotEmpty() && backstack.last() != MainShell) {
+                        backstack.remove(backstack.last())
+                    }
+                }
+            }
+        }
+    }
+
     NavDisplay(
         backStack = backstack,
         onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
