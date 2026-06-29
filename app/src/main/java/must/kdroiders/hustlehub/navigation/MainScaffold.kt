@@ -54,6 +54,7 @@ fun MainShellScreen(
     onNavigateToSearch: () -> Unit = {},
     onNavigateToAiSearch: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val innerBackstack = rememberNavBackStack(BottomHome)
@@ -118,6 +119,7 @@ fun MainShellScreen(
                         onNavigateToServiceDetail = onNavigateToServiceDetail,
                         onNavigateToSearch = onNavigateToSearch,
                         onNavigateToAiSearch = onNavigateToAiSearch,
+                        onNavigateToNotifications = onNavigateToNotifications,
                     )
                 }
                 entry<BottomMap> { MapScreen() }

@@ -76,6 +76,7 @@ fun HomeScreen(
     onNavigateToServiceDetail: (serviceId: String) -> Unit = {},
     onNavigateToSearch: () -> Unit = {},
     onNavigateToAiSearch: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
     val gridState = rememberLazyGridState()
@@ -156,6 +157,7 @@ fun HomeScreen(
                     HomeTopBar(
                         initials = state.providerInitials,
                         notificationCount = state.notificationCount,
+                        onNotificationClick = onNavigateToNotifications,
                     )
                 }
 

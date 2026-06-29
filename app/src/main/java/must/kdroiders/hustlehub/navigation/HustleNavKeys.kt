@@ -136,3 +136,7 @@ data object EditProfile : NavKey
  */
 @Serializable
 data class WriteReview(val serviceId: String, val providerId: String) : NavKey
+
+/** In-app notification center screen. */
+@Serializable
+data object Notifications : NavKey

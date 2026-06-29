@@ -40,6 +40,7 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServices
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.ServiceDetailScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.WriteReviewScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
+import must.kdroiders.hustlehub.ui.features.notification.presentation.view.NotificationScreen
 
 /**
  * Root Navigation 3 navigator for HustleHub.
@@ -248,6 +249,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     onNavigateToSearch = { backstack.add(must.kdroiders.hustlehub.navigation.SearchScreen) },
                     onNavigateToAiSearch = { backstack.add(must.kdroiders.hustlehub.navigation.AiSearchScreen) },
                     onNavigateToEditProfile = { backstack.add(EditProfile) },
+                    onNavigateToNotifications = { backstack.add(Notifications) },
                 )
             }
 
@@ -359,6 +361,12 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 AiSearchScreen(
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
+                )
+            }
+
+            entry<Notifications> {
+                NotificationScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) }
                 )
             }
         },
