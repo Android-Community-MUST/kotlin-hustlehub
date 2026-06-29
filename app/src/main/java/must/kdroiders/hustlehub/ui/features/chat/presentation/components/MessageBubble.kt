@@ -1,6 +1,10 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.components
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.res.stringResource
+import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -13,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -73,6 +78,7 @@ fun MessageBubble(
     onImageClick: (url: String) -> Unit = {},
     onImageLongClick: (url: String) -> Unit = {},
     modifier: Modifier = Modifier,
+    currentUserLocation: android.location.Location? = null,
 ) {
     val bubbleShape = if (isCurrentUser) {
         RoundedCornerShape(
@@ -190,6 +196,7 @@ fun MessageBubble(
                         LocationMessageContent(
                             message = message,
                             textColor = textColor,
+                            currentUserLocation = currentUserLocation,
                             onClick = onLocationClick,
                         )
                     }
@@ -417,6 +424,7 @@ private const val WAVEFORM_BAR_COUNT = 40
 private fun LocationMessageContent(
     message: Message,
     textColor: androidx.compose.ui.graphics.Color,
+    currentUserLocation: android.location.Location?,
     onClick: (Double, Double, String) -> Unit,
 ) {
     val gson = remember { Gson() }
@@ -427,37 +435,109 @@ private fun LocationMessageContent(
             null
         }
     }
+    val mapsApiKey = stringResource(id = R.string.google_maps_key)
+    val staticMapUrl = remember(locationData, mapsApiKey) {
+        if (locationData != null) {
+            "https://maps.googleapis.com/maps/api/staticmap?center=${locationData.lat},${locationData.lng}&zoom=15&size=300x150&scale=2&markers=${locationData.lat},${locationData.lng}&key=$mapsApiKey"
+        } else {
+            ""
+        }
+    }
+    val distanceText = remember(locationData, currentUserLocation) {
+        if (locationData != null && currentUserLocation != null) {
+            val results = FloatArray(1)
+            try {
+                android.location.Location.distanceBetween(
+                    locationData.lat,
+                    locationData.lng,
+                    currentUserLocation.latitude,
+                    currentUserLocation.longitude,
+                    results
+                )
+                val distanceMeters = results[0]
+                if (distanceMeters < 1000f) {
+                    "${distanceMeters.toInt()}m away"
+                } else {
+                    "${String.format("%.1f", distanceMeters / 1000f)}km away"
+                }
+            } catch (e: Exception) {
+                null
+            }
+        } else {
+            null
+        }
+    }
 
     Column(
         modifier = Modifier
-            .width(220.dp)
+            .width(240.dp)
             .clickable {
                 if (locationData != null) {
-                    onClick(locationData.lat, locationData.lng, locationData.label ?: "Shared Location")
+                    onClick(
+                        locationData.lat,
+                        locationData.lng,
+                        locationData.label ?: "Shared Location"
+                    )
                 }
-            },
+            }
+            .padding(4.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 6.dp)
+        ) {
             Icon(
                 imageVector = Icons.Default.LocationOn,
                 contentDescription = "Location",
                 tint = textColor,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(20.dp),
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = locationData?.label ?: "Shared Location",
                 color = textColor,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
+
+        if (staticMapUrl.isNotEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(130.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
+            ) {
+                AsyncImage(
+                    model = staticMapUrl,
+                    contentDescription = "Map Preview",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
         Text(
-            text = "Tap to open in maps",
+            text = "Tap to open in Maps",
             color = textColor.copy(alpha = 0.8f),
-            fontSize = 12.sp,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium
         )
+
+        if (distanceText != null) {
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = distanceText,
+                color = textColor.copy(alpha = 0.9f),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
@@ -551,25 +631,12 @@ private fun ServiceCardMessageContent(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // "View Service" CTA
-                OutlinedButton(
+                HustleButton(
+                    text = "View Service",
                     onClick = { onClick(serviceData.serviceId) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary,
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        horizontal = 12.dp,
-                        vertical = 6.dp,
-                    ),
-                ) {
-                    Text(
-                        text = "View Service",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
+                    variant = HustleButtonVariant.Outlined,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     } else {

@@ -1,9 +1,11 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.view
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
+import com.google.android.gms.location.LocationServices
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -138,6 +140,102 @@ fun ChatDetailScreen(
     var imageToSave by remember { mutableStateOf<String?>(null) }
 
     val voiceRecorder = remember { VoiceRecorder(context) }
+
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    var currentUserLocation by remember { mutableStateOf<android.location.Location?>(null) }
+
+    val shareCurrentLocation: () -> Unit = {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager
+        val isGpsEnabled = locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
+
+        if (!isGpsEnabled) {
+            Toast.makeText(context, "GPS is disabled. Please enable it in Settings.", Toast.LENGTH_LONG).show()
+        } else {
+            val hasFineLocation = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            val hasCoarseLocation = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (hasFineLocation || hasCoarseLocation) {
+                try {
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location: android.location.Location? ->
+                        if (location != null) {
+                            currentUserLocation = location
+                            viewModel.sendLocationMessage(location.latitude, location.longitude, "Current Location")
+                        } else {
+                            Toast.makeText(context, "Could not retrieve location. Please try again.", Toast.LENGTH_SHORT).show()
+                        }
+                    }.addOnFailureListener { e ->
+                        Toast.makeText(context, "Error getting location: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: SecurityException) {
+                    Toast.makeText(context, "Permission error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (granted) {
+            shareCurrentLocation()
+        } else {
+            Toast.makeText(context, "Location permission denied. Cannot share location.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val requestLocationAndShare: () -> Unit = {
+        val hasFineLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarseLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasFineLocation || hasCoarseLocation) {
+            shareCurrentLocation()
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val hasFineLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarseLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasFineLocation || hasCoarseLocation) {
+            try {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        currentUserLocation = location
+                    }
+                }
+            } catch (e: SecurityException) {
+                // Ignore
+            }
+        }
+    }
 
     // Initialize the conversation when screen loads or ID changes
     LaunchedEffect(conversationId) {
@@ -459,6 +557,7 @@ fun ChatDetailScreen(
                             message = message,
                             isCurrentUser = isSelf,
                             playerState = state.playerState,
+                            currentUserLocation = currentUserLocation,
                             onVoicePlayClick = viewModel::playVoice,
                             onVoiceSpeedToggle = viewModel::toggleVoicePlaybackSpeed,
                             onLocationClick = { lat, lng, label ->
@@ -557,8 +656,8 @@ fun ChatDetailScreen(
                         icon = Icons.Default.LocationOn,
                         label = "Location",
                         onClick = {
-                            showLocationDialog = true
                             showAttachmentMenu = false
+                            requestLocationAndShare()
                         },
                     )
                 }
