@@ -7,40 +7,47 @@ import must.kdroiders.hustlehub.ui.features.notification.domain.model.Notificati
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import javax.inject.Inject
 
-class NotificationRepositoryImpl @Inject constructor(
-    private val apiService: NotificationApiService
-) : NotificationRepository {
+class NotificationRepositoryImpl
+    @Inject
+    constructor(
+        private val apiService: NotificationApiService,
+    ) : NotificationRepository {
+        override suspend fun getNotifications(
+            page: Int,
+            size: Int,
+        ): Result<List<Notification>> =
+            runCatching {
+                val apiResponse = apiService.getNotifications(page, size)
+                val pageResponse = apiResponse.data ?: return@runCatching emptyList()
+                pageResponse.content.map { it.toDomain() }
+            }
 
-    override suspend fun getNotifications(page: Int, size: Int): Result<List<Notification>> = runCatching {
-        val apiResponse = apiService.getNotifications(page, size)
-        val pageResponse = apiResponse.data ?: return@runCatching emptyList()
-        pageResponse.content.map { it.toDomain() }
-    }
+        override suspend fun markRead(id: String): Result<Unit> =
+            runCatching {
+                apiService.markRead(id)
+            }.map { }
 
-    override suspend fun markRead(id: String): Result<Unit> = runCatching {
-        apiService.markRead(id)
-    }.map { }
+        override suspend fun markAllRead(): Result<Unit> =
+            runCatching {
+                apiService.markAllRead()
+            }.map { }
 
-    override suspend fun markAllRead(): Result<Unit> = runCatching {
-        apiService.markAllRead()
-    }.map { }
-
-    private fun NotificationResponse.toDomain(): Notification {
-        val typeEnum = when (type.uppercase()) {
-            "NEW_MESSAGE" -> NotificationType.NEW_MESSAGE
-            "NEW_REVIEW" -> NotificationType.NEW_REVIEW
-            "SERVICE_INQUIRY" -> NotificationType.SERVICE_INQUIRY
-            else -> NotificationType.SYSTEM
+        private fun NotificationResponse.toDomain(): Notification {
+            val typeEnum = when (type.uppercase()) {
+                "NEW_MESSAGE" -> NotificationType.NEW_MESSAGE
+                "NEW_REVIEW" -> NotificationType.NEW_REVIEW
+                "SERVICE_INQUIRY" -> NotificationType.SERVICE_INQUIRY
+                else -> NotificationType.SYSTEM
+            }
+            return Notification(
+                id = id,
+                userId = userId,
+                type = typeEnum,
+                title = title,
+                body = body,
+                data = data,
+                isRead = isRead,
+                sentAt = sentAt,
+            )
         }
-        return Notification(
-            id = id,
-            userId = userId,
-            type = typeEnum,
-            title = title,
-            body = body,
-            data = data,
-            isRead = isRead,
-            sentAt = sentAt
-        )
     }
-}

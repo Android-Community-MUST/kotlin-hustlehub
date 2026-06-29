@@ -14,11 +14,13 @@ sealed interface DeepLinkAction {
 }
 
 @HiltViewModel
-class MainNavigationViewModel @Inject constructor() : ViewModel() {
-    private val _deepLinkEvent = MutableSharedFlow<DeepLinkAction>(extraBufferCapacity = 1)
-    val deepLinkEvent: SharedFlow<DeepLinkAction> = _deepLinkEvent.asSharedFlow()
+class MainNavigationViewModel
+    @Inject
+    constructor() : ViewModel() {
+        private val _deepLinkEvent = MutableSharedFlow<DeepLinkAction>(extraBufferCapacity = 1)
+        val deepLinkEvent: SharedFlow<DeepLinkAction> = _deepLinkEvent.asSharedFlow()
 
-    fun triggerDeepLink(action: DeepLinkAction) {
-        _deepLinkEvent.tryEmit(action)
+        fun triggerDeepLink(action: DeepLinkAction) {
+            _deepLinkEvent.tryEmit(action)
+        }
     }
-}

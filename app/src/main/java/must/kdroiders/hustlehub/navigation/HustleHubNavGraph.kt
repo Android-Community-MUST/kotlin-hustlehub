@@ -32,6 +32,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginVie
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatDetailScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.AiSearchScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.SearchScreen
+import must.kdroiders.hustlehub.ui.features.notification.presentation.view.NotificationScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.EditProfileScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProviderProfileScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
@@ -40,7 +41,6 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServices
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.ServiceDetailScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.WriteReviewScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
-import must.kdroiders.hustlehub.ui.features.notification.presentation.view.NotificationScreen
 
 /**
  * Root Navigation 3 navigator for HustleHub.
@@ -366,7 +366,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
 
             entry<Notifications> {
                 NotificationScreen(
-                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) }
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                 )
             }
         },

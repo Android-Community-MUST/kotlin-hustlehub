@@ -4,7 +4,7 @@ enum class NotificationType {
     NEW_MESSAGE,
     NEW_REVIEW,
     SERVICE_INQUIRY,
-    SYSTEM
+    SYSTEM,
 }
 
 data class Notification(
@@ -15,5 +15,5 @@ data class Notification(
     val body: String,
     val data: Map<String, String>?,
     val isRead: Boolean,
-    val sentAt: String
+    val sentAt: String,
 )

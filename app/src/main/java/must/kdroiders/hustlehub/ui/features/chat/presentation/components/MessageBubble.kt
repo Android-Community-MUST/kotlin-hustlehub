@@ -1,12 +1,9 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.ui.res.stringResource
-import must.kdroiders.hustlehub.R
-import must.kdroiders.hustlehub.sharedComposables.HustleButton
-import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,8 +13,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -32,7 +29,6 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Work
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -42,18 +38,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -61,6 +56,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.google.gson.Gson
+import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.PlayerState
@@ -452,7 +450,7 @@ private fun LocationMessageContent(
                     locationData.lng,
                     currentUserLocation.latitude,
                     currentUserLocation.longitude,
-                    results
+                    results,
                 )
                 val distanceMeters = results[0]
                 if (distanceMeters < 1000f) {
@@ -476,15 +474,14 @@ private fun LocationMessageContent(
                     onClick(
                         locationData.lat,
                         locationData.lng,
-                        locationData.label ?: "Shared Location"
+                        locationData.label ?: "Shared Location",
                     )
                 }
-            }
-            .padding(4.dp),
+            }.padding(4.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 6.dp)
+            modifier = Modifier.padding(bottom = 6.dp),
         ) {
             Icon(
                 imageVector = Icons.Default.LocationOn,
@@ -499,7 +496,7 @@ private fun LocationMessageContent(
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
 
@@ -509,13 +506,13 @@ private fun LocationMessageContent(
                     .fillMaxWidth()
                     .height(130.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)),
             ) {
                 AsyncImage(
                     model = staticMapUrl,
                     contentDescription = "Map Preview",
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
                 )
             }
         }
@@ -526,7 +523,7 @@ private fun LocationMessageContent(
             text = "Tap to open in Maps",
             color = textColor.copy(alpha = 0.8f),
             fontSize = 11.sp,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
 
         if (distanceText != null) {
@@ -535,7 +532,7 @@ private fun LocationMessageContent(
                 text = distanceText,
                 color = textColor.copy(alpha = 0.9f),
                 fontSize = 11.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
     }
@@ -635,7 +632,7 @@ private fun ServiceCardMessageContent(
                     text = "View Service",
                     onClick = { onClick(serviceData.serviceId) },
                     variant = HustleButtonVariant.Outlined,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }

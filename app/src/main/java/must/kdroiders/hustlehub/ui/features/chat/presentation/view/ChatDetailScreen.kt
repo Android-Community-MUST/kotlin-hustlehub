@@ -5,12 +5,10 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
-import com.google.android.gms.location.LocationServices
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -92,6 +90,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.notification.ActiveConversationTracker
@@ -157,32 +156,33 @@ fun ChatDetailScreen(
     val shareCurrentLocation: () -> Unit = {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager
         val isGpsEnabled = locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
-                locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
+            locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
 
         if (!isGpsEnabled) {
             Toast.makeText(context, "GPS is disabled. Please enable it in Settings.", Toast.LENGTH_LONG).show()
         } else {
             val hasFineLocation = ContextCompat.checkSelfPermission(
                 context,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION,
             ) == PackageManager.PERMISSION_GRANTED
             val hasCoarseLocation = ContextCompat.checkSelfPermission(
                 context,
-                Manifest.permission.ACCESS_COARSE_LOCATION
+                Manifest.permission.ACCESS_COARSE_LOCATION,
             ) == PackageManager.PERMISSION_GRANTED
 
             if (hasFineLocation || hasCoarseLocation) {
                 try {
-                    fusedLocationClient.lastLocation.addOnSuccessListener { location: android.location.Location? ->
-                        if (location != null) {
-                            currentUserLocation = location
-                            viewModel.sendLocationMessage(location.latitude, location.longitude, "Current Location")
-                        } else {
-                            Toast.makeText(context, "Could not retrieve location. Please try again.", Toast.LENGTH_SHORT).show()
+                    fusedLocationClient.lastLocation
+                        .addOnSuccessListener { location: android.location.Location? ->
+                            if (location != null) {
+                                currentUserLocation = location
+                                viewModel.sendLocationMessage(location.latitude, location.longitude, "Current Location")
+                            } else {
+                                Toast.makeText(context, "Could not retrieve location. Please try again.", Toast.LENGTH_SHORT).show()
+                            }
+                        }.addOnFailureListener { e ->
+                            Toast.makeText(context, "Error getting location: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
-                    }.addOnFailureListener { e ->
-                        Toast.makeText(context, "Error getting location: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
                 } catch (e: SecurityException) {
                     Toast.makeText(context, "Permission error: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -191,10 +191,10 @@ fun ChatDetailScreen(
     }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
         val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (granted) {
             shareCurrentLocation()
         } else {
@@ -205,11 +205,11 @@ fun ChatDetailScreen(
     val requestLocationAndShare: () -> Unit = {
         val hasFineLocation = ContextCompat.checkSelfPermission(
             context,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_FINE_LOCATION,
         ) == PackageManager.PERMISSION_GRANTED
         val hasCoarseLocation = ContextCompat.checkSelfPermission(
             context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION,
         ) == PackageManager.PERMISSION_GRANTED
 
         if (hasFineLocation || hasCoarseLocation) {
@@ -218,8 +218,8 @@ fun ChatDetailScreen(
             locationPermissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                ),
             )
         }
     }
@@ -227,11 +227,11 @@ fun ChatDetailScreen(
     LaunchedEffect(Unit) {
         val hasFineLocation = ContextCompat.checkSelfPermission(
             context,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_FINE_LOCATION,
         ) == PackageManager.PERMISSION_GRANTED
         val hasCoarseLocation = ContextCompat.checkSelfPermission(
             context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION,
         ) == PackageManager.PERMISSION_GRANTED
 
         if (hasFineLocation || hasCoarseLocation) {
@@ -405,8 +405,7 @@ fun ChatDetailScreen(
                         .clickable {
                             imageToSave = null
                             scope.launch { saveImageToGallery(context, url) }
-                        }
-                        .padding(16.dp),
+                        }.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
@@ -644,7 +643,8 @@ fun ChatDetailScreen(
                         onClick = {
                             showAttachmentMenu = false
                             val hasPerm = ContextCompat.checkSelfPermission(
-                                context, Manifest.permission.CAMERA,
+                                context,
+                                Manifest.permission.CAMERA,
                             ) == PackageManager.PERMISSION_GRANTED
                             if (hasPerm) {
                                 val tempFile = createTempCameraFile(context)

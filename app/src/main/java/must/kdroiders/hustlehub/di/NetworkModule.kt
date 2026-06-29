@@ -13,9 +13,9 @@ import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
 import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
-import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

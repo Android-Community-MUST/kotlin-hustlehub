@@ -11,5 +11,5 @@ data class NotificationResponse(
     val body: String,
     val data: Map<String, String>? = null,
     val isRead: Boolean,
-    val sentAt: String
+    val sentAt: String,
 )

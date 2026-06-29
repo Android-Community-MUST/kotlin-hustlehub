@@ -30,6 +30,9 @@ import must.kdroiders.hustlehub.ui.features.home.domain.repository.AiSearchRepos
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.media.data.repository.StorageRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
+import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
+import must.kdroiders.hustlehub.ui.features.notification.data.repository.NotificationRepositoryImpl
+import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.profile.data.repository.UserRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
@@ -37,9 +40,6 @@ import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
 import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
 import must.kdroiders.hustlehub.ui.features.service.data.repository.ServiceRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
-import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
-import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
-import must.kdroiders.hustlehub.ui.features.notification.data.repository.NotificationRepositoryImpl
 import timber.log.Timber
 import javax.inject.Singleton
 
@@ -158,9 +158,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideNotificationRepository(
-        notificationApiService: NotificationApiService
-    ): NotificationRepository {
+    fun provideNotificationRepository(notificationApiService: NotificationApiService): NotificationRepository {
         return NotificationRepositoryImpl(notificationApiService)
     }
 }

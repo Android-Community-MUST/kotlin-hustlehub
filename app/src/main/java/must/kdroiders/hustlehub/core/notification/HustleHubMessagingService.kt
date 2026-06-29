@@ -12,7 +12,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class HustleHubMessagingService : FirebaseMessagingService() {
-
     @Inject
     lateinit var userRepository: UserRepository
 

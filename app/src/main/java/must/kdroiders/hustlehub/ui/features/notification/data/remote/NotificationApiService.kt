@@ -12,12 +12,12 @@ interface NotificationApiService {
     @GET("notifications")
     suspend fun getNotifications(
         @Query("page") page: Int = 0,
-        @Query("size") size: Int = 20
+        @Query("size") size: Int = 20,
     ): ApiResponse<PageResponse<NotificationResponse>>
 
     @PUT("notifications/{notificationId}/read")
     suspend fun markRead(
-        @Path("notificationId") notificationId: String
+        @Path("notificationId") notificationId: String,
     ): ApiResponse<Unit>
 
     @PUT("notifications/read-all")

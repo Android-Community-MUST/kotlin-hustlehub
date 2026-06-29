@@ -1,9 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.notification.presentation.view
 
 import androidx.activity.ComponentActivity
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,13 +43,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.navigation.DeepLinkAction
 import must.kdroiders.hustlehub.navigation.MainNavigationViewModel
@@ -67,7 +61,7 @@ import java.time.Instant
 fun NotificationScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: NotificationViewModel = hiltViewModel()
+    viewModel: NotificationViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -81,21 +75,21 @@ fun NotificationScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header Top Bar
             NotificationHeader(
                 unreadCount = state.unreadCount,
                 onBack = onBack,
-                onMarkAllRead = { viewModel.markAllAsRead() }
+                onMarkAllRead = { viewModel.markAllAsRead() },
             )
 
             // Notifications List / Empty State / PullToRefresh
             PullToRefreshBox(
                 isRefreshing = state.isRefreshing,
                 onRefresh = { viewModel.loadNotifications(isRefresh = true) },
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 if (state.notifications.isEmpty() && !state.isLoading) {
                     NotificationEmptyState()
@@ -103,18 +97,18 @@ fun NotificationScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(
                             items = state.notifications,
-                            key = { it.id }
+                            key = { it.id },
                         ) { notification ->
                             NotificationItem(
                                 notification = notification,
                                 onClick = {
                                     viewModel.markAsRead(notification.id)
                                     handleNotificationTap(notification, onBack, mainNavigationViewModel)
-                                }
+                                },
                             )
                         }
                     }
@@ -128,20 +122,20 @@ fun NotificationScreen(
 fun NotificationHeader(
     unreadCount: Int,
     onBack: () -> Unit,
-    onMarkAllRead: () -> Unit
+    onMarkAllRead: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
             .padding(horizontal = 8.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = MaterialTheme.colorScheme.onSurface
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         }
         Text(
@@ -149,7 +143,7 @@ fun NotificationHeader(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(start = 8.dp)
+            modifier = Modifier.padding(start = 8.dp),
         )
         if (unreadCount > 0) {
             Box(
@@ -157,13 +151,13 @@ fun NotificationHeader(
                     .padding(start = 8.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.primaryContainer)
-                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
             ) {
                 Text(
                     text = "$unreadCount new",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
         }
@@ -171,19 +165,19 @@ fun NotificationHeader(
         if (unreadCount > 0) {
             TextButton(
                 onClick = onMarkAllRead,
-                contentPadding = PaddingValues(horizontal = 12.dp)
+                contentPadding = PaddingValues(horizontal = 12.dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.DoneAll,
                     contentDescription = "Mark all read",
                     modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.primary,
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "Mark all read",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -193,7 +187,7 @@ fun NotificationHeader(
 @Composable
 fun NotificationItem(
     notification: Notification,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val containerColor = if (notification.isRead) {
         MaterialTheme.colorScheme.surface
@@ -205,22 +199,22 @@ fun NotificationItem(
         NotificationType.NEW_MESSAGE -> Triple(
             Icons.AutoMirrored.Filled.Chat,
             MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.primaryContainer
+            MaterialTheme.colorScheme.primaryContainer,
         )
         NotificationType.NEW_REVIEW -> Triple(
             Icons.Default.Star,
             MaterialTheme.colorScheme.tertiary,
-            MaterialTheme.colorScheme.tertiaryContainer
+            MaterialTheme.colorScheme.tertiaryContainer,
         )
         NotificationType.SERVICE_INQUIRY -> Triple(
             Icons.Default.Work,
             MaterialTheme.colorScheme.secondary,
-            MaterialTheme.colorScheme.secondaryContainer
+            MaterialTheme.colorScheme.secondaryContainer,
         )
         NotificationType.SYSTEM -> Triple(
             Icons.Default.Info,
             MaterialTheme.colorScheme.outline,
-            MaterialTheme.colorScheme.surfaceVariant
+            MaterialTheme.colorScheme.surfaceVariant,
         )
     }
 
@@ -230,11 +224,11 @@ fun NotificationItem(
             .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // Left circular icon
             Box(
@@ -242,13 +236,13 @@ fun NotificationItem(
                     .size(44.dp)
                     .clip(CircleShape)
                     .background(iconInfo.third),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = iconInfo.first,
                     contentDescription = null,
                     tint = iconInfo.second,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
                 )
             }
 
@@ -260,7 +254,7 @@ fun NotificationItem(
                     text = notification.title,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = if (notification.isRead) FontWeight.Medium else FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -268,13 +262,13 @@ fun NotificationItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = formatRelativeTime(notification.sentAt),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 )
             }
 
@@ -285,7 +279,7 @@ fun NotificationItem(
                     modifier = Modifier
                         .size(10.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
+                        .background(MaterialTheme.colorScheme.primary),
                 )
             }
         }
@@ -299,27 +293,27 @@ fun NotificationEmptyState() {
             .fillMaxSize()
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             imageVector = Icons.Default.NotificationsNone,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-            modifier = Modifier.size(80.dp)
+            modifier = Modifier.size(80.dp),
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = "Your inbox is empty",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "We will notify you here when you receive new messages, reviews, or inquiries.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
     }
 }
@@ -344,7 +338,7 @@ fun formatRelativeTime(dateString: String): String {
 private fun handleNotificationTap(
     notification: Notification,
     onBack: () -> Unit,
-    mainNavigationViewModel: MainNavigationViewModel?
+    mainNavigationViewModel: MainNavigationViewModel?,
 ) {
     if (mainNavigationViewModel == null) return
 

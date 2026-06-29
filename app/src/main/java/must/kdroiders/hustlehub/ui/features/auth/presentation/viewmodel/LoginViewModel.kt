@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.CheckUserProfileUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.GoogleSignInUseCase
@@ -20,7 +21,6 @@ import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SendPasswordRese
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
-import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -95,7 +95,10 @@ class LoginViewModel
         private fun uploadFcmToken() {
             viewModelScope.launch {
                 try {
-                    val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
+                    val token = com.google.firebase.messaging.FirebaseMessaging
+                        .getInstance()
+                        .token
+                        .await()
                     if (token.isNullOrBlank()) return@launch
                     userRepository.updateFcmToken(token)
                     Timber.d("Successfully updated FCM token after login")

@@ -49,7 +49,10 @@ class SplashViewModel
         private fun uploadFcmToken() {
             viewModelScope.launch {
                 try {
-                    val token = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
+                    val token = com.google.firebase.messaging.FirebaseMessaging
+                        .getInstance()
+                        .token
+                        .await()
                     if (token.isNullOrBlank()) return@launch
                     userRepository.updateFcmToken(token)
                     Timber.d("Successfully updated FCM token on splash")

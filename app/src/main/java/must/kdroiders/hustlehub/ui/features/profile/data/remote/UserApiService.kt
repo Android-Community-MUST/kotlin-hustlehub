@@ -49,4 +49,3 @@ interface UserApiService {
         @Body request: FcmTokenRequest,
     ): Response<Unit>
 }
-

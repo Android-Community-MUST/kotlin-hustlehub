@@ -8,9 +8,9 @@ import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.RegisterRequest
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.profile.data.remote.FcmTokenRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UpdateProfileRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
-import must.kdroiders.hustlehub.ui.features.profile.data.remote.FcmTokenRequest
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository

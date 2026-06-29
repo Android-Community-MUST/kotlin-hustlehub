@@ -50,11 +50,12 @@ class ServiceDetailViewModel
                 val serviceResult = serviceDeferred.await()
                 val reviewsResult = reviewsDeferred.await()
 
-                serviceResult.onSuccess { service ->
-                    val providerResult = getProviderProfileUseCase(service.providerId)
-                    val provider = providerResult.getOrNull()
-                    val reviews = reviewsResult.getOrElse { emptyList<Review>().let { it } }
-                    val reviewPage = reviewsResult.getOrNull()
+                serviceResult
+                    .onSuccess { service ->
+                        val providerResult = getProviderProfileUseCase(service.providerId)
+                        val provider = providerResult.getOrNull()
+                        val reviews = reviewsResult.getOrElse { emptyList<Review>().let { it } }
+                        val reviewPage = reviewsResult.getOrNull()
 
                         _uiState.update {
                             it.copy(

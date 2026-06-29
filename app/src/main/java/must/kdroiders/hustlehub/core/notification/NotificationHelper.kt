@@ -32,7 +32,7 @@ object NotificationHelper {
                 },
                 NotificationChannel(CHANNEL_INQUIRIES, "Inquiries", NotificationManager.IMPORTANCE_HIGH).apply {
                     description = "Service inquiry notifications"
-                }
+                },
             )
             manager.createNotificationChannels(channels)
         } catch (e: Exception) {
@@ -58,7 +58,8 @@ object NotificationHelper {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
 
-            val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGES)
+            val notification = NotificationCompat
+                .Builder(context, CHANNEL_MESSAGES)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle(senderName)
                 .setContentText(messagePreview)
@@ -92,7 +93,8 @@ object NotificationHelper {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
 
-            val notification = NotificationCompat.Builder(context, CHANNEL_REVIEWS)
+            val notification = NotificationCompat
+                .Builder(context, CHANNEL_REVIEWS)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle(title)
                 .setContentText(body)
@@ -126,7 +128,8 @@ object NotificationHelper {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
 
-            val notification = NotificationCompat.Builder(context, CHANNEL_INQUIRIES)
+            val notification = NotificationCompat
+                .Builder(context, CHANNEL_INQUIRIES)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle(title)
                 .setContentText(body)

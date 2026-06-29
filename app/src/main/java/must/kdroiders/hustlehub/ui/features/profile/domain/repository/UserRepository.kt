@@ -77,4 +77,3 @@ interface UserRepository {
      */
     suspend fun updateFcmToken(token: String): Result<Unit>
 }
-
