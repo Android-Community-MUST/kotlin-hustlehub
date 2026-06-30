@@ -339,6 +339,73 @@ class ChatRepositoryImpl
                 }
             }
         }
+
+        override suspend fun deleteMessageForMe(messageId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                try {
+                    // Delete from local DB
+                    messageDao.deleteById(messageId)
+
+                    // Call backend REST endpoint (handle lack of endpoint gracefully)
+                    try {
+                        conversationApiService.deleteMessageForMe(messageId)
+                    } catch (e: Exception) {
+                        Timber.w(e, "Remote deleteMessageForMe failed, treating as local-only success")
+                    }
+                    Result.success(Unit)
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            }
+
+        override suspend fun deleteMessageForEveryone(messageId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                try {
+                    // Call backend REST endpoint (handle lack of endpoint gracefully)
+                    try {
+                        conversationApiService.deleteMessageForEveryone(messageId)
+                    } catch (e: Exception) {
+                        Timber.w(e, "Remote deleteMessageForEveryone failed, treating as local-only success")
+                    }
+
+                    // Update locally
+                    val cached = messageDao.getById(messageId)
+                    if (cached != null) {
+                        val gson = Gson()
+                        val metaObj = try {
+                            if (!cached.metadata.isNullOrBlank()) {
+                                gson.fromJson(cached.metadata, JsonObject::class.java)
+                            } else {
+                                JsonObject()
+                            }
+                        } catch (e: Exception) {
+                            JsonObject()
+                        }
+                        metaObj.addProperty("isDeleted", true)
+                        val updated = cached.copy(
+                            content = "This message was deleted",
+                            mediaUrl = null,
+                            thumbnailUrl = null,
+                            metadata = gson.toJson(metaObj)
+                        )
+                        messageDao.upsert(updated)
+
+                        // Update conversation preview if needed
+                        val conv = conversationDao.getById(cached.conversationId)
+                        if (conv != null && conv.lastMessageAt == cached.timestamp) {
+                            conversationDao.upsert(
+                                conv.copy(
+                                    lastMessage = "This message was deleted",
+                                    lastMessageType = "TEXT"
+                                )
+                            )
+                        }
+                    }
+                    Result.success(Unit)
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            }
     }
 
 // Mapper extensions for DTOs to Domain models

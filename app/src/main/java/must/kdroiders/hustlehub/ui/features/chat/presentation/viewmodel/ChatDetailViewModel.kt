@@ -336,6 +336,24 @@ class ChatDetailViewModel
             _uiState.update { it.copy(replyingToMessage = null) }
         }
 
+        fun deleteMessageForMe(messageId: String) {
+            viewModelScope.launch {
+                chatRepository.deleteMessageForMe(messageId)
+                    .onFailure { error ->
+                        _uiState.update { it.copy(error = error.message) }
+                    }
+            }
+        }
+
+        fun deleteMessageForEveryone(messageId: String) {
+            viewModelScope.launch {
+                chatRepository.deleteMessageForEveryone(messageId)
+                    .onFailure { error ->
+                        _uiState.update { it.copy(error = error.message) }
+                    }
+            }
+        }
+
         fun sendTextMessage(content: String) {
             val id = conversationId ?: return
             if (content.isBlank()) return

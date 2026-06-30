@@ -584,6 +584,8 @@ fun ChatDetailScreen(
                             onImageClick = { url -> selectedImageUrl = url },
                             onImageLongClick = { url -> imageToSave = url },
                             onReply = viewModel::startReplying,
+                            onDeleteForMe = { msg -> viewModel.deleteMessageForMe(msg.id) },
+                            onDeleteForEveryone = { msg -> viewModel.deleteMessageForEveryone(msg.id) },
                         )
                     }
                 }
