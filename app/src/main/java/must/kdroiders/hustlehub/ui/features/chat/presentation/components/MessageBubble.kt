@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -95,6 +96,7 @@ fun MessageBubble(
     onDeleteForEveryone: (Message) -> Unit = {},
     modifier: Modifier = Modifier,
     currentUserLocation: android.location.Location? = null,
+    isOtherUserOnline: Boolean = false,
 ) {
     val haptic = LocalHapticFeedback.current
     var dragAmountX by remember { mutableStateOf(0f) }
@@ -419,7 +421,7 @@ fun MessageBubble(
                         Spacer(modifier = Modifier.width(4.dp))
                         val isPending = message.id.startsWith("temp_")
                         val isRead = message.readAt != null
-                        val isDelivered = message.deliveredAt != null
+                        val isDelivered = message.deliveredAt != null && (isOtherUserOnline || isRead)
                         val receiptIcon = when {
                             isPending -> Icons.Default.Schedule
                             isRead || isDelivered -> Icons.Default.DoneAll

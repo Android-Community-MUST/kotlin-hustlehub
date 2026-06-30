@@ -4,6 +4,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
@@ -28,25 +30,28 @@ class ChatWebSocketService
     ) {
         private var stompSession: StompSession? = null
         private val gson = Gson()
+        private val connectMutex = kotlinx.coroutines.sync.Mutex()
 
         suspend fun connect() {
-            if (stompSession != null) return
-            try {
-                val currentUser = firebaseAuth?.currentUser ?: throw IllegalStateException("User not logged in")
-                val token = currentUser.getIdToken(false).await().token ?: throw IllegalStateException("Could not get Firebase token")
+            connectMutex.withLock {
+                if (stompSession != null) return
+                try {
+                    val currentUser = firebaseAuth?.currentUser ?: throw IllegalStateException("User not logged in")
+                    val token = currentUser.getIdToken(false).await().token ?: throw IllegalStateException("Could not get Firebase token")
 
-                val wsUrl = BuildConfig.WS_BASE_URL
-                val webSocketClient = OkHttpWebSocketClient(okHttpClient)
-                val stompClient = StompClient(webSocketClient)
+                    val wsUrl = BuildConfig.WS_BASE_URL
+                    val webSocketClient = OkHttpWebSocketClient(okHttpClient)
+                    val stompClient = StompClient(webSocketClient)
 
-                stompSession = stompClient.connect(
-                    url = wsUrl,
-                    customStompConnectHeaders = mapOf("token" to token),
-                )
-                Timber.d("Connected to STOMP WebSocket server")
-            } catch (e: Exception) {
-                Timber.e(e, "Error connecting to STOMP WebSocket server")
-                throw e
+                    stompSession = stompClient.connect(
+                        url = wsUrl,
+                        customStompConnectHeaders = mapOf("token" to token),
+                    )
+                    Timber.d("Connected to STOMP WebSocket server")
+                } catch (e: Exception) {
+                    Timber.e(e, "Error connecting to STOMP WebSocket server")
+                    throw e
+                }
             }
         }
 

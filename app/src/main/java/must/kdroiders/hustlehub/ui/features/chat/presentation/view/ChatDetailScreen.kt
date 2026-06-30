@@ -586,6 +586,7 @@ fun ChatDetailScreen(
                             onReply = viewModel::startReplying,
                             onDeleteForMe = { msg -> viewModel.deleteMessageForMe(msg.id) },
                             onDeleteForEveryone = { msg -> viewModel.deleteMessageForEveryone(msg.id) },
+                            isOtherUserOnline = state.isOtherUserOnline,
                         )
                     }
                 }

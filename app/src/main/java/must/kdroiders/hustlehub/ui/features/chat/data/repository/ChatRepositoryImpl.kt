@@ -154,45 +154,45 @@ class ChatRepositoryImpl
             metadata: String?,
         ): Result<Unit> =
             withContext(Dispatchers.IO) {
-                try {
-                    // Optimistic UI Update: Create a temporary message
-                    val tempId = "temp_${UUID.randomUUID()}"
-                    val currentUserId = firebaseAuth?.currentUser?.uid ?: ""
-                    val currentTimestamp = java.time.Instant
-                        .now()
-                        .toString()
+                // Optimistic UI Update: Create a temporary message
+                val tempId = "temp_${UUID.randomUUID()}"
+                val currentUserId = firebaseAuth?.currentUser?.uid ?: ""
+                val currentTimestamp = java.time.Instant
+                    .now()
+                    .toString()
 
-                    // Embed localId into metadata
-                    val gson = Gson()
-                    val metadataJson = if (metadata != null) {
-                        try {
-                            gson.fromJson(metadata, JsonObject::class.java).apply {
-                                addProperty("localId", tempId)
-                            }
-                        } catch (e: Exception) {
-                            JsonObject().apply { addProperty("localId", tempId) }
+                // Embed localId into metadata
+                val gson = Gson()
+                val metadataJson = if (metadata != null) {
+                    try {
+                        gson.fromJson(metadata, JsonObject::class.java).apply {
+                            addProperty("localId", tempId)
                         }
-                    } else {
+                    } catch (e: Exception) {
                         JsonObject().apply { addProperty("localId", tempId) }
                     }
-                    val newMetadataString = gson.toJson(metadataJson)
+                } else {
+                    JsonObject().apply { addProperty("localId", tempId) }
+                }
+                val newMetadataString = gson.toJson(metadataJson)
 
-                    val tempMessage = Message(
-                        id = tempId,
-                        conversationId = conversationId,
-                        senderId = currentUserId,
-                        type = type,
-                        content = content,
-                        mediaUrl = mediaUrl,
-                        thumbnailUrl = null,
-                        metadata = newMetadataString,
-                        timestamp = currentTimestamp,
-                        deliveredAt = null,
-                        readAt = null,
-                        isSynced = false,
-                        isFailed = false,
-                    )
+                val tempMessage = Message(
+                    id = tempId,
+                    conversationId = conversationId,
+                    senderId = currentUserId,
+                    type = type,
+                    content = content,
+                    mediaUrl = mediaUrl,
+                    thumbnailUrl = null,
+                    metadata = newMetadataString,
+                    timestamp = currentTimestamp,
+                    deliveredAt = null,
+                    readAt = null,
+                    isSynced = false,
+                    isFailed = false,
+                )
 
+                try {
                     messageDao.upsert(tempMessage.toEntity())
 
                     val request = SendMessageRequest(
@@ -202,10 +202,27 @@ class ChatRepositoryImpl
                         mediaUrl = mediaUrl,
                         metadata = newMetadataString,
                     )
+                    chatWebSocketService.connect()
                     chatWebSocketService.sendMessage(request)
                     Result.success(Unit)
                 } catch (e: Exception) {
-                    Timber.e(e, "Failed to send message over WebSocket")
+                    Timber.e(e, "Failed to send message over WebSocket, marking as failed")
+                    val failedMessage = Message(
+                        id = tempMessage.id,
+                        conversationId = tempMessage.conversationId,
+                        senderId = tempMessage.senderId,
+                        type = tempMessage.type,
+                        content = tempMessage.content,
+                        mediaUrl = tempMessage.mediaUrl,
+                        thumbnailUrl = tempMessage.thumbnailUrl,
+                        metadata = tempMessage.metadata,
+                        timestamp = tempMessage.timestamp,
+                        deliveredAt = tempMessage.deliveredAt,
+                        readAt = tempMessage.readAt,
+                        isSynced = tempMessage.isSynced,
+                        isFailed = true,
+                    )
+                    messageDao.upsert(failedMessage.toEntity())
                     Result.failure(e)
                 }
             }
