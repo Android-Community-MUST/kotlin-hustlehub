@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.LocationOn
@@ -100,6 +101,7 @@ import must.kdroiders.hustlehub.core.utils.saveImageToGallery
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoiceRecorder
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSeparator
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.MessageBubble
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ChatDetailViewModel
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.FullScreenImageViewer
 import java.io.File
@@ -581,6 +583,7 @@ fun ChatDetailScreen(
                             onServiceCardClick = onNavigateToServiceDetail,
                             onImageClick = { url -> selectedImageUrl = url },
                             onImageLongClick = { url -> imageToSave = url },
+                            onReply = viewModel::startReplying,
                         )
                     }
                 }
@@ -708,6 +711,74 @@ fun ChatDetailScreen(
                                 borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                             ),
                         )
+                    }
+                }
+            }
+
+            // Reply Preview Banner
+            AnimatedVisibility(visible = state.replyingToMessage != null) {
+                val replyingTo = state.replyingToMessage
+                if (replyingTo != null) {
+                    val replyText = when (replyingTo.type) {
+                        MessageType.VOICE -> "[Voice note]"
+                        MessageType.IMAGE -> "[Image]"
+                        MessageType.LOCATION -> "[Location]"
+                        MessageType.SERVICE_CARD -> "[Service Card]"
+                        else -> replyingTo.content
+                    }
+                    val senderName = if (replyingTo.senderId == state.currentUserId) {
+                        "You"
+                    } else {
+                        state.otherUserName
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        // Left vertical accent line
+                        Box(
+                            modifier = Modifier
+                                .width(4.dp)
+                                .height(36.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(MaterialTheme.colorScheme.primary),
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(
+                                text = "Replying to $senderName",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 12.sp,
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = replyText ?: "",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                fontSize = 12.sp,
+                            )
+                        }
+                        IconButton(
+                            onClick = viewModel::cancelReplying,
+                            modifier = Modifier.size(24.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cancel reply",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
                     }
                 }
             }
