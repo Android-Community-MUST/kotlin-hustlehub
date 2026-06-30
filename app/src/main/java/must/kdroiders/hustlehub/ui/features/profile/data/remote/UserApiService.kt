@@ -20,6 +20,10 @@ data class OnlineStatusRequest(
     val isOnline: Boolean,
 )
 
+data class FcmTokenRequest(
+    val token: String,
+)
+
 interface UserApiService {
     @GET("users/me")
     suspend fun getMe(): ApiResponse<UserResponseDto>
@@ -38,5 +42,10 @@ interface UserApiService {
     @PUT("users/me/status")
     suspend fun updateOnlineStatus(
         @Body request: OnlineStatusRequest,
+    ): Response<Unit>
+
+    @PUT("users/fcm-token")
+    suspend fun updateFcmToken(
+        @Body request: FcmTokenRequest,
     ): Response<Unit>
 }

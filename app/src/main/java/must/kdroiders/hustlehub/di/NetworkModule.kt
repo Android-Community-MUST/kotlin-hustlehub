@@ -13,6 +13,7 @@ import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
 import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
 import okhttp3.OkHttpClient
@@ -99,4 +100,10 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideDiscoveryApiService(retrofit: Retrofit): DiscoveryApiService = retrofit.create(DiscoveryApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideNotificationApiService(retrofit: Retrofit): NotificationApiService {
+        return retrofit.create(NotificationApiService::class.java)
+    }
 }

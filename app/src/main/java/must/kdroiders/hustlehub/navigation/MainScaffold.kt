@@ -1,14 +1,17 @@
 package must.kdroiders.hustlehub.navigation
 
+import androidx.activity.ComponentActivity
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -51,9 +54,36 @@ fun MainShellScreen(
     onNavigateToSearch: () -> Unit = {},
     onNavigateToAiSearch: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val innerBackstack = rememberNavBackStack(BottomHome)
+
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
+    val mainNavigationViewModel: MainNavigationViewModel? = if (activity != null) {
+        hiltViewModel<MainNavigationViewModel>(viewModelStoreOwner = activity)
+    } else {
+        null
+    }
+
+    LaunchedEffect(mainNavigationViewModel) {
+        mainNavigationViewModel?.deepLinkEvent?.collect { action ->
+            when (action) {
+                DeepLinkAction.OpenProfile -> {
+                    innerBackstack.clear()
+                    innerBackstack.add(BottomProfile)
+                }
+                DeepLinkAction.OpenChatList -> {
+                    innerBackstack.clear()
+                    innerBackstack.add(BottomChat)
+                }
+                is DeepLinkAction.OpenChat -> {
+                    // Handled at the root graph level (HustleHubNavGraph)
+                }
+            }
+        }
+    }
 
     // The currently active tab key is always the last element.
     val currentKey = innerBackstack.lastOrNull() ?: BottomHome
@@ -89,6 +119,7 @@ fun MainShellScreen(
                         onNavigateToServiceDetail = onNavigateToServiceDetail,
                         onNavigateToSearch = onNavigateToSearch,
                         onNavigateToAiSearch = onNavigateToAiSearch,
+                        onNavigateToNotifications = onNavigateToNotifications,
                     )
                 }
                 entry<BottomMap> { MapScreen() }

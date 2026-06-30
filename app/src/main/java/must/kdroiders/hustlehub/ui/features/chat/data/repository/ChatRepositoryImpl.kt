@@ -291,7 +291,7 @@ class ChatRepositoryImpl
                                         }
                                         NotificationHelper.postMessageNotification(
                                             context = context,
-                                            notificationId = conversationId.hashCode(),
+                                            conversationId = conversationId,
                                             senderName = senderName,
                                             messagePreview = preview,
                                         )

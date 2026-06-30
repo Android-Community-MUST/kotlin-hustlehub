@@ -30,6 +30,9 @@ import must.kdroiders.hustlehub.ui.features.home.domain.repository.AiSearchRepos
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.media.data.repository.StorageRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
+import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
+import must.kdroiders.hustlehub.ui.features.notification.data.repository.NotificationRepositoryImpl
+import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.profile.data.repository.UserRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
@@ -152,6 +155,12 @@ object AppModule {
     @Singleton
     fun provideAiSearchRepository(discoveryApiService: DiscoveryApiService): AiSearchRepository =
         AiSearchRepositoryImpl(discoveryApiService)
+
+    @Provides
+    @Singleton
+    fun provideNotificationRepository(notificationApiService: NotificationApiService): NotificationRepository {
+        return NotificationRepositoryImpl(notificationApiService)
+    }
 }
 
 private class NoopAuthRepository : AuthRepository {

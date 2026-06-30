@@ -29,6 +29,7 @@ import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketServic
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
+import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.PlayerState
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoicePlayer
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
@@ -56,6 +57,7 @@ data class ChatDetailUiState(
     val isCurrentUserProvider: Boolean = false,
     /** Prevents the auto-generated service card from being re-sent on every re-open. */
     val serviceCardSent: Boolean = false,
+    val replyingToMessage: Message? = null,
 )
 
 @HiltViewModel
@@ -67,6 +69,7 @@ class ChatDetailViewModel
         private val chatWebSocketService: ChatWebSocketService,
         private val mediaApiService: MediaApiService,
         private val conversationDao: ConversationDao,
+        private val serviceRepository: ServiceRepository,
         private val firebaseAuth: FirebaseAuth?,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ChatDetailUiState())
@@ -126,7 +129,7 @@ class ChatDetailViewModel
             presenceJob?.cancel()
 
             val currentUid = firebaseAuth?.currentUser?.uid ?: ""
-            _uiState.update { it.copy(currentUserId = currentUid, messages = emptyList()) }
+            _uiState.update { it.copy(currentUserId = currentUid, messages = emptyList(), replyingToMessage = null) }
 
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
@@ -157,7 +160,14 @@ class ChatDetailViewModel
                 // 2. Load cached conversation details to show other user's info in header instantly
                 val finalCached = withContext(Dispatchers.IO) { conversationDao.getById(resolvedId) }
                 if (finalCached != null) {
-                    val isProvider = finalCached.otherUserId != currentUid
+                    val sId = finalCached.serviceId
+                    var isProvider = false
+                    if (sId != null) {
+                        val svcResult = serviceRepository.getServiceById(sId)
+                        svcResult.onSuccess { svc ->
+                            isProvider = svc.providerId == currentUid
+                        }
+                    }
                     _uiState.update {
                         it.copy(
                             otherUserId = finalCached.otherUserId,
@@ -168,12 +178,19 @@ class ChatDetailViewModel
                     }
                 } else {
                     // Fallback to providerName if conversation isn't cached yet
+                    var isProvider = false
+                    if (serviceId != null) {
+                        val svcResult = serviceRepository.getServiceById(serviceId)
+                        svcResult.onSuccess { svc ->
+                            isProvider = svc.providerId == currentUid
+                        }
+                    }
                     _uiState.update {
                         it.copy(
                             otherUserId = conversationId,
                             otherUserName = providerName ?: "User",
                             otherUserAvatar = null,
-                            isCurrentUserProvider = false,
+                            isCurrentUserProvider = isProvider,
                         )
                     }
                 }
@@ -311,14 +328,51 @@ class ChatDetailViewModel
             }
         }
 
+        fun startReplying(message: Message) {
+            _uiState.update { it.copy(replyingToMessage = message) }
+        }
+
+        fun cancelReplying() {
+            _uiState.update { it.copy(replyingToMessage = null) }
+        }
+
         fun sendTextMessage(content: String) {
             val id = conversationId ?: return
             if (content.isBlank()) return
+            val currentReply = uiState.value.replyingToMessage
             viewModelScope.launch {
                 // Clear the typing indicator immediately when the message is sent
                 sendTypingIndicator(false)
                 typingClearJob?.cancel()
-                chatRepository.sendMessage(id, MessageType.TEXT, content)
+
+                val metadata = if (currentReply != null) {
+                    val replyText = when (currentReply.type) {
+                        MessageType.VOICE -> "[Voice note]"
+                        MessageType.IMAGE -> "[Image]"
+                        MessageType.LOCATION -> "[Location]"
+                        MessageType.SERVICE_CARD -> "[Service Card]"
+                        else -> currentReply.content
+                    }
+                    val senderName = if (currentReply.senderId == uiState.value.currentUserId) {
+                        "You"
+                    } else {
+                        uiState.value.otherUserName
+                    }
+                    gson.toJson(mapOf(
+                        "replyToId" to currentReply.id,
+                        "replyToContent" to replyText,
+                        "replyToSenderName" to senderName
+                    ))
+                } else null
+
+                chatRepository.sendMessage(
+                    conversationId = id,
+                    type = MessageType.TEXT,
+                    content = content,
+                    mediaUrl = null,
+                    metadata = metadata,
+                )
+                cancelReplying()
             }
         }
 

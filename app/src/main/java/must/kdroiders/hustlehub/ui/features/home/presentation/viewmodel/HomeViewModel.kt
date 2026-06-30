@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
+import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.util.HustleScoreCalculator
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
@@ -46,6 +47,7 @@ class HomeViewModel
         private val browseServices: BrowseServicesUseCase,
         private val authManager: AuthManager,
         private val userRepository: UserRepository,
+        private val notificationRepository: NotificationRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(HomeUiState())
         val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -55,6 +57,18 @@ class HomeViewModel
         init {
             loadUserInitials()
             fetchServices(reset = true)
+            loadNotificationCount()
+        }
+
+        private fun loadNotificationCount() {
+            viewModelScope.launch {
+                notificationRepository
+                    .getNotifications(0, 50)
+                    .onSuccess { list ->
+                        val count = list.count { !it.isRead }
+                        _uiState.update { it.copy(notificationCount = count) }
+                    }
+            }
         }
 
         private fun loadUserInitials() {
@@ -154,6 +168,7 @@ class HomeViewModel
         fun onRefresh() {
             _uiState.update { it.copy(isRefreshing = true) }
             fetchServices(reset = true)
+            loadNotificationCount()
         }
 
         fun loadNextPage() {

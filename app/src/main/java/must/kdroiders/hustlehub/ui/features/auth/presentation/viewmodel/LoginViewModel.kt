@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.CheckUserProfileUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.GoogleSignInUseCase
@@ -91,6 +92,22 @@ class LoginViewModel
             }
         }
 
+        private fun uploadFcmToken() {
+            viewModelScope.launch {
+                try {
+                    val token = com.google.firebase.messaging.FirebaseMessaging
+                        .getInstance()
+                        .token
+                        .await()
+                    if (token.isNullOrBlank()) return@launch
+                    userRepository.updateFcmToken(token)
+                    Timber.d("Successfully updated FCM token after login")
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to retrieve/upload FCM token after login")
+                }
+            }
+        }
+
         fun login(
             onSuccess: (hasProfile: Boolean) -> Unit,
             onEmailNotVerified: (email: String) -> Unit,
@@ -105,6 +122,7 @@ class LoginViewModel
                         if (result.isEmailVerified) {
                             val hasProfile = hasProfile(result.user)
                             persistUser(result.user)
+                            uploadFcmToken()
                             _uiState.update { it.copy(isLoading = false) }
                             onSuccess(hasProfile)
                         } else {
@@ -150,6 +168,7 @@ class LoginViewModel
 
                         val hasProfile = hasProfile(result.user)
                         persistUser(result.user)
+                        uploadFcmToken()
                         _uiState.update { it.copy(isLoading = false) }
                         _navigateToHome.tryEmit(hasProfile)
                         onSuccess(hasProfile)

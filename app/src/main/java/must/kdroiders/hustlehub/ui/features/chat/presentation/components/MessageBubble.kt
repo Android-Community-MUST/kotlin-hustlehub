@@ -3,16 +3,20 @@ package must.kdroiders.hustlehub.ui.features.chat.presentation.components
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,7 +29,6 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Work
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -35,17 +38,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -53,10 +59,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.google.gson.Gson
+import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.PlayerState
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.offset
+import androidx.compose.material.icons.automirrored.filled.Reply
+import kotlin.math.roundToInt
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MessageBubble(
     message: Message,
@@ -66,53 +85,173 @@ fun MessageBubble(
     onVoiceSpeedToggle: () -> Unit,
     onLocationClick: (Double, Double, String) -> Unit,
     onServiceCardClick: (String) -> Unit,
+    onImageClick: (url: String) -> Unit = {},
+    onImageLongClick: (url: String) -> Unit = {},
+    onReply: (Message) -> Unit = {},
     modifier: Modifier = Modifier,
+    currentUserLocation: android.location.Location? = null,
 ) {
-    val bubbleShape = if (isCurrentUser) {
-        RoundedCornerShape(
-            topStart = 16.dp,
-            topEnd = 16.dp,
-            bottomStart = 16.dp,
-            bottomEnd = 2.dp,
-        )
-    } else {
-        RoundedCornerShape(
-            topStart = 16.dp,
-            topEnd = 16.dp,
-            bottomStart = 2.dp,
-            bottomEnd = 16.dp,
-        )
-    }
+    val haptic = LocalHapticFeedback.current
+    var dragAmountX by remember { mutableStateOf(0f) }
+    var replyThreshold by remember { mutableStateOf(0f) }
 
-    val bubbleBackground = if (isCurrentUser) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant
-    }
-
-    val textColor = if (isCurrentUser) {
-        MaterialTheme.colorScheme.onPrimary
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    val alignment = if (isCurrentUser) Alignment.End else Alignment.Start
-
-    Column(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
-        horizontalAlignment = alignment,
+        contentAlignment = Alignment.CenterStart
     ) {
-        Box(
+        // Background layer: Reply Icon (only shown if dragging)
+        if (dragAmountX > 0f) {
+            val scale = (dragAmountX / replyThreshold).coerceIn(0f, 1.2f)
+            val alpha = (dragAmountX / replyThreshold).coerceIn(0f, 1f)
+            val iconTint = if (dragAmountX >= replyThreshold) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            }
+
+            Box(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Reply,
+                    contentDescription = "Reply",
+                    tint = iconTint,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            alpha = alpha
+                        )
+                )
+            }
+        }
+
+        val bubbleShape = if (isCurrentUser) {
+            RoundedCornerShape(
+                topStart = 16.dp,
+                topEnd = 16.dp,
+                bottomStart = 16.dp,
+                bottomEnd = 2.dp,
+            )
+        } else {
+            RoundedCornerShape(
+                topStart = 16.dp,
+                topEnd = 16.dp,
+                bottomStart = 2.dp,
+                bottomEnd = 16.dp,
+            )
+        }
+
+        val bubbleBackground = if (isCurrentUser) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant
+        }
+
+        val textColor = if (isCurrentUser) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        }
+
+        val alignment = if (isCurrentUser) Alignment.End else Alignment.Start
+
+        Column(
             modifier = Modifier
-                .clip(bubbleShape)
-                .background(bubbleBackground)
-                .padding(12.dp),
+                .fillMaxWidth()
+                .swipeToReply(
+                    haptic = haptic,
+                    onReply = { onReply(message) },
+                    onDragStateChanged = { dragX, thresh ->
+                        dragAmountX = dragX
+                        replyThreshold = thresh
+                    }
+                ),
+            horizontalAlignment = alignment,
         ) {
-            Column {
-                when (message.type) {
-                    MessageType.TEXT -> {
+            Box(
+                modifier = Modifier
+                    .clip(bubbleShape)
+                    .background(bubbleBackground)
+                    .padding(12.dp),
+            ) {
+                Column {
+                    // Render Reply Quote Box if message has reply details in metadata
+                    val replyData = remember(message.metadata) {
+                        try {
+                            if (message.metadata != null) {
+                                val gson = Gson()
+                                val obj = gson.fromJson(message.metadata, com.google.gson.JsonObject::class.java)
+                                if (obj.has("replyToId")) {
+                                    ReplyMetadata(
+                                        replyToId = obj.get("replyToId")?.asString,
+                                        replyToContent = obj.get("replyToContent")?.asString,
+                                        replyToSenderName = obj.get("replyToSenderName")?.asString
+                                    )
+                                } else null
+                            } else null
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+
+                    if (replyData != null) {
+                        val barColor = if (isCurrentUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                        val quoteBg = if (isCurrentUser) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f)
+                        val replyTextColor = if (isCurrentUser) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant
+
+                        Row(
+                            modifier = Modifier
+                                .padding(bottom = 8.dp)
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(quoteBg)
+                        ) {
+                            // Vertical accent bar on the left
+                            Box(
+                                modifier = Modifier
+                                    .width(4.dp)
+                                    .height(42.dp)
+                                    .background(barColor)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(
+                                modifier = Modifier
+                                    .padding(vertical = 4.dp, horizontal = 8.dp)
+                                    .align(Alignment.CenterVertically)
+                            ) {
+                                Text(
+                                    text = replyData.replyToSenderName ?: "User",
+                                    fontWeight = FontWeight.Bold,
+                                    color = barColor,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = replyData.replyToContent ?: "",
+                                    color = replyTextColor,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+
+                    when (message.type) {
+                        MessageType.TEXT -> {
                         Text(
                             text = message.content,
                             color = textColor,
@@ -122,14 +261,44 @@ fun MessageBubble(
 
                     MessageType.IMAGE -> {
                         val imageUrl = message.mediaUrl ?: ""
-                        AsyncImage(
-                            model = imageUrl,
-                            contentDescription = "Shared Image",
+                        val isUploading = message.id.startsWith("temp_") || imageUrl.isBlank()
+
+                        Box(
                             modifier = Modifier
-                                .size(240.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Crop,
-                        )
+                                .fillMaxWidth(0.72f)
+                                .heightIn(min = 120.dp, max = 320.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .combinedClickable(
+                                    onClick = { if (!isUploading) onImageClick(imageUrl) },
+                                    onLongClick = { if (!isUploading) onImageLongClick(imageUrl) },
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (isUploading) {
+                                // Uploading placeholder
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(180.dp)
+                                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CircularWavyProgressIndicator(
+                                        modifier = Modifier.size(36.dp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    )
+                                }
+                            } else {
+                                AsyncImage(
+                                    model = imageUrl,
+                                    contentDescription = "Shared Image",
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentScale = ContentScale.FillWidth,
+                                )
+                            }
+                        }
+
                         if (!message.content.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
@@ -154,6 +323,7 @@ fun MessageBubble(
                         LocationMessageContent(
                             message = message,
                             textColor = textColor,
+                            currentUserLocation = currentUserLocation,
                             onClick = onLocationClick,
                         )
                     }
@@ -213,6 +383,7 @@ fun MessageBubble(
             }
         }
     }
+}
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -381,6 +552,7 @@ private const val WAVEFORM_BAR_COUNT = 40
 private fun LocationMessageContent(
     message: Message,
     textColor: androidx.compose.ui.graphics.Color,
+    currentUserLocation: android.location.Location?,
     onClick: (Double, Double, String) -> Unit,
 ) {
     val gson = remember { Gson() }
@@ -391,37 +563,108 @@ private fun LocationMessageContent(
             null
         }
     }
+    val mapsApiKey = stringResource(id = R.string.google_maps_key)
+    val staticMapUrl = remember(locationData, mapsApiKey) {
+        if (locationData != null) {
+            "https://maps.googleapis.com/maps/api/staticmap?center=${locationData.lat},${locationData.lng}&zoom=15&size=300x150&scale=2&markers=${locationData.lat},${locationData.lng}&key=$mapsApiKey"
+        } else {
+            ""
+        }
+    }
+    val distanceText = remember(locationData, currentUserLocation) {
+        if (locationData != null && currentUserLocation != null) {
+            val results = FloatArray(1)
+            try {
+                android.location.Location.distanceBetween(
+                    locationData.lat,
+                    locationData.lng,
+                    currentUserLocation.latitude,
+                    currentUserLocation.longitude,
+                    results,
+                )
+                val distanceMeters = results[0]
+                if (distanceMeters < 1000f) {
+                    "${distanceMeters.toInt()}m away"
+                } else {
+                    "${String.format("%.1f", distanceMeters / 1000f)}km away"
+                }
+            } catch (e: Exception) {
+                null
+            }
+        } else {
+            null
+        }
+    }
 
     Column(
         modifier = Modifier
-            .width(220.dp)
+            .width(240.dp)
             .clickable {
                 if (locationData != null) {
-                    onClick(locationData.lat, locationData.lng, locationData.label ?: "Shared Location")
+                    onClick(
+                        locationData.lat,
+                        locationData.lng,
+                        locationData.label ?: "Shared Location",
+                    )
                 }
-            },
+            }.padding(4.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 6.dp),
+        ) {
             Icon(
                 imageVector = Icons.Default.LocationOn,
                 contentDescription = "Location",
                 tint = textColor,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(20.dp),
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = locationData?.label ?: "Shared Location",
                 color = textColor,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
+
+        if (staticMapUrl.isNotEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(130.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)),
+            ) {
+                AsyncImage(
+                    model = staticMapUrl,
+                    contentDescription = "Map Preview",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
         Text(
-            text = "Tap to open in maps",
+            text = "Tap to open in Maps",
             color = textColor.copy(alpha = 0.8f),
-            fontSize = 12.sp,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
         )
+
+        if (distanceText != null) {
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = distanceText,
+                color = textColor.copy(alpha = 0.9f),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
     }
 }
 
@@ -515,25 +758,12 @@ private fun ServiceCardMessageContent(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // "View Service" CTA
-                OutlinedButton(
+                HustleButton(
+                    text = "View Service",
                     onClick = { onClick(serviceData.serviceId) },
+                    variant = HustleButtonVariant.Outlined,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary,
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        horizontal = 12.dp,
-                        vertical = 6.dp,
-                    ),
-                ) {
-                    Text(
-                        text = "View Service",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
+                )
             }
         }
     } else {
@@ -585,3 +815,66 @@ private data class ServiceMetadata(
     val category: String? = null,
     val providerName: String? = null,
 )
+private data class ReplyMetadata(
+    val replyToId: String?,
+    val replyToContent: String?,
+    val replyToSenderName: String?,
+)
+
+@Composable
+fun Modifier.swipeToReply(
+    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
+    onReply: () -> Unit,
+    onDragStateChanged: (dragX: Float, thresholdPx: Float) -> Unit,
+): Modifier {
+    val density = LocalDensity.current
+    val maxDragX = 80.dp
+    val maxDragPx = with(density) { maxDragX.toPx() }
+    val thresholdX = 50.dp
+    val thresholdPx = with(density) { thresholdX.toPx() }
+
+    var dragX by remember { mutableStateOf(0f) }
+    var hapticTriggered by remember { mutableStateOf(false) }
+    val animatedDragX by animateFloatAsState(
+        targetValue = dragX,
+        animationSpec = tween(durationMillis = 150),
+        label = "swipeToReplyDragX"
+    )
+
+    // Notify parent of dragging state so it can display the background icon
+    onDragStateChanged(animatedDragX, thresholdPx)
+
+    return this
+        .offset { IntOffset(animatedDragX.roundToInt(), 0) }
+        .pointerInput(Unit) {
+            detectHorizontalDragGestures(
+                onDragStart = {
+                    dragX = 0f
+                    hapticTriggered = false
+                },
+                onHorizontalDrag = { _, dragAmount ->
+                    // Only allow swiping right (left-to-right) for reply
+                    val newDragX = (dragX + dragAmount).coerceIn(0f, maxDragPx)
+                    dragX = newDragX
+
+                    if (newDragX >= thresholdPx && !hapticTriggered) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        hapticTriggered = true
+                    } else if (newDragX < thresholdPx) {
+                        hapticTriggered = false
+                    }
+                },
+                onDragEnd = {
+                    if (dragX >= thresholdPx) {
+                        onReply()
+                    }
+                    dragX = 0f
+                    hapticTriggered = false
+                },
+                onDragCancel = {
+                    dragX = 0f
+                    hapticTriggered = false
+                }
+            )
+        }
+}

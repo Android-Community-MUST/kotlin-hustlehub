@@ -32,6 +32,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginVie
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatDetailScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.AiSearchScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.SearchScreen
+import must.kdroiders.hustlehub.ui.features.notification.presentation.view.NotificationScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.EditProfileScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProviderProfileScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
@@ -92,6 +93,40 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
             if (authState == AuthState.Unauthenticated && !isInAuthFlow) {
                 backstack.clear()
                 backstack.add(Login())
+            }
+        }
+    }
+
+    val mainNavigationViewModel: MainNavigationViewModel? = if (activity != null) {
+        hiltViewModel<MainNavigationViewModel>(viewModelStoreOwner = activity)
+    } else {
+        null
+    }
+
+    LaunchedEffect(mainNavigationViewModel) {
+        mainNavigationViewModel?.deepLinkEvent?.collect { action ->
+            if (action is DeepLinkAction.OpenChat) {
+                val currentTop = backstack.lastOrNull()
+                if (currentTop is ChatDetail && currentTop.chatId == action.conversationId) {
+                    return@collect
+                }
+                // Make sure MainShell is present under ChatDetail
+                if (backstack.none { it is MainShell }) {
+                    backstack.clear()
+                    backstack.add(MainShell)
+                }
+                backstack.add(ChatDetail(chatId = action.conversationId))
+            } else {
+                // For other actions (OpenProfile, OpenChatList), make sure we return to MainShell
+                if (backstack.none { it is MainShell }) {
+                    backstack.clear()
+                    backstack.add(MainShell)
+                } else {
+                    // Pop any detail screens on top of MainShell
+                    while (backstack.isNotEmpty() && backstack.last() != MainShell) {
+                        backstack.remove(backstack.last())
+                    }
+                }
             }
         }
     }
@@ -214,6 +249,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     onNavigateToSearch = { backstack.add(must.kdroiders.hustlehub.navigation.SearchScreen) },
                     onNavigateToAiSearch = { backstack.add(must.kdroiders.hustlehub.navigation.AiSearchScreen) },
                     onNavigateToEditProfile = { backstack.add(EditProfile) },
+                    onNavigateToNotifications = { backstack.add(Notifications) },
                 )
             }
 
@@ -325,6 +361,12 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 AiSearchScreen(
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
+                )
+            }
+
+            entry<Notifications> {
+                NotificationScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                 )
             }
         },

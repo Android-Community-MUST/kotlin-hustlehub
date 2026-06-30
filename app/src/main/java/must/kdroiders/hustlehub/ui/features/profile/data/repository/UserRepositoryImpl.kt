@@ -8,6 +8,7 @@ import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.RegisterRequest
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.profile.data.remote.FcmTokenRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UpdateProfileRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
@@ -172,6 +173,16 @@ class UserRepositoryImpl
                 }
             }.onFailure { e ->
                 Timber.e(e, "UserRepositoryImpl: failed to update profile")
+            }
+
+        override suspend fun updateFcmToken(token: String): Result<Unit> =
+            runCatching {
+                val response = userApiService.updateFcmToken(FcmTokenRequest(token))
+                if (!response.isSuccessful) {
+                    throw Exception("FCM token update failed: code ${response.code()}")
+                }
+            }.onFailure { e ->
+                Timber.e(e, "UserRepositoryImpl: failed to update FCM token")
             }
     }
 

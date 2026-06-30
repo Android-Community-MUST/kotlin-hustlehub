@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 fun HomeTopBar(
     initials: String,
     notificationCount: Int,
+    onNotificationClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -93,7 +94,7 @@ fun HomeTopBar(
                 },
             ) {
                 IconButton(
-                    onClick = { /* TODO: navigate to notifications */ },
+                    onClick = onNotificationClick,
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)

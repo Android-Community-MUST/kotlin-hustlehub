@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!--
+        Exposes files under getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        so that the camera app can write a full-resolution JPEG to a location
+        the app controls, without needing WRITE_EXTERNAL_STORAGE permission.
+    -->
+    <external-files-path
+        name="camera_pics"
+        path="Pictures" />
+</paths>

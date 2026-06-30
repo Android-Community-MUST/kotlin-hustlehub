@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.view
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
@@ -36,8 +37,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mic
@@ -51,6 +55,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -61,6 +66,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -82,14 +88,22 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.notification.ActiveConversationTracker
+import must.kdroiders.hustlehub.core.utils.ImageCompressor
+import must.kdroiders.hustlehub.core.utils.createTempCameraFile
+import must.kdroiders.hustlehub.core.utils.saveImageToGallery
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoiceRecorder
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSeparator
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.MessageBubble
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ChatDetailViewModel
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.FullScreenImageViewer
 import java.io.File
 import java.time.Duration
 import java.time.Instant
@@ -122,8 +136,118 @@ fun ChatDetailScreen(
     var recordingFile by remember { mutableStateOf<File?>(null) }
     var showLocationDialog by remember { mutableStateOf(false) }
     var showAttachmentMenu by remember { mutableStateOf(false) }
+    // Fullscreen image viewer
+    var selectedImageUrl by remember { mutableStateOf<String?>(null) }
+    // Save-to-gallery bottom sheet
+    var imageToSave by remember { mutableStateOf<String?>(null) }
 
     val voiceRecorder = remember { VoiceRecorder(context) }
+
+    DisposableEffect(conversationId) {
+        ActiveConversationTracker.activeConversationId = conversationId
+        onDispose {
+            if (ActiveConversationTracker.activeConversationId == conversationId) {
+                ActiveConversationTracker.activeConversationId = null
+            }
+        }
+    }
+
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    var currentUserLocation by remember { mutableStateOf<android.location.Location?>(null) }
+
+    val shareCurrentLocation: () -> Unit = {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager
+        val isGpsEnabled = locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
+            locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
+
+        if (!isGpsEnabled) {
+            Toast.makeText(context, "GPS is disabled. Please enable it in Settings.", Toast.LENGTH_LONG).show()
+        } else {
+            val hasFineLocation = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            ) == PackageManager.PERMISSION_GRANTED
+            val hasCoarseLocation = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (hasFineLocation || hasCoarseLocation) {
+                try {
+                    fusedLocationClient.lastLocation
+                        .addOnSuccessListener { location: android.location.Location? ->
+                            if (location != null) {
+                                currentUserLocation = location
+                                viewModel.sendLocationMessage(location.latitude, location.longitude, "Current Location")
+                            } else {
+                                Toast.makeText(context, "Could not retrieve location. Please try again.", Toast.LENGTH_SHORT).show()
+                            }
+                        }.addOnFailureListener { e ->
+                            Toast.makeText(context, "Error getting location: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                } catch (e: SecurityException) {
+                    Toast.makeText(context, "Permission error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (granted) {
+            shareCurrentLocation()
+        } else {
+            Toast.makeText(context, "Location permission denied. Cannot share location.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val requestLocationAndShare: () -> Unit = {
+        val hasFineLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarseLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasFineLocation || hasCoarseLocation) {
+            shareCurrentLocation()
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                ),
+            )
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val hasFineLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarseLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasFineLocation || hasCoarseLocation) {
+            try {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        currentUserLocation = location
+                    }
+                }
+            } catch (e: SecurityException) {
+                // Ignore
+            }
+        }
+    }
 
     // Initialize the conversation when screen loads or ID changes
     LaunchedEffect(conversationId) {
@@ -155,23 +279,54 @@ fun ChatDetailScreen(
     // Typing indicator: delegate to ViewModel which owns debounce + auto-clear logic
     // (no LaunchedEffect needed — the screen just forwards raw onChange events)
 
-    // Image picker launcher
+    val compressAndSendImage: (Uri) -> Unit = { uri ->
+        scope.launch {
+            try {
+                val bytes = ImageCompressor.compressImage(context, uri)
+                if (bytes != null) {
+                    viewModel.sendImageMessage(bytes)
+                } else {
+                    Toast.makeText(context, "Failed to compress image", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // Gallery image picker — compresses before upload
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { uri: Uri? ->
-        uri?.let {
-            scope.launch {
-                try {
-                    val bytes = context.contentResolver.openInputStream(uri)?.readBytes()
-                    if (bytes != null) {
-                        viewModel.sendImageMessage(bytes)
-                    } else {
-                        Toast.makeText(context, "Failed to read image data", Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: Exception) {
-                    Toast.makeText(context, "Error reading image: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+        uri?.let(compressAndSendImage)
+    }
+
+    // Camera capture state — holds the temp file URI until capture completes
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+    ) { success ->
+        if (success) {
+            cameraImageUri?.let(compressAndSendImage)
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            val tempFile = createTempCameraFile(context)
+            if (tempFile != null) {
+                val uri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    tempFile,
+                )
+                cameraImageUri = uri
+                cameraLauncher.launch(uri)
             }
+        } else {
+            Toast.makeText(context, "Camera permission is required", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -215,6 +370,63 @@ fun ChatDetailScreen(
                 showLocationDialog = false
             },
         )
+    }
+
+    // Fullscreen image viewer — opens when user taps a chat image bubble
+    selectedImageUrl?.let { url ->
+        FullScreenImageViewer(
+            imageUrls = listOf(url),
+            initialIndex = 0,
+            onDismiss = { selectedImageUrl = null },
+        )
+    }
+
+    // Save-to-gallery bottom sheet — opens on long-press of a chat image bubble
+    imageToSave?.let { url ->
+        ModalBottomSheet(
+            onDismissRequest = { imageToSave = null },
+            sheetState = rememberModalBottomSheetState(),
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                    .padding(bottom = 32.dp),
+            ) {
+                Text(
+                    text = "Image Options",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable {
+                            imageToSave = null
+                            scope.launch { saveImageToGallery(context, url) }
+                        }.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = "Save to Gallery",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text("Save to Gallery", fontWeight = FontWeight.Medium)
+                        Text(
+                            text = "Download this image to your photos",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
     }
 
     Scaffold(
@@ -356,10 +568,10 @@ fun ChatDetailScreen(
                             message = message,
                             isCurrentUser = isSelf,
                             playerState = state.playerState,
+                            currentUserLocation = currentUserLocation,
                             onVoicePlayClick = viewModel::playVoice,
                             onVoiceSpeedToggle = viewModel::toggleVoicePlaybackSpeed,
                             onLocationClick = { lat, lng, label ->
-                                // Custom maps action or toast
                                 val mapUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng($label)")
                                 val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, mapUri)
                                 try {
@@ -369,6 +581,9 @@ fun ChatDetailScreen(
                                 }
                             },
                             onServiceCardClick = onNavigateToServiceDetail,
+                            onImageClick = { url -> selectedImageUrl = url },
+                            onImageLongClick = { url -> imageToSave = url },
+                            onReply = viewModel::startReplying,
                         )
                     }
                 }
@@ -426,11 +641,36 @@ fun ChatDetailScreen(
                         },
                     )
                     AttachmentOption(
+                        icon = Icons.Filled.CameraAlt,
+                        label = "Camera",
+                        onClick = {
+                            showAttachmentMenu = false
+                            val hasPerm = ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.CAMERA,
+                            ) == PackageManager.PERMISSION_GRANTED
+                            if (hasPerm) {
+                                val tempFile = createTempCameraFile(context)
+                                if (tempFile != null) {
+                                    val uri = FileProvider.getUriForFile(
+                                        context,
+                                        "${context.packageName}.fileprovider",
+                                        tempFile,
+                                    )
+                                    cameraImageUri = uri
+                                    cameraLauncher.launch(uri)
+                                }
+                            } else {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
+                        },
+                    )
+                    AttachmentOption(
                         icon = Icons.Default.LocationOn,
                         label = "Location",
                         onClick = {
-                            showLocationDialog = true
                             showAttachmentMenu = false
+                            requestLocationAndShare()
                         },
                     )
                 }
@@ -471,6 +711,74 @@ fun ChatDetailScreen(
                                 borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                             ),
                         )
+                    }
+                }
+            }
+
+            // Reply Preview Banner
+            AnimatedVisibility(visible = state.replyingToMessage != null) {
+                val replyingTo = state.replyingToMessage
+                if (replyingTo != null) {
+                    val replyText = when (replyingTo.type) {
+                        MessageType.VOICE -> "[Voice note]"
+                        MessageType.IMAGE -> "[Image]"
+                        MessageType.LOCATION -> "[Location]"
+                        MessageType.SERVICE_CARD -> "[Service Card]"
+                        else -> replyingTo.content
+                    }
+                    val senderName = if (replyingTo.senderId == state.currentUserId) {
+                        "You"
+                    } else {
+                        state.otherUserName
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        // Left vertical accent line
+                        Box(
+                            modifier = Modifier
+                                .width(4.dp)
+                                .height(36.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(MaterialTheme.colorScheme.primary),
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(
+                                text = "Replying to $senderName",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 12.sp,
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = replyText ?: "",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                fontSize = 12.sp,
+                            )
+                        }
+                        IconButton(
+                            onClick = viewModel::cancelReplying,
+                            modifier = Modifier.size(24.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cancel reply",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
                     }
                 }
             }
