@@ -605,6 +605,36 @@ Returns a sorted list of conversations (newest activity first).
 
 ---
 
+### Delete Message for Me
+`DELETE /api/v1/conversations/messages/{messageId}/me`
+
+Removes a message from the current user's message history.
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Message deleted for me successfully"
+}
+```
+
+---
+
+### Delete Message for Everyone
+`DELETE /api/v1/conversations/messages/{messageId}/everyone`
+
+Deletes a message for all participants in the conversation, replacing its content with a deletion placeholder.
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Message deleted for everyone successfully"
+}
+```
+
+---
+
 ## Real-Time Chat — WebSocket (STOMP Protocol)
 
 Connect to: `ws://10.0.2.2:8080/ws` (debug) / `wss://api.hustlehub.app/ws` (release)
