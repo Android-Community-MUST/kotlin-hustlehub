@@ -52,7 +52,8 @@
             android:name="must.kdroiders.hustlehub.activities.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.HustleHub">
+            android:theme="@style/Theme.HustleHub"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

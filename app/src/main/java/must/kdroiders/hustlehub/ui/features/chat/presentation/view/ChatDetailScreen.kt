@@ -513,15 +513,13 @@ fun ChatDetailScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background,
-        modifier = modifier
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .imePadding(),
+        modifier = modifier,
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .imePadding(),
         ) {
             // Messages list (reversed so it starts at the bottom)
             val reversedMessages = state.messages.reversed()
