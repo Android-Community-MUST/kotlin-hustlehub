@@ -19,6 +19,11 @@ import must.kdroiders.hustlehub.ui.features.map.domain.usecase.GetMapPinsUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import javax.inject.Inject
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 data class MapUiState(
     val pins: List<MapPin> = emptyList(),
@@ -35,6 +40,11 @@ class MapViewModel @Inject constructor(
     private val getMapPinsUseCase: GetMapPinsUseCase,
     private val userPreferences: UserPreferences,
 ) : ViewModel() {
+
+    companion object {
+        /** How often the map polls the backend for provider availability updates. */
+        const val POLL_INTERVAL_MS = 10_000L
+    }
 
     private var isPollingEnabled = true
 
@@ -101,16 +111,17 @@ class MapViewModel @Inject constructor(
         pollingJob = viewModelScope.launch {
             while (isActive) {
                 fetchPins()
-                delay(10_000) // Poll every 10 seconds for real-time availability updates
+                delay(POLL_INTERVAL_MS)
             }
         }
     }
 
     private suspend fun fetchPins() {
         val currentState = _uiState.value
-        val lat = currentState.userLocation?.latitude
-        val lng = currentState.userLocation?.longitude
-        // We use a radius of 2.0 km around the user location for nearby services
+        val userLoc = currentState.userLocation
+        val lat = userLoc?.latitude
+        val lng = userLoc?.longitude
+        // Use a 2 km radius when the user location is known
         val radius = if (lat != null && lng != null) 2.0 else null
 
         getMapPinsUseCase(
@@ -119,11 +130,42 @@ class MapViewModel @Inject constructor(
             radiusKm = radius,
             category = currentState.selectedCategory,
             availability = currentState.availability,
-        ).onSuccess { pins ->
-            _uiState.update { it.copy(pins = pins, isLoading = false, error = null) }
+        ).onSuccess { rawPins ->
+            // Compute distance for each pin and sort nearest-first (nulls last)
+            val enriched = rawPins.map { pin ->
+                val dist = if (userLoc != null) {
+                    haversineDistance(userLoc.latitude, userLoc.longitude, pin.lat, pin.lng)
+                } else {
+                    null
+                }
+                pin.copy(distanceMeters = dist)
+            }.sortedWith(compareBy(nullsLast()) { it.distanceMeters })
+
+            _uiState.update { it.copy(pins = enriched, isLoading = false, error = null) }
         }.onFailure { error ->
             _uiState.update { it.copy(isLoading = false, error = error.message ?: "Unknown error") }
         }
+    }
+
+    /**
+     * Haversine formula: computes the great-circle distance (in metres) between two
+     * geographic coordinates. Kept in the ViewModel layer so sorting is testable
+     * without depending on any Android/Compose APIs.
+     */
+    internal fun haversineDistance(
+        lat1: Double,
+        lng1: Double,
+        lat2: Double,
+        lng2: Double,
+    ): Double {
+        val earthRadiusMetres = 6_371_000.0
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLng = Math.toRadians(lng2 - lng1)
+        val a = sin(dLat / 2).pow(2) +
+            cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+            sin(dLng / 2).pow(2)
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return earthRadiusMetres * c
     }
 
     override fun onCleared() {
@@ -131,3 +173,4 @@ class MapViewModel @Inject constructor(
         pollingJob?.cancel()
     }
 }
+

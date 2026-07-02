@@ -16,6 +16,7 @@ data class MapPin(
     val averageRating: Double,
     val lat: Double,
     val lng: Double,
+    val distanceMeters: Double? = null,
 ) : ClusterItem {
     override fun getPosition(): LatLng = LatLng(lat, lng)
     override fun getTitle(): String = serviceTitle

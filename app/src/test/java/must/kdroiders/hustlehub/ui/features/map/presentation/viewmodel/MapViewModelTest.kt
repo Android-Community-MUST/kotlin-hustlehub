@@ -119,4 +119,62 @@ class MapViewModelTest {
 
         assertEquals(latLng, viewModel.uiState.value.userLocation)
     }
+
+    @Test
+    fun `pins are sorted by distance ascending when user location is set`() = runTest {
+        val userLat = 0.0515
+        val userLng = 37.6456
+
+        // farPin is ~2 km north, nearPin is ~0.1 km north
+        val nearPin = MapPin(
+            serviceId = "1", providerId = "p1", providerName = "Near",
+            providerPhotoUrl = null, serviceTitle = "Haircut",
+            category = must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory.SALON,
+            availability = must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability.AVAILABLE,
+            averageRating = 4.5, lat = 0.0524, lng = 37.6456 // ~100 m away
+        )
+        val farPin = MapPin(
+            serviceId = "2", providerId = "p2", providerName = "Far",
+            providerPhotoUrl = null, serviceTitle = "Laundry",
+            category = must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory.LAUNDRY,
+            availability = must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability.AVAILABLE,
+            averageRating = 4.0, lat = 0.0695, lng = 37.6456 // ~2 km away
+        )
+
+        // API returns far pin first, near pin second
+        coEvery {
+            getMapPinsUseCase(any(), any(), any(), any(), any())
+        } returns Result.success(listOf(farPin, nearPin))
+
+        viewModel.updateUserLocation(LatLng(userLat, userLng))
+        viewModel.refreshPins()
+
+        val pins = viewModel.uiState.value.pins
+        assertEquals(2, pins.size)
+        // After sorting, nearPin should be first
+        assertEquals("1", pins[0].serviceId)
+        assertEquals("2", pins[1].serviceId)
+        // Distance values must be populated
+        assertTrue(pins[0].distanceMeters != null)
+        assertTrue(pins[0].distanceMeters!! < pins[1].distanceMeters!!)
+    }
+
+    @Test
+    fun `fetchPins failure sets error state and clears loading`() = runTest {
+        coEvery {
+            getMapPinsUseCase(any(), any(), any(), any(), any())
+        } returns Result.failure(RuntimeException("Network error"))
+
+        viewModel.refreshPins()
+
+        val state = viewModel.uiState.value
+        assertEquals("Network error", state.error)
+        assertEquals(false, state.isLoading)
+    }
+
+    @Test
+    fun `haversineDistance returns zero for same point`() {
+        val dist = viewModel.haversineDistance(0.0515, 37.6456, 0.0515, 37.6456)
+        assertEquals(0.0, dist, 0.001)
+    }
 }
