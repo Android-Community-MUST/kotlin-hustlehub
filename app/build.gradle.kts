@@ -137,6 +137,7 @@ dependencies {
     // Google Maps & Location
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)
+    implementation(libs.maps.compose.utils)
     implementation(libs.play.services.location)
 
     // Gemini AI

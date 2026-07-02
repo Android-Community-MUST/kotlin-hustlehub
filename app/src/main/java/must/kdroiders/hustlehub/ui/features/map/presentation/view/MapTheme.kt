@@ -1,4 +1,4 @@
-package must.kdroiders.hustlehub.ui.features.map
+package must.kdroiders.hustlehub.ui.features.map.presentation.view
 
 object MapTheme {
     const val DARK_JSON = """[

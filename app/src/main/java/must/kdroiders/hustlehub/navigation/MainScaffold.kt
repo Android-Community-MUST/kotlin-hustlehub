@@ -22,7 +22,7 @@ import must.kdroiders.hustlehub.navigation.ServiceDetail
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatScreen
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.UnreadCountViewModel
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.HomeScreen
-import must.kdroiders.hustlehub.ui.features.map.MapScreen
+import must.kdroiders.hustlehub.ui.features.map.presentation.view.MapScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScreen
 
 /**

@@ -106,6 +106,7 @@ firebase-perf = { group = "com.google.firebase", name = "firebase-perf" }
 # Google Maps & Location
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "googleMaps" }
 maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
+maps-compose-utils = { group = "com.google.maps.android", name = "maps-compose-utils", version.ref = "mapsCompose" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "googleLocation" }
 
 # Gemini AI
