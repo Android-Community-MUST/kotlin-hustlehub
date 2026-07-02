@@ -28,6 +28,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.isActive
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.navigation.DeepLinkAction
@@ -36,9 +37,16 @@ import must.kdroiders.hustlehub.navigation.MainNavigationViewModel
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 import timber.log.Timber
+import javax.inject.Inject
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var userRepository: UserRepository
+
+    private var locationJob: kotlinx.coroutines.Job? = null
+
     private val loginViewModel: LoginViewModel by viewModels()
     private val mainNavigationViewModel: MainNavigationViewModel by viewModels()
 
@@ -131,6 +139,54 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         // Clear all chat notifications and badge when user returns to the app
         NotificationHelper.cancelAllNotifications(this)
+        startLocationUpdates()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        stopLocationUpdates()
+    }
+
+    private fun startLocationUpdates() {
+        locationJob?.cancel()
+        locationJob = lifecycleScope.launch {
+            while (isActive) {
+                updateLocationIfPermitted()
+                kotlinx.coroutines.delay(5 * 60 * 1000L) // 5 minutes
+            }
+        }
+    }
+
+    private fun stopLocationUpdates() {
+        locationJob?.cancel()
+        locationJob = null
+    }
+
+    private fun updateLocationIfPermitted() {
+        if (androidx.core.app.ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
+            androidx.core.app.ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this)
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    lifecycleScope.launch {
+                        userRepository.updateUserLocation(location.latitude, location.longitude)
+                            .onSuccess {
+                                Timber.d("Successfully updated location to backend: lat=${location.latitude}, lng=${location.longitude}")
+                            }
+                            .onFailure { e ->
+                                Timber.e(e, "Failed to update location to backend")
+                            }
+                    }
+                }
+            }
+        }
     }
 
     private fun initializeLegacyGoogleSignIn() {

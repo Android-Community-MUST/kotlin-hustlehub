@@ -20,5 +20,7 @@ data class User(
     val isOnline: Boolean = true,
     val hustleScore: Float = 0f,
     val reviewCount: Int = 0,
+    val lat: Double? = null,
+    val lng: Double? = null,
     val createdAt: Long = System.currentTimeMillis(),
 )

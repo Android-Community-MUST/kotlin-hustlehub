@@ -76,4 +76,16 @@ interface UserRepository {
      * Wraps PUT /api/v1/users/fcm-token.
      */
     suspend fun updateFcmToken(token: String): Result<Unit>
+
+    /**
+     * Updates the user's location coordinates.
+     * Wraps PUT /api/v1/users/me/location.
+     */
+    suspend fun updateUserLocation(lat: Double, lng: Double): Result<Unit>
+
+    /**
+     * Fetches nearby providers within a given radius.
+     * Wraps GET /api/v1/users/nearby.
+     */
+    suspend fun getNearbyProviders(lat: Double, lng: Double, radiusMeters: Double = 1000.0): Result<List<User>>
 }
