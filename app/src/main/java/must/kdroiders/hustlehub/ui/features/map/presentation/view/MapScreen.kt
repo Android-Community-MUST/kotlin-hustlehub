@@ -6,11 +6,15 @@ import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -31,6 +35,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.ContentCut
@@ -297,55 +302,137 @@ fun MapScreen(
             }
         }
 
-        // 3. Category & Availability Filter Row (Horizontal Scrollable)
-        Row(
+        // 3. Category & Availability Filter Section (Vertical layout for chips + count)
+        Column(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .fillMaxWidth()
-                .padding(top = 84.dp, start = 16.dp, end = 16.dp)
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(top = 84.dp, start = 16.dp, end = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Availability Filter Chip
-            val isAvailableOnly = uiState.availability == ServiceAvailability.AVAILABLE
-            FilterChip(
-                selected = isAvailableOnly,
-                onClick = {
-                    viewModel.selectAvailability(
-                        if (isAvailableOnly) null else ServiceAvailability.AVAILABLE
+            // A. Chips Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Category Filter Chips
+                val categories = remember {
+                    listOf(
+                        ServiceCategory.ALL to "All",
+                        ServiceCategory.TECH to "Tech",
+                        ServiceCategory.SALON to "Salon",
+                        ServiceCategory.LAUNDRY to "Laundry",
+                        ServiceCategory.TUTORING to "Tutoring",
+                        ServiceCategory.FOOD to "Food",
+                        ServiceCategory.FASHION to "Fashion",
+                        ServiceCategory.PHOTOGRAPHY to "Photo"
                     )
+                }
+
+                categories.forEach { (category, label) ->
+                    val isSelected = if (category == ServiceCategory.ALL) {
+                        uiState.selectedCategory == null
+                    } else {
+                        uiState.selectedCategory == category
+                    }
+
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            viewModel.selectCategory(if (category == ServiceCategory.ALL) null else category)
+                        },
+                        label = { Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                        leadingIcon = {
+                            if (category != ServiceCategory.ALL) {
+                                val (icon, _) = getCategoryIconAndColor(category)
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(4.dp))
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .height(24.dp)
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+
+                // Availability Filter Chip
+                val isAvailableOnly = uiState.availability == ServiceAvailability.AVAILABLE
+                FilterChip(
+                    selected = isAvailableOnly,
+                    onClick = {
+                        viewModel.selectAvailability(
+                            if (isAvailableOnly) null else ServiceAvailability.AVAILABLE
+                        )
+                    },
+                    label = { Text("Available Only", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                    leadingIcon = {
+                        if (isAvailableOnly) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                        selectedLabelColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
+
+            // B. Visible Provider Count Badge
+            AnimatedContent(
+                targetState = uiState.pins.size,
+                transitionSpec = {
+                    (slideInVertically { height -> height } + fadeIn()) togetherWith
+                        (slideOutVertically { height -> -height } + fadeOut())
                 },
-                label = { Text("Available Only", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
-                leadingIcon = {
-                    if (isAvailableOnly) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp)
+                label = "ProviderCountAnimation"
+            ) { count ->
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+                        .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        // Dot pulse indicator
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .background(MaterialTheme.colorScheme.primary, CircleShape)
+                        )
+                        Text(
+                            text = "Showing $count provider${if (count == 1) "" else "s"}",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         )
                     }
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                    selectedLabelColor = MaterialTheme.colorScheme.primary
-                )
-            )
-
-            // Category Filter Chips
-            ServiceCategory.entries.filter { it != ServiceCategory.ALL }.forEach { category ->
-                val isSelected = uiState.selectedCategory == category
-                FilterChip(
-                    selected = isSelected,
-                    onClick = {
-                        viewModel.selectCategory(if (isSelected) null else category)
-                    },
-                    label = { Text(category.label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                )
+                }
             }
         }
 
@@ -695,6 +782,7 @@ private fun getCategoryIconAndColor(category: ServiceCategory): Pair<androidx.co
         ServiceCategory.TUTORING -> Icons.Default.School to Color(0xFF4CAF50)
         ServiceCategory.FOOD -> Icons.Default.Restaurant to Color(0xFFFF9800)
         ServiceCategory.TECH -> Icons.Default.Computer to Color(0xFF009688)
+        ServiceCategory.FASHION -> Icons.Default.Checkroom to Color(0xFF3F51B5)
         ServiceCategory.PHOTOGRAPHY -> Icons.Default.PhotoCamera to Color(0xFFE91E63)
         else -> Icons.Default.Place to Color(0xFF757575)
     }

@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
+import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.map.domain.usecase.GetMapPinsUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
@@ -31,13 +33,18 @@ data class MapUiState(
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val getMapPinsUseCase: GetMapPinsUseCase,
+    private val userPreferences: UserPreferences,
 ) : ViewModel() {
+
+    private var isPollingEnabled = true
 
     // Secondary constructor for testing to prevent infinite loop under TestScope
     constructor(
         getMapPinsUseCase: GetMapPinsUseCase,
+        userPreferences: UserPreferences,
         startPollingImmediately: Boolean
-    ) : this(getMapPinsUseCase) {
+    ) : this(getMapPinsUseCase, userPreferences) {
+        isPollingEnabled = startPollingImmediately
         if (!startPollingImmediately) {
             pollingJob?.cancel()
         }
@@ -49,11 +56,23 @@ class MapViewModel @Inject constructor(
     private var pollingJob: Job? = null
 
     init {
-        startPolling()
+        viewModelScope.launch {
+            val categoryName = runCatching {
+                userPreferences.lastSelectedCategory.first()
+            }.getOrNull()
+            val category = categoryName?.let {
+                runCatching { ServiceCategory.valueOf(it) }.getOrNull()
+            }
+            _uiState.update { it.copy(selectedCategory = category) }
+            startPolling()
+        }
     }
 
     fun selectCategory(category: ServiceCategory?) {
         _uiState.update { it.copy(selectedCategory = category) }
+        viewModelScope.launch {
+            userPreferences.saveLastSelectedCategory(category?.name)
+        }
         refreshPins()
     }
 
@@ -77,6 +96,7 @@ class MapViewModel @Inject constructor(
     }
 
     private fun startPolling() {
+        if (!isPollingEnabled) return
         pollingJob?.cancel()
         pollingJob = viewModelScope.launch {
             while (isActive) {

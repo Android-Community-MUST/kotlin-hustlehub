@@ -3,13 +3,16 @@ package must.kdroiders.hustlehub.ui.features.map.presentation.viewmodel
 import com.google.android.gms.maps.model.LatLng
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.map.domain.usecase.GetMapPinsUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
@@ -26,18 +29,23 @@ class MapViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var getMapPinsUseCase: GetMapPinsUseCase
+    private lateinit var userPreferences: UserPreferences
     private lateinit var viewModel: MapViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getMapPinsUseCase = mockk()
+        userPreferences = mockk(relaxed = true) {
+            every { lastSelectedCategory } returns flowOf(null)
+        }
+
         // Always stub the use case before initializing the ViewModel to avoid crashes in the init polling loop
         coEvery {
             getMapPinsUseCase(any(), any(), any(), any(), any())
         } returns Result.success(emptyList())
 
-        viewModel = MapViewModel(getMapPinsUseCase, startPollingImmediately = false)
+        viewModel = MapViewModel(getMapPinsUseCase, userPreferences, startPollingImmediately = false)
     }
 
     @After
@@ -56,11 +64,12 @@ class MapViewModelTest {
     }
 
     @Test
-    fun `selectCategory updates category filter and fetches pins`() = runTest {
+    fun `selectCategory updates category filter, persists selection, and fetches pins`() = runTest {
         viewModel.selectCategory(ServiceCategory.SALON)
 
         assertEquals(ServiceCategory.SALON, viewModel.uiState.value.selectedCategory)
         coVerify {
+            userPreferences.saveLastSelectedCategory(ServiceCategory.SALON.name)
             getMapPinsUseCase(
                 lat = null,
                 lng = null,
@@ -69,6 +78,22 @@ class MapViewModelTest {
                 availability = ServiceAvailability.AVAILABLE
             )
         }
+    }
+
+    @Test
+    fun `initializes selectedCategory from persisted filter`() = runTest {
+        val persistedCategoryFlow = flowOf(ServiceCategory.TECH.name)
+        val mockPrefs = mockk<UserPreferences>(relaxed = true) {
+            every { lastSelectedCategory } returns persistedCategoryFlow
+        }
+        val mockUseCase = mockk<GetMapPinsUseCase>()
+        coEvery {
+            mockUseCase(any(), any(), any(), any(), any())
+        } returns Result.success(emptyList())
+
+        val testViewModel = MapViewModel(mockUseCase, mockPrefs, startPollingImmediately = false)
+
+        assertEquals(ServiceCategory.TECH, testViewModel.uiState.value.selectedCategory)
     }
 
     @Test

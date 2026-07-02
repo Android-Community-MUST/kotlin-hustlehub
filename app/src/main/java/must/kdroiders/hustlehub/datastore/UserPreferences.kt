@@ -51,6 +51,7 @@ class UserPreferences
             val USER_AVATAR_URL = stringPreferencesKey("user_avatar_url")
             val USER_UUID = stringPreferencesKey("user_uuid")
             val RECENT_SEARCHES = stringSetPreferencesKey("recent_searches")
+            val LAST_SELECTED_CATEGORY = stringPreferencesKey("last_selected_category")
 
             /** Maximum number of recent searches to persist. Oldest entry is evicted when full. */
             const val MAX_RECENT_SEARCHES = 10
@@ -218,6 +219,36 @@ class UserPreferences
                 dataStore.edit { prefs -> prefs.remove(RECENT_SEARCHES) }
             } catch (e: IOException) {
                 Timber.e(e, "Error clearing recent searches")
+            }
+        }
+
+        /**
+         * Emits the last selected map filter category.
+         */
+        val lastSelectedCategory: Flow<String?> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading last selected category")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs -> prefs[LAST_SELECTED_CATEGORY] }
+
+        /**
+         * Saves the last selected category filter to Datastore.
+         */
+        suspend fun saveLastSelectedCategory(category: String?) {
+            try {
+                dataStore.edit { prefs ->
+                    if (category == null) {
+                        prefs.remove(LAST_SELECTED_CATEGORY)
+                    } else {
+                        prefs[LAST_SELECTED_CATEGORY] = category
+                    }
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error saving last selected category")
             }
         }
     }
