@@ -122,7 +122,12 @@ fun MainShellScreen(
                         onNavigateToNotifications = onNavigateToNotifications,
                     )
                 }
-                entry<BottomMap> { MapScreen() }
+                entry<BottomMap> {
+                    MapScreen(
+                        onNavigateToServiceDetail = onNavigateToServiceDetail,
+                        onNavigateToChatDetail = onNavigateToChatDetail,
+                    )
+                }
                 entry<BottomChat> {
                     ChatScreen(
                         onNavigateToChatDetail = onNavigateToChatDetail,

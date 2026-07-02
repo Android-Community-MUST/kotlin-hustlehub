@@ -1,9 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.map.presentation.view
 
 import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -35,24 +32,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Checkroom
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Computer
-import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
-import androidx.compose.material.icons.filled.LocalMall
 import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -77,7 +68,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -96,6 +86,9 @@ import must.kdroiders.hustlehub.ui.features.map.presentation.viewmodel.MapViewMo
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import timber.log.Timber
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
+import must.kdroiders.hustlehub.ui.features.map.presentation.view.components.*
 
 private object MapDefaults {
     val MERU_UNIVERSITY = LatLng(0.0515, 37.6456)
@@ -107,12 +100,15 @@ private object MapDefaults {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
+    onNavigateToServiceDetail: (serviceId: String) -> Unit = {},
+    onNavigateToChatDetail: (providerId: String) -> Unit = {},
     modifier: Modifier = Modifier,
-    viewModel: MapViewModel = hiltViewModel(),
+    mapViewModel: MapViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by mapViewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Map Settings State
     var mapType by remember { mutableStateOf(MapType.NORMAL) }
@@ -124,6 +120,7 @@ fun MapScreen(
 
     // Selected Pin for the bottom details overlay
     var selectedPin by remember { mutableStateOf<MapPin?>(null) }
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     // Camera State
     val cameraPositionState = rememberCameraPositionState {
@@ -161,7 +158,9 @@ fun MapScreen(
             permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         isLocationPermissionGranted = granted
         if (!granted) {
-            Toast.makeText(context, "Location permission is required to center on your position.", Toast.LENGTH_SHORT).show()
+            scope.launch {
+                snackbarHostState.showSnackbar("Location permission is required to center on your position.")
+            }
         }
     }
 
@@ -184,7 +183,7 @@ fun MapScreen(
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                     location?.let {
                         val userLatLng = LatLng(it.latitude, it.longitude)
-                        viewModel.updateUserLocation(userLatLng)
+                        mapViewModel.updateUserLocation(userLatLng)
                         if (!uiState.isInitialCameraAnimationDone) {
                             scope.launch {
                                 cameraPositionState.animate(
@@ -193,7 +192,7 @@ fun MapScreen(
                                         MapDefaults.DEFAULT_ZOOM
                                     )
                                 )
-                                viewModel.setInitialCameraAnimationDone()
+                                mapViewModel.setInitialCameraAnimationDone()
                             }
                         }
                     }
@@ -217,6 +216,7 @@ fun MapScreen(
             uiSettings = uiSettings,
             onMapClick = {
                 selectedPin = null
+                showBottomSheet = false
             }
         ) {
             Clustering(
@@ -234,6 +234,7 @@ fun MapScreen(
                 },
                 onClusterItemClick = { pin ->
                     selectedPin = pin
+                    showBottomSheet = true
                     true
                 },
                 clusterContent = { cluster ->
@@ -342,7 +343,7 @@ fun MapScreen(
                     FilterChip(
                         selected = isSelected,
                         onClick = {
-                            viewModel.selectCategory(if (category == ServiceCategory.ALL) null else category)
+                            mapViewModel.selectCategory(if (category == ServiceCategory.ALL) null else category)
                         },
                         label = { Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
                         leadingIcon = {
@@ -377,7 +378,7 @@ fun MapScreen(
                 FilterChip(
                     selected = isAvailableOnly,
                     onClick = {
-                        viewModel.selectAvailability(
+                        mapViewModel.selectAvailability(
                             if (isAvailableOnly) null else ServiceAvailability.AVAILABLE
                         )
                     },
@@ -538,7 +539,9 @@ fun MapScreen(
                                             )
                                         }
                                     } else {
-                                        Toast.makeText(context, "Fetching current location...", Toast.LENGTH_SHORT).show()
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Fetching current location...")
+                                        }
                                     }
                                 }
                             } catch (e: SecurityException) {
@@ -557,117 +560,33 @@ fun MapScreen(
             )
         }
 
-        // 6. Premium Selected Provider Details Card Overlay (Bottom Center)
-        AnimatedVisibility(
-            visible = selectedPin != null,
-            enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
-            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(16.dp)
-                .padding(bottom = 60.dp) // Avoid overlap with bottom navigation bar
-        ) {
-            selectedPin?.let { pin ->
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-                    ),
-                    modifier = Modifier
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Category Icon container
-                        val (icon, color) = getCategoryIconAndColor(pin.category)
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(color.copy(alpha = 0.15f), CircleShape)
-                                .border(1.5.dp, color, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = pin.category.name,
-                                tint = color,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-
-                        // Details
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            Text(
-                                text = pin.serviceTitle,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = pin.providerName,
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Star,
-                                    contentDescription = "Rating",
-                                    tint = Color(0xFFFFB300),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = pin.averageRating.toString(),
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                // Availability indicator dot
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .background(
-                                            if (pin.availability == ServiceAvailability.AVAILABLE) Color(0xFF4CAF50) else Color(0xFFFF9800),
-                                            CircleShape
-                                        )
-                                )
-                                Text(
-                                    text = pin.availability.name,
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+        // 6. Modal Bottom Sheet for tapped Provider Details
+        if (showBottomSheet && selectedPin != null) {
+            val pin = selectedPin!!
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showBottomSheet = false
+                    selectedPin = null
+                },
+                sheetState = sheetState,
+                dragHandle = { BottomSheetDefaults.DragHandle() },
+                containerColor = MaterialTheme.colorScheme.surface,
+            ) {
+                BottomSheetContent(
+                    pin = pin,
+                    userLocation = uiState.userLocation,
+                    onNavigateToServiceDetail = onNavigateToServiceDetail,
+                    onNavigateToChatDetail = onNavigateToChatDetail,
+                    onDismiss = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                showBottomSheet = false
+                                selectedPin = null
                             }
                         }
-
-                        // Close button
-                        IconButton(
-                            onClick = { selectedPin = null },
-                            modifier = Modifier.align(Alignment.Top)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Close",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
                     }
-                }
+                )
             }
         }
 
@@ -726,7 +645,8 @@ fun MapScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 16.sp
                     )
-                    Button(
+                    HustleButton(
+                        text = "Grant Access",
                         onClick = {
                             permissionLauncher.launch(
                                 arrayOf(
@@ -735,96 +655,17 @@ fun MapScreen(
                                 )
                             )
                         },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
+                        variant = HustleButtonVariant.Primary,
                         modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text(
-                            text = "Grant Access",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
-                        )
-                    }
+                    )
                 }
             }
         }
-    }
-}
 
-@Composable
-private fun ProviderMarkerContent(category: ServiceCategory) {
-    val (icon, color) = getCategoryIconAndColor(category)
-
-    Box(
-        modifier = Modifier
-            .size(36.dp)
-            .background(Color.White, CircleShape)
-            .border(2.dp, color, CircleShape)
-            .padding(4.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = category.name,
-            tint = color,
-            modifier = Modifier.size(20.dp)
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
 }
 
-private fun getCategoryIconAndColor(category: ServiceCategory): Pair<androidx.compose.ui.graphics.vector.ImageVector, Color> {
-    return when (category) {
-        ServiceCategory.SALON -> Icons.Default.ContentCut to Color(0xFF9C27B0)
-        ServiceCategory.LAUNDRY -> Icons.Default.LocalMall to Color(0xFF2196F3)
-        ServiceCategory.TUTORING -> Icons.Default.School to Color(0xFF4CAF50)
-        ServiceCategory.FOOD -> Icons.Default.Restaurant to Color(0xFFFF9800)
-        ServiceCategory.TECH -> Icons.Default.Computer to Color(0xFF009688)
-        ServiceCategory.FASHION -> Icons.Default.Checkroom to Color(0xFF3F51B5)
-        ServiceCategory.PHOTOGRAPHY -> Icons.Default.PhotoCamera to Color(0xFFE91E63)
-        else -> Icons.Default.Place to Color(0xFF757575)
-    }
-}
-
-@Composable
-private fun MapControlFloatingButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .size(44.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
-            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), CircleShape)
-            .padding(2.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        IconButton(onClick = onClick) {
-            Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-private fun checkLocationPermission(context: Context): Boolean {
-    val fineLocation = ContextCompat.checkSelfPermission(
-        context,
-        Manifest.permission.ACCESS_FINE_LOCATION
-    ) == PackageManager.PERMISSION_GRANTED
-
-    val coarseLocation = ContextCompat.checkSelfPermission(
-        context,
-        Manifest.permission.ACCESS_COARSE_LOCATION
-    ) == PackageManager.PERMISSION_GRANTED
-
-    return fineLocation || coarseLocation
-}
