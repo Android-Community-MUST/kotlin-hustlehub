@@ -13,6 +13,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -130,12 +131,15 @@ fun MapScreen(
     // Client to fetch user location for recentering
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
+    val isSystemInDark = isSystemInDarkTheme()
+
     // Map Properties & UI settings
-    val mapProperties = remember(mapType, isLocationPermissionGranted) {
+    val mapProperties = remember(mapType, isLocationPermissionGranted, isSystemInDark) {
+        val styleJson = if (isSystemInDark) MapTheme.DARK_JSON else MapTheme.LIGHT_JSON
         MapProperties(
             mapType = mapType,
             isMyLocationEnabled = isLocationPermissionGranted,
-            mapStyleOptions = MapStyleOptions(MapTheme.DARK_JSON),
+            mapStyleOptions = MapStyleOptions(styleJson),
             minZoomPreference = MapDefaults.MIN_ZOOM,
             maxZoomPreference = MapDefaults.MAX_ZOOM,
         )
@@ -449,7 +453,7 @@ fun MapScreen(
                 icon = Icons.Default.Layers,
                 contentDescription = "Toggle Map Type",
                 onClick = {
-                    mapType = if (mapType == MapType.NORMAL) MapType.SATELLITE else MapType.NORMAL
+                    mapType = if (mapType == MapType.NORMAL) MapType.HYBRID else MapType.NORMAL
                 }
             )
 
