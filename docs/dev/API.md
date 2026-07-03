@@ -669,7 +669,7 @@ Returns a sorted list of conversations (newest activity first).
 ---
 
 ### Delete Message for Me
-`DELETE /api/v1/conversations/messages/{messageId}/me`
+`DELETE /api/v1/messages/{messageId}`
 
 Removes a message from the current user's message history.
 
@@ -684,7 +684,7 @@ Removes a message from the current user's message history.
 ---
 
 ### Delete Message for Everyone
-`DELETE /api/v1/conversations/messages/{messageId}/everyone`
+`DELETE /api/v1/messages/{messageId}/everyone`
 
 Deletes a message for all participants in the conversation, replacing its content with a deletion placeholder.
 
