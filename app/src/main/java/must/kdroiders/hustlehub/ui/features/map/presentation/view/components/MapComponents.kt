@@ -5,10 +5,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.Computer
@@ -18,36 +17,135 @@ import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import kotlin.math.*
 
 @Composable
-fun ProviderMarkerContent(category: ServiceCategory) {
-    val (icon, color) = getCategoryIconAndColor(category)
+fun ProviderMarkerContent(pin: MapPin) {
+    val (icon, baseColor) = getCategoryIconAndColor(pin.category)
+    val neonColor = remember(pin.category) {
+        when (pin.category) {
+            ServiceCategory.SALON -> Color(0xFFB388FF)      // Neon light purple
+            ServiceCategory.LAUNDRY -> Color(0xFF80D8FF)    // Neon cyan/blue
+            ServiceCategory.TUTORING -> Color(0xFF69F0AE)   // Neon green
+            ServiceCategory.FOOD -> Color(0xFFFFD740)       // Neon yellow/orange
+            ServiceCategory.TECH -> Color(0xFF64FFDA)       // Neon teal
+            ServiceCategory.FASHION -> Color(0xFF82B1FF)    // Neon blue/indigo
+            ServiceCategory.PHOTOGRAPHY -> Color(0xFFFF4081)// Neon pink
+            else -> Color(0xFFE0E0E0)
+        }
+    }
 
-    Box(
-        modifier = Modifier
-            .size(36.dp)
-            .background(Color.White, CircleShape)
-            .border(2.dp, color, CircleShape)
-            .padding(4.dp),
-        contentAlignment = Alignment.Center
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(IntrinsicSize.Max)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = category.name,
-            tint = color,
-            modifier = Modifier.size(20.dp)
+        // Pill Layout
+        Row(
+            modifier = Modifier
+                .background(
+                    color = Color(0xFF131324).copy(alpha = 0.92f),
+                    shape = RoundedCornerShape(24.dp)
+                )
+                .border(
+                    width = 1.5.dp,
+                    color = neonColor.copy(alpha = 0.85f),
+                    shape = RoundedCornerShape(24.dp)
+                )
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Icon Badge
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .background(
+                        color = baseColor.copy(alpha = 0.2f),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = neonColor,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+
+            // Info Column
+            Column(
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = pin.providerName,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                    softWrap = false
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = pin.category.label,
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = "•",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 9.sp
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = Color(0xFFFFD740),
+                        modifier = Modifier.size(10.dp)
+                    )
+                    Text(
+                        text = String.format(java.util.Locale.US, "%.1f", pin.averageRating),
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // Pointer Triangle (glowing base border)
+        Box(
+            modifier = Modifier
+                .offset(y = (-4).dp)
+                .size(10.dp)
+                .graphicsLayer(rotationZ = 45f)
+                .background(Color(0xFF131324).copy(alpha = 0.92f))
+                .border(
+                    width = 1.5.dp,
+                    color = neonColor.copy(alpha = 0.85f),
+                    shape = RoundedCornerShape(topStart = 0.dp)
+                )
         )
     }
 }

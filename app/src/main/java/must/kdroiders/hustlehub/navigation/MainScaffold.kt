@@ -126,6 +126,7 @@ fun MainShellScreen(
                     MapScreen(
                         onNavigateToServiceDetail = onNavigateToServiceDetail,
                         onNavigateToChatDetail = onNavigateToChatDetail,
+                        onNavigateToNotifications = onNavigateToNotifications,
                     )
                 }
                 entry<BottomChat> {

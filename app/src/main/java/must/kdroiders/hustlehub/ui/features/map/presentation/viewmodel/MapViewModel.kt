@@ -18,6 +18,7 @@ import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.map.domain.usecase.GetMapPinsUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import javax.inject.Inject
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -29,6 +30,8 @@ data class MapUiState(
     val pins: List<MapPin> = emptyList(),
     val selectedCategory: ServiceCategory? = null,
     val availability: ServiceAvailability? = ServiceAvailability.AVAILABLE,
+    val searchQuery: String = "",
+    val notificationCount: Int = 0,
     val isLoading: Boolean = false,
     val error: String? = null,
     val userLocation: LatLng? = null,
@@ -39,6 +42,7 @@ data class MapUiState(
 class MapViewModel @Inject constructor(
     private val getMapPinsUseCase: GetMapPinsUseCase,
     private val userPreferences: UserPreferences,
+    private val notificationRepository: NotificationRepository,
 ) : ViewModel() {
 
     companion object {
@@ -52,8 +56,9 @@ class MapViewModel @Inject constructor(
     constructor(
         getMapPinsUseCase: GetMapPinsUseCase,
         userPreferences: UserPreferences,
+        notificationRepository: NotificationRepository,
         startPollingImmediately: Boolean
-    ) : this(getMapPinsUseCase, userPreferences) {
+    ) : this(getMapPinsUseCase, userPreferences, notificationRepository) {
         isPollingEnabled = startPollingImmediately
         if (!startPollingImmediately) {
             pollingJob?.cancel()
@@ -75,6 +80,18 @@ class MapViewModel @Inject constructor(
             }
             _uiState.update { it.copy(selectedCategory = category) }
             startPolling()
+            loadNotificationCount()
+        }
+    }
+
+    fun loadNotificationCount() {
+        viewModelScope.launch {
+            notificationRepository
+                .getNotifications(0, 50)
+                .onSuccess { list ->
+                    val count = list.count { !it.isRead }
+                    _uiState.update { it.copy(notificationCount = count) }
+                }
         }
     }
 
@@ -91,6 +108,11 @@ class MapViewModel @Inject constructor(
         refreshPins()
     }
 
+    fun updateSearchQuery(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+        refreshPins()
+    }
+
     fun updateUserLocation(latLng: LatLng) {
         _uiState.update { it.copy(userLocation = latLng) }
     }
@@ -102,6 +124,7 @@ class MapViewModel @Inject constructor(
     fun refreshPins() {
         viewModelScope.launch {
             fetchPins()
+            loadNotificationCount()
         }
     }
 
@@ -111,6 +134,7 @@ class MapViewModel @Inject constructor(
         pollingJob = viewModelScope.launch {
             while (isActive) {
                 fetchPins()
+                loadNotificationCount()
                 delay(POLL_INTERVAL_MS)
             }
         }
@@ -141,7 +165,16 @@ class MapViewModel @Inject constructor(
                 pin.copy(distanceMeters = dist)
             }.sortedWith(compareBy(nullsLast()) { it.distanceMeters })
 
-            _uiState.update { it.copy(pins = enriched, isLoading = false, error = null) }
+            val filtered = if (currentState.searchQuery.isNotEmpty()) {
+                enriched.filter {
+                    it.providerName.contains(currentState.searchQuery, ignoreCase = true) ||
+                        it.serviceTitle.contains(currentState.searchQuery, ignoreCase = true)
+                }
+            } else {
+                enriched
+            }
+
+            _uiState.update { it.copy(pins = filtered, isLoading = false, error = null) }
         }.onFailure { error ->
             _uiState.update { it.copy(isLoading = false, error = error.message ?: "Unknown error") }
         }

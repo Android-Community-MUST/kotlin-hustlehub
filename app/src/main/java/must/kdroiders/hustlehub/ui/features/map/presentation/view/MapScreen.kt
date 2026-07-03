@@ -36,8 +36,11 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,6 +48,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -92,7 +97,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.map.presentation.view.components.*
 
 private object MapDefaults {
-    val MERU_UNIVERSITY = LatLng(0.0515, 37.6456)
+    val MERU_UNIVERSITY = LatLng(0.1287003, 37.7098333)
     const val DEFAULT_ZOOM = 16f
     const val MIN_ZOOM = 12f
     const val MAX_ZOOM = 20f
@@ -103,6 +108,7 @@ private object MapDefaults {
 fun MapScreen(
     onNavigateToServiceDetail: (serviceId: String) -> Unit = {},
     onNavigateToChatDetail: (providerId: String) -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
     modifier: Modifier = Modifier,
     mapViewModel: MapViewModel = hiltViewModel(),
 ) {
@@ -258,64 +264,131 @@ fun MapScreen(
                     }
                 },
                 clusterItemContent = { pin ->
-                    ProviderMarkerContent(category = pin.category)
+                    ProviderMarkerContent(pin = pin)
                 }
             )
         }
 
-        // 2. Custom Floating Title Badge (Glassmorphic)
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(16.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
-                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.School,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
-                Column {
-                    Text(
-                        text = "Meru University",
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 14.sp,
-                    )
-                    Text(
-                        text = "HustleHub Campus Map",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp,
-                    )
-                }
-            }
-        }
-
-        // 3. Category & Availability Filter Section (Vertical layout for chips + count)
+        // 2. Top Floating HUD (Search + Chips + Stats)
         Column(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .fillMaxWidth()
-                .padding(top = 84.dp, start = 16.dp, end = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // A. Chips Row
+            // Row 1: Search Bar & Notification Bell
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Search TextField (Glassmorphic look)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+                            RoundedCornerShape(24.dp)
+                        )
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        
+                        // BasicTextField for search input
+                        androidx.compose.foundation.text.BasicTextField(
+                            value = uiState.searchQuery,
+                            onValueChange = { query ->
+                                mapViewModel.updateSearchQuery(query)
+                            },
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            decorationBox = { innerTextField ->
+                                Box(contentAlignment = Alignment.CenterStart) {
+                                    if (uiState.searchQuery.isEmpty()) {
+                                        Text(
+                                            text = "Search services on campus..",
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                            )
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
+                        )
+                        
+                        // Filter slider icon
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = "Filters",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                // Notification Bell
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(onClick = onNavigateToNotifications) {
+                        BadgedBox(
+                            badge = {
+                                if (uiState.notificationCount > 0) {
+                                    Badge(
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                        contentColor = MaterialTheme.colorScheme.onError
+                                    ) {
+                                        Text(
+                                            text = uiState.notificationCount.toString(),
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 9.sp
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notifications",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Row 2: Category Chips
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -403,7 +476,7 @@ fun MapScreen(
                 )
             }
 
-            // B. Visible Provider Count Badge
+            // Row 3: Visible Provider Count Badge
             AnimatedContent(
                 targetState = uiState.pins.size,
                 transitionSpec = {
@@ -423,7 +496,6 @@ fun MapScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        // Dot pulse indicator
                         Box(
                             modifier = Modifier
                                 .size(6.dp)
@@ -441,11 +513,11 @@ fun MapScreen(
             }
         }
 
-        // 4. Custom Zoom and Layers Panel (Glassmorphic, Top Right)
+        // 4. Custom Zoom and Layers Panel (Glassmorphic, Shifted down to prevent overlapping)
         Column(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(16.dp),
+                .padding(top = 180.dp, end = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             // Map Type Toggle

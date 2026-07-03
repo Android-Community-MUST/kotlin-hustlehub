@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.setMain
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.map.domain.usecase.GetMapPinsUseCase
+import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import org.junit.After
@@ -30,6 +31,7 @@ class MapViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var getMapPinsUseCase: GetMapPinsUseCase
     private lateinit var userPreferences: UserPreferences
+    private lateinit var notificationRepository: NotificationRepository
     private lateinit var viewModel: MapViewModel
 
     @Before
@@ -39,13 +41,16 @@ class MapViewModelTest {
         userPreferences = mockk(relaxed = true) {
             every { lastSelectedCategory } returns flowOf(null)
         }
+        notificationRepository = mockk(relaxed = true) {
+            coEvery { getNotifications(any(), any()) } returns Result.success(emptyList())
+        }
 
         // Always stub the use case before initializing the ViewModel to avoid crashes in the init polling loop
         coEvery {
             getMapPinsUseCase(any(), any(), any(), any(), any())
         } returns Result.success(emptyList())
 
-        viewModel = MapViewModel(getMapPinsUseCase, userPreferences, startPollingImmediately = false)
+        viewModel = MapViewModel(getMapPinsUseCase, userPreferences, notificationRepository, startPollingImmediately = false)
     }
 
     @After
@@ -91,7 +96,7 @@ class MapViewModelTest {
             mockUseCase(any(), any(), any(), any(), any())
         } returns Result.success(emptyList())
 
-        val testViewModel = MapViewModel(mockUseCase, mockPrefs, startPollingImmediately = false)
+        val testViewModel = MapViewModel(mockUseCase, mockPrefs, notificationRepository, startPollingImmediately = false)
 
         assertEquals(ServiceCategory.TECH, testViewModel.uiState.value.selectedCategory)
     }
