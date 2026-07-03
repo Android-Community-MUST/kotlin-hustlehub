@@ -41,4 +41,8 @@ interface ChatRepository {
     fun setActiveConversation(conversationId: String?)
 
     suspend fun deleteConversation(conversationId: String): Result<Unit>
+
+    suspend fun deleteMessageForMe(messageId: String): Result<Unit>
+
+    suspend fun deleteMessageForEveryone(messageId: String): Result<Unit>
 }

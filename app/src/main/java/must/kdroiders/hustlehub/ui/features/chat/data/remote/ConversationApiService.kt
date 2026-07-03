@@ -41,4 +41,14 @@ interface ConversationApiService {
     suspend fun deleteConversation(
         @Path("conversationId") conversationId: String,
     ): ApiResponse<Unit>
+
+    @DELETE("messages/{messageId}")
+    suspend fun deleteMessageForMe(
+        @Path("messageId") messageId: String,
+    ): ApiResponse<Unit>
+
+    @DELETE("messages/{messageId}/everyone")
+    suspend fun deleteMessageForEveryone(
+        @Path("messageId") messageId: String,
+    ): ApiResponse<Unit>
 }

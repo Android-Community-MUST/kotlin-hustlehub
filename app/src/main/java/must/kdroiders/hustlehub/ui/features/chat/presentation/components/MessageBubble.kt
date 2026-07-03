@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -39,6 +40,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -74,6 +77,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.automirrored.filled.Reply
 import kotlin.math.roundToInt
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.isDeleted
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -88,12 +92,16 @@ fun MessageBubble(
     onImageClick: (url: String) -> Unit = {},
     onImageLongClick: (url: String) -> Unit = {},
     onReply: (Message) -> Unit = {},
+    onDeleteForMe: (Message) -> Unit = {},
+    onDeleteForEveryone: (Message) -> Unit = {},
     modifier: Modifier = Modifier,
     currentUserLocation: android.location.Location? = null,
+    isOtherUserOnline: Boolean = false,
 ) {
     val haptic = LocalHapticFeedback.current
     var dragAmountX by remember { mutableStateOf(0f) }
     var replyThreshold by remember { mutableStateOf(0f) }
+    var showMenu by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -167,12 +175,18 @@ fun MessageBubble(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .swipeToReply(
-                    haptic = haptic,
-                    onReply = { onReply(message) },
-                    onDragStateChanged = { dragX, thresh ->
-                        dragAmountX = dragX
-                        replyThreshold = thresh
+                .then(
+                    if (message.isDeleted) {
+                        Modifier
+                    } else {
+                        Modifier.swipeToReply(
+                            haptic = haptic,
+                            onReply = { onReply(message) },
+                            onDragStateChanged = { dragX, thresh ->
+                                dragAmountX = dragX
+                                replyThreshold = thresh
+                            }
+                        )
                     }
                 ),
             horizontalAlignment = alignment,
@@ -181,13 +195,52 @@ fun MessageBubble(
                 modifier = Modifier
                     .clip(bubbleShape)
                     .background(bubbleBackground)
+                    .combinedClickable(
+                        enabled = !message.isDeleted,
+                        onClick = { /* Child views handle their own click events */ },
+                        onLongClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            showMenu = true
+                        }
+                    )
                     .padding(12.dp),
             ) {
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Delete for me") },
+                        onClick = {
+                            showMenu = false
+                            onDeleteForMe(message)
+                        }
+                    )
+                    if (isCurrentUser) {
+                        DropdownMenuItem(
+                            text = { Text("Delete for everyone") },
+                            onClick = {
+                                showMenu = false
+                                onDeleteForEveryone(message)
+                            }
+                        )
+                    }
+                    if (message.type == MessageType.IMAGE && !message.mediaUrl.isNullOrBlank()) {
+                        DropdownMenuItem(
+                            text = { Text("Save Image") },
+                            onClick = {
+                                showMenu = false
+                                onImageLongClick(message.mediaUrl)
+                            }
+                        )
+                    }
+                }
+
                 Column {
                     // Render Reply Quote Box if message has reply details in metadata
                     val replyData = remember(message.metadata) {
                         try {
-                            if (message.metadata != null) {
+                            if (message.metadata != null && !message.isDeleted) {
                                 val gson = Gson()
                                 val obj = gson.fromJson(message.metadata, com.google.gson.JsonObject::class.java)
                                 if (obj.has("replyToId")) {
@@ -250,91 +303,104 @@ fun MessageBubble(
                         }
                     }
 
-                    when (message.type) {
-                        MessageType.TEXT -> {
+                    if (message.isDeleted) {
                         Text(
-                            text = message.content,
-                            color = textColor,
-                            style = MaterialTheme.typography.bodyLarge,
+                            text = if (isCurrentUser) "You deleted this message" else "This message was deleted",
+                            color = textColor.copy(alpha = 0.65f),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                            )
                         )
-                    }
+                    } else {
+                        when (message.type) {
+                            MessageType.TEXT -> {
+                                Text(
+                                    text = message.content,
+                                    color = textColor,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            }
 
-                    MessageType.IMAGE -> {
-                        val imageUrl = message.mediaUrl ?: ""
-                        val isUploading = message.id.startsWith("temp_") || imageUrl.isBlank()
+                            MessageType.IMAGE -> {
+                                val imageUrl = message.mediaUrl ?: ""
+                                val isUploading = message.id.startsWith("temp_") || imageUrl.isBlank()
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.72f)
-                                .heightIn(min = 120.dp, max = 320.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .combinedClickable(
-                                    onClick = { if (!isUploading) onImageClick(imageUrl) },
-                                    onLongClick = { if (!isUploading) onImageLongClick(imageUrl) },
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (isUploading) {
-                                // Uploading placeholder
                                 Box(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(180.dp)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                                        .fillMaxWidth(0.72f)
+                                        .heightIn(min = 120.dp, max = 320.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .run {
+                                            if (isUploading) {
+                                                this
+                                            } else {
+                                                clickable { onImageClick(imageUrl) }
+                                            }
+                                        },
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    CircularWavyProgressIndicator(
-                                        modifier = Modifier.size(36.dp),
-                                        color = MaterialTheme.colorScheme.primary,
-                                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    if (isUploading) {
+                                        // Uploading placeholder
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(180.dp)
+                                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            CircularWavyProgressIndicator(
+                                                modifier = Modifier.size(36.dp),
+                                                color = MaterialTheme.colorScheme.primary,
+                                                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                            )
+                                        }
+                                    } else {
+                                        AsyncImage(
+                                            model = imageUrl,
+                                            contentDescription = "Shared Image",
+                                            modifier = Modifier.fillMaxWidth(),
+                                            contentScale = ContentScale.FillWidth,
+                                        )
+                                    }
+                                }
+
+                                if (!message.content.isNullOrBlank()) {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = message.content,
+                                        color = textColor,
+                                        style = MaterialTheme.typography.bodyLarge,
                                     )
                                 }
-                            } else {
-                                AsyncImage(
-                                    model = imageUrl,
-                                    contentDescription = "Shared Image",
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentScale = ContentScale.FillWidth,
+                            }
+
+                            MessageType.VOICE -> {
+                                VoiceMessageContent(
+                                    message = message,
+                                    textColor = textColor,
+                                    playerState = playerState,
+                                    onPlayClick = onVoicePlayClick,
+                                    onSpeedToggle = onVoiceSpeedToggle,
+                                )
+                            }
+
+                            MessageType.LOCATION -> {
+                                LocationMessageContent(
+                                    message = message,
+                                    textColor = textColor,
+                                    currentUserLocation = currentUserLocation,
+                                    onClick = onLocationClick,
+                                )
+                            }
+
+                            MessageType.SERVICE_CARD -> {
+                                ServiceCardMessageContent(
+                                    message = message,
+                                    onClick = onServiceCardClick,
                                 )
                             }
                         }
-
-                        if (!message.content.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = message.content,
-                                color = textColor,
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                        }
                     }
-
-                    MessageType.VOICE -> {
-                        VoiceMessageContent(
-                            message = message,
-                            textColor = textColor,
-                            playerState = playerState,
-                            onPlayClick = onVoicePlayClick,
-                            onSpeedToggle = onVoiceSpeedToggle,
-                        )
-                    }
-
-                    MessageType.LOCATION -> {
-                        LocationMessageContent(
-                            message = message,
-                            textColor = textColor,
-                            currentUserLocation = currentUserLocation,
-                            onClick = onLocationClick,
-                        )
-                    }
-
-                    MessageType.SERVICE_CARD -> {
-                        ServiceCardMessageContent(
-                            message = message,
-                            onClick = onServiceCardClick,
-                        )
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(4.dp))
 
@@ -355,7 +421,7 @@ fun MessageBubble(
                         Spacer(modifier = Modifier.width(4.dp))
                         val isPending = message.id.startsWith("temp_")
                         val isRead = message.readAt != null
-                        val isDelivered = message.deliveredAt != null
+                        val isDelivered = message.deliveredAt != null && (isOtherUserOnline || isRead)
                         val receiptIcon = when {
                             isPending -> Icons.Default.Schedule
                             isRead || isDelivered -> Icons.Default.DoneAll

@@ -126,7 +126,11 @@ class ChatRepositoryImpl
                         if (localIdsToDelete.isNotEmpty()) {
                             localIdsToDelete.forEach { messageDao.deleteById(it) }
                         }
-                        val entities = response.data.content.map { it.toEntity() }
+                        val entities = response.data.content.mapNotNull { msgDto ->
+                            val msgDomain = msgDto.toDomainModel()
+                            val processed = applyDeletionStatusToMessage(msgDomain)
+                            processed?.toEntity()
+                        }
                         messageDao.upsertAll(entities)
                         Result.success(Unit)
                     } else {
@@ -150,45 +154,45 @@ class ChatRepositoryImpl
             metadata: String?,
         ): Result<Unit> =
             withContext(Dispatchers.IO) {
-                try {
-                    // Optimistic UI Update: Create a temporary message
-                    val tempId = "temp_${UUID.randomUUID()}"
-                    val currentUserId = firebaseAuth?.currentUser?.uid ?: ""
-                    val currentTimestamp = java.time.Instant
-                        .now()
-                        .toString()
+                // Optimistic UI Update: Create a temporary message
+                val tempId = "temp_${UUID.randomUUID()}"
+                val currentUserId = firebaseAuth?.currentUser?.uid ?: ""
+                val currentTimestamp = java.time.Instant
+                    .now()
+                    .toString()
 
-                    // Embed localId into metadata
-                    val gson = Gson()
-                    val metadataJson = if (metadata != null) {
-                        try {
-                            gson.fromJson(metadata, JsonObject::class.java).apply {
-                                addProperty("localId", tempId)
-                            }
-                        } catch (e: Exception) {
-                            JsonObject().apply { addProperty("localId", tempId) }
+                // Embed localId into metadata
+                val gson = Gson()
+                val metadataJson = if (metadata != null) {
+                    try {
+                        gson.fromJson(metadata, JsonObject::class.java).apply {
+                            addProperty("localId", tempId)
                         }
-                    } else {
+                    } catch (e: Exception) {
                         JsonObject().apply { addProperty("localId", tempId) }
                     }
-                    val newMetadataString = gson.toJson(metadataJson)
+                } else {
+                    JsonObject().apply { addProperty("localId", tempId) }
+                }
+                val newMetadataString = gson.toJson(metadataJson)
 
-                    val tempMessage = Message(
-                        id = tempId,
-                        conversationId = conversationId,
-                        senderId = currentUserId,
-                        type = type,
-                        content = content,
-                        mediaUrl = mediaUrl,
-                        thumbnailUrl = null,
-                        metadata = newMetadataString,
-                        timestamp = currentTimestamp,
-                        deliveredAt = null,
-                        readAt = null,
-                        isSynced = false,
-                        isFailed = false,
-                    )
+                val tempMessage = Message(
+                    id = tempId,
+                    conversationId = conversationId,
+                    senderId = currentUserId,
+                    type = type,
+                    content = content,
+                    mediaUrl = mediaUrl,
+                    thumbnailUrl = null,
+                    metadata = newMetadataString,
+                    timestamp = currentTimestamp,
+                    deliveredAt = null,
+                    readAt = null,
+                    isSynced = false,
+                    isFailed = false,
+                )
 
+                try {
                     messageDao.upsert(tempMessage.toEntity())
 
                     val request = SendMessageRequest(
@@ -198,10 +202,27 @@ class ChatRepositoryImpl
                         mediaUrl = mediaUrl,
                         metadata = newMetadataString,
                     )
+                    chatWebSocketService.connect()
                     chatWebSocketService.sendMessage(request)
                     Result.success(Unit)
                 } catch (e: Exception) {
-                    Timber.e(e, "Failed to send message over WebSocket")
+                    Timber.e(e, "Failed to send message over WebSocket, marking as failed")
+                    val failedMessage = Message(
+                        id = tempMessage.id,
+                        conversationId = tempMessage.conversationId,
+                        senderId = tempMessage.senderId,
+                        type = tempMessage.type,
+                        content = tempMessage.content,
+                        mediaUrl = tempMessage.mediaUrl,
+                        thumbnailUrl = tempMessage.thumbnailUrl,
+                        metadata = tempMessage.metadata,
+                        timestamp = tempMessage.timestamp,
+                        deliveredAt = tempMessage.deliveredAt,
+                        readAt = tempMessage.readAt,
+                        isSynced = tempMessage.isSynced,
+                        isFailed = true,
+                    )
+                    messageDao.upsert(failedMessage.toEntity())
                     Result.failure(e)
                 }
             }
@@ -240,7 +261,7 @@ class ChatRepositoryImpl
                         .subscribeToConversation(conversationId)
                         .map { it.toDomainModel() }
                         .collect { message ->
-                            withContext(Dispatchers.IO) {
+                            val processed = withContext(Dispatchers.IO) {
                                 val gson = Gson()
 
                                 val cachedConv = conversationDao.getById(conversationId)
@@ -262,47 +283,75 @@ class ChatRepositoryImpl
                                     }
                                 }
 
-                                messageDao.upsert(message.toEntity())
-                                if (cachedConv != null) {
-                                    val isActive = conversationId == activeConversationId
+                                val proc = applyDeletionStatusToMessage(message)
+                                if (proc != null) {
+                                    messageDao.upsert(proc.toEntity())
+                                    if (cachedConv != null) {
+                                        val isActive = conversationId == activeConversationId
 
-                                    conversationDao.upsert(
-                                        cachedConv.copy(
-                                            lastMessage = message.content,
-                                            lastMessageType = message.type.name,
-                                            lastMessageAt = message.timestamp,
-                                            // Only increment badge for messages from others if the chat is NOT active
-                                            unreadCount = if (isFromOtherUser && !isActive) {
-                                                cachedConv.unreadCount + 1
-                                            } else {
-                                                0
-                                            },
-                                        ),
-                                    )
-
-                                    // Post a local notification for incoming messages if the chat is not active.
-                                    if (isFromOtherUser && !isActive) {
-                                        val senderName = cachedConv.otherUserName
-                                        val preview = when (message.type.name) {
-                                            "VOICE" -> "Sent a voice note"
-                                            "IMAGE" -> "Sent an image"
-                                            "LOCATION" -> "Shared a location"
-                                            else -> message.content.take(80)
-                                        }
-                                        NotificationHelper.postMessageNotification(
-                                            context = context,
-                                            conversationId = conversationId,
-                                            senderName = senderName,
-                                            messagePreview = preview,
+                                        conversationDao.upsert(
+                                            cachedConv.copy(
+                                                lastMessage = proc.content,
+                                                lastMessageType = proc.type.name,
+                                                lastMessageAt = proc.timestamp,
+                                                // Only increment badge for messages from others if the chat is NOT active
+                                                unreadCount = if (isFromOtherUser && !isActive) {
+                                                    cachedConv.unreadCount + 1
+                                                } else {
+                                                    0
+                                                },
+                                            ),
                                         )
-                                    } else if (isFromOtherUser && isActive) {
-                                        // If the conversation is currently active, mark the new message as read on the backend
-                                        // since the user is actively viewing it.
-                                        markAsRead(conversationId)
+
+                                        // Post a local notification for incoming messages if the chat is not active.
+                                        if (isFromOtherUser && !isActive) {
+                                            val senderName = cachedConv.otherUserName
+                                            val preview = when (proc.type.name) {
+                                                "VOICE" -> "Sent a voice note"
+                                                "IMAGE" -> "Sent an image"
+                                                "LOCATION" -> "Shared a location"
+                                                else -> proc.content.take(80)
+                                            }
+                                            NotificationHelper.postMessageNotification(
+                                                context = context,
+                                                conversationId = conversationId,
+                                                senderName = senderName,
+                                                messagePreview = preview,
+                                            )
+                                        } else if (isFromOtherUser && isActive) {
+                                            // If the conversation is currently active, mark the new message as read on the backend
+                                            // since the user is actively viewing it.
+                                            markAsRead(conversationId)
+                                        }
+                                    }
+                                } else {
+                                    messageDao.deleteById(message.id)
+                                    if (cachedConv != null && cachedConv.lastMessageAt == message.timestamp) {
+                                        val latest = messageDao.getLatestMessage(conversationId)
+                                        if (latest != null) {
+                                            conversationDao.upsert(
+                                                cachedConv.copy(
+                                                    lastMessage = latest.content ?: "",
+                                                    lastMessageType = latest.type,
+                                                    lastMessageAt = latest.timestamp
+                                                )
+                                            )
+                                        } else {
+                                            conversationDao.upsert(
+                                                cachedConv.copy(
+                                                    lastMessage = "",
+                                                    lastMessageType = "TEXT",
+                                                    lastMessageAt = ""
+                                                )
+                                            )
+                                        }
                                     }
                                 }
+                                proc
                             }
-                            emit(message)
+                            if (processed != null) {
+                                emit(processed)
+                            }
                         }
                 } catch (e: Exception) {
                     chatWebSocketService.disconnect()
@@ -338,6 +387,142 @@ class ChatRepositoryImpl
                     Result.failure(e)
                 }
             }
+        }
+
+        override suspend fun deleteMessageForMe(messageId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                try {
+                    markMessageDeletedForMe(messageId)
+
+                    // Delete from local DB
+                    val cached = messageDao.getById(messageId)
+                    if (cached != null) {
+                        messageDao.deleteById(messageId)
+
+                        // Update conversation preview if needed
+                        val conv = conversationDao.getById(cached.conversationId)
+                        if (conv != null && conv.lastMessageAt == cached.timestamp) {
+                            val latest = messageDao.getLatestMessage(cached.conversationId)
+                            if (latest != null) {
+                                conversationDao.upsert(
+                                    conv.copy(
+                                        lastMessage = latest.content ?: "",
+                                        lastMessageType = latest.type,
+                                        lastMessageAt = latest.timestamp
+                                    )
+                                )
+                            } else {
+                                conversationDao.upsert(
+                                    conv.copy(
+                                        lastMessage = "",
+                                        lastMessageType = "TEXT",
+                                        lastMessageAt = ""
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    // Call backend REST endpoint (handle lack of endpoint gracefully)
+                    try {
+                        conversationApiService.deleteMessageForMe(messageId)
+                    } catch (e: Exception) {
+                        Timber.w(e, "Remote deleteMessageForMe failed, treating as local-only success")
+                    }
+                    Result.success(Unit)
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            }
+
+        override suspend fun deleteMessageForEveryone(messageId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                try {
+                    markMessageDeletedForEveryone(messageId)
+
+                    // Call backend REST endpoint (handle lack of endpoint gracefully)
+                    try {
+                        conversationApiService.deleteMessageForEveryone(messageId)
+                    } catch (e: Exception) {
+                        Timber.w(e, "Remote deleteMessageForEveryone failed, treating as local-only success")
+                    }
+
+                    // Update locally
+                    val cached = messageDao.getById(messageId)
+                    if (cached != null) {
+                        val gson = Gson()
+                        val metaObj = try {
+                            if (!cached.metadata.isNullOrBlank()) {
+                                gson.fromJson(cached.metadata, JsonObject::class.java)
+                            } else {
+                                JsonObject()
+                            }
+                        } catch (e: Exception) {
+                            JsonObject()
+                        }
+                        metaObj.addProperty("isDeleted", true)
+                        val updated = cached.copy(
+                            content = "This message was deleted",
+                            mediaUrl = null,
+                            thumbnailUrl = null,
+                            metadata = gson.toJson(metaObj)
+                        )
+                        messageDao.upsert(updated)
+
+                        // Update conversation preview if needed
+                        val conv = conversationDao.getById(cached.conversationId)
+                        if (conv != null && conv.lastMessageAt == cached.timestamp) {
+                            conversationDao.upsert(
+                                conv.copy(
+                                    lastMessage = "This message was deleted",
+                                    lastMessageType = "TEXT"
+                                )
+                            )
+                        }
+                    }
+                    Result.success(Unit)
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            }
+
+        private val sharedPrefs by lazy {
+            context.getSharedPreferences("hustlehub_chat_deletions", Context.MODE_PRIVATE)
+        }
+
+        private fun markMessageDeletedForMe(messageId: String) {
+            sharedPrefs.edit().putString(messageId, "for_me").apply()
+        }
+
+        private fun markMessageDeletedForEveryone(messageId: String) {
+            sharedPrefs.edit().putString(messageId, "for_everyone").apply()
+        }
+
+        private fun getDeletionStatus(messageId: String): String? {
+            return sharedPrefs.getString(messageId, null)
+        }
+
+        private fun applyDeletionStatusToMessage(message: Message): Message? {
+            val status = getDeletionStatus(message.id) ?: return message
+            if (status == "for_me") return null
+
+            val gson = Gson()
+            val metaObj = try {
+                if (!message.metadata.isNullOrBlank()) {
+                    gson.fromJson(message.metadata, JsonObject::class.java)
+                } else {
+                    JsonObject()
+                }
+            } catch (e: Exception) {
+                JsonObject()
+            }
+            metaObj.addProperty("isDeleted", true)
+            return message.copy(
+                content = "This message was deleted",
+                mediaUrl = null,
+                thumbnailUrl = null,
+                metadata = gson.toJson(metaObj)
+            )
         }
     }
 

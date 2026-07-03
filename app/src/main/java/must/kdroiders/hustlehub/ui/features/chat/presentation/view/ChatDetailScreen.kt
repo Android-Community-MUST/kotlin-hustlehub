@@ -513,15 +513,13 @@ fun ChatDetailScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background,
-        modifier = modifier
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .imePadding(),
+        modifier = modifier,
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .imePadding(),
         ) {
             // Messages list (reversed so it starts at the bottom)
             val reversedMessages = state.messages.reversed()
@@ -584,6 +582,9 @@ fun ChatDetailScreen(
                             onImageClick = { url -> selectedImageUrl = url },
                             onImageLongClick = { url -> imageToSave = url },
                             onReply = viewModel::startReplying,
+                            onDeleteForMe = { msg -> viewModel.deleteMessageForMe(msg.id) },
+                            onDeleteForEveryone = { msg -> viewModel.deleteMessageForEveryone(msg.id) },
+                            isOtherUserOnline = state.isOtherUserOnline,
                         )
                     }
                 }
