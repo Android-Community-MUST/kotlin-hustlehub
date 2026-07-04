@@ -209,7 +209,7 @@ class UserRepositoryImpl
                 if (response.success && response.data != null) {
                     response.data.map { it.toDomain() }
                 } else {
-                    emptyList()
+                    throw Exception(response.message)
                 }
             }.onFailure { e ->
                 Timber.e(e, "UserRepositoryImpl: failed to fetch nearby providers")

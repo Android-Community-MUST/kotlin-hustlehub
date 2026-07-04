@@ -48,7 +48,7 @@ class MapViewModel
     ) : ViewModel() {
         companion object {
             /** How often the map polls the backend for provider availability updates. */
-            const val POLL_INTERVAL_MS = 10_000L
+            const val POLL_INTERVAL_MS = 120_000L
         }
 
         private var isPollingEnabled = true
@@ -65,6 +65,8 @@ class MapViewModel
                 pollingJob?.cancel()
             }
         }
+
+        private var cachedPins: List<MapPin> = emptyList()
 
         private val _uiState = MutableStateFlow(MapUiState())
         val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
@@ -111,7 +113,20 @@ class MapViewModel
 
         fun updateSearchQuery(query: String) {
             _uiState.update { it.copy(searchQuery = query) }
-            refreshPins()
+            applySearchFilter()
+        }
+
+        private fun applySearchFilter() {
+            val query = _uiState.value.searchQuery
+            val filtered = if (query.isNotEmpty()) {
+                cachedPins.filter {
+                    it.providerName.contains(query, ignoreCase = true) ||
+                        it.serviceTitle.contains(query, ignoreCase = true)
+                }
+            } else {
+                cachedPins
+            }
+            _uiState.update { it.copy(pins = filtered) }
         }
 
         fun updateUserLocation(latLng: LatLng) {
@@ -167,16 +182,9 @@ class MapViewModel
                         pin.copy(distanceMeters = dist)
                     }.sortedWith(compareBy(nullsLast()) { it.distanceMeters })
 
-                val filtered = if (currentState.searchQuery.isNotEmpty()) {
-                    enriched.filter {
-                        it.providerName.contains(currentState.searchQuery, ignoreCase = true) ||
-                            it.serviceTitle.contains(currentState.searchQuery, ignoreCase = true)
-                    }
-                } else {
-                    enriched
-                }
-
-                _uiState.update { it.copy(pins = filtered, isLoading = false, error = null) }
+                cachedPins = enriched
+                applySearchFilter()
+                _uiState.update { it.copy(isLoading = false, error = null) }
             }.onFailure { error ->
                 _uiState.update { it.copy(isLoading = false, error = error.message ?: "Unknown error") }
             }

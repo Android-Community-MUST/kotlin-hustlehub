@@ -28,6 +28,8 @@ import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.theme.HustleSuccess
+import must.kdroiders.hustlehub.ui.theme.HustleWarning
 
 @Composable
 fun BottomSheetContent(
@@ -110,14 +112,14 @@ fun BottomSheetContent(
                         modifier = Modifier
                             .size(8.dp)
                             .background(
-                                if (isAvailable) Color(0xFF4CAF50) else Color(0xFFFF9800),
+                                if (isAvailable) HustleSuccess else HustleWarning,
                                 CircleShape,
                             ),
                     )
                     Text(
                         text = if (isAvailable) "Available" else "Busy/Away",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = if (isAvailable) Color(0xFF4CAF50) else Color(0xFFFF9800),
+                            color = if (isAvailable) HustleSuccess else HustleWarning,
                             fontWeight = FontWeight.SemiBold,
                         ),
                     )
@@ -150,7 +152,7 @@ fun BottomSheetContent(
                     modifier = Modifier.size(18.dp),
                 )
                 Text(
-                    text = "${pin.averageRating} · 23 reviews",
+                    text = pin.averageRating.toString(),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Medium,
@@ -158,9 +160,9 @@ fun BottomSheetContent(
                 )
             }
 
-            // Category & Price
+            // Category
             Text(
-                text = "${pin.category.label} · KES 300-800",
+                text = pin.category.label,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium,
