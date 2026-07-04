@@ -307,4 +307,3 @@ object MapTheme {
   }
 ]"""
 }
-

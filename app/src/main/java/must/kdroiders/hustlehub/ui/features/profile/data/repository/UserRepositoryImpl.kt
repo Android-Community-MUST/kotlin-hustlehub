@@ -9,9 +9,9 @@ import must.kdroiders.hustlehub.ui.features.auth.data.remote.RegisterRequest
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.FcmTokenRequest
+import must.kdroiders.hustlehub.ui.features.profile.data.remote.LocationUpdateRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UpdateProfileRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
-import must.kdroiders.hustlehub.ui.features.profile.data.remote.LocationUpdateRequest
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
@@ -186,7 +186,10 @@ class UserRepositoryImpl
                 Timber.e(e, "UserRepositoryImpl: failed to update FCM token")
             }
 
-        override suspend fun updateUserLocation(lat: Double, lng: Double): Result<Unit> =
+        override suspend fun updateUserLocation(
+            lat: Double,
+            lng: Double,
+        ): Result<Unit> =
             runCatching {
                 val response = userApiService.updateLocation(LocationUpdateRequest(lat, lng))
                 if (!response.isSuccessful) {
@@ -196,7 +199,11 @@ class UserRepositoryImpl
                 Timber.e(e, "UserRepositoryImpl: failed to update user location")
             }
 
-        override suspend fun getNearbyProviders(lat: Double, lng: Double, radiusMeters: Double): Result<List<User>> =
+        override suspend fun getNearbyProviders(
+            lat: Double,
+            lng: Double,
+            radiusMeters: Double,
+        ): Result<List<User>> =
             runCatching {
                 val response = userApiService.getNearbyProviders(lat, lng, radiusMeters)
                 if (response.success && response.data != null) {

@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
@@ -53,13 +52,13 @@ fun BottomSheetContent(
         modifier = modifier
             .fillMaxWidth()
             .padding(start = 24.dp, end = 24.dp, bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         // 1. Header Row (Avatar + Name & Status Info)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             // Profile photo / default avatar
             if (pin.providerPhotoUrl.isNullOrEmpty()) {
@@ -68,13 +67,13 @@ fun BottomSheetContent(
                         .size(60.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = "Default Avatar",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(32.dp),
                     )
                 }
             } else {
@@ -85,25 +84,25 @@ fun BottomSheetContent(
                         .size(60.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
                 )
             }
 
             // Name & Status
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
                         text = pin.providerName,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                            color = MaterialTheme.colorScheme.onSurface,
+                        ),
                     )
                     // Availability Dot & Text
                     val isAvailable = pin.availability == ServiceAvailability.AVAILABLE
@@ -112,15 +111,15 @@ fun BottomSheetContent(
                             .size(8.dp)
                             .background(
                                 if (isAvailable) Color(0xFF4CAF50) else Color(0xFFFF9800),
-                                CircleShape
-                            )
+                                CircleShape,
+                            ),
                     )
                     Text(
                         text = if (isAvailable) "Available" else "Busy/Away",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = if (isAvailable) Color(0xFF4CAF50) else Color(0xFFFF9800),
-                            fontWeight = FontWeight.SemiBold
-                        )
+                            fontWeight = FontWeight.SemiBold,
+                        ),
                     )
                 }
 
@@ -128,8 +127,8 @@ fun BottomSheetContent(
                     text = pin.serviceTitle,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
                 )
             }
         }
@@ -137,25 +136,25 @@ fun BottomSheetContent(
         // 2. Metadata Info Grid (Rating + Category & Price + Distance)
         Column(
             verticalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             // Rating
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = "Rating",
                     tint = Color(0xFFFFB300),
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
                 Text(
                     text = "${pin.averageRating} · 23 reviews",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Medium
-                    )
+                        fontWeight = FontWeight.Medium,
+                    ),
                 )
             }
 
@@ -164,28 +163,28 @@ fun BottomSheetContent(
                 text = "${pin.category.label} · KES 300-800",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium
-                )
+                    fontWeight = FontWeight.Medium,
+                ),
             )
 
             // Distance
             if (distanceText != null) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Place,
                         contentDescription = "Location info",
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(18.dp),
                     )
                     Text(
                         text = distanceText,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                            fontWeight = FontWeight.SemiBold,
+                        ),
                     )
                 }
             }
@@ -194,7 +193,7 @@ fun BottomSheetContent(
         // 3. Quick Action Buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             HustleButton(
                 text = "View Profile",
@@ -203,7 +202,7 @@ fun BottomSheetContent(
                     onNavigateToServiceDetail(pin.serviceId)
                 },
                 variant = HustleButtonVariant.Outlined,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
 
             HustleButton(
@@ -213,7 +212,7 @@ fun BottomSheetContent(
                     onNavigateToChatDetail(pin.providerId)
                 },
                 variant = HustleButtonVariant.Primary,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
         }
 
@@ -222,7 +221,7 @@ fun BottomSheetContent(
             onClick = {
                 val intent = Intent(
                     Intent.ACTION_VIEW,
-                    Uri.parse("google.navigation:q=${pin.lat},${pin.lng}")
+                    Uri.parse("google.navigation:q=${pin.lat},${pin.lng}"),
                 ).apply {
                     setPackage("com.google.android.apps.maps")
                 }
@@ -231,14 +230,14 @@ fun BottomSheetContent(
                 } catch (e: Exception) {
                     val webIntent = Intent(
                         Intent.ACTION_VIEW,
-                        Uri.parse("https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}")
+                        Uri.parse("https://www.google.com/maps/search/?api=1&query=${pin.lat},${pin.lng}"),
                     )
                     context.startActivity(webIntent)
                 }
             },
             icon = Icons.Default.Place,
             variant = HustleButtonVariant.Secondary,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

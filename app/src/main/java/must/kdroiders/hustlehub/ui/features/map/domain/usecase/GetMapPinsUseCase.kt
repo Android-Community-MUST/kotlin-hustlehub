@@ -6,20 +6,23 @@ import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailabi
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import javax.inject.Inject
 
-class GetMapPinsUseCase @Inject constructor(
-    private val repository: MapRepository,
-) {
-    suspend operator fun invoke(
-        lat: Double?,
-        lng: Double?,
-        radiusKm: Double?,
-        category: ServiceCategory?,
-        availability: ServiceAvailability?,
-    ): Result<List<MapPin>> = repository.getMapPins(
-        lat = lat,
-        lng = lng,
-        radiusKm = radiusKm,
-        category = category,
-        availability = availability,
-    )
-}
+class GetMapPinsUseCase
+    @Inject
+    constructor(
+        private val repository: MapRepository,
+    ) {
+        suspend operator fun invoke(
+            lat: Double?,
+            lng: Double?,
+            radiusKm: Double?,
+            category: ServiceCategory?,
+            availability: ServiceAvailability?,
+        ): Result<List<MapPin>> =
+            repository.getMapPins(
+                lat = lat,
+                lng = lng,
+                radiusKm = radiusKm,
+                category = category,
+                availability = availability,
+            )
+    }

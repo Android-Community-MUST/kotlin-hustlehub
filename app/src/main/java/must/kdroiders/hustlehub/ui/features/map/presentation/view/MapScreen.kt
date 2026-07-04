@@ -13,9 +13,9 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,22 +41,22 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -87,14 +87,14 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.clustering.Clustering
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
+import must.kdroiders.hustlehub.ui.features.map.presentation.view.components.*
 import must.kdroiders.hustlehub.ui.features.map.presentation.viewmodel.MapViewModel
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import timber.log.Timber
-import must.kdroiders.hustlehub.sharedComposables.HustleButton
-import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
-import must.kdroiders.hustlehub.ui.features.map.presentation.view.components.*
 
 private object MapDefaults {
     val MERU_UNIVERSITY = LatLng(0.1287003, 37.7098333)
@@ -121,7 +121,7 @@ fun MapScreen(
     var mapType by remember { mutableStateOf(MapType.NORMAL) }
     var isLocationPermissionGranted by remember {
         mutableStateOf(
-            checkLocationPermission(context)
+            checkLocationPermission(context),
         )
     }
 
@@ -180,8 +180,8 @@ fun MapScreen(
             permissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                ),
             )
         }
     }
@@ -199,8 +199,8 @@ fun MapScreen(
                                 cameraPositionState.animate(
                                     CameraUpdateFactory.newLatLngZoom(
                                         userLatLng,
-                                        MapDefaults.DEFAULT_ZOOM
-                                    )
+                                        MapDefaults.DEFAULT_ZOOM,
+                                    ),
                                 )
                                 mapViewModel.setInitialCameraAnimationDone()
                             }
@@ -227,7 +227,7 @@ fun MapScreen(
             onMapClick = {
                 selectedPin = null
                 showBottomSheet = false
-            }
+            },
         ) {
             Clustering(
                 items = uiState.pins,
@@ -236,8 +236,8 @@ fun MapScreen(
                         cameraPositionState.animate(
                             CameraUpdateFactory.newLatLngZoom(
                                 cluster.position,
-                                cameraPositionState.position.zoom + 2f
-                            )
+                                cameraPositionState.position.zoom + 2f,
+                            ),
                         )
                     }
                     true
@@ -253,19 +253,19 @@ fun MapScreen(
                             .size(44.dp)
                             .background(Color(0xFF7C4DFF), shape = CircleShape)
                             .border(2.dp, Color.White, shape = CircleShape),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = cluster.size.toString(),
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
                         )
                     }
                 },
                 clusterItemContent = { pin ->
                     ProviderMarkerContent(pin = pin)
-                }
+                },
             )
         }
 
@@ -275,13 +275,13 @@ fun MapScreen(
                 .align(Alignment.TopStart)
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             // Row 1: Search Bar & Notification Bell
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 // Search TextField (Glassmorphic look)
                 Box(
@@ -293,22 +293,21 @@ fun MapScreen(
                         .border(
                             1.dp,
                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
-                            RoundedCornerShape(24.dp)
-                        )
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.CenterStart
+                            RoundedCornerShape(24.dp),
+                        ).padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterStart,
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = "Search",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
-                        
+
                         // BasicTextField for search input
                         androidx.compose.foundation.text.BasicTextField(
                             value = uiState.searchQuery,
@@ -316,7 +315,7 @@ fun MapScreen(
                                 mapViewModel.updateSearchQuery(query)
                             },
                             textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
                             ),
                             singleLine = true,
                             modifier = Modifier.weight(1f),
@@ -326,21 +325,21 @@ fun MapScreen(
                                         Text(
                                             text = "Search services on campus..",
                                             style = MaterialTheme.typography.bodyMedium.copy(
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                            )
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                            ),
                                         )
                                     }
                                     innerTextField()
                                 }
-                            }
+                            },
                         )
-                        
+
                         // Filter slider icon
                         Icon(
                             imageVector = Icons.Default.Tune,
                             contentDescription = "Filters",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
                     }
                 }
@@ -354,9 +353,9 @@ fun MapScreen(
                         .border(
                             1.dp,
                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
-                            CircleShape
+                            CircleShape,
                         ),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     IconButton(onClick = onNavigateToNotifications) {
                         BadgedBox(
@@ -364,24 +363,24 @@ fun MapScreen(
                                 if (uiState.notificationCount > 0) {
                                     Badge(
                                         containerColor = MaterialTheme.colorScheme.error,
-                                        contentColor = MaterialTheme.colorScheme.onError
+                                        contentColor = MaterialTheme.colorScheme.onError,
                                     ) {
                                         Text(
                                             text = uiState.notificationCount.toString(),
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 fontWeight = FontWeight.Bold,
-                                                fontSize = 9.sp
-                                            )
+                                                fontSize = 9.sp,
+                                            ),
                                         )
                                     }
                                 }
-                            }
+                            },
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Notifications,
                                 contentDescription = "Notifications",
                                 tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(22.dp),
                             )
                         }
                     }
@@ -394,7 +393,7 @@ fun MapScreen(
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Category Filter Chips
                 val categories = remember {
@@ -406,7 +405,7 @@ fun MapScreen(
                         ServiceCategory.TUTORING to "Tutoring",
                         ServiceCategory.FOOD to "Food",
                         ServiceCategory.FASHION to "Fashion",
-                        ServiceCategory.PHOTOGRAPHY to "Photo"
+                        ServiceCategory.PHOTOGRAPHY to "Photo",
                     )
                 }
 
@@ -429,15 +428,15 @@ fun MapScreen(
                                 Icon(
                                     imageVector = icon,
                                     contentDescription = null,
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(14.dp),
                                 )
                             }
                         },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primary,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
                     )
                 }
 
@@ -446,7 +445,7 @@ fun MapScreen(
                     modifier = Modifier
                         .width(1.dp)
                         .height(24.dp)
-                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)),
                 )
                 Spacer(modifier = Modifier.width(4.dp))
 
@@ -456,7 +455,7 @@ fun MapScreen(
                     selected = isAvailableOnly,
                     onClick = {
                         mapViewModel.selectAvailability(
-                            if (isAvailableOnly) null else ServiceAvailability.AVAILABLE
+                            if (isAvailableOnly) null else ServiceAvailability.AVAILABLE,
                         )
                     },
                     label = { Text("Available Only", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
@@ -465,14 +464,14 @@ fun MapScreen(
                             Icon(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = null,
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(14.dp),
                             )
                         }
                     },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                        selectedLabelColor = MaterialTheme.colorScheme.primary
-                    )
+                        selectedLabelColor = MaterialTheme.colorScheme.primary,
+                    ),
                 )
             }
 
@@ -483,30 +482,30 @@ fun MapScreen(
                     (slideInVertically { height -> height } + fadeIn()) togetherWith
                         (slideOutVertically { height -> -height } + fadeOut())
                 },
-                label = "ProviderCountAnimation"
+                label = "ProviderCountAnimation",
             ) { count ->
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
                         .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(6.dp)
-                                .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                .background(MaterialTheme.colorScheme.primary, CircleShape),
                         )
                         Text(
                             text = "Showing $count provider${if (count == 1) "" else "s"}",
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                                color = MaterialTheme.colorScheme.onSurface,
+                            ),
                         )
                     }
                 }
@@ -526,7 +525,7 @@ fun MapScreen(
                 contentDescription = "Toggle Map Type",
                 onClick = {
                     mapType = if (mapType == MapType.NORMAL) MapType.HYBRID else MapType.NORMAL
-                }
+                },
             )
 
             // Zoom Controls group
@@ -534,7 +533,7 @@ fun MapScreen(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
-                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
             ) {
                 IconButton(
                     onClick = {
@@ -542,19 +541,19 @@ fun MapScreen(
                             cameraPositionState.animate(CameraUpdateFactory.zoomIn())
                         }
                     },
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(44.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Zoom In",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
                 Spacer(
                     modifier = Modifier
                         .width(44.dp)
                         .height(1.dp)
-                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)),
                 )
                 IconButton(
                     onClick = {
@@ -562,12 +561,12 @@ fun MapScreen(
                             cameraPositionState.animate(CameraUpdateFactory.zoomOut())
                         }
                     },
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(44.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Remove,
                         contentDescription = "Zoom Out",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -578,7 +577,7 @@ fun MapScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             // Recenter to MUST
             MapControlFloatingButton(
@@ -589,11 +588,11 @@ fun MapScreen(
                         cameraPositionState.animate(
                             CameraUpdateFactory.newLatLngZoom(
                                 MapDefaults.MERU_UNIVERSITY,
-                                MapDefaults.DEFAULT_ZOOM
-                            )
+                                MapDefaults.DEFAULT_ZOOM,
+                            ),
                         )
                     }
-                }
+                },
             )
 
             // Center on user location
@@ -610,8 +609,8 @@ fun MapScreen(
                                             cameraPositionState.animate(
                                                 CameraUpdateFactory.newLatLngZoom(
                                                     LatLng(location.latitude, location.longitude),
-                                                    MapDefaults.DEFAULT_ZOOM
-                                                )
+                                                    MapDefaults.DEFAULT_ZOOM,
+                                                ),
                                             )
                                         }
                                     } else {
@@ -628,11 +627,11 @@ fun MapScreen(
                         permissionLauncher.launch(
                             arrayOf(
                                 Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
-                            )
+                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                            ),
                         )
                     }
-                }
+                },
             )
         }
 
@@ -661,7 +660,7 @@ fun MapScreen(
                                 selectedPin = null
                             }
                         }
-                    }
+                    },
                 )
             }
         }
@@ -675,12 +674,12 @@ fun MapScreen(
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
                 .padding(16.dp)
-                .padding(end = 76.dp) // Leave space for bottom right buttons
+                .padding(end = 76.dp), // Leave space for bottom right buttons
         ) {
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
                 ),
                 modifier = Modifier
                     .border(
@@ -688,38 +687,38 @@ fun MapScreen(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
                                 MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
-                            )
+                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
+                            ),
                         ),
-                        shape = RoundedCornerShape(16.dp)
-                    )
+                        shape = RoundedCornerShape(16.dp),
+                    ),
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = "Location Info",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
                         Text(
                             text = "Enable Location Services",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                     Text(
                         text = "To find nearby student service providers and view your position on campus, please grant location access.",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 16.sp
+                        lineHeight = 16.sp,
                     )
                     HustleButton(
                         text = "Grant Access",
@@ -727,12 +726,12 @@ fun MapScreen(
                             permissionLauncher.launch(
                                 arrayOf(
                                     Manifest.permission.ACCESS_FINE_LOCATION,
-                                    Manifest.permission.ACCESS_COARSE_LOCATION
-                                )
+                                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                                ),
                             )
                         },
                         variant = HustleButtonVariant.Primary,
-                        modifier = Modifier.align(Alignment.End)
+                        modifier = Modifier.align(Alignment.End),
                     )
                 }
             }
@@ -740,8 +739,7 @@ fun MapScreen(
 
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
 }
-

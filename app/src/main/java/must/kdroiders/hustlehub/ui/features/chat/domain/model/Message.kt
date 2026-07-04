@@ -30,10 +30,11 @@ val Message.isDeleted: Boolean
     get() {
         if (metadata.isNullOrBlank()) return false
         return try {
-            val obj = com.google.gson.Gson().fromJson(metadata, com.google.gson.JsonObject::class.java)
+            val obj = com.google.gson
+                .Gson()
+                .fromJson(metadata, com.google.gson.JsonObject::class.java)
             obj.has("isDeleted") && obj.get("isDeleted").asBoolean
         } catch (e: Exception) {
             false
         }
     }
-

@@ -27,18 +27,18 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.navigation.DeepLinkAction
 import must.kdroiders.hustlehub.navigation.HustleHubNav
 import must.kdroiders.hustlehub.navigation.MainNavigationViewModel
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 import timber.log.Timber
 import javax.inject.Inject
-import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -165,22 +165,23 @@ class MainActivity : ComponentActivity() {
     private fun updateLocationIfPermitted() {
         if (androidx.core.app.ActivityCompat.checkSelfPermission(
                 this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
             ) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
             androidx.core.app.ActivityCompat.checkSelfPermission(
                 this,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
+                android.Manifest.permission.ACCESS_COARSE_LOCATION,
             ) == android.content.pm.PackageManager.PERMISSION_GRANTED
         ) {
-            val fusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this)
+            val fusedLocationClient = com.google.android.gms.location.LocationServices
+                .getFusedLocationProviderClient(this)
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
                     lifecycleScope.launch {
-                        userRepository.updateUserLocation(location.latitude, location.longitude)
+                        userRepository
+                            .updateUserLocation(location.latitude, location.longitude)
                             .onSuccess {
                                 Timber.d("Successfully updated location to backend: lat=${location.latitude}, lng=${location.longitude}")
-                            }
-                            .onFailure { e ->
+                            }.onFailure { e ->
                                 Timber.e(e, "Failed to update location to backend")
                             }
                     }
