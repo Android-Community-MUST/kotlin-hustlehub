@@ -7,6 +7,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 data class UpdateProfileRequest(
     val name: String? = null,
@@ -22,6 +23,11 @@ data class OnlineStatusRequest(
 
 data class FcmTokenRequest(
     val token: String,
+)
+
+data class LocationUpdateRequest(
+    val lat: Double,
+    val lng: Double,
 )
 
 interface UserApiService {
@@ -48,4 +54,16 @@ interface UserApiService {
     suspend fun updateFcmToken(
         @Body request: FcmTokenRequest,
     ): Response<Unit>
+
+    @PUT("users/me/location")
+    suspend fun updateLocation(
+        @Body request: LocationUpdateRequest,
+    ): Response<Unit>
+
+    @GET("users/nearby")
+    suspend fun getNearbyProviders(
+        @Query("lat") lat: Double,
+        @Query("lng") lng: Double,
+        @Query("radiusMeters") radiusMeters: Double,
+    ): ApiResponse<List<UserResponseDto>>
 }

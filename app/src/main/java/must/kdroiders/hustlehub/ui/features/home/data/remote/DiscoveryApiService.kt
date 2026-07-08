@@ -2,7 +2,9 @@ package must.kdroiders.hustlehub.ui.features.home.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 /** Backend contract for AI-powered service discovery. */
 interface DiscoveryApiService {
@@ -19,7 +21,29 @@ interface DiscoveryApiService {
     suspend fun aiSearch(
         @Body request: AiSearchRequest,
     ): ApiResponse<AiSearchResponse>
+
+    @GET("discovery/map-pins")
+    suspend fun getMapPins(
+        @Query("lat") lat: Double?,
+        @Query("lng") lng: Double?,
+        @Query("radiusKm") radiusKm: Double?,
+        @Query("category") category: String?,
+        @Query("availability") availability: String?,
+    ): ApiResponse<List<MapPinResponseDto>>
 }
+
+data class MapPinResponseDto(
+    val serviceId: String,
+    val providerId: String,
+    val providerName: String,
+    val providerPhotoUrl: String?,
+    val title: String,
+    val category: String,
+    val availability: String,
+    val averageRating: Double,
+    val lat: Double,
+    val lng: Double,
+)
 
 /** @property query Natural language query from the user, max 500 chars. */
 data class AiSearchRequest(

@@ -333,16 +333,16 @@ class ChatRepositoryImpl
                                                 cachedConv.copy(
                                                     lastMessage = latest.content ?: "",
                                                     lastMessageType = latest.type,
-                                                    lastMessageAt = latest.timestamp
-                                                )
+                                                    lastMessageAt = latest.timestamp,
+                                                ),
                                             )
                                         } else {
                                             conversationDao.upsert(
                                                 cachedConv.copy(
                                                     lastMessage = "",
                                                     lastMessageType = "TEXT",
-                                                    lastMessageAt = ""
-                                                )
+                                                    lastMessageAt = "",
+                                                ),
                                             )
                                         }
                                     }
@@ -408,16 +408,16 @@ class ChatRepositoryImpl
                                     conv.copy(
                                         lastMessage = latest.content ?: "",
                                         lastMessageType = latest.type,
-                                        lastMessageAt = latest.timestamp
-                                    )
+                                        lastMessageAt = latest.timestamp,
+                                    ),
                                 )
                             } else {
                                 conversationDao.upsert(
                                     conv.copy(
                                         lastMessage = "",
                                         lastMessageType = "TEXT",
-                                        lastMessageAt = ""
-                                    )
+                                        lastMessageAt = "",
+                                    ),
                                 )
                             }
                         }
@@ -465,7 +465,7 @@ class ChatRepositoryImpl
                             content = "This message was deleted",
                             mediaUrl = null,
                             thumbnailUrl = null,
-                            metadata = gson.toJson(metaObj)
+                            metadata = gson.toJson(metaObj),
                         )
                         messageDao.upsert(updated)
 
@@ -475,8 +475,8 @@ class ChatRepositoryImpl
                             conversationDao.upsert(
                                 conv.copy(
                                     lastMessage = "This message was deleted",
-                                    lastMessageType = "TEXT"
-                                )
+                                    lastMessageType = "TEXT",
+                                ),
                             )
                         }
                     }
@@ -521,7 +521,7 @@ class ChatRepositoryImpl
                 content = "This message was deleted",
                 mediaUrl = null,
                 thumbnailUrl = null,
-                metadata = gson.toJson(metaObj)
+                metadata = gson.toJson(metaObj),
             )
         }
     }

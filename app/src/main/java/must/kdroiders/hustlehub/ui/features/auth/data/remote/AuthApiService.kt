@@ -30,6 +30,8 @@ data class UserResponseDto(
     val active: Boolean,
     val hustleScore: Float? = null,
     val reviewCount: Int? = null,
+    val lat: Double? = null,
+    val lng: Double? = null,
     val createdAt: String,
     val updatedAt: String,
 )

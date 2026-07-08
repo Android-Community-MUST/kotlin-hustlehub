@@ -109,12 +109,15 @@ Called after Firebase sign-up to persist the user details on the backend.
     "avatarUrl": "https://lh3.googleusercontent.com/.../photo.jpg",
     "phone": "0712345678",
     "campusLocation": "Hostel B, Room 204",
+    "lat": null,
+    "lng": null,
     "isVerified": true,
     "isActive": true,
     "createdAt": "2026-02-14T10:00:00Z",
     "updatedAt": "2026-02-14T10:00:00Z"
   }
 }
+
 ```
 
 ---
@@ -155,12 +158,15 @@ Saves or updates a user's active device FCM token for push notifications. Caps a
     "avatarUrl": "https://...",
     "phone": "0712345678",
     "campusLocation": "Hostel B, Room 204",
+    "lat": -0.0515,
+    "lng": 37.6456,
     "isVerified": true,
     "isActive": true,
     "createdAt": "2026-02-01T10:00:00Z",
     "updatedAt": "2026-02-14T14:30:00Z"
   }
 }
+
 ```
 
 ---
@@ -207,6 +213,63 @@ Fetches public profile details of any user by their primary PostgreSQL UUID.
 **Response `204 No Content`** (Empty body).
 
 ---
+
+### Update User Location
+`PUT /api/v1/users/me/location`
+
+Updates the geographic latitude and longitude coordinates of the currently authenticated user in the database.
+
+**Request:**
+```json
+{
+  "lat": -0.0515,
+  "lng": 37.6456
+}
+```
+
+**Response `204 No Content`** (Empty body).
+
+---
+
+### Get Nearby Providers (PostGIS)
+`GET /api/v1/users/nearby`
+
+Fetches service providers located within a specified distance using PostGIS spatial queries.
+
+**Query Parameters:**
+- `lat` (Double, Required): Center latitude.
+- `lng` (Double, Required): Center longitude.
+- `radiusMeters` (Double, Optional, default `1000.0`): Distance limit in meters.
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Nearby providers fetched successfully",
+  "data": [
+    {
+      "id": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+      "firebaseUid": "user_abc123",
+      "email": "jane.kamau@must.ac.ke",
+      "name": "Jane Kamau",
+      "role": "PROVIDER",
+      "bio": "Professional Hair Styling",
+      "avatarUrl": "https://...",
+      "phone": "0712345678",
+      "campusLocation": "Hostel C",
+      "lat": -0.0524,
+      "lng": 37.6456,
+      "isVerified": true,
+      "isActive": true,
+      "createdAt": "2026-02-14T10:00:00Z",
+      "updatedAt": "2026-02-14T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
 
 ### Block User
 `POST /api/v1/users/{userId}/block`
@@ -606,7 +669,7 @@ Returns a sorted list of conversations (newest activity first).
 ---
 
 ### Delete Message for Me
-`DELETE /api/v1/conversations/messages/{messageId}/me`
+`DELETE /api/v1/messages/{messageId}`
 
 Removes a message from the current user's message history.
 
@@ -621,7 +684,7 @@ Removes a message from the current user's message history.
 ---
 
 ### Delete Message for Everyone
-`DELETE /api/v1/conversations/messages/{messageId}/everyone`
+`DELETE /api/v1/messages/{messageId}/everyone`
 
 Deletes a message for all participants in the conversation, replacing its content with a deletion placeholder.
 

@@ -39,12 +39,12 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "GEMINI_API_KEY", "\"${keysProperty("gemini.api.key")}\"")
-        buildConfigField("String", "MAPS_API_KEY", "\"${keysProperty("maps.api.key")}\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"${keysProperty("GEMINI_API_KEY")}\"")
+        buildConfigField("String", "MAPS_API_KEY", "\"${keysProperty("MAPS_API_KEY")}\"")
         buildConfigField("String", "BASE_URL", "\"${keysProperty("BASE_URL", "http://10.0.2.2:8080/api/v1/")}\"")
         buildConfigField("String", "WS_BASE_URL", "\"${keysProperty("WS_BASE_URL", "ws://10.0.2.2:8080/ws")}\"")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${keysProperty("GOOGLE_WEB_CLIENT_ID", "")}\"")
-        resValue("string", "google_maps_key", keysProperty("maps.api.key"))
+        resValue("string", "google_maps_key", keysProperty("MAPS_API_KEY"))
         resValue("string", "google_web_client_id", keysProperty("GOOGLE_WEB_CLIENT_ID", ""))
     }
 
@@ -137,6 +137,7 @@ dependencies {
     // Google Maps & Location
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)
+    implementation(libs.maps.compose.utils)
     implementation(libs.play.services.location)
 
     // Gemini AI

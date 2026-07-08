@@ -1,6 +1,7 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) and other AI assistants when working with code in this repository. Detailed rules, coding standards, and project instructions are maintained in [.agents/rules.md](.agents/rules.md).
+
 
 ---
 
@@ -105,7 +106,7 @@ must.kdroiders.hustlehub/
 └── util/                # ImageUtils
 ```
 
-> The target architecture in `.agents/rules.md` places all features under `feature/<name>/` with full `data/domain/presentation` sub-splits. Currently `auth`, `profile`, and `chat` have full domain/data/presentation splits; other features will migrate to this structure as they are built out.
+> The target architecture in `[.agents/rules.md](.agents/rules.md)` places all features under `feature/<name>/` with full `data/domain/presentation` sub-splits. Currently `auth`, `profile`, and `chat` have full domain/data/presentation splits; other features will migrate to this structure as they are built out.
 
 ---
 
@@ -133,8 +134,8 @@ Uses **Navigation 3** (`androidx.navigation3`) exclusively — no legacy `NavCon
 
 - Firebase Auth (email/password + Google Sign-In) for identity only.
 - After sign-in, Firebase ID token is attached to every API request via `AuthInterceptor` (`Authorization: Bearer <token>`).
-- **All application data** goes through the Spring Boot backend REST API (`/api/v1/`) — Firebase Firestore and Realtime Database are **not** used for app data.
-- Supabase is used only for file/media storage.
+- **All application data and media files** go through the Spring Boot backend REST API (`/api/v1/`) — Firebase Firestore, Realtime Database, and Supabase are **not** used for app data.
+- Media upload is handled via multipart POST requests to the Spring Boot backend (`/api/v1/media/upload`), which handles storage via Firebase Storage bucket.
 
 ---
 

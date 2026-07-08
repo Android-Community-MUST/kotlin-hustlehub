@@ -9,6 +9,7 @@ import must.kdroiders.hustlehub.ui.features.auth.data.remote.RegisterRequest
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.FcmTokenRequest
+import must.kdroiders.hustlehub.ui.features.profile.data.remote.LocationUpdateRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UpdateProfileRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
@@ -184,6 +185,35 @@ class UserRepositoryImpl
             }.onFailure { e ->
                 Timber.e(e, "UserRepositoryImpl: failed to update FCM token")
             }
+
+        override suspend fun updateUserLocation(
+            lat: Double,
+            lng: Double,
+        ): Result<Unit> =
+            runCatching {
+                val response = userApiService.updateLocation(LocationUpdateRequest(lat, lng))
+                if (!response.isSuccessful) {
+                    throw Exception("Location update failed: code ${response.code()}")
+                }
+            }.onFailure { e ->
+                Timber.e(e, "UserRepositoryImpl: failed to update user location")
+            }
+
+        override suspend fun getNearbyProviders(
+            lat: Double,
+            lng: Double,
+            radiusMeters: Double,
+        ): Result<List<User>> =
+            runCatching {
+                val response = userApiService.getNearbyProviders(lat, lng, radiusMeters)
+                if (response.success && response.data != null) {
+                    response.data.map { it.toDomain() }
+                } else {
+                    throw Exception(response.message)
+                }
+            }.onFailure { e ->
+                Timber.e(e, "UserRepositoryImpl: failed to fetch nearby providers")
+            }
     }
 
 // DTO → Domain mapper (private to this file)
@@ -202,6 +232,8 @@ private fun UserResponseDto.toDomain(): User =
         isOnline = active,
         hustleScore = hustleScore ?: 0f,
         reviewCount = reviewCount ?: 0,
+        lat = lat,
+        lng = lng,
     )
 
 private fun ServiceResponse.toDomainService(): Service =
