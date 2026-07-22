@@ -54,11 +54,8 @@ jobs:
           }
           EOF
 
-      - name: Run Code Quality Checks (ktlint & detekt)
-        run: ./gradlew ktlintCheck detekt --no-daemon
-
-      - name: Run Android Lint
-        run: ./gradlew lint --no-daemon
+      - name: Run Quality Checks & Android Lint
+        run: ./gradlew qualityCheck --no-daemon
 
       - name: Run Unit Tests
         run: ./gradlew test --no-daemon
