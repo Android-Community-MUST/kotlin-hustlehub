@@ -84,6 +84,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.clustering.Clustering
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
@@ -103,7 +104,7 @@ private object MapDefaults {
     const val MAX_ZOOM = 20f
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, MapsComposeExperimentalApi::class)
 @Composable
 fun MapScreen(
     onNavigateToServiceDetail: (serviceId: String) -> Unit = {},

@@ -48,3 +48,15 @@ subprojects {
         }
     }
 }
+
+tasks.register("qualityCheck") {
+    group = "verification"
+    description = "Runs ktlintFormat, ktlintCheck, detekt, and Android lint."
+    dependsOn(":app:ktlintFormat", ":app:ktlintCheck", ":app:detekt", ":app:lint")
+}
+
+tasks.register("checkAll") {
+    group = "verification"
+    description = "Runs ktlintFormat, ktlintCheck, detekt, and Android lint."
+    dependsOn("qualityCheck")
+}

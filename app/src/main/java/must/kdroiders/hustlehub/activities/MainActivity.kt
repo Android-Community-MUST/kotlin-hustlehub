@@ -163,7 +163,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun updateLocationIfPermitted() {
-        if (com.google.firebase.auth.FirebaseAuth.getInstance().currentUser == null) return
+        if (com.google.firebase.auth.FirebaseAuth
+                .getInstance()
+                .currentUser == null
+        ) {
+            return
+        }
         if (androidx.core.app.ActivityCompat.checkSelfPermission(
                 this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION,
