@@ -39,8 +39,10 @@
 ---
 
 ## 🔍 Code quality
-- [ ] Ktlint passed  (`./gradlew ktlintCheck`)
-- [ ] Detekt passed  (`./gradlew detekt`)
+- [ ] Quality checks passed (`./gradlew qualityCheck`)
+- [ ] Ktlint passed (`./gradlew ktlintCheck`)
+- [ ] Detekt passed (`./gradlew detekt`)
+- [ ] Android Lint passed (`./gradlew lint`)
 - [ ] My commit message follows convention (`feat:`, `fix:`, `chore:` etc.)
 
 ---
