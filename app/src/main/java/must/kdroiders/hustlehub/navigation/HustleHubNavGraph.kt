@@ -213,6 +213,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     onSignUpSuccess = { email ->
                         backstack.add(EmailVerification(email = email))
                     },
+                    onGoogleSignInClick = onGoogleSignInClick,
                 )
             }
 
