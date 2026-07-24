@@ -1,5 +1,10 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +39,7 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileHeader
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileInfo
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileStatsRow
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProviderOnboardingCard
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ServiceCard
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ServicesHeader
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
@@ -167,6 +173,19 @@ private fun ProfileContent(
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
             Spacer(Modifier.height(12.dp))
+        }
+
+        item(key = "provider_onboarding") {
+            AnimatedVisibility(
+                visible = state.services.isEmpty(),
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
+                ProviderOnboardingCard(
+                    onCreateServiceClick = onAddNewServiceClick,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                )
+            }
         }
 
         // Service cards — each tappable to manage that specific service

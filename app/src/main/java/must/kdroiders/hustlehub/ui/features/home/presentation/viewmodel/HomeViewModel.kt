@@ -8,11 +8,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.auth.AuthManager
+import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.util.HustleScoreCalculator
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
@@ -27,9 +30,7 @@ data class HomeUiState(
     val searchQuery: String = "",
     val providerInitials: String = "HH",
     val notificationCount: Int = 0,
-    // Paginated real services from backend
     val services: List<Service> = emptyList(),
-    /** Top 5 highest-rated services derived from the loaded list — powers the Featured row. */
     val featuredServices: List<Service> = emptyList(),
     val isLoadingServices: Boolean = false,
     val isRefreshing: Boolean = false,
@@ -38,6 +39,7 @@ data class HomeUiState(
     val currentPage: Int = 0,
     val error: String? = null,
     val isLoading: Boolean = false,
+    val showProviderBanner: Boolean = false,
 )
 
 @HiltViewModel
@@ -48,6 +50,7 @@ class HomeViewModel
         private val authManager: AuthManager,
         private val userRepository: UserRepository,
         private val notificationRepository: NotificationRepository,
+        private val userPreferences: UserPreferences,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(HomeUiState())
         val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -58,6 +61,24 @@ class HomeViewModel
             loadUserInitials()
             fetchServices(reset = true)
             loadNotificationCount()
+            observeProviderBannerVisibility()
+        }
+
+        private fun observeProviderBannerVisibility() {
+            viewModelScope.launch {
+                combine(
+                    userPreferences.cachedUser,
+                    userPreferences.isProviderBannerDismissed,
+                ) { user, dismissed ->
+                    !dismissed && user.role == UserRole.CUSTOMER
+                }.collect { show ->
+                    _uiState.update { it.copy(showProviderBanner = show) }
+                }
+            }
+        }
+
+        fun dismissProviderBanner() {
+            viewModelScope.launch { userPreferences.dismissProviderBanner() }
         }
 
         private fun loadNotificationCount() {
@@ -85,6 +106,7 @@ class HomeViewModel
                                 parts[0].take(2).uppercase()
                             }
                             _uiState.update { it.copy(providerInitials = initials) }
+                            userPreferences.writeUser(user)
                         }
                     }
             }

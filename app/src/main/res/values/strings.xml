@@ -25,4 +25,16 @@
     <string name="portfolio_status_percent">%1$d%%</string>
     <!-- %1$d = uploaded count, %2$d = total selected -->
     <string name="portfolio_upload_success_count">%1$d of %2$d images uploaded successfully</string>
+
+    <!-- Provider banner (Home screen) -->
+    <string name="banner_provider_label">For Hustlers</string>
+    <string name="banner_provider_title">Start Earning on Campus</string>
+    <string name="banner_provider_subtitle">List your skills and get discovered by students at MUST.</string>
+    <string name="banner_provider_action">List a Service</string>
+    <string name="banner_provider_dismiss">Dismiss provider banner</string>
+
+    <!-- Provider onboarding card (Profile screen) -->
+    <string name="profile_provider_cta_title">Start Your Campus Business</string>
+    <string name="profile_provider_cta_body">List your skills and earn from fellow students at MUST.</string>
+    <string name="profile_provider_cta_action">Create Your First Service</string>
 </resources>

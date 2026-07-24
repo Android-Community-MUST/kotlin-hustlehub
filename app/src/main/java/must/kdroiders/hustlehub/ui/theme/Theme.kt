@@ -34,7 +34,7 @@ private val LightColorScheme = lightColorScheme(
     onBackground = HustleDarkNavy,
     surface = HustleWhite,
     onSurface = HustleDarkNavy,
-    surfaceVariant = HustleLightBackground,
+    surfaceVariant = HustleLightSurfaceVariant,
     onSurfaceVariant = HustleMediumGrey,
 
     outline = HustleInputBorder,
