@@ -72,7 +72,9 @@ fun SettingsScreen(
                 is SettingsEvent.LoggedOut -> onBack() // parent nav graph pops to Login
                 is SettingsEvent.NavigateToChangePassword -> onNavigateToChangePassword()
                 else -> {
-                    android.widget.Toast.makeText(context, "Coming soon", android.widget.Toast.LENGTH_SHORT).show()
+                    android.widget.Toast
+                        .makeText(context, "Coming soon", android.widget.Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
         }

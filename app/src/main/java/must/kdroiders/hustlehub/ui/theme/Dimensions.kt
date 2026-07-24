@@ -27,34 +27,37 @@ data class Dimensions(
 )
 
 /** Small compact phones (< 360dp width e.g. Pixel 4a / small budget devices) */
-fun compactDimensions() = Dimensions(
-    horizontalPadding = 8.dp,
-    verticalPadding = 8.dp,
-    gridSpacing = 8.dp,
-    gridColumns = 2,
-    cardCornerRadius = 16.dp,
-    cardContentPadding = 12.dp,
-)
+fun compactDimensions() =
+    Dimensions(
+        horizontalPadding = 8.dp,
+        verticalPadding = 8.dp,
+        gridSpacing = 8.dp,
+        gridColumns = 2,
+        cardCornerRadius = 16.dp,
+        cardContentPadding = 12.dp,
+    )
 
 /** Standard devices (360dp – 600dp width) */
-fun standardDimensions() = Dimensions(
-    horizontalPadding = 12.dp,
-    verticalPadding = 12.dp,
-    gridSpacing = 10.dp,
-    gridColumns = 2,
-    cardCornerRadius = 20.dp,
-    cardContentPadding = 16.dp,
-)
+fun standardDimensions() =
+    Dimensions(
+        horizontalPadding = 12.dp,
+        verticalPadding = 12.dp,
+        gridSpacing = 10.dp,
+        gridColumns = 2,
+        cardCornerRadius = 20.dp,
+        cardContentPadding = 16.dp,
+    )
 
 /** Large foldables and tablets (>= 600dp width) */
-fun expandedDimensions() = Dimensions(
-    horizontalPadding = 20.dp,
-    verticalPadding = 16.dp,
-    gridSpacing = 14.dp,
-    gridColumns = 3,
-    cardCornerRadius = 24.dp,
-    cardContentPadding = 20.dp,
-)
+fun expandedDimensions() =
+    Dimensions(
+        horizontalPadding = 20.dp,
+        verticalPadding = 16.dp,
+        gridSpacing = 14.dp,
+        gridColumns = 3,
+        cardCornerRadius = 24.dp,
+        cardContentPadding = 20.dp,
+    )
 
 val DefaultDimensions = standardDimensions()
 

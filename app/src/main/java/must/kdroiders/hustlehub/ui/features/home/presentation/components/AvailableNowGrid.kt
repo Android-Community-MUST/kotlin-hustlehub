@@ -104,8 +104,7 @@ fun LiveServiceCard(
             .clickable {
                 Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
                 onServiceClick(service.id)
-            }
-            .padding(bottom = 12.dp),
+            }.padding(bottom = 12.dp),
     ) {
         Box(
             modifier = Modifier
