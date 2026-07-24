@@ -149,7 +149,6 @@ fun HomeScreen(
                 state = gridState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding()
                     .testTag("home_service_grid"),
                 contentPadding = PaddingValues(
                     start = dimensions.horizontalPadding,

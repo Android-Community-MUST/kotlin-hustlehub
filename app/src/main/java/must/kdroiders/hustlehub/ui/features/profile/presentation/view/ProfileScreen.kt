@@ -68,7 +68,7 @@ fun ProfileScreen(
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        modifier = Modifier.fillMaxSize().statusBarsPadding(),
+        modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {

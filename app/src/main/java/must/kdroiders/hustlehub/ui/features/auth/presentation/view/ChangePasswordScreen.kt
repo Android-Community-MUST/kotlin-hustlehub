@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -48,9 +50,10 @@ fun ChangePasswordScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    Scaffold(
+    HustleScaffold(
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = { Text("Change Password") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

@@ -22,7 +22,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
+import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -427,9 +429,10 @@ fun ChatDetailScreen(
         }
     }
 
-    Scaffold(
+    HustleScaffold(
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

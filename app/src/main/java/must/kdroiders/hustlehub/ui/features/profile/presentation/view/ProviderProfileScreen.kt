@@ -3,6 +3,7 @@ package must.kdroiders.hustlehub.ui.features.profile.presentation.view
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -43,6 +44,7 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileInfo
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileStatsRow
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ServiceCard
+import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProviderProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,9 +63,10 @@ fun ProviderProfileScreen(
         providerProfileViewModel.initialize(providerId)
     }
 
-    Scaffold(
+    HustleScaffold(
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Text(
                         text = state.provider?.name ?: "Provider Profile",
@@ -119,7 +122,7 @@ fun ProviderProfileScreen(
                 modifier = Modifier.padding(innerPadding).fillMaxSize(),
             )
             else -> {
-                val provider = state.provider ?: return@Scaffold
+                val provider = state.provider ?: return@HustleScaffold
 
                 LazyColumn(
                     modifier = Modifier
