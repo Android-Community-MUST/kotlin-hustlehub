@@ -12,6 +12,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 
 private val LightColorScheme = lightColorScheme(
@@ -94,7 +95,16 @@ fun HustleHubTheme(
         else -> LightColorScheme
     }
 
-    CompositionLocalProvider(LocalDimensions provides DefaultDimensions) {
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+
+    val dimensions = when {
+        screenWidthDp < 360 -> compactDimensions()
+        screenWidthDp >= 600 -> expandedDimensions()
+        else -> standardDimensions()
+    }
+
+    CompositionLocalProvider(LocalDimensions provides dimensions) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,

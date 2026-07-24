@@ -26,8 +26,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
+import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
-private val CardShape = RoundedCornerShape(12.dp)
 
 enum class HustleCardVariant {
     /** Default surface card — subtle, clean */
@@ -52,10 +52,13 @@ fun HustleCard(
     modifier: Modifier = Modifier,
     variant: HustleCardVariant = HustleCardVariant.Elevated,
     onClick: (() -> Unit)? = null,
-    contentPadding: PaddingValues = PaddingValues(20.dp),
+    contentPadding: PaddingValues? = null,
     containerColor: Color? = null,
     content: @Composable () -> Unit,
 ) {
+    val dimensions = LocalDimensions.current
+    val effectivePadding = contentPadding ?: PaddingValues(dimensions.cardContentPadding)
+    val cardShape = RoundedCornerShape(dimensions.cardCornerRadius)
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val motionScheme = MaterialTheme.motionScheme
@@ -85,7 +88,7 @@ fun HustleCard(
                 onClick = onClick ?: {},
                 enabled = onClick != null,
                 modifier = cardModifier,
-                shape = CardShape,
+                shape = cardShape,
                 interactionSource = interactionSource,
                 colors = CardDefaults.cardColors(
                     containerColor = containerColor ?: MaterialTheme.colorScheme.surface,
@@ -93,7 +96,7 @@ fun HustleCard(
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             ) {
-                Box(Modifier.padding(contentPadding)) { content() }
+                Box(Modifier.padding(effectivePadding)) { content() }
             }
         }
 
@@ -102,7 +105,7 @@ fun HustleCard(
                 onClick = onClick ?: {},
                 enabled = onClick != null,
                 modifier = cardModifier,
-                shape = CardShape,
+                shape = cardShape,
                 interactionSource = interactionSource,
                 colors = CardDefaults.cardColors(
                     containerColor = containerColor ?: MaterialTheme.colorScheme.surface,
@@ -114,7 +117,7 @@ fun HustleCard(
                     hoveredElevation = 4.dp,
                 ),
             ) {
-                Box(Modifier.padding(contentPadding)) { content() }
+                Box(Modifier.padding(effectivePadding)) { content() }
             }
         }
 
@@ -123,7 +126,7 @@ fun HustleCard(
                 onClick = onClick ?: {},
                 enabled = onClick != null,
                 modifier = cardModifier,
-                shape = CardShape,
+                shape = cardShape,
                 interactionSource = interactionSource,
                 border = BorderStroke(
                     width = 1.dp,
@@ -135,7 +138,7 @@ fun HustleCard(
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             ) {
-                Box(Modifier.padding(contentPadding)) { content() }
+                Box(Modifier.padding(effectivePadding)) { content() }
             }
         }
 
@@ -144,7 +147,7 @@ fun HustleCard(
                 onClick = onClick ?: {},
                 enabled = onClick != null,
                 modifier = cardModifier,
-                shape = CardShape,
+                shape = cardShape,
                 interactionSource = interactionSource,
                 border = glassBorder,
                 colors = CardDefaults.cardColors(
@@ -153,7 +156,7 @@ fun HustleCard(
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             ) {
-                Box(Modifier.padding(contentPadding)) { content() }
+                Box(Modifier.padding(effectivePadding)) { content() }
             }
         }
     }

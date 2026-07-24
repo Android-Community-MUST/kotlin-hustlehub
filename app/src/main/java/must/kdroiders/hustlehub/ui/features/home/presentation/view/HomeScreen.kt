@@ -61,6 +61,7 @@ import must.kdroiders.hustlehub.ui.features.home.presentation.components.Service
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCardShimmer
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.HomeViewModel
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
+import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
 /** Number of shimmer placeholders shown while the initial page loads. */
 private const val SHIMMER_COUNT = 6
@@ -119,6 +120,8 @@ fun HomeScreen(
         }
     }
 
+    val dimensions = LocalDimensions.current
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -142,21 +145,21 @@ fun HomeScreen(
             },
         ) {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
+                columns = GridCells.Fixed(dimensions.gridColumns),
                 state = gridState,
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
                     .testTag("home_service_grid"),
                 contentPadding = PaddingValues(
-                    start = 12.dp,
-                    end = 12.dp,
+                    start = dimensions.horizontalPadding,
+                    end = dimensions.horizontalPadding,
                     bottom = 100.dp,
                 ),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement
-                    .spacedBy(12.dp),
+                    .spacedBy(dimensions.gridSpacing),
                 horizontalArrangement = androidx.compose.foundation.layout.Arrangement
-                    .spacedBy(12.dp),
+                    .spacedBy(dimensions.gridSpacing),
             ) {
                 // Header items span both columns.
 

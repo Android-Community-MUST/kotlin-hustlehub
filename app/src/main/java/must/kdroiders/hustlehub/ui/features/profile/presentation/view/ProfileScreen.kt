@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ErrorState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.LoadingState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileAvatar
@@ -44,6 +45,7 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ServicesHeader
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
+import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
 @Composable
 fun ProfileScreen(
@@ -58,7 +60,7 @@ fun ProfileScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    Scaffold(
+    HustleScaffold(
         topBar = {
             ProfileHeader(
                 onEditClick = onEditClick,
@@ -109,6 +111,7 @@ private fun ProfileContent(
     onShowSnackbar: (String) -> Unit = {},
 ) {
     val user = state.user ?: return
+    val horizontalPadding = LocalDimensions.current.horizontalPadding
 
     LazyColumn(
         modifier = Modifier
@@ -148,7 +151,7 @@ private fun ProfileContent(
                 serviceCount = state.services.size,
                 reviewCount = state.reviewCount,
                 modifier = Modifier.padding(
-                    horizontal = 16.dp,
+                    horizontal = horizontalPadding,
                 ),
             )
         }
@@ -159,7 +162,7 @@ private fun ProfileContent(
             ProfileBadges(
                 badges = state.badges,
                 modifier = Modifier.padding(
-                    horizontal = 16.dp,
+                    horizontal = horizontalPadding,
                 ),
             )
         }
@@ -170,7 +173,7 @@ private fun ProfileContent(
             ServicesHeader(
                 onAddNewServiceClick = onAddNewServiceClick,
                 onManageServicesClick = onNavigateToMyServices,
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = horizontalPadding),
             )
             Spacer(Modifier.height(12.dp))
         }
@@ -183,7 +186,7 @@ private fun ProfileContent(
             ) {
                 ProviderOnboardingCard(
                     onCreateServiceClick = onAddNewServiceClick,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 4.dp),
                 )
             }
         }
@@ -200,7 +203,7 @@ private fun ProfileContent(
                     onToggleService(service.id)
                 },
                 modifier = Modifier.padding(
-                    horizontal = 16.dp,
+                    horizontal = horizontalPadding,
                     vertical = 6.dp,
                 ),
             )
@@ -210,7 +213,7 @@ private fun ProfileContent(
         item(key = "bottom_tabs") {
             Spacer(Modifier.height(20.dp))
             ProfileBottomTabs(
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = horizontalPadding),
                 onAnalyticsClick = { onShowSnackbar("Pay for premium to access it") },
                 onEarningsClick = { onShowSnackbar("Pay for premium to access it") },
             )
