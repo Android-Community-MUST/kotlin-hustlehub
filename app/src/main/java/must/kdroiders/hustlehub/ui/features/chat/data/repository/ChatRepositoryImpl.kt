@@ -5,6 +5,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -15,12 +16,12 @@ import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.MessageDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toDomain
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toEntity
-import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
-import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.ConversationResponse
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.CreateConversationRequest
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.ConversationResponse
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.SendMessageRequest
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
@@ -36,16 +37,16 @@ class ChatRepositoryImpl
     constructor(
         @ApplicationContext private val context: Context,
         private val conversationApiService: ConversationApiService,
-        private val chatWebSocketService: ChatWebSocketService,
         private val conversationDao: ConversationDao,
         private val messageDao: MessageDao,
+        private val chatWebSocketService: ChatWebSocketService,
         private val firebaseAuth: FirebaseAuth?,
     ) : ChatRepository {
         @Volatile
         private var activeConversationId: String? = null
 
         override fun setActiveConversation(conversationId: String?) {
-            this.activeConversationId = conversationId
+            activeConversationId = conversationId
         }
 
         override fun getConversations(): Flow<List<Conversation>> {
@@ -56,18 +57,14 @@ class ChatRepositoryImpl
 
         override suspend fun refreshConversations(): Result<Unit> =
             withContext(Dispatchers.IO) {
-                try {
+                runCatching {
                     val response = conversationApiService.getConversations(0, 50)
-                    if (response.success && response.data != null) {
-                        val entities = response.data.content.map { it.toEntity() }
-                        conversationDao.upsertAll(entities)
-                        Result.success(Unit)
-                    } else {
-                        Result.failure(Exception(response.message))
-                    }
-                } catch (e: Exception) {
+                    check(response.success && response.data != null) { response.message ?: "Failed to refresh conversations" }
+                    val entities = response.data.content.map { it.toEntity() }
+                    conversationDao.upsertAll(entities)
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
                     Timber.e(e, "Failed to refresh conversations")
-                    Result.failure(e)
                 }
             }
 
@@ -76,19 +73,16 @@ class ChatRepositoryImpl
             serviceId: String?,
         ): Result<Conversation> =
             withContext(Dispatchers.IO) {
-                try {
+                runCatching {
                     val request = CreateConversationRequest(otherUserId, serviceId)
                     val response = conversationApiService.getOrCreateConversation(request)
-                    if (response.success && response.data != null) {
-                        val conversation = response.data.toDomainModel()
-                        conversationDao.upsert(conversation.toEntity())
-                        Result.success(conversation)
-                    } else {
-                        Result.failure(Exception(response.message))
-                    }
-                } catch (e: Exception) {
+                    check(response.success && response.data != null) { response.message ?: "Failed to get or create conversation" }
+                    val conversation = response.data.toDomainModel()
+                    conversationDao.upsert(conversation.toEntity())
+                    conversation
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
                     Timber.e(e, "Failed to get or create conversation")
-                    Result.failure(e)
                 }
             }
 
@@ -103,46 +97,40 @@ class ChatRepositoryImpl
             page: Int,
         ): Result<Unit> =
             withContext(Dispatchers.IO) {
-                try {
+                runCatching {
                     val response = conversationApiService.getMessages(conversationId, page, 50)
-                    if (response.success && response.data != null) {
-                        val gson = Gson()
-                        val localIdsToDelete = response.data.content.mapNotNull { msg ->
-                            try {
-                                if (msg.metadata != null) {
-                                    val metaObj = gson.fromJson(msg.metadata, JsonObject::class.java)
-                                    if (metaObj.has("localId")) {
-                                        metaObj.get("localId").asString
-                                    } else {
-                                        null
-                                    }
+                    check(response.success && response.data != null) { response.message ?: "Failed to load message history" }
+                    val gson = Gson()
+                    val localIdsToDelete = response.data.content.mapNotNull { msg ->
+                        if (msg.metadata != null) {
+                            runCatching {
+                                val metaObj = gson.fromJson(msg.metadata, JsonObject::class.java)
+                                if (metaObj.has("localId")) {
+                                    metaObj.get("localId").asString
                                 } else {
                                     null
                                 }
-                            } catch (e: Exception) {
-                                null
-                            }
+                            }.getOrNull()
+                        } else {
+                            null
                         }
-                        if (localIdsToDelete.isNotEmpty()) {
-                            localIdsToDelete.forEach { messageDao.deleteById(it) }
-                        }
-                        val entities = response.data.content.mapNotNull { msgDto ->
-                            val msgDomain = msgDto.toDomainModel()
-                            val processed = applyDeletionStatusToMessage(msgDomain)
-                            processed?.toEntity()
-                        }
-                        messageDao.upsertAll(entities)
-                        Result.success(Unit)
-                    } else {
-                        Result.failure(Exception(response.message))
                     }
-                } catch (e: Exception) {
+                    if (localIdsToDelete.isNotEmpty()) {
+                        localIdsToDelete.forEach { messageDao.deleteById(it) }
+                    }
+                    val entities = response.data.content.mapNotNull { msgDto ->
+                        val msgDomain = msgDto.toDomainModel()
+                        val processed = applyDeletionStatusToMessage(msgDomain)
+                        processed?.toEntity()
+                    }
+                    messageDao.upsertAll(entities)
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
                     Timber.e(e, "Failed to load message history")
                     if (e is retrofit2.HttpException && e.code() == 404) {
                         conversationDao.deleteById(conversationId)
                         messageDao.deleteByConversation(conversationId)
                     }
-                    Result.failure(e)
                 }
             }
 
@@ -154,21 +142,19 @@ class ChatRepositoryImpl
             metadata: String?,
         ): Result<Unit> =
             withContext(Dispatchers.IO) {
-                // Optimistic UI Update: Create a temporary message
                 val tempId = "temp_${UUID.randomUUID()}"
                 val currentUserId = firebaseAuth?.currentUser?.uid ?: ""
                 val currentTimestamp = java.time.Instant
                     .now()
                     .toString()
 
-                // Embed localId into metadata
                 val gson = Gson()
                 val metadataJson = if (metadata != null) {
-                    try {
+                    runCatching {
                         gson.fromJson(metadata, JsonObject::class.java).apply {
                             addProperty("localId", tempId)
                         }
-                    } catch (e: Exception) {
+                    }.getOrElse {
                         JsonObject().apply { addProperty("localId", tempId) }
                     }
                 } else {
@@ -192,7 +178,7 @@ class ChatRepositoryImpl
                     isFailed = false,
                 )
 
-                try {
+                runCatching {
                     messageDao.upsert(tempMessage.toEntity())
 
                     val request = SendMessageRequest(
@@ -204,59 +190,38 @@ class ChatRepositoryImpl
                     )
                     chatWebSocketService.connect()
                     chatWebSocketService.sendMessage(request)
-                    Result.success(Unit)
-                } catch (e: Exception) {
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
                     Timber.e(e, "Failed to send message over WebSocket, marking as failed")
-                    val failedMessage = Message(
-                        id = tempMessage.id,
-                        conversationId = tempMessage.conversationId,
-                        senderId = tempMessage.senderId,
-                        type = tempMessage.type,
-                        content = tempMessage.content,
-                        mediaUrl = tempMessage.mediaUrl,
-                        thumbnailUrl = tempMessage.thumbnailUrl,
-                        metadata = tempMessage.metadata,
-                        timestamp = tempMessage.timestamp,
-                        deliveredAt = tempMessage.deliveredAt,
-                        readAt = tempMessage.readAt,
-                        isSynced = tempMessage.isSynced,
-                        isFailed = true,
-                    )
+                    val failedMessage = tempMessage.copy(isFailed = true)
                     messageDao.upsert(failedMessage.toEntity())
-                    Result.failure(e)
                 }
             }
 
         override suspend fun markAsRead(conversationId: String): Result<Unit> =
             withContext(Dispatchers.IO) {
-                try {
+                runCatching {
                     val response = conversationApiService.markAsRead(conversationId)
-                    if (response.success) {
-                        val cached = conversationDao.getById(conversationId)
-                        if (cached != null) {
-                            conversationDao.upsert(cached.copy(unreadCount = 0))
-                        }
-                        Result.success(Unit)
-                    } else {
-                        Result.failure(Exception(response.message))
+                    check(response.success) { response.message ?: "Failed to mark conversation as read" }
+                    val cached = conversationDao.getById(conversationId)
+                    if (cached != null) {
+                        conversationDao.upsert(cached.copy(unreadCount = 0))
                     }
-                } catch (e: Exception) {
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
                     Timber.e(e, "Failed to mark conversation as read")
                     if (e is retrofit2.HttpException && e.code() == 404) {
                         conversationDao.deleteById(conversationId)
                         messageDao.deleteByConversation(conversationId)
                     }
-                    Result.failure(e)
                 }
             }
 
         override suspend fun connectWebSocket(conversationId: String): Flow<Message> =
             flow {
                 try {
-                    // Ensure WebSocket is connected
                     chatWebSocketService.connect()
 
-                    // Subscribe to conversation fresh on each collection
                     chatWebSocketService
                         .subscribeToConversation(conversationId)
                         .map { it.toDomainModel() }
@@ -268,18 +233,18 @@ class ChatRepositoryImpl
                                 val isFromOtherUser = cachedConv?.let { message.senderId == it.otherUserId } ?: false
                                 val isFromSelf = !isFromOtherUser
 
-                                // Remove optimistic message if this is the real one from the server
                                 if (isFromSelf) {
-                                    try {
-                                        if (message.metadata != null) {
+                                    if (message.metadata != null) {
+                                        runCatching {
                                             val metaObj = gson.fromJson(message.metadata, JsonObject::class.java)
                                             if (metaObj.has("localId")) {
                                                 val localId = metaObj.get("localId").asString
                                                 messageDao.deleteById(localId)
                                             }
+                                        }.onFailure { e ->
+                                            if (e is CancellationException) throw e
+                                            Timber.e(e, "Error processing localId from metadata")
                                         }
-                                    } catch (e: Exception) {
-                                        Timber.e(e, "Error processing localId from metadata")
                                     }
                                 }
 
@@ -294,7 +259,6 @@ class ChatRepositoryImpl
                                                 lastMessage = proc.content,
                                                 lastMessageType = proc.type.name,
                                                 lastMessageAt = proc.timestamp,
-                                                // Only increment badge for messages from others if the chat is NOT active
                                                 unreadCount = if (isFromOtherUser && !isActive) {
                                                     cachedConv.unreadCount + 1
                                                 } else {
@@ -303,7 +267,6 @@ class ChatRepositoryImpl
                                             ),
                                         )
 
-                                        // Post a local notification for incoming messages if the chat is not active.
                                         if (isFromOtherUser && !isActive) {
                                             val senderName = cachedConv.otherUserName
                                             val preview = when (proc.type.name) {
@@ -319,8 +282,6 @@ class ChatRepositoryImpl
                                                 messagePreview = preview,
                                             )
                                         } else if (isFromOtherUser && isActive) {
-                                            // If the conversation is currently active, mark the new message as read on the backend
-                                            // since the user is actively viewing it.
                                             markAsRead(conversationId)
                                         }
                                     }
@@ -354,6 +315,7 @@ class ChatRepositoryImpl
                             }
                         }
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     chatWebSocketService.disconnect()
                     throw e
                 }
@@ -369,37 +331,29 @@ class ChatRepositoryImpl
             chatWebSocketService.disconnect()
         }
 
-        override suspend fun deleteConversation(conversationId: String): Result<Unit> {
-            return withContext(Dispatchers.IO) {
-                try {
-                    // 1. Delete from local database
+        override suspend fun deleteConversation(conversationId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
                     conversationDao.deleteById(conversationId)
                     messageDao.deleteByConversation(conversationId)
 
-                    // 2. Perform the remote API delete call
                     val response = conversationApiService.deleteConversation(conversationId)
-                    if (response.success) {
-                        Result.success(Unit)
-                    } else {
-                        Result.failure(Exception(response.message ?: "Failed to delete conversation on server"))
-                    }
-                } catch (e: Exception) {
-                    Result.failure(e)
+                    check(response.success) { response.message ?: "Failed to delete conversation on server" }
+                    Unit
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
                 }
             }
-        }
 
         override suspend fun deleteMessageForMe(messageId: String): Result<Unit> =
             withContext(Dispatchers.IO) {
-                try {
+                runCatching {
                     markMessageDeletedForMe(messageId)
 
-                    // Delete from local DB
                     val cached = messageDao.getById(messageId)
                     if (cached != null) {
                         messageDao.deleteById(messageId)
 
-                        // Update conversation preview if needed
                         val conv = conversationDao.getById(cached.conversationId)
                         if (conv != null && conv.lastMessageAt == cached.timestamp) {
                             val latest = messageDao.getLatestMessage(cached.conversationId)
@@ -423,43 +377,41 @@ class ChatRepositoryImpl
                         }
                     }
 
-                    // Call backend REST endpoint (handle lack of endpoint gracefully)
-                    try {
+                    runCatching {
                         conversationApiService.deleteMessageForMe(messageId)
-                    } catch (e: Exception) {
+                    }.onFailure { e ->
+                        if (e is CancellationException) throw e
                         Timber.w(e, "Remote deleteMessageForMe failed, treating as local-only success")
                     }
-                    Result.success(Unit)
-                } catch (e: Exception) {
-                    Result.failure(e)
+                    Unit
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
                 }
             }
 
         override suspend fun deleteMessageForEveryone(messageId: String): Result<Unit> =
             withContext(Dispatchers.IO) {
-                try {
+                runCatching {
                     markMessageDeletedForEveryone(messageId)
 
-                    // Call backend REST endpoint (handle lack of endpoint gracefully)
-                    try {
+                    runCatching {
                         conversationApiService.deleteMessageForEveryone(messageId)
-                    } catch (e: Exception) {
+                    }.onFailure { e ->
+                        if (e is CancellationException) throw e
                         Timber.w(e, "Remote deleteMessageForEveryone failed, treating as local-only success")
                     }
 
-                    // Update locally
                     val cached = messageDao.getById(messageId)
                     if (cached != null) {
                         val gson = Gson()
-                        val metaObj = try {
+                        val metaObj = runCatching {
                             if (!cached.metadata.isNullOrBlank()) {
                                 gson.fromJson(cached.metadata, JsonObject::class.java)
                             } else {
                                 JsonObject()
                             }
-                        } catch (e: Exception) {
-                            JsonObject()
-                        }
+                        }.getOrElse { JsonObject() }
+
                         metaObj.addProperty("isDeleted", true)
                         val updated = cached.copy(
                             content = "This message was deleted",
@@ -469,7 +421,6 @@ class ChatRepositoryImpl
                         )
                         messageDao.upsert(updated)
 
-                        // Update conversation preview if needed
                         val conv = conversationDao.getById(cached.conversationId)
                         if (conv != null && conv.lastMessageAt == cached.timestamp) {
                             conversationDao.upsert(
@@ -480,9 +431,9 @@ class ChatRepositoryImpl
                             )
                         }
                     }
-                    Result.success(Unit)
-                } catch (e: Exception) {
-                    Result.failure(e)
+                    Unit
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
                 }
             }
 
@@ -507,15 +458,14 @@ class ChatRepositoryImpl
             if (status == "for_me") return null
 
             val gson = Gson()
-            val metaObj = try {
+            val metaObj = runCatching {
                 if (!message.metadata.isNullOrBlank()) {
                     gson.fromJson(message.metadata, JsonObject::class.java)
                 } else {
                     JsonObject()
                 }
-            } catch (e: Exception) {
-                JsonObject()
-            }
+            }.getOrElse { JsonObject() }
+
             metaObj.addProperty("isDeleted", true)
             return message.copy(
                 content = "This message was deleted",
@@ -525,8 +475,6 @@ class ChatRepositoryImpl
             )
         }
     }
-
-// Mapper extensions for DTOs to Domain models
 
 private fun ConversationResponse.toDomainModel(): Conversation =
     Conversation(

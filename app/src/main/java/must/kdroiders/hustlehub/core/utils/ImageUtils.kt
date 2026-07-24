@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -21,7 +22,7 @@ suspend fun saveImageToGallery(
     context: Context,
     imageUrl: String,
 ) = withContext(Dispatchers.IO) {
-    try {
+    runCatching {
         val url = java.net.URL(imageUrl)
         val bytes = url.openStream().use { it.readBytes() }
 
@@ -36,7 +37,7 @@ suspend fun saveImageToGallery(
 
         val resolver = context.contentResolver
         val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-            ?: throw IllegalStateException("MediaStore insert returned null URI")
+            ?: checkNotNull(null) { "MediaStore insert returned null URI" }
 
         resolver.openOutputStream(uri)?.use { out -> out.write(bytes) }
 
@@ -49,7 +50,8 @@ suspend fun saveImageToGallery(
         withContext(Dispatchers.Main) {
             Toast.makeText(context, "Image saved to gallery", Toast.LENGTH_SHORT).show()
         }
-    } catch (e: Exception) {
+    }.onFailure { e ->
+        if (e is CancellationException) throw e
         Timber.e(e, "ImageUtils: failed to save image to gallery url=$imageUrl")
         withContext(Dispatchers.Main) {
             Toast.makeText(context, "Failed to save image", Toast.LENGTH_SHORT).show()

@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.home.data.repository
 
+import kotlinx.coroutines.CancellationException
 import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchRequest
 import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchResponse
 import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
@@ -48,18 +49,15 @@ class AiSearchRepositoryImpl(
             }
         }
 
-        return try {
+        return runCatching {
             val request = AiSearchRequest(query = query, userLocation = userLocation, maxResults = maxResults)
             val response = discoveryApiService.aiSearch(request)
-            if (response.success && response.data != null) {
-                cache[cacheKey] = now to response.data
-                Result.success(response.data)
-            } else {
-                Result.failure(Exception(response.message))
-            }
-        } catch (e: Exception) {
+            check(response.success && response.data != null) { response.message ?: "AI search failed" }
+            cache[cacheKey] = now to response.data
+            response.data
+        }.onFailure { e ->
+            if (e is CancellationException) throw e
             Timber.w(e, "AI search network failure for query='$query'")
-            Result.failure(e)
         }
     }
 }
