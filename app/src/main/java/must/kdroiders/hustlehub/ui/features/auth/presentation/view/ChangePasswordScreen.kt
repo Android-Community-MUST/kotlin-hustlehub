@@ -52,7 +52,6 @@ fun ChangePasswordScreen(
     HustleScaffold(
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = { Text("Change Password") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
