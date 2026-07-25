@@ -128,6 +128,7 @@ fun ChatLocationPickerSheet(
                 withContext(Dispatchers.IO) {
                     try {
                         val geocoder = Geocoder(context, Locale.getDefault())
+
                         @Suppress("DEPRECATION")
                         val addresses = geocoder.getFromLocation(gpsLat, gpsLng, 1)
                         if (!addresses.isNullOrEmpty()) {
@@ -433,7 +434,10 @@ private fun AccuracyDot(accuracy: Float) {
 }
 
 @Composable
-private fun LandmarkChip(label: String, onClick: () -> Unit) {
+private fun LandmarkChip(
+    label: String,
+    onClick: () -> Unit,
+) {
     SuggestionChip(
         onClick = onClick,
         label = {

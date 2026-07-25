@@ -3,11 +3,6 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.view.components
 
 import android.location.Geocoder
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -97,7 +91,11 @@ fun extractAreaName(fullAddress: String): String {
     return when {
         parts.size >= 3 -> {
             val locality = parts.getOrNull(1)?.takeIf { !it.contains(Regex("\\d{5}")) } ?: parts.getOrNull(0)
-            val city = parts.getOrNull(2)?.replace(Regex("\\d+"), "")?.trim()?.takeIf { it.isNotBlank() && it != "Kenya" }
+            val city = parts
+                .getOrNull(2)
+                ?.replace(Regex("\\d+"), "")
+                ?.trim()
+                ?.takeIf { it.isNotBlank() && it != "Kenya" }
             if (city != null && locality != null && city != locality) {
                 "$locality, $city"
             } else {
@@ -122,8 +120,11 @@ fun MapLocationPickerModal(
 
     // Default to Nchiru if no previous coordinate is set
     val startLatLng = remember {
-        if (initialLat == 0.0 && initialLng == 0.0) NCHIRU_LATLNG
-        else LatLng(initialLat, initialLng)
+        if (initialLat == 0.0 && initialLng == 0.0) {
+            NCHIRU_LATLNG
+        } else {
+            LatLng(initialLat, initialLng)
+        }
     }
 
     val cameraPositionState = rememberCameraPositionState {
@@ -156,8 +157,10 @@ fun MapLocationPickerModal(
     // Swallow vertical scroll so the bottom sheet cannot close when panning the map
     val mapNestedScrollConnection = remember {
         object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset =
-                Offset(0f, available.y)
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset = Offset(0f, available.y)
         }
     }
 
@@ -178,6 +181,7 @@ fun MapLocationPickerModal(
         withContext(Dispatchers.IO) {
             try {
                 val geocoder = Geocoder(context, Locale.getDefault())
+
                 @Suppress("DEPRECATION")
                 val addresses = geocoder.getFromLocation(confirmedLat, confirmedLng, 1)
                 if (!addresses.isNullOrEmpty()) {
@@ -237,7 +241,7 @@ fun MapLocationPickerModal(
                 // Map type toggle button (layers icon)
                 IconButton(onClick = {
                     pickerMapType = PickerMapType.entries[
-                        (pickerMapType.ordinal + 1) % PickerMapType.entries.size
+                        (pickerMapType.ordinal + 1) % PickerMapType.entries.size,
                     ]
                 }) {
                     Icon(
@@ -376,8 +380,7 @@ fun MapLocationPickerModal(
                                 .background(
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                     shape = RoundedCornerShape(8.dp),
-                                )
-                                .padding(8.dp),
+                                ).padding(8.dp),
                         ) {
                             Icon(
                                 imageVector = Icons.Default.LocationOn,
@@ -397,7 +400,13 @@ fun MapLocationPickerModal(
                                 overflow = TextOverflow.Ellipsis,
                             )
                             Text(
-                                text = if (geocodedAddress.isNotBlank()) geocodedAddress else "${"%.5f".format(confirmedLat)}, ${"%.5f".format(confirmedLng)}",
+                                text = if (geocodedAddress.isNotBlank()) {
+                                    geocodedAddress
+                                } else {
+                                    "${"%.5f".format(
+                                        confirmedLat,
+                                    )}, ${"%.5f".format(confirmedLng)}"
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,

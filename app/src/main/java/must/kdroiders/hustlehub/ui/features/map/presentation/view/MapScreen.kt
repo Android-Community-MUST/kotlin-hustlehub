@@ -276,9 +276,6 @@ fun MapScreen(
                     ProviderMarkerContent(pin = pin)
                 },
             )
-
-
-
         }
 
         // 2. Top Floating HUD (Search + Chips + Stats)
