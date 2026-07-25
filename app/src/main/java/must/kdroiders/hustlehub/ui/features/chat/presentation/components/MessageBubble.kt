@@ -68,7 +68,16 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
@@ -643,14 +652,10 @@ private fun LocationMessageContent(
             null
         }
     }
-    val mapsApiKey = stringResource(id = R.string.google_maps_key)
-    val staticMapUrl = remember(locationData, mapsApiKey) {
-        if (locationData != null && mapsApiKey.isNotBlank()) {
-            "https://maps.googleapis.com/maps/api/staticmap?center=${locationData.lat},${locationData.lng}&zoom=16&size=400x200&scale=2&markers=color:red%7C${locationData.lat},${locationData.lng}&key=$mapsApiKey"
-        } else {
-            ""
-        }
+    val latLng = remember(locationData) {
+        if (locationData != null) LatLng(locationData.lat, locationData.lng) else null
     }
+
     val distanceText = remember(locationData, currentUserLocation) {
         if (locationData != null && currentUserLocation != null) {
             val results = FloatArray(1)
@@ -721,7 +726,7 @@ private fun LocationMessageContent(
             }
         }
 
-        // Map Preview Thumbnail
+        // Map Preview Thumbnail — renders native GoogleMap view
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -730,13 +735,43 @@ private fun LocationMessageContent(
                 .background(textColor.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center,
         ) {
-            if (staticMapUrl.isNotEmpty()) {
-                AsyncImage(
-                    model = staticMapUrl,
-                    contentDescription = "Map Preview",
+            if (latLng != null) {
+                val cameraPositionState = rememberCameraPositionState {
+                    position = CameraPosition.fromLatLngZoom(latLng, 16f)
+                }
+                val markerState = rememberUpdatedMarkerState(position = latLng)
+                val mapUiSettings = remember {
+                    MapUiSettings(
+                        zoomControlsEnabled = false,
+                        scrollGesturesEnabled = false,
+                        zoomGesturesEnabled = false,
+                        tiltGesturesEnabled = false,
+                        rotationGesturesEnabled = false,
+                        myLocationButtonEnabled = false,
+                        compassEnabled = false,
+                        mapToolbarEnabled = false,
+                    )
+                }
+
+                GoogleMap(
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
+                    cameraPositionState = cameraPositionState,
+                    uiSettings = mapUiSettings,
+                    onMapClick = {
+                        if (locationData != null) {
+                            onClick(
+                                locationData.lat,
+                                locationData.lng,
+                                locationData.label ?: "Shared Location",
+                            )
+                        }
+                    },
+                ) {
+                    Marker(
+                        state = markerState,
+                        title = locationData?.label ?: "Shared Location",
+                    )
+                }
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
@@ -772,6 +807,7 @@ private fun LocationMessageContent(
         }
     }
 }
+
 
 
 @Composable

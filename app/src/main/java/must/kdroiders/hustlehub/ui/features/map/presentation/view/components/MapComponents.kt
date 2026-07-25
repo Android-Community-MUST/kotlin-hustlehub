@@ -37,6 +37,7 @@ import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import kotlin.math.*
 
+
 @Composable
 fun ProviderMarkerContent(pin: MapPin) {
     val (icon, baseColor) = getCategoryIconAndColor(pin.category)
@@ -234,3 +235,4 @@ fun formatDistance(meters: Double): String {
         String.format(java.util.Locale.US, "%.1fkm away", km)
     }
 }
+
