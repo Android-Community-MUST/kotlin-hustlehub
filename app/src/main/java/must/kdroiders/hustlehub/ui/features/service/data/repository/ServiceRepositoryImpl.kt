@@ -12,6 +12,7 @@ import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiServic
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.AvailabilityRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateReviewRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateServiceRequest
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.LocationDto
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewResponse
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ServiceResponse
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.UpdateServiceRequest
@@ -45,9 +46,18 @@ class ServiceRepositoryImpl
             openToBarter: Boolean,
             tags: List<String>,
             portfolioUrls: List<String>,
+            lat: Double?,
+            lng: Double?,
+            locationLabel: String?,
         ): Result<Service> =
             withContext(Dispatchers.IO) {
                 runCatching {
+                    val locationDto = if (lat != null && lng != null) {
+                        LocationDto(lat = lat, lng = lng, label = locationLabel)
+                    } else {
+                        null
+                    }
+
                     val request = CreateServiceRequest(
                         title = title,
                         category = category.name,
@@ -56,6 +66,7 @@ class ServiceRepositoryImpl
                         maxPrice = maxPrice,
                         openToBarter = openToBarter,
                         tags = tags,
+                        location = locationDto,
                         portfolioUrls = portfolioUrls,
                     )
                     val response = apiService.createService(request)
@@ -94,9 +105,18 @@ class ServiceRepositoryImpl
             openToBarter: Boolean?,
             tags: List<String>?,
             portfolioUrls: List<String>?,
+            lat: Double?,
+            lng: Double?,
+            locationLabel: String?,
         ): Result<Service> =
             withContext(Dispatchers.IO) {
                 runCatching {
+                    val locationDto = if (lat != null && lng != null) {
+                        LocationDto(lat = lat, lng = lng, label = locationLabel)
+                    } else {
+                        null
+                    }
+
                     val request = UpdateServiceRequest(
                         title = title,
                         category = category?.name,
@@ -105,6 +125,7 @@ class ServiceRepositoryImpl
                         maxPrice = maxPrice,
                         openToBarter = openToBarter,
                         tags = tags,
+                        location = locationDto,
                         portfolioUrls = portfolioUrls,
                     )
                     val response = apiService.updateService(serviceId, request)

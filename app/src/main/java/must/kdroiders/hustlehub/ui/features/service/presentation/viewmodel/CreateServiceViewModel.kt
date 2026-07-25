@@ -18,12 +18,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
+import must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import timber.log.Timber
 import javax.inject.Inject
+
+enum class LocationSelectionMode {
+    CAMPUS_PRESET,
+    CURRENT_GPS,
+    MAP_PICKER,
+}
 
 data class CreateServiceUiState(
     val isEditMode: Boolean = false,
@@ -41,6 +48,11 @@ data class CreateServiceUiState(
     val tags: List<String> = emptyList(),
     val tagError: String? = null,
     val openToBarter: Boolean = false,
+    // Operating Location
+    val locationMode: LocationSelectionMode = LocationSelectionMode.CAMPUS_PRESET,
+    val selectedLat: Double? = -0.0076,
+    val selectedLng: Double? = 37.6534,
+    val locationLabel: String = "MUST Main Campus (Nchiru)",
     // Portfolio
     val portfolioUris: List<Uri> = emptyList(), // newly picked local images
     val existingPortfolioUrls: List<String> = emptyList(), // loaded from server on edit
@@ -228,6 +240,60 @@ class CreateServiceViewModel
             }
         }
 
+        // --- Location ---
+
+        fun onLocationModeChange(mode: LocationSelectionMode) {
+            _uiState.update { state ->
+                when (mode) {
+                    LocationSelectionMode.CAMPUS_PRESET -> state.copy(
+                        locationMode = mode,
+                        selectedLat = -0.0076,
+                        selectedLng = 37.6534,
+                        locationLabel = "MUST Main Campus (Nchiru)",
+                    )
+                    LocationSelectionMode.CURRENT_GPS -> state.copy(
+                        locationMode = mode,
+                    )
+                    LocationSelectionMode.MAP_PICKER -> state.copy(
+                        locationMode = mode,
+                    )
+                }
+            }
+        }
+
+        fun onLocationPresetSelect(
+            name: String,
+            lat: Double,
+            lng: Double,
+        ) {
+            _uiState.update {
+                it.copy(
+                    locationMode = LocationSelectionMode.CAMPUS_PRESET,
+                    selectedLat = lat,
+                    selectedLng = lng,
+                    locationLabel = name,
+                )
+            }
+        }
+
+        fun onCustomLocationSelect(
+            lat: Double,
+            lng: Double,
+            label: String,
+        ) {
+            _uiState.update {
+                it.copy(
+                    selectedLat = lat,
+                    selectedLng = lng,
+                    locationLabel = label,
+                )
+            }
+        }
+
+        fun onLocationLabelChange(label: String) {
+            _uiState.update { it.copy(locationLabel = label) }
+        }
+
         fun publish() {
             if (!validate()) return
 
@@ -250,6 +316,9 @@ class CreateServiceViewModel
                         maxPrice = maxPrice,
                         openToBarter = state.openToBarter,
                         tags = state.tags,
+                        lat = state.selectedLat,
+                        lng = state.selectedLng,
+                        locationLabel = state.locationLabel,
                     )
                 } else {
                     serviceRepository.createService(
@@ -260,6 +329,9 @@ class CreateServiceViewModel
                         maxPrice = maxPrice,
                         openToBarter = state.openToBarter,
                         tags = state.tags,
+                        lat = state.selectedLat,
+                        lng = state.selectedLng,
+                        locationLabel = state.locationLabel,
                     )
                 }
 
@@ -278,7 +350,7 @@ class CreateServiceViewModel
                                             // Flow usually emits once then completes for single uploads, collect first result
                                             var url: String? = null
                                             storageRepository.uploadPortfolioImage(targetId, bytes).collect { result ->
-                                                if (result is must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult.Success) {
+                                                if (result is UploadResult.Success) {
                                                     url = result.url
                                                 }
                                             }

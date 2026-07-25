@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package must.kdroiders.hustlehub.ui.features.service.presentation.view
 
 import android.net.Uri
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,23 +34,39 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -56,7 +75,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.rememberCameraPositionState
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleCard
+import must.kdroiders.hustlehub.sharedComposables.HustleCardVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.AvailabilityChipSelector
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.CategoryDropdown
@@ -66,6 +92,7 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.TagChip
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.CreateServiceEvent
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.CreateServiceViewModel
+import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.LocationSelectionMode
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -355,6 +382,20 @@ fun CreateServiceScreen(
                 }
                 Spacer(Modifier.height(16.dp))
 
+                // Service Operating Location
+                ServiceLocationCard(
+                    locationMode = state.locationMode,
+                    selectedLat = state.selectedLat,
+                    selectedLng = state.selectedLng,
+                    locationLabel = state.locationLabel,
+                    onModeChange = viewModel::onLocationModeChange,
+                    onPresetSelect = viewModel::onLocationPresetSelect,
+                    onCustomLocationSelect = viewModel::onCustomLocationSelect,
+                    onLabelChange = viewModel::onLocationLabelChange,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(16.dp))
+
                 // Current status
                 SectionLabel(text = "Current Status")
                 AvailabilityChipSelector(
@@ -411,6 +452,263 @@ fun CreateServiceScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 CircularWavyProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ServiceLocationCard(
+    locationMode: LocationSelectionMode,
+    selectedLat: Double?,
+    selectedLng: Double?,
+    locationLabel: String,
+    onModeChange: (LocationSelectionMode) -> Unit,
+    onPresetSelect: (String, Double, Double) -> Unit,
+    onCustomLocationSelect: (Double, Double, String) -> Unit,
+    onLabelChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    var showMapModal by remember { mutableStateOf(false) }
+
+    val presets = remember {
+        listOf(
+            Triple("MUST Main Campus (Nchiru)", -0.0076, 37.6534),
+            Triple("Tuition & Admin Block", -0.0075, 37.6535),
+            Triple("MUST Library", -0.0074, 37.6532),
+            Triple("Engineering & Tech Block", -0.0073, 37.6538),
+            Triple("Campus Hostels", -0.0080, 37.6530),
+        )
+    }
+
+    HustleCard(
+        modifier = modifier,
+        variant = HustleCardVariant.Surface,
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
+                Text(
+                    text = "Service Operating Location",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+
+            Spacer(Modifier.height(4.dp))
+
+            Text(
+                text = "Where will you provide this service when operating on campus?",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            // Selection Mode Chips
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = locationMode == LocationSelectionMode.CAMPUS_PRESET,
+                    onClick = { onModeChange(LocationSelectionMode.CAMPUS_PRESET) },
+                    label = { Text("Preset", fontSize = 11.sp) },
+                    leadingIcon = {
+                        Icon(Icons.Default.School, contentDescription = null, modifier = Modifier.size(14.dp))
+                    },
+                )
+
+                FilterChip(
+                    selected = locationMode == LocationSelectionMode.CURRENT_GPS,
+                    onClick = {
+                        onModeChange(LocationSelectionMode.CURRENT_GPS)
+                        val fusedClient = LocationServices.getFusedLocationProviderClient(context)
+                        try {
+                            fusedClient.lastLocation.addOnSuccessListener { loc ->
+                                loc?.let {
+                                    onCustomLocationSelect(it.latitude, it.longitude, "Current Device Location")
+                                }
+                            }
+                        } catch (e: SecurityException) {
+                            timber.log.Timber.e(e, "GPS permission error")
+                        }
+                    },
+                    label = { Text("My GPS", fontSize = 11.sp) },
+                    leadingIcon = {
+                        Icon(Icons.Default.MyLocation, contentDescription = null, modifier = Modifier.size(14.dp))
+                    },
+                )
+
+                FilterChip(
+                    selected = locationMode == LocationSelectionMode.MAP_PICKER,
+                    onClick = {
+                        onModeChange(LocationSelectionMode.MAP_PICKER)
+                        showMapModal = true
+                    },
+                    label = { Text("Pick on Map", fontSize = 11.sp) },
+                    leadingIcon = {
+                        Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(14.dp))
+                    },
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Details depending on mode
+            when (locationMode) {
+                LocationSelectionMode.CAMPUS_PRESET -> {
+                    Text(
+                        text = "Select Campus Landmark:",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        for ((name, lat, lng) in presets) {
+                            val isSelected = locationLabel == name
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { onPresetSelect(name, lat, lng) },
+                                label = { Text(name, fontSize = 11.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                ),
+                            )
+                        }
+                    }
+                }
+                LocationSelectionMode.CURRENT_GPS -> {
+                    Text(
+                        text = if (selectedLat !=
+                            null
+                        ) {
+                            "Detected Coordinates: ${"%.4f".format(selectedLat)}, ${"%.4f".format(selectedLng)}"
+                        } else {
+                            "Detecting GPS location..."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+                LocationSelectionMode.MAP_PICKER -> {
+                    HustleButton(
+                        text = if (selectedLat != null) "Change Location on Map" else "Open Map Picker",
+                        onClick = { showMapModal = true },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Location note / building name input
+            HustleTextField(
+                value = locationLabel,
+                onValueChange = onLabelChange,
+                placeholder = "Location note (e.g. Hostel 3, Room 12 or Block B)",
+            )
+        }
+    }
+
+    if (showMapModal) {
+        MapLocationPickerModal(
+            initialLat = selectedLat ?: -0.0076,
+            initialLng = selectedLng ?: 37.6534,
+            onLocationConfirmed = { lat, lng ->
+                onCustomLocationSelect(lat, lng, "Custom Map Location (${"%.4f".format(lat)}, ${"%.4f".format(lng)})")
+                showMapModal = false
+            },
+            onDismiss = { showMapModal = false },
+        )
+    }
+}
+
+@Composable
+private fun MapLocationPickerModal(
+    initialLat: Double,
+    initialLng: Double,
+    onLocationConfirmed: (Double, Double) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(LatLng(initialLat, initialLng), 16f)
+    }
+
+    val mapNestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                return Offset(0f, available.y)
+            }
+        }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.85f),
+        ) {
+            Text(
+                text = "Drag map to center location pin",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .nestedScroll(mapNestedScrollConnection),
+            ) {
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                )
+
+                // Center pin overlay
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Target Pin",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .align(Alignment.Center),
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                HustleButton(
+                    text = "Confirm Location",
+                    onClick = {
+                        val target = cameraPositionState.position.target
+                        onLocationConfirmed(target.latitude, target.longitude)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }

@@ -21,12 +21,12 @@ interface ServiceRepository {
         openToBarter: Boolean,
         tags: List<String>,
         portfolioUrls: List<String> = emptyList(),
+        lat: Double? = null,
+        lng: Double? = null,
+        locationLabel: String? = null,
     ): Result<Service>
 
-    /**
-     * Fetches a single service by its UUID.
-     * Falls back to the Room cache if the network is unavailable.
-     */
+    /** Fetches a single service by its UUID. */
     suspend fun getServiceById(serviceId: String): Result<Service>
 
     /** Updates an existing service listing. Null parameters leave the field unchanged. */
@@ -40,6 +40,9 @@ interface ServiceRepository {
         openToBarter: Boolean? = null,
         tags: List<String>? = null,
         portfolioUrls: List<String>? = null,
+        lat: Double? = null,
+        lng: Double? = null,
+        locationLabel: String? = null,
     ): Result<Service>
 
     /** Permanently deletes the service and removes it from the local cache. */
