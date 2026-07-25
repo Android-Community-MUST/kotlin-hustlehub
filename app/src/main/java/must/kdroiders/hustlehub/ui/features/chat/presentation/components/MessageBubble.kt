@@ -631,7 +631,7 @@ private const val WAVEFORM_BAR_COUNT = 40
 @Composable
 private fun LocationMessageContent(
     message: Message,
-    textColor: androidx.compose.ui.graphics.Color,
+    textColor: Color,
     currentUserLocation: android.location.Location?,
     onClick: (Double, Double, String) -> Unit,
 ) {
@@ -645,8 +645,8 @@ private fun LocationMessageContent(
     }
     val mapsApiKey = stringResource(id = R.string.google_maps_key)
     val staticMapUrl = remember(locationData, mapsApiKey) {
-        if (locationData != null) {
-            "https://maps.googleapis.com/maps/api/staticmap?center=${locationData.lat},${locationData.lng}&zoom=15&size=300x150&scale=2&markers=${locationData.lat},${locationData.lng}&key=$mapsApiKey"
+        if (locationData != null && mapsApiKey.isNotBlank()) {
+            "https://maps.googleapis.com/maps/api/staticmap?center=${locationData.lat},${locationData.lng}&zoom=16&size=400x200&scale=2&markers=color:red%7C${locationData.lat},${locationData.lng}&key=$mapsApiKey"
         } else {
             ""
         }
@@ -678,7 +678,7 @@ private fun LocationMessageContent(
 
     Column(
         modifier = Modifier
-            .width(240.dp)
+            .width(250.dp)
             .clickable {
                 if (locationData != null) {
                     onClick(
@@ -687,8 +687,9 @@ private fun LocationMessageContent(
                         locationData.label ?: "Shared Location",
                     )
                 }
-            }.padding(4.dp),
+            }.padding(2.dp),
     ) {
+        // Location title & distance badge
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = 6.dp),
@@ -700,53 +701,78 @@ private fun LocationMessageContent(
                 modifier = Modifier.size(20.dp),
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = locationData?.label ?: "Shared Location",
-                color = textColor,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = locationData?.label ?: "Shared Location",
+                    color = textColor,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (distanceText != null) {
+                    Text(
+                        text = distanceText,
+                        color = textColor.copy(alpha = 0.85f),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+            }
         }
 
-        if (staticMapUrl.isNotEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(130.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)),
-            ) {
+        // Map Preview Thumbnail
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(135.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(textColor.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (staticMapUrl.isNotEmpty()) {
                 AsyncImage(
                     model = staticMapUrl,
                     contentDescription = "Map Preview",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                 )
+            } else {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = textColor.copy(alpha = 0.6f),
+                        modifier = Modifier.size(36.dp),
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Shared Location Pin",
+                        fontSize = 11.sp,
+                        color = textColor.copy(alpha = 0.7f),
+                    )
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        Text(
-            text = "Tap to open in Maps",
-            color = textColor.copy(alpha = 0.8f),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium,
-        )
-
-        if (distanceText != null) {
-            Spacer(modifier = Modifier.height(2.dp))
+        // Get Directions CTA line
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Text(
-                text = distanceText,
-                color = textColor.copy(alpha = 0.9f),
+                text = "Tap to view in Maps",
+                color = textColor.copy(alpha = 0.85f),
                 fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
             )
         }
     }
 }
+
 
 @Composable
 private fun ServiceCardMessageContent(
