@@ -50,7 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
@@ -62,9 +62,9 @@ import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.Conversa
 fun ChatScreen(
     onNavigateToChatDetail: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ConversationListViewModel = hiltViewModel(),
+    conversationListViewModel: ConversationListViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by conversationListViewModel.uiState.collectAsState()
 
     HustleScaffold(
         topBar = {
@@ -112,7 +112,7 @@ fun ChatScreen(
                     val pullToRefreshState = rememberPullToRefreshState()
                     PullToRefreshBox(
                         isRefreshing = state.isRefreshing,
-                        onRefresh = viewModel::refreshConversations,
+                        onRefresh = conversationListViewModel::refreshConversations,
                         modifier = Modifier.fillMaxSize(),
                         state = pullToRefreshState,
                         indicator = {
@@ -136,7 +136,7 @@ fun ChatScreen(
                                 val dismissState = rememberSwipeToDismissBoxState(
                                     confirmValueChange = { dismissValue ->
                                         if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
-                                            viewModel.deleteConversation(conversation.id)
+                                            conversationListViewModel.deleteConversation(conversation.id)
                                             true
                                         } else {
                                             false

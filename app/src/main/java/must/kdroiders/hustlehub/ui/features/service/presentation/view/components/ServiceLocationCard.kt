@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalLayoutApi::class)
-
 package must.kdroiders.hustlehub.ui.features.service.presentation.view.components
 
 import androidx.compose.foundation.layout.Arrangement
@@ -209,8 +207,8 @@ fun ServiceLocationCard(
         MapLocationPickerModal(
             initialLat = selectedLat ?: -0.0076,
             initialLng = selectedLng ?: 37.6534,
-            onLocationConfirmed = { lat, lng ->
-                onCustomLocationSelect(lat, lng, "Custom Map Location (${"%.4f".format(lat)}, ${"%.4f".format(lng)})")
+            onLocationConfirmed = { lat, lng, addressLabel ->
+                onCustomLocationSelect(lat, lng, addressLabel)
                 showMapModal = false
             },
             onDismiss = { showMapModal = false },

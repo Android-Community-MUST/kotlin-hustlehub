@@ -26,7 +26,7 @@ fun HustleScaffold(
     floatingActionButtonPosition: FabPosition = FabPosition.End,
     containerColor: Color = MaterialTheme.colorScheme.background,
     contentColor: Color = MaterialTheme.colorScheme.onBackground,
-    contentWindowInsets: WindowInsets = WindowInsets(0.dp),
+    // contentWindowInsets: WindowInsets = WindowInsets(0.dp),
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
@@ -38,7 +38,7 @@ fun HustleScaffold(
         floatingActionButtonPosition = floatingActionButtonPosition,
         containerColor = containerColor,
         contentColor = contentColor,
-        contentWindowInsets = contentWindowInsets,
+        // contentWindowInsets = contentWindowInsets,
         content = content,
     )
 }
