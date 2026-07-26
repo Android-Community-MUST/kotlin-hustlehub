@@ -69,6 +69,7 @@ interface UserRepository {
         phone: String,
         campusLocation: String,
         avatarUrl: String? = null,
+        allowCalls: Boolean = false,
     ): Result<User>
 
     /**

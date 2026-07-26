@@ -157,6 +157,7 @@ class UserRepositoryImpl
             phone: String,
             campusLocation: String,
             avatarUrl: String?,
+            allowCalls: Boolean,
         ): Result<User> =
             runCatching {
                 val request = UpdateProfileRequest(
@@ -165,6 +166,7 @@ class UserRepositoryImpl
                     avatarUrl = avatarUrl,
                     phone = phone.takeIf { it.isNotBlank() },
                     campusLocation = campusLocation.takeIf { it.isNotBlank() },
+                    allowCalls = allowCalls,
                 )
                 val response = userApiService.updateMe(request)
                 if (response.success && response.data != null) {
@@ -230,6 +232,7 @@ private fun UserResponseDto.toDomain(): User =
         bio = bio ?: "",
         isVerified = verified,
         isOnline = active,
+        allowCalls = allowCalls ?: false,
         hustleScore = hustleScore ?: 0f,
         reviewCount = reviewCount ?: 0,
         lat = lat,

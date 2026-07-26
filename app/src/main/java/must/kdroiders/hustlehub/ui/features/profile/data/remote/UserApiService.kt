@@ -15,6 +15,7 @@ data class UpdateProfileRequest(
     val avatarUrl: String? = null,
     val phone: String? = null,
     val campusLocation: String? = null,
+    val allowCalls: Boolean? = null,
 )
 
 data class OnlineStatusRequest(

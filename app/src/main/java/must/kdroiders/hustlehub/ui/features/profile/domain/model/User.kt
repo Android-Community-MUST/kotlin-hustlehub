@@ -22,5 +22,6 @@ data class User(
     val reviewCount: Int = 0,
     val lat: Double? = null,
     val lng: Double? = null,
+    val allowCalls: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
 )

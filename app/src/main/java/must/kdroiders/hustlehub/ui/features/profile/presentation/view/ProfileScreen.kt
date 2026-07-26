@@ -137,6 +137,8 @@ private fun ProfileContent(
                     phone = user.phone,
                     campusLocation = user.campusLocation,
                     bio = user.bio,
+                    allowCalls = user.allowCalls,
+                    isOwnProfile = true,
                 )
             }
         }
