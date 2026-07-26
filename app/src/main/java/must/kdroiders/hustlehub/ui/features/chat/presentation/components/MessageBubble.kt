@@ -68,6 +68,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.google.android.gms.maps.model.CameraPosition
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
 import com.google.maps.android.compose.GoogleMap
@@ -911,16 +914,19 @@ private fun ServiceCardMessageContent(
 }
 
 private fun formatTimestamp(isoString: String?): String {
-    if (isoString == null) return ""
+    if (isoString.isNullOrBlank()) return ""
     return try {
-        val parts = isoString.split("T")
-        if (parts.size >= 2) {
-            parts[1].substring(0, 5) // "HH:MM"
-        } else {
+        val instant = Instant.parse(isoString)
+        val zonedDateTime = instant.atZone(ZoneId.systemDefault())
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        zonedDateTime.format(formatter)
+    } catch (e: Exception) {
+        try {
+            val parts = isoString.split("T")
+            if (parts.size >= 2) parts[1].substring(0, 5) else isoString
+        } catch (_: Exception) {
             isoString
         }
-    } catch (e: Exception) {
-        isoString
     }
 }
 

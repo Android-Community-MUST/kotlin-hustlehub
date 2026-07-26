@@ -53,6 +53,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
@@ -334,16 +337,18 @@ private fun ConversationItem(
 }
 
 private fun formatTimestamp(isoString: String?): String {
-    if (isoString == null) return ""
+    if (isoString.isNullOrBlank()) return ""
     return try {
-        val parts = isoString.split("T")
-        if (parts.size >= 2) {
-            val time = parts[1].substring(0, 5) // "HH:MM"
-            time
-        } else {
+        val instant = Instant.parse(isoString)
+        val zonedDateTime = instant.atZone(ZoneId.systemDefault())
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        zonedDateTime.format(formatter)
+    } catch (e: Exception) {
+        try {
+            val parts = isoString.split("T")
+            if (parts.size >= 2) parts[1].substring(0, 5) else isoString
+        } catch (_: Exception) {
             isoString
         }
-    } catch (e: Exception) {
-        isoString
     }
 }
