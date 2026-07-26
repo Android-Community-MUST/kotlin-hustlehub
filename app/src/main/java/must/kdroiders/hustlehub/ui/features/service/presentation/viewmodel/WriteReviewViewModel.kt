@@ -8,10 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.firstOrNull
-import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
-import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicateReviewUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.SubmitReviewUseCase
 import timber.log.Timber
@@ -24,8 +22,7 @@ class WriteReviewViewModel
         private val submitReviewUseCase: SubmitReviewUseCase,
         private val getServiceByIdUseCase: GetServiceByIdUseCase,
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
-        private val serviceRepository: ServiceRepository,
-        private val userPreferences: UserPreferences,
+        private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase,
     ) : ViewModel() {
         private var serviceId: String? = null
 
@@ -46,16 +43,7 @@ class WriteReviewViewModel
                     .onSuccess { service ->
                         getProviderProfileUseCase(service.providerId)
                             .onSuccess { provider ->
-                                val currentUser = userPreferences.cachedUser.firstOrNull()
-                                var alreadyReviewed = false
-                                if (currentUser != null && currentUser.id.isNotBlank()) {
-                                    serviceRepository.getServiceReviews(id)
-                                        .onSuccess { page ->
-                                            alreadyReviewed = page.content.any { review ->
-                                                review.customerId == currentUser.id
-                                            }
-                                        }
-                                }
+                                val alreadyReviewed = checkDuplicateReviewUseCase(id).getOrDefault(false)
 
                                 _uiState.update {
                                     it.copy(
