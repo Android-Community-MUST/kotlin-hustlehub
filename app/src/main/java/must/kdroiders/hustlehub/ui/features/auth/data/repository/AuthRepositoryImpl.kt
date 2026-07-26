@@ -6,6 +6,8 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.core.api.FirebaseAuthErrorMapper
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
@@ -17,8 +19,9 @@ import javax.inject.Singleton
 /**
  * Firebase Auth implementation of [AuthRepository].
  *
+ * Idiomatic Kotlin implementation using [runCatching] pipelines.
  * All Firebase exceptions are routed through [FirebaseAuthErrorMapper] before being
- * rethrown, so callers always receive a user-friendly error message.
+ * rethrown, while preserving coroutine cancellation.
  */
 @Singleton
 class AuthRepositoryImpl
@@ -36,8 +39,8 @@ class AuthRepositoryImpl
         override suspend fun login(
             email: String,
             password: String,
-        ): LoginResult {
-            return try {
+        ): LoginResult =
+            runCatching {
                 val result = firebaseAuth
                     .signInWithEmailAndPassword(email, password)
                     .await()
@@ -52,10 +55,11 @@ class AuthRepositoryImpl
 
                 // Auto-send a new verification link if the email is still unverified
                 if (!user.isEmailVerified) {
-                    try {
+                    runCatching {
                         user.sendEmailVerification().await()
                         Timber.d("Automatic verification link re-sent to %s", email)
-                    } catch (e: Exception) {
+                    }.onFailure { e ->
+                        if (e is CancellationException) throw e
                         Timber.e(e, "Failed to auto-send verification email on login")
                     }
                 }
@@ -64,11 +68,11 @@ class AuthRepositoryImpl
                     user = user,
                     isEmailVerified = user.isEmailVerified,
                 )
-            } catch (e: Exception) {
+            }.getOrElse { e ->
+                if (e is CancellationException) throw e
                 Timber.e(e, "Login failed for %s", email)
                 throw Exception(FirebaseAuthErrorMapper.map(e), e)
             }
-        }
 
         /**
          * Creates a new Firebase user and sends a verification email.
@@ -81,8 +85,8 @@ class AuthRepositoryImpl
             name: String,
             email: String,
             password: String,
-        ): LoginResult {
-            return try {
+        ): LoginResult =
+            runCatching {
                 val result = firebaseAuth
                     .createUserWithEmailAndPassword(email, password)
                     .await()
@@ -91,22 +95,24 @@ class AuthRepositoryImpl
                     ?: throw Exception("Sign-up failed: no user returned")
 
                 // Set Firebase display name
-                try {
-                    val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest
+                runCatching {
+                    val profileUpdates = UserProfileChangeRequest
                         .Builder()
                         .setDisplayName(name)
                         .build()
                     user.updateProfile(profileUpdates).await()
                     Timber.d("Firebase profile updated with name: %s", name)
-                } catch (e: Exception) {
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
                     Timber.e(e, "Failed to update Firebase profile display name")
                 }
 
                 // Send the verification email link
-                try {
+                runCatching {
                     user.sendEmailVerification().await()
                     Timber.d("Verification email sent to %s", email)
-                } catch (e: Exception) {
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
                     Timber.e(e, "Failed to send verification email on sign-up")
                 }
 
@@ -114,11 +120,11 @@ class AuthRepositoryImpl
                     user = user,
                     isEmailVerified = user.isEmailVerified,
                 )
-            } catch (e: Exception) {
+            }.getOrElse { e ->
+                if (e is CancellationException) throw e
                 Timber.e(e, "Sign-up failed for %s", email)
                 throw Exception(FirebaseAuthErrorMapper.map(e), e)
             }
-        }
 
         /**
          * Signs in with a Google ID token obtained from the Credential Manager flow.
@@ -126,8 +132,8 @@ class AuthRepositoryImpl
          * Domain validation (@must.ac.ke) is enforced in [LoginViewModel] after this
          * call succeeds, because Firebase does not know our domain restriction.
          */
-        override suspend fun signInWithGoogle(idToken: String): LoginResult {
-            return try {
+        override suspend fun signInWithGoogle(idToken: String): LoginResult =
+            runCatching {
                 val credential = GoogleAuthProvider.getCredential(idToken, null)
                 val result = firebaseAuth.signInWithCredential(credential).await()
                 val user = result.user
@@ -137,11 +143,11 @@ class AuthRepositoryImpl
                     user = user,
                     isEmailVerified = user.isEmailVerified,
                 )
-            } catch (e: Exception) {
+            }.getOrElse { e ->
+                if (e is CancellationException) throw e
                 Timber.e(e, "Google sign-in failed")
                 throw Exception(FirebaseAuthErrorMapper.map(e), e)
             }
-        }
 
         /**
          * Sends a Firebase email verification link to the currently signed-in user.
@@ -150,12 +156,13 @@ class AuthRepositoryImpl
          * uses a link rather than a numeric OTP.
          */
         override suspend fun sendOtp(email: String) {
-            try {
+            runCatching {
                 val user = firebaseAuth.currentUser
                     ?: throw Exception("No signed-in user to send a verification email to")
                 user.sendEmailVerification().await()
                 Timber.d("Verification email link sent to %s", email)
-            } catch (e: Exception) {
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
                 Timber.e(e, "Failed to send verification email link")
                 throw Exception(FirebaseAuthErrorMapper.map(e), e)
             }
@@ -171,7 +178,7 @@ class AuthRepositoryImpl
             email: String,
             otp: String,
         ) {
-            try {
+            runCatching {
                 val user = firebaseAuth.currentUser
                     ?: throw Exception("No signed-in user to verify")
 
@@ -183,10 +190,9 @@ class AuthRepositoryImpl
                             "verification link, then tap \"Verify\" below.",
                     )
                 }
-            } catch (e: Exception) {
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
                 Timber.e(e, "Email verification check failed")
-                // Only re-wrap if this is a Firebase exception; plain Exceptions already have
-                // a clear message from the check above.
                 throw if (e is com.google.firebase.auth.FirebaseAuthException) {
                     Exception(FirebaseAuthErrorMapper.map(e), e)
                 } else {
@@ -210,10 +216,11 @@ class AuthRepositoryImpl
 
         /** Sends a password reset email to the given email address. */
         override suspend fun sendPasswordResetEmail(email: String) {
-            try {
+            runCatching {
                 firebaseAuth.sendPasswordResetEmail(email).await()
                 Timber.d("Password reset email sent to %s", email)
-            } catch (e: Exception) {
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
                 Timber.e(e, "Failed to send password reset email")
                 throw Exception(FirebaseAuthErrorMapper.map(e), e)
             }
@@ -226,16 +233,16 @@ class AuthRepositoryImpl
         override suspend fun changePassword(
             currentPassword: String,
             newPassword: String,
-        ): Result<Unit> {
-            return try {
+        ): Result<Unit> =
+            runCatching {
                 val user = firebaseAuth.currentUser
-                    ?: return Result.failure(Exception("User not logged in"))
+                    ?: throw Exception("User not logged in")
 
                 val email = user.email
-                    ?: return Result.failure(Exception("Email not found for current user"))
+                    ?: throw Exception("Email not found for current user")
 
                 if (currentPassword == newPassword) {
-                    return Result.failure(Exception("New password cannot be the same as the current password"))
+                    throw Exception("New password cannot be the same as the current password")
                 }
 
                 // Create the credential
@@ -246,16 +253,13 @@ class AuthRepositoryImpl
 
                 // Update to the new password
                 user.updatePassword(newPassword).await()
-
-                Result.success(Unit)
-            } catch (e: FirebaseAuthInvalidUserException) {
-                Result.failure(Exception("User account is disabled or deleted."))
-            } catch (e: FirebaseAuthInvalidCredentialsException) {
-                Result.failure(Exception("Incorrect current password."))
-            } catch (e: Exception) {
-                // Catch all other Firebase exceptions (e.g. network errors, weak password)
-                // and safely return them as a Result.failure instead of crashing.
-                Result.failure(e)
+                Unit
+            }.recoverCatching { e ->
+                if (e is CancellationException) throw e
+                when (e) {
+                    is FirebaseAuthInvalidUserException -> throw Exception("User account is disabled or deleted.")
+                    is FirebaseAuthInvalidCredentialsException -> throw Exception("Incorrect current password.")
+                    else -> throw e
+                }
             }
-        }
     }

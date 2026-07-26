@@ -60,7 +60,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -68,14 +67,23 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
-import must.kdroiders.hustlehub.R
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.isDeleted
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.PlayerState
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -631,7 +639,7 @@ private const val WAVEFORM_BAR_COUNT = 40
 @Composable
 private fun LocationMessageContent(
     message: Message,
-    textColor: androidx.compose.ui.graphics.Color,
+    textColor: Color,
     currentUserLocation: android.location.Location?,
     onClick: (Double, Double, String) -> Unit,
 ) {
@@ -643,14 +651,10 @@ private fun LocationMessageContent(
             null
         }
     }
-    val mapsApiKey = stringResource(id = R.string.google_maps_key)
-    val staticMapUrl = remember(locationData, mapsApiKey) {
-        if (locationData != null) {
-            "https://maps.googleapis.com/maps/api/staticmap?center=${locationData.lat},${locationData.lng}&zoom=15&size=300x150&scale=2&markers=${locationData.lat},${locationData.lng}&key=$mapsApiKey"
-        } else {
-            ""
-        }
+    val latLng = remember(locationData) {
+        if (locationData != null) LatLng(locationData.lat, locationData.lng) else null
     }
+
     val distanceText = remember(locationData, currentUserLocation) {
         if (locationData != null && currentUserLocation != null) {
             val results = FloatArray(1)
@@ -678,7 +682,7 @@ private fun LocationMessageContent(
 
     Column(
         modifier = Modifier
-            .width(240.dp)
+            .width(250.dp)
             .clickable {
                 if (locationData != null) {
                     onClick(
@@ -687,8 +691,9 @@ private fun LocationMessageContent(
                         locationData.label ?: "Shared Location",
                     )
                 }
-            }.padding(4.dp),
+            }.padding(2.dp),
     ) {
+        // Location title & distance badge
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = 6.dp),
@@ -700,49 +705,103 @@ private fun LocationMessageContent(
                 modifier = Modifier.size(20.dp),
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = locationData?.label ?: "Shared Location",
-                color = textColor,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = locationData?.label ?: "Shared Location",
+                    color = textColor,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (distanceText != null) {
+                    Text(
+                        text = distanceText,
+                        color = textColor.copy(alpha = 0.85f),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+            }
         }
 
-        if (staticMapUrl.isNotEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(130.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)),
-            ) {
-                AsyncImage(
-                    model = staticMapUrl,
-                    contentDescription = "Map Preview",
+        // Map Preview Thumbnail — renders native GoogleMap view
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(135.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(textColor.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (latLng != null) {
+                val cameraPositionState = rememberCameraPositionState {
+                    position = CameraPosition.fromLatLngZoom(latLng, 16f)
+                }
+                val markerState = rememberUpdatedMarkerState(position = latLng)
+                val mapUiSettings = remember {
+                    MapUiSettings(
+                        zoomControlsEnabled = false,
+                        scrollGesturesEnabled = false,
+                        zoomGesturesEnabled = false,
+                        tiltGesturesEnabled = false,
+                        rotationGesturesEnabled = false,
+                        myLocationButtonEnabled = false,
+                        compassEnabled = false,
+                        mapToolbarEnabled = false,
+                    )
+                }
+
+                GoogleMap(
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
+                    cameraPositionState = cameraPositionState,
+                    uiSettings = mapUiSettings,
+                    onMapClick = {
+                        if (locationData != null) {
+                            onClick(
+                                locationData.lat,
+                                locationData.lng,
+                                locationData.label ?: "Shared Location",
+                            )
+                        }
+                    },
+                ) {
+                    Marker(
+                        state = markerState,
+                        title = locationData?.label ?: "Shared Location",
+                    )
+                }
+            } else {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = textColor.copy(alpha = 0.6f),
+                        modifier = Modifier.size(36.dp),
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Shared Location Pin",
+                        fontSize = 11.sp,
+                        color = textColor.copy(alpha = 0.7f),
+                    )
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        Text(
-            text = "Tap to open in Maps",
-            color = textColor.copy(alpha = 0.8f),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium,
-        )
-
-        if (distanceText != null) {
-            Spacer(modifier = Modifier.height(2.dp))
+        // Get Directions CTA line
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Text(
-                text = distanceText,
-                color = textColor.copy(alpha = 0.9f),
+                text = "Tap to view in Maps",
+                color = textColor.copy(alpha = 0.85f),
                 fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
             )
         }
     }
@@ -855,16 +914,19 @@ private fun ServiceCardMessageContent(
 }
 
 private fun formatTimestamp(isoString: String?): String {
-    if (isoString == null) return ""
+    if (isoString.isNullOrBlank()) return ""
     return try {
-        val parts = isoString.split("T")
-        if (parts.size >= 2) {
-            parts[1].substring(0, 5) // "HH:MM"
-        } else {
+        val instant = Instant.parse(isoString)
+        val zonedDateTime = instant.atZone(ZoneId.systemDefault())
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        zonedDateTime.format(formatter)
+    } catch (e: Exception) {
+        try {
+            val parts = isoString.split("T")
+            if (parts.size >= 2) parts[1].substring(0, 5) else isoString
+        } catch (_: Exception) {
             isoString
         }
-    } catch (e: Exception) {
-        isoString
     }
 }
 

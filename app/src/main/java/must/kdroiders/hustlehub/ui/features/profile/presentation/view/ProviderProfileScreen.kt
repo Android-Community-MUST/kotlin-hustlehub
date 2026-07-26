@@ -1,5 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,16 +13,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -31,11 +34,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
+import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.sharedComposables.SectionHeader
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileAvatar
@@ -56,12 +63,13 @@ fun ProviderProfileScreen(
     onNavigateToServiceDetail: (serviceId: String) -> Unit = {},
 ) {
     val state by providerProfileViewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(providerId) {
         providerProfileViewModel.initialize(providerId)
     }
 
-    Scaffold(
+    HustleScaffold(
         topBar = {
             TopAppBar(
                 title = {
@@ -98,19 +106,49 @@ fun ProviderProfileScreen(
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         } else {
-                            HustleButton(
-                                text = "Message",
-                                onClick = {
-                                    state.provider?.id?.let { onNavigateToChat(it) }
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                            )
+                            val provider = state.provider
+                            val canCall = provider?.allowCalls == true && !provider.phone.isBlank()
+
+                            if (canCall) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    HustleButton(
+                                        text = "Call",
+                                        variant = HustleButtonVariant.Secondary,
+                                        icon = Icons.Default.Call,
+                                        onClick = {
+                                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${provider.phone}"))
+                                            context.startActivity(intent)
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    HustleButton(
+                                        text = "Message",
+                                        variant = HustleButtonVariant.Primary,
+                                        onClick = {
+                                            onNavigateToChat(provider.id)
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
+                            } else {
+                                HustleButton(
+                                    text = "Message",
+                                    onClick = {
+                                        state.provider?.id?.let { onNavigateToChat(it) }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
                         }
                     }
                 }
             }
         },
     ) { innerPadding ->
+
         when {
             state.isLoading -> LoadingIndicator(modifier = Modifier.padding(innerPadding).fillMaxSize())
             state.error != null -> ErrorView(
@@ -119,65 +157,92 @@ fun ProviderProfileScreen(
                 modifier = Modifier.padding(innerPadding).fillMaxSize(),
             )
             else -> {
-                val provider = state.provider ?: return@Scaffold
+                val provider = state.provider ?: return@HustleScaffold
 
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background),
                     contentPadding = PaddingValues(
-                        top = innerPadding.calculateTopPadding() + 16.dp,
+                        top = innerPadding.calculateTopPadding(),
                         bottom = innerPadding.calculateBottomPadding() + 16.dp,
                     ),
                 ) {
+                    item(key = "header_banner") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .background(
+                                    brush = Brush.verticalGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                            MaterialTheme.colorScheme.background,
+                                        ),
+                                    ),
+                                ),
+                        )
+                    }
+
                     item(key = "avatar") {
                         Column(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .offset(y = (-45).dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            ProfileAvatar(photoUrl = provider.profilePhotoUrl)
-                            Spacer(Modifier.height(12.dp))
+                            ProfileAvatar(
+                                photoUrl = provider.profilePhotoUrl,
+                                isVerified = provider.isVerified,
+                            )
+                            Spacer(Modifier.height(10.dp))
                             ProfileInfo(
                                 name = provider.name,
                                 phone = provider.phone,
                                 campusLocation = provider.campusLocation,
                                 bio = provider.bio,
+                                isOnline = provider.isOnline,
+                                allowCalls = provider.allowCalls,
+                                isOwnProfile = state.isOwnProfile,
                             )
                         }
                     }
 
                     item(key = "stats") {
-                        Spacer(Modifier.height(20.dp))
                         ProfileStatsRow(
                             hustleScore = state.hustleScore,
                             serviceCount = state.services.size,
                             reviewCount = state.reviewCount,
-                            modifier = Modifier.padding(horizontal = 16.dp),
+                            modifier = Modifier
+                                .offset(y = (-30).dp)
+                                .padding(horizontal = 16.dp),
                         )
                     }
 
                     if (state.badges.isNotEmpty()) {
                         item(key = "badges") {
-                            Spacer(Modifier.height(16.dp))
                             ProfileBadges(
                                 badges = state.badges,
-                                modifier = Modifier.padding(horizontal = 16.dp),
+                                modifier = Modifier
+                                    .offset(y = (-20).dp)
+                                    .padding(horizontal = 16.dp),
                             )
                         }
                     }
 
                     item(key = "services_header") {
-                        Spacer(Modifier.height(24.dp))
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .offset(y = (-10).dp)
                                 .padding(horizontal = 16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             SectionHeader(title = "Services (${state.services.size})")
                         }
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(4.dp))
                     }
 
                     items(items = state.services, key = { it.id }) { service ->
@@ -185,7 +250,9 @@ fun ProviderProfileScreen(
                             service = service,
                             onClick = { onNavigateToServiceDetail(service.id) },
                             onToggle = {},
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                            modifier = Modifier
+                                .offset(y = (-10).dp)
+                                .padding(horizontal = 16.dp, vertical = 6.dp),
                         )
                     }
                 }

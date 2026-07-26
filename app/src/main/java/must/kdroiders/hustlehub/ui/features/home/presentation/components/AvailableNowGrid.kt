@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.home.presentation.components
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -90,14 +92,19 @@ fun AvailableNowGrid(
 @Composable
 fun LiveServiceCard(
     service: LiveService,
+    onServiceClick: (serviceId: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .clickable { /* TODO: navigate to service detail */ }
-            .padding(bottom = 12.dp),
+            .clickable {
+                Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
+                onServiceClick(service.id)
+            }.padding(bottom = 12.dp),
     ) {
         Box(
             modifier = Modifier

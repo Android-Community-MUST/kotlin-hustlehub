@@ -1,5 +1,10 @@
 package must.kdroiders.hustlehub.ui.features.home.presentation.view
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -51,10 +55,12 @@ import must.kdroiders.hustlehub.ui.features.home.presentation.components.EmptySe
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.FeaturedServicesRow
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.HomeSearchBar
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.HomeTopBar
+import must.kdroiders.hustlehub.ui.features.home.presentation.components.ProviderBannerCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCardShimmer
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.HomeViewModel
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
+import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
 /** Number of shimmer placeholders shown while the initial page loads. */
 private const val SHIMMER_COUNT = 6
@@ -77,6 +83,7 @@ fun HomeScreen(
     onNavigateToSearch: () -> Unit = {},
     onNavigateToAiSearch: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
+    onNavigateToCreateService: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
     val gridState = rememberLazyGridState()
@@ -112,6 +119,8 @@ fun HomeScreen(
         }
     }
 
+    val dimensions = LocalDimensions.current
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -135,21 +144,20 @@ fun HomeScreen(
             },
         ) {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
+                columns = GridCells.Fixed(dimensions.gridColumns),
                 state = gridState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding()
                     .testTag("home_service_grid"),
                 contentPadding = PaddingValues(
-                    start = 12.dp,
-                    end = 12.dp,
+                    start = dimensions.horizontalPadding,
+                    end = dimensions.horizontalPadding,
                     bottom = 100.dp,
                 ),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement
-                    .spacedBy(12.dp),
+                    .spacedBy(dimensions.gridSpacing),
                 horizontalArrangement = androidx.compose.foundation.layout.Arrangement
-                    .spacedBy(12.dp),
+                    .spacedBy(dimensions.gridSpacing),
             ) {
                 // Header items span both columns.
 
@@ -159,6 +167,20 @@ fun HomeScreen(
                         notificationCount = state.notificationCount,
                         onNotificationClick = onNavigateToNotifications,
                     )
+                }
+
+                item(key = "provider_banner", span = { GridItemSpan(maxLineSpan) }) {
+                    AnimatedVisibility(
+                        visible = state.showProviderBanner,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut(),
+                    ) {
+                        ProviderBannerCard(
+                            onListServiceClick = onNavigateToCreateService,
+                            onDismiss = viewModel::dismissProviderBanner,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+                        )
+                    }
                 }
 
                 item(key = "searchbar", span = { GridItemSpan(maxLineSpan) }) {

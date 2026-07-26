@@ -48,6 +48,7 @@ class EditProfileViewModel
                                 bio = user?.bio ?: "",
                                 phone = user?.phone ?: "",
                                 campusLocation = user?.campusLocation ?: "",
+                                allowCalls = user?.allowCalls ?: false,
                                 isLoading = false,
                             )
                         }
@@ -62,6 +63,7 @@ class EditProfileViewModel
         fun onBioChanged(value: String) = _uiState.update { it.copy(bio = value) }
         fun onPhoneChanged(value: String) = _uiState.update { it.copy(phone = value) }
         fun onCampusLocationChanged(value: String) = _uiState.update { it.copy(campusLocation = value) }
+        fun onAllowCallsChanged(value: Boolean) = _uiState.update { it.copy(allowCalls = value) }
         fun onAvatarPicked(uri: Uri) = _uiState.update { it.copy(pendingAvatarUri = uri.toString()) }
         fun clearError() = _uiState.update { it.copy(error = null) }
 
@@ -96,6 +98,7 @@ class EditProfileViewModel
                     phone = state.phone.trim(),
                     campusLocation = state.campusLocation.trim(),
                     avatarUrl = newAvatarUrl,
+                    allowCalls = state.allowCalls,
                 ).onSuccess {
                     _uiState.update { it.copy(isSaving = false, saveSuccess = true) }
                 }.onFailure { e ->

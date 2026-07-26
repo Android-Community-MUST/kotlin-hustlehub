@@ -13,5 +13,6 @@ class UpdateProfileUseCase
             phone: String,
             campusLocation: String,
             avatarUrl: String? = null,
-        ): Result<User> = repository.updateProfile(name, bio, phone, campusLocation, avatarUrl)
+            allowCalls: Boolean = false,
+        ): Result<User> = repository.updateProfile(name, bio, phone, campusLocation, avatarUrl, allowCalls)
     }

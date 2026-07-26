@@ -146,9 +146,9 @@ object AppModule {
         return ChatRepositoryImpl(
             context,
             conversationApiService,
-            chatWebSocketService,
             conversationDao,
             messageDao,
+            chatWebSocketService,
             firebaseAuth,
         )
     }

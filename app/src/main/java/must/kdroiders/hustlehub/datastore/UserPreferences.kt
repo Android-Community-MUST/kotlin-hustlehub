@@ -52,8 +52,8 @@ class UserPreferences
             val USER_UUID = stringPreferencesKey("user_uuid")
             val RECENT_SEARCHES = stringSetPreferencesKey("recent_searches")
             val LAST_SELECTED_CATEGORY = stringPreferencesKey("last_selected_category")
+            val PROVIDER_BANNER_DISMISSED = booleanPreferencesKey("provider_banner_dismissed")
 
-            /** Maximum number of recent searches to persist. Oldest entry is evicted when full. */
             const val MAX_RECENT_SEARCHES = 10
         }
 
@@ -147,10 +147,29 @@ class UserPreferences
                     prefs.remove(USER_EMAIL)
                     prefs.remove(USER_ROLE)
                     prefs.remove(USER_AVATAR_URL)
+                    prefs.remove(PROVIDER_BANNER_DISMISSED)
                 }
                 Timber.d("User cleared from DataStore")
             } catch (e: IOException) {
                 Timber.e(e, "Error clearing user from DataStore")
+            }
+        }
+
+        val isProviderBannerDismissed: Flow<Boolean> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading provider banner state")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs -> prefs[PROVIDER_BANNER_DISMISSED] ?: false }
+
+        suspend fun dismissProviderBanner() {
+            try {
+                dataStore.edit { prefs -> prefs[PROVIDER_BANNER_DISMISSED] = true }
+            } catch (e: IOException) {
+                Timber.e(e, "Error saving provider banner dismiss state")
             }
         }
 

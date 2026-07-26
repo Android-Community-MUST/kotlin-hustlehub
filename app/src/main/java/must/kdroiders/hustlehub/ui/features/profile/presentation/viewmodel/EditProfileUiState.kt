@@ -9,6 +9,7 @@ data class EditProfileUiState(
     val bio: String = "",
     val phone: String = "",
     val campusLocation: String = "",
+    val allowCalls: Boolean = false,
     /** Set to a new URI string when the user picks a photo; null means unchanged. */
     val pendingAvatarUri: String? = null,
     val isSaving: Boolean = false,

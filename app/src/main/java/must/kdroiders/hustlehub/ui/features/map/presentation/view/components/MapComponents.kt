@@ -44,28 +44,36 @@ fun ProviderMarkerContent(pin: MapPin) {
         when (pin.category) {
             ServiceCategory.SALON -> Color(0xFFB388FF) // Neon light purple
             ServiceCategory.LAUNDRY -> Color(0xFF80D8FF) // Neon cyan/blue
-            ServiceCategory.TUTORING -> Color(0xFF69F0AE) // Neon green
-            ServiceCategory.FOOD -> Color(0xFFFFD740) // Neon yellow/orange
-            ServiceCategory.TECH -> Color(0xFF64FFDA) // Neon teal
+            ServiceCategory.TUTORING -> Color(0xFF00E676) // Neon vibrant green
+            ServiceCategory.FOOD -> Color(0xFFFFB300) // Neon amber/gold
+            ServiceCategory.TECH -> Color(0xFF00E5FF) // Neon cyan
             ServiceCategory.FASHION -> Color(0xFF82B1FF) // Neon blue/indigo
             ServiceCategory.PHOTOGRAPHY -> Color(0xFFFF4081) // Neon pink
             else -> Color(0xFFE0E0E0)
         }
     }
 
+    val pillBgColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+    val titleTextColor = MaterialTheme.colorScheme.onSurface
+    val subtitleTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(IntrinsicSize.Max),
     ) {
-        // Pill Layout
+        // Pill Layout with Glowing Neon Outer Halo
         Row(
             modifier = Modifier
-                .background(
-                    color = Color(0xFF131324).copy(alpha = 0.92f),
+                .border(
+                    width = 3.dp,
+                    color = neonColor.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(26.dp),
+                ).background(
+                    color = pillBgColor,
                     shape = RoundedCornerShape(24.dp),
                 ).border(
                     width = 1.5.dp,
-                    color = neonColor.copy(alpha = 0.85f),
+                    color = neonColor,
                     shape = RoundedCornerShape(24.dp),
                 ).padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -76,7 +84,7 @@ fun ProviderMarkerContent(pin: MapPin) {
                 modifier = Modifier
                     .size(24.dp)
                     .background(
-                        color = baseColor.copy(alpha = 0.2f),
+                        color = baseColor.copy(alpha = 0.25f),
                         shape = CircleShape,
                     ),
                 contentAlignment = Alignment.Center,
@@ -95,7 +103,7 @@ fun ProviderMarkerContent(pin: MapPin) {
             ) {
                 Text(
                     text = pin.providerName,
-                    color = Color.White,
+                    color = titleTextColor,
                     fontWeight = FontWeight.Bold,
                     fontSize = 11.sp,
                     maxLines = 1,
@@ -107,13 +115,13 @@ fun ProviderMarkerContent(pin: MapPin) {
                 ) {
                     Text(
                         text = pin.category.label,
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = subtitleTextColor,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Medium,
                     )
                     Text(
                         text = "•",
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = subtitleTextColor,
                         fontSize = 9.sp,
                     )
                     Icon(
@@ -124,7 +132,7 @@ fun ProviderMarkerContent(pin: MapPin) {
                     )
                     Text(
                         text = String.format(java.util.Locale.US, "%.1f", pin.averageRating),
-                        color = Color.White.copy(alpha = 0.8f),
+                        color = titleTextColor,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                     )
@@ -138,10 +146,10 @@ fun ProviderMarkerContent(pin: MapPin) {
                 .offset(y = (-4).dp)
                 .size(10.dp)
                 .graphicsLayer(rotationZ = 45f)
-                .background(Color(0xFF131324).copy(alpha = 0.92f))
+                .background(pillBgColor)
                 .border(
                     width = 1.5.dp,
-                    color = neonColor.copy(alpha = 0.85f),
+                    color = neonColor,
                     shape = RoundedCornerShape(topStart = 0.dp),
                 ),
         )

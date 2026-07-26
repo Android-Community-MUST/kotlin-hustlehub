@@ -143,10 +143,16 @@ fun MapScreen(
     // Map Properties & UI settings
     val mapProperties = remember(mapType, isLocationPermissionGranted, isSystemInDark) {
         val styleJson = if (isSystemInDark) MapTheme.DARK_JSON else MapTheme.LIGHT_JSON
+        val styleOptions = try {
+            MapStyleOptions(styleJson)
+        } catch (e: Exception) {
+            Timber.e(e, "Error loading map style options")
+            null
+        }
         MapProperties(
             mapType = mapType,
             isMyLocationEnabled = isLocationPermissionGranted,
-            mapStyleOptions = MapStyleOptions(styleJson),
+            mapStyleOptions = styleOptions,
             minZoomPreference = MapDefaults.MIN_ZOOM,
             maxZoomPreference = MapDefaults.MAX_ZOOM,
         )
@@ -249,16 +255,18 @@ fun MapScreen(
                     true
                 },
                 clusterContent = { cluster ->
+                    val glowColor = MaterialTheme.colorScheme.primary
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
-                            .background(Color(0xFF7C4DFF), shape = CircleShape)
-                            .border(2.dp, Color.White, shape = CircleShape),
+                            .size(46.dp)
+                            .border(3.dp, glowColor.copy(alpha = 0.35f), shape = CircleShape)
+                            .background(glowColor, shape = CircleShape)
+                            .border(2.dp, MaterialTheme.colorScheme.surface, shape = CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = cluster.size.toString(),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                         )
@@ -420,7 +428,8 @@ fun MapScreen(
                     FilterChip(
                         selected = isSelected,
                         onClick = {
-                            mapViewModel.selectCategory(if (category == ServiceCategory.ALL) null else category)
+                            val targetCategory = if (isSelected || category == ServiceCategory.ALL) null else category
+                            mapViewModel.selectCategory(targetCategory)
                         },
                         label = { Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
                         leadingIcon = {
@@ -434,9 +443,20 @@ fun MapScreen(
                             }
                         },
                         colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                            labelColor = MaterialTheme.colorScheme.onSurface,
+                            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             selectedContainerColor = MaterialTheme.colorScheme.primary,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                             selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = isSelected,
+                            borderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+                            selectedBorderColor = Color.Transparent,
+                            borderWidth = 1.dp,
+                            selectedBorderWidth = 0.dp,
                         ),
                     )
                 }
@@ -470,8 +490,20 @@ fun MapScreen(
                         }
                     },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                        selectedLabelColor = MaterialTheme.colorScheme.primary,
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                        labelColor = MaterialTheme.colorScheme.onSurface,
+                        iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = isAvailableOnly,
+                        borderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+                        selectedBorderColor = Color.Transparent,
+                        borderWidth = 1.dp,
+                        selectedBorderWidth = 0.dp,
                     ),
                 )
             }

@@ -1,5 +1,10 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,11 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -26,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ErrorState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.LoadingState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileAvatar
@@ -34,10 +38,12 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileHeader
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileInfo
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileStatsRow
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProviderOnboardingCard
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ServiceCard
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ServicesHeader
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
+import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
 @Composable
 fun ProfileScreen(
@@ -52,7 +58,7 @@ fun ProfileScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    Scaffold(
+    HustleScaffold(
         topBar = {
             ProfileHeader(
                 onEditClick = onEditClick,
@@ -60,7 +66,7 @@ fun ProfileScreen(
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        modifier = Modifier.fillMaxSize().statusBarsPadding(),
+        modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
@@ -103,6 +109,7 @@ private fun ProfileContent(
     onShowSnackbar: (String) -> Unit = {},
 ) {
     val user = state.user ?: return
+    val horizontalPadding = LocalDimensions.current.horizontalPadding
 
     LazyColumn(
         modifier = Modifier
@@ -130,6 +137,8 @@ private fun ProfileContent(
                     phone = user.phone,
                     campusLocation = user.campusLocation,
                     bio = user.bio,
+                    allowCalls = user.allowCalls,
+                    isOwnProfile = true,
                 )
             }
         }
@@ -142,7 +151,7 @@ private fun ProfileContent(
                 serviceCount = state.services.size,
                 reviewCount = state.reviewCount,
                 modifier = Modifier.padding(
-                    horizontal = 16.dp,
+                    horizontal = horizontalPadding,
                 ),
             )
         }
@@ -153,7 +162,7 @@ private fun ProfileContent(
             ProfileBadges(
                 badges = state.badges,
                 modifier = Modifier.padding(
-                    horizontal = 16.dp,
+                    horizontal = horizontalPadding,
                 ),
             )
         }
@@ -164,9 +173,22 @@ private fun ProfileContent(
             ServicesHeader(
                 onAddNewServiceClick = onAddNewServiceClick,
                 onManageServicesClick = onNavigateToMyServices,
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = horizontalPadding),
             )
             Spacer(Modifier.height(12.dp))
+        }
+
+        item(key = "provider_onboarding") {
+            AnimatedVisibility(
+                visible = state.services.isEmpty(),
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
+                ProviderOnboardingCard(
+                    onCreateServiceClick = onAddNewServiceClick,
+                    modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 4.dp),
+                )
+            }
         }
 
         // Service cards — each tappable to manage that specific service
@@ -181,7 +203,7 @@ private fun ProfileContent(
                     onToggleService(service.id)
                 },
                 modifier = Modifier.padding(
-                    horizontal = 16.dp,
+                    horizontal = horizontalPadding,
                     vertical = 6.dp,
                 ),
             )
@@ -191,7 +213,7 @@ private fun ProfileContent(
         item(key = "bottom_tabs") {
             Spacer(Modifier.height(20.dp))
             ProfileBottomTabs(
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = horizontalPadding),
                 onAnalyticsClick = { onShowSnackbar("Pay for premium to access it") },
                 onEarningsClick = { onShowSnackbar("Pay for premium to access it") },
             )

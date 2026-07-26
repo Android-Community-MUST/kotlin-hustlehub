@@ -7,8 +7,9 @@ val HustlePrimaryBlue = Color(0xFF1E88E5) // Main brand/action color
 val HustleLinkBlue = Color(0xFF2563EB) // Clickable text — Sign Up, Forgot password
 
 // Light mode surfaces
-val HustleLightBackground = Color(0xFFF5F7FA) // Page background (very light grey)
-val HustleWhite = Color(0xFFFFFFFF) // Cards, inputs, Google button
+val HustleLightBackground = Color(0xFFF8FAFC) // Clean slate page canvas
+val HustleWhite = Color(0xFFFFFFFF) // Crisp card surface
+val HustleLightSurfaceVariant = Color(0xFFF1F5F9) // Distinct tonal card container fill
 
 // Text
 val HustleDarkNavy = Color(0xFF0F172A) // Strong title text — "Hustle" wordmark

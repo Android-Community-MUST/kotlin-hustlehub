@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,12 +25,12 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Work
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -50,24 +51,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
+import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ConversationListViewModel
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ChatScreen(
     onNavigateToChatDetail: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ConversationListViewModel = hiltViewModel(),
+    conversationListViewModel: ConversationListViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by conversationListViewModel.uiState.collectAsState()
 
-    Scaffold(
+    HustleScaffold(
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Text(
                         text = "Messages",
@@ -91,7 +97,7 @@ fun ChatScreen(
         ) {
             when {
                 state.isLoading && !state.isRefreshing -> {
-                    CircularProgressIndicator(
+                    CircularWavyProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -110,7 +116,7 @@ fun ChatScreen(
                     val pullToRefreshState = rememberPullToRefreshState()
                     PullToRefreshBox(
                         isRefreshing = state.isRefreshing,
-                        onRefresh = viewModel::refreshConversations,
+                        onRefresh = conversationListViewModel::refreshConversations,
                         modifier = Modifier.fillMaxSize(),
                         state = pullToRefreshState,
                         indicator = {
@@ -134,7 +140,7 @@ fun ChatScreen(
                                 val dismissState = rememberSwipeToDismissBoxState(
                                     confirmValueChange = { dismissValue ->
                                         if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
-                                            viewModel.deleteConversation(conversation.id)
+                                            conversationListViewModel.deleteConversation(conversation.id)
                                             true
                                         } else {
                                             false
@@ -331,16 +337,18 @@ private fun ConversationItem(
 }
 
 private fun formatTimestamp(isoString: String?): String {
-    if (isoString == null) return ""
+    if (isoString.isNullOrBlank()) return ""
     return try {
-        val parts = isoString.split("T")
-        if (parts.size >= 2) {
-            val time = parts[1].substring(0, 5) // "HH:MM"
-            time
-        } else {
+        val instant = Instant.parse(isoString)
+        val zonedDateTime = instant.atZone(ZoneId.systemDefault())
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        zonedDateTime.format(formatter)
+    } catch (e: Exception) {
+        try {
+            val parts = isoString.split("T")
+            if (parts.size >= 2) parts[1].substring(0, 5) else isoString
+        } catch (_: Exception) {
             isoString
         }
-    } catch (e: Exception) {
-        isoString
     }
 }

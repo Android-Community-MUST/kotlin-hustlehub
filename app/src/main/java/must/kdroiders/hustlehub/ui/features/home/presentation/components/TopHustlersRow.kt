@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.home.presentation.components
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,27 +30,58 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.ui.features.home.domain.model.TopHustler
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
-import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 @Composable
 fun TopHustlersRow(
     hustlers: List<TopHustler>,
+    onHustlerClick: (hustlerId: String) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
+    if (hustlers.isEmpty()) return
+
+    Column(modifier = modifier) {
+        TopHustlersHeader()
+        Spacer(modifier = Modifier.height(12.dp))
+        TopHustlersCarousel(hustlers = hustlers, onHustlerClick = onHustlerClick)
+    }
+}
+
+@Composable
+fun TopHustlersHeader(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = "Top Hustlers",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+@Composable
+fun TopHustlersCarousel(
+    hustlers: List<TopHustler>,
+    onHustlerClick: (hustlerId: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     LazyRow(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp),
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 0.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(items = hustlers, key = { it.id }) { hustler ->
-            TopHustlerCard(hustler = hustler)
+            TopHustlerCard(hustler = hustler, onHustlerClick = onHustlerClick)
         }
     }
 }
@@ -57,15 +89,21 @@ fun TopHustlersRow(
 @Composable
 fun TopHustlerCard(
     hustler: TopHustler,
+    onHustlerClick: (hustlerId: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+
     Box(
         modifier = modifier
             .width(180.dp)
             .height(240.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .clickable { /* TODO: navigate to service detail */ },
+            .clickable {
+                Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
+                onHustlerClick(hustler.id)
+            },
     ) {
         // Hero image (placeholder gradient when no URL)
         Box(
@@ -83,74 +121,72 @@ fun TopHustlerCard(
                     ),
                 ),
         ) {
-            // Load actual image if URL provided
             if (hustler.imageUrl.isNotBlank()) {
                 AsyncImage(
                     model = hustler.imageUrl,
-                    contentDescription = hustler.serviceTitle,
-                    contentScale = ContentScale.Crop,
+                    contentDescription = hustler.providerName,
                     modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
                 )
-            }
-
-            // Rating badge
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color.Black.copy(alpha = 0.55f))
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = null,
-                        tint = HustleWarningAmber,
-                        modifier = Modifier.size(12.dp),
-                    )
-                    Spacer(Modifier.width(3.dp))
-                    Text(
-                        text = hustler.rating.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 11.sp,
-                    )
-                }
             }
         }
 
-        // Bottom info
+        // Card info bottom overlay
         Column(
             modifier = Modifier
-                .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp, top = 6.dp),
+                .align(Alignment.BottomStart)
+                .padding(12.dp),
         ) {
             Text(
-                text = hustler.category.label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 11.sp,
-            )
-            Text(
-                text = hustler.serviceTitle,
+                text = hustler.providerName,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                fontSize = 13.sp,
             )
-            Spacer(Modifier.height(2.dp))
+
+            Spacer(modifier = Modifier.height(2.dp))
+
             Text(
-                text = hustler.priceLabel,
-                style = MaterialTheme.typography.labelSmall,
+                text = hustler.serviceTitle,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Rating",
+                        tint = Color(0xFFFFB300),
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "%.1f".format(hustler.rating),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+
+                Text(
+                    text = hustler.priceLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }

@@ -62,7 +62,7 @@ class MapViewModelTest {
         val state = viewModel.uiState.value
         assertTrue(state.pins.isEmpty())
         assertNull(state.selectedCategory)
-        assertEquals(ServiceAvailability.AVAILABLE, state.availability)
+        assertNull(state.availability)
         assertNull(state.userLocation)
         assertNull(state.error)
     }
@@ -80,7 +80,7 @@ class MapViewModelTest {
                     lng = null,
                     radiusKm = null,
                     category = ServiceCategory.SALON,
-                    availability = ServiceAvailability.AVAILABLE,
+                    availability = null,
                 )
             }
         }

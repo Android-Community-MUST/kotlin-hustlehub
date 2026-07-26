@@ -3,6 +3,7 @@ package must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,10 +11,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignOutUseCase
-import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
+import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -63,7 +66,8 @@ class SettingsViewModel
         private val authRepository: AuthRepository,
         private val signOutUseCase: SignOutUseCase,
         private val userPreferences: UserPreferences,
-        private val serviceDao: ServiceDao,
+        private val appDatabase: AppDatabase,
+        private val chatRepository: ChatRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SettingsUiState())
         val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -97,7 +101,6 @@ class SettingsViewModel
 
         fun onDarkModeToggled(enabled: Boolean) {
             _uiState.update { it.copy(isDarkMode = enabled) }
-            // TODO: persist via DataStore — userPreferences.setDarkMode(enabled)
         }
 
         // Navigation triggers
@@ -115,16 +118,19 @@ class SettingsViewModel
 
         /**
          * Signs the user out of Firebase Auth via [SignOutUseCase], clears the cached
-         * user from DataStore, and emits [SettingsEvent.LoggedOut] to trigger navigation
-         * back to the Login screen.
+         * user from DataStore, disconnects active WebSockets, clears local Room database tables,
+         * and emits [SettingsEvent.LoggedOut] to trigger navigation back to the Login screen.
          */
         fun onLogOutClicked() {
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoggingOut = true, error = null) }
                 try {
+                    runCatching { chatRepository.disconnectWebSocket() }
                     signOutUseCase()
                     userPreferences.clearUser()
-                    serviceDao.clearAll()
+                    withContext(Dispatchers.IO) {
+                        appDatabase.clearAllTables()
+                    }
                     _events.send(SettingsEvent.LoggedOut)
                 } catch (e: Exception) {
                     Timber.e(e, "Sign out failed")

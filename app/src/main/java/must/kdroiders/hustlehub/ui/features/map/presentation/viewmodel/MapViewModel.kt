@@ -29,7 +29,7 @@ import kotlin.math.sqrt
 data class MapUiState(
     val pins: List<MapPin> = emptyList(),
     val selectedCategory: ServiceCategory? = null,
-    val availability: ServiceAvailability? = ServiceAvailability.AVAILABLE,
+    val availability: ServiceAvailability? = null,
     val searchQuery: String = "",
     val notificationCount: Int = 0,
     val isLoading: Boolean = false,
@@ -161,8 +161,8 @@ class MapViewModel
             val userLoc = currentState.userLocation
             val lat = userLoc?.latitude
             val lng = userLoc?.longitude
-            // Use a 2 km radius when the user location is known
-            val radius = if (lat != null && lng != null) 2.0 else null
+            // Use a 50 km radius when the user location is known to catch campus & nearby providers
+            val radius = if (lat != null && lng != null) 50.0 else null
 
             getMapPinsUseCase(
                 lat = lat,

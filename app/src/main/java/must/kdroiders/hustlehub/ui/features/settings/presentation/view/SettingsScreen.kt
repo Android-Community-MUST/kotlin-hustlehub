@@ -63,13 +63,19 @@ fun SettingsScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     // Consume one-shot navigation events
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is SettingsEvent.LoggedOut -> onBack() // parent nav graph pops to Login
                 is SettingsEvent.NavigateToChangePassword -> onNavigateToChangePassword()
-                else -> { /* TODO: handle sub-screen navigation */ }
+                else -> {
+                    android.widget.Toast
+                        .makeText(context, "Coming soon", android.widget.Toast.LENGTH_SHORT)
+                        .show()
+                }
             }
         }
     }

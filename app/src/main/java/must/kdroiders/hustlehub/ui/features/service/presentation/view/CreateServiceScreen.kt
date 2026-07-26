@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.ui.features.service.presentation.view
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -43,7 +44,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,7 +55,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.AvailabilityChipSelector
@@ -63,6 +63,7 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ErrorText
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.PortfolioSlots
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.SectionLabel
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ServiceLocationCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.TagChip
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.CreateServiceEvent
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.CreateServiceViewModel
@@ -72,26 +73,26 @@ import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 @Composable
 fun CreateServiceScreen(
     serviceId: String? = null,
-    viewModel: CreateServiceViewModel = hiltViewModel(),
+    createServiceViewModel: CreateServiceViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onSuccess: () -> Unit,
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by createServiceViewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
     val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { uri: Uri? ->
-        uri?.let { viewModel.onPortfolioImageAdded(it) }
+        uri?.let { createServiceViewModel.onPortfolioImageAdded(it) }
     }
 
     LaunchedEffect(serviceId) {
-        if (serviceId != null) viewModel.loadForEdit(serviceId)
+        if (serviceId != null) createServiceViewModel.loadForEdit(serviceId)
     }
 
     LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
+        createServiceViewModel.events.collect { event ->
             when (event) {
                 is CreateServiceEvent.Success -> onSuccess()
             }
@@ -160,13 +161,13 @@ fun CreateServiceScreen(
                     newUris = state.portfolioUris,
                     onAddClick = {
                         imagePicker.launch(
-                            androidx.activity.result.PickVisualMediaRequest(
+                            PickVisualMediaRequest(
                                 ActivityResultContracts.PickVisualMedia.ImageOnly,
                             ),
                         )
                     },
-                    onRemoveExisting = viewModel::onPortfolioExistingImageRemoved,
-                    onRemoveNew = viewModel::onPortfolioNewImageRemoved,
+                    onRemoveExisting = createServiceViewModel::onPortfolioExistingImageRemoved,
+                    onRemoveNew = createServiceViewModel::onPortfolioNewImageRemoved,
                 )
                 Spacer(Modifier.height(20.dp))
 
@@ -174,7 +175,7 @@ fun CreateServiceScreen(
                 SectionLabel(text = "Service Title", required = true)
                 HustleTextField(
                     value = state.title,
-                    onValueChange = viewModel::onTitleChange,
+                    onValueChange = createServiceViewModel::onTitleChange,
                     placeholder = "e.g. Professional Braiding Services",
                     isError = state.titleError != null,
                     errorText = state.titleError,
@@ -189,7 +190,7 @@ fun CreateServiceScreen(
                 SectionLabel(text = "Category", required = true)
                 CategoryDropdown(
                     selected = state.category,
-                    onSelect = viewModel::onCategoryChange,
+                    onSelect = createServiceViewModel::onCategoryChange,
                     hasError = state.categoryError != null,
                 )
                 ErrorText(state.categoryError)
@@ -199,7 +200,7 @@ fun CreateServiceScreen(
                 SectionLabel(text = "Description")
                 HustleTextField(
                     value = state.description,
-                    onValueChange = viewModel::onDescriptionChange,
+                    onValueChange = createServiceViewModel::onDescriptionChange,
                     placeholder = "Describe your service details, what you offer, and any prerequisites...",
                     isError = state.descriptionError != null,
                     errorText = state.descriptionError,
@@ -229,7 +230,7 @@ fun CreateServiceScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     HustleTextField(
                         value = state.minPrice,
-                        onValueChange = viewModel::onMinPriceChange,
+                        onValueChange = createServiceViewModel::onMinPriceChange,
                         placeholder = "Min",
                         isError = state.priceError != null,
                         keyboardOptions = KeyboardOptions(
@@ -240,7 +241,7 @@ fun CreateServiceScreen(
                     )
                     HustleTextField(
                         value = state.maxPrice,
-                        onValueChange = viewModel::onMaxPriceChange,
+                        onValueChange = createServiceViewModel::onMaxPriceChange,
                         placeholder = "Max",
                         isError = state.priceError != null,
                         keyboardOptions = KeyboardOptions(
@@ -275,7 +276,7 @@ fun CreateServiceScreen(
                         modifier = Modifier.padding(bottom = 8.dp),
                     ) {
                         state.tags.forEach { tag ->
-                            TagChip(label = tag, onRemove = { viewModel.removeTag(tag) })
+                            TagChip(label = tag, onRemove = { createServiceViewModel.removeTag(tag) })
                         }
                     }
                 }
@@ -285,7 +286,7 @@ fun CreateServiceScreen(
                 ) {
                     HustleTextField(
                         value = state.tagInput,
-                        onValueChange = viewModel::onTagInputChange,
+                        onValueChange = createServiceViewModel::onTagInputChange,
                         placeholder = "e.g. braids",
                         isError = state.tagError != null,
                         errorText = state.tagError,
@@ -295,7 +296,7 @@ fun CreateServiceScreen(
                         ),
                         keyboardActions = KeyboardActions(
                             onDone = {
-                                viewModel.addTag()
+                                createServiceViewModel.addTag()
                                 focusManager.clearFocus()
                             },
                         ),
@@ -306,7 +307,7 @@ fun CreateServiceScreen(
                             .size(48.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(MaterialTheme.colorScheme.primary)
-                            .clickable { viewModel.addTag() },
+                            .clickable { createServiceViewModel.addTag() },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -344,7 +345,7 @@ fun CreateServiceScreen(
                     }
                     Switch(
                         checked = state.openToBarter,
-                        onCheckedChange = viewModel::onOpenToBarterChange,
+                        onCheckedChange = createServiceViewModel::onOpenToBarterChange,
                         colors = SwitchDefaults.colors(
                             checkedTrackColor = HustleActiveGreen,
                             checkedThumbColor = Color.White,
@@ -355,11 +356,25 @@ fun CreateServiceScreen(
                 }
                 Spacer(Modifier.height(16.dp))
 
+                // Service Operating Location
+                ServiceLocationCard(
+                    locationMode = state.locationMode,
+                    selectedLat = state.selectedLat,
+                    selectedLng = state.selectedLng,
+                    locationLabel = state.locationLabel,
+                    onModeChange = createServiceViewModel::onLocationModeChange,
+                    onPresetSelect = createServiceViewModel::onLocationPresetSelect,
+                    onCustomLocationSelect = createServiceViewModel::onCustomLocationSelect,
+                    onLabelChange = createServiceViewModel::onLocationLabelChange,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(16.dp))
+
                 // Current status
                 SectionLabel(text = "Current Status")
                 AvailabilityChipSelector(
                     current = state.availability,
-                    onSelect = viewModel::onAvailabilityChange,
+                    onSelect = createServiceViewModel::onAvailabilityChange,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -393,7 +408,7 @@ fun CreateServiceScreen(
                     text = if (state.isLoading) "Publishing…" else "Publish Service",
                     onClick = {
                         focusManager.clearFocus()
-                        viewModel.publish()
+                        createServiceViewModel.publish()
                     },
                     enabled = !state.isLoading,
                     modifier = Modifier.fillMaxWidth(),

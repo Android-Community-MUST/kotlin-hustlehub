@@ -1,7 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.view
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
@@ -43,9 +42,6 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -54,7 +50,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SuggestionChip
@@ -96,8 +91,10 @@ import must.kdroiders.hustlehub.core.notification.ActiveConversationTracker
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.core.utils.createTempCameraFile
 import must.kdroiders.hustlehub.core.utils.saveImageToGallery
+import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoiceRecorder
+import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ChatLocationPickerSheet
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSeparator
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.MessageBubble
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ChatDetailViewModel
@@ -132,7 +129,7 @@ fun ChatDetailScreen(
     var isRecording by remember { mutableStateOf(false) }
     var recordingDurationSeconds by remember { mutableIntStateOf(0) }
     var recordingFile by remember { mutableStateOf<File?>(null) }
-    var showLocationDialog by remember { mutableStateOf(false) }
+    var showLocationPickerSheet by remember { mutableStateOf(false) }
     var showAttachmentMenu by remember { mutableStateOf(false) }
     // Fullscreen image viewer
     var selectedImageUrl by remember { mutableStateOf<String?>(null) }
@@ -153,50 +150,13 @@ fun ChatDetailScreen(
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var currentUserLocation by remember { mutableStateOf<android.location.Location?>(null) }
 
-    val shareCurrentLocation: () -> Unit = {
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager
-        val isGpsEnabled = locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
-            locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
-
-        if (!isGpsEnabled) {
-            Toast.makeText(context, "GPS is disabled. Please enable it in Settings.", Toast.LENGTH_LONG).show()
-        } else {
-            val hasFineLocation = ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-            ) == PackageManager.PERMISSION_GRANTED
-            val hasCoarseLocation = ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-            ) == PackageManager.PERMISSION_GRANTED
-
-            if (hasFineLocation || hasCoarseLocation) {
-                try {
-                    fusedLocationClient.lastLocation
-                        .addOnSuccessListener { location: android.location.Location? ->
-                            if (location != null) {
-                                currentUserLocation = location
-                                viewModel.sendLocationMessage(location.latitude, location.longitude, "Current Location")
-                            } else {
-                                Toast.makeText(context, "Could not retrieve location. Please try again.", Toast.LENGTH_SHORT).show()
-                            }
-                        }.addOnFailureListener { e ->
-                            Toast.makeText(context, "Error getting location: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                } catch (e: SecurityException) {
-                    Toast.makeText(context, "Permission error: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
         val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (granted) {
-            shareCurrentLocation()
+            showLocationPickerSheet = true
         } else {
             Toast.makeText(context, "Location permission denied. Cannot share location.", Toast.LENGTH_SHORT).show()
         }
@@ -213,7 +173,7 @@ fun ChatDetailScreen(
         ) == PackageManager.PERMISSION_GRANTED
 
         if (hasFineLocation || hasCoarseLocation) {
-            shareCurrentLocation()
+            showLocationPickerSheet = true
         } else {
             locationPermissionLauncher.launch(
                 arrayOf(
@@ -359,13 +319,13 @@ fun ChatDetailScreen(
         }
     }
 
-    // Dialog to select preset location to share
-    if (showLocationDialog) {
-        LocationSelectorDialog(
-            onDismiss = { showLocationDialog = false },
+    // Location picker sheet (WhatsApp style)
+    if (showLocationPickerSheet) {
+        ChatLocationPickerSheet(
+            onDismiss = { showLocationPickerSheet = false },
             onLocationSelected = { lat, lng, label ->
                 viewModel.sendLocationMessage(lat, lng, label)
-                showLocationDialog = false
+                showLocationPickerSheet = false
             },
         )
     }
@@ -427,7 +387,7 @@ fun ChatDetailScreen(
         }
     }
 
-    Scaffold(
+    HustleScaffold(
         topBar = {
             TopAppBar(
                 title = {
@@ -968,70 +928,6 @@ private fun AttachmentOption(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
-}
-
-@Composable
-private fun LocationSelectorDialog(
-    onDismiss: () -> Unit,
-    onLocationSelected: (Double, Double, String) -> Unit,
-) {
-    val locations = listOf(
-        Triple(0.0515, 37.6456, "Hostel C"),
-        Triple(0.0530, 37.6480, "Main Library"),
-        Triple(0.0505, 37.6440, "Student Center"),
-        Triple(0.0485, 37.6425, "Main Gate"),
-    )
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Share Location") },
-        text = {
-            Column {
-                Text(
-                    text = "Choose a campus location to share:",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 12.dp),
-                )
-                locations.forEach { (lat, lng, label) ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .clickable { onLocationSelected(lat, lng, label) },
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                        ),
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            IconButton(onClick = onDismiss) {
-                Text("Cancel", color = MaterialTheme.colorScheme.primary)
-            }
-        },
-    )
 }
 
 private fun formatSeconds(totalSeconds: Int): String {

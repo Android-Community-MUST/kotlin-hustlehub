@@ -1,6 +1,5 @@
 package must.kdroiders.hustlehub.ui.features.auth.presentation.view
 
-import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -24,6 +23,8 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -32,12 +33,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -49,6 +50,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
@@ -65,8 +67,15 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
 ) {
     val uiState by loginViewModel.uiState.collectAsState()
-    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var showForgotPasswordDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { err ->
+            snackbarHostState.showSnackbar(err)
+        }
+    }
 
     // Prefill email if passed from navigation (e.g. after registration or email verification)
     LaunchedEffect(prefilledEmail) {
@@ -233,7 +242,7 @@ fun LoginScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                     ),
-                ) { append("Don't have an account?  ") }
+                ) { append("New here?  ") }
                 pushStringAnnotation("signup", "signup")
                 withStyle(
                     SpanStyle(
@@ -241,7 +250,7 @@ fun LoginScreen(
                         fontWeight = FontWeight.Bold,
                         fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                     ),
-                ) { append("Sign Up") }
+                ) { append("Create Account") }
                 pop()
             }
             ClickableText(
@@ -263,7 +272,8 @@ fun LoginScreen(
                 title = { Text("Reset Password") },
                 text = {
                     Text(
-                        "Send a password reset email to ${if (uiState.email.isNotBlank()) uiState.email else "your email address"}?",
+                        "Enter your student email address to receive a password reset link.",
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 },
                 confirmButton = {
@@ -273,15 +283,19 @@ fun LoginScreen(
                             loginViewModel.sendPasswordResetEmail(
                                 email = uiState.email,
                                 onSuccess = {
-                                    Toast.makeText(context, "Password reset email sent to ${uiState.email}", Toast.LENGTH_LONG).show()
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Password reset link sent to your email")
+                                    }
                                 },
                                 onError = { err ->
-                                    Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(err)
+                                    }
                                 },
                             )
                         },
                     ) {
-                        Text("Send")
+                        Text("Send Link")
                     }
                 },
                 dismissButton = {
@@ -291,6 +305,13 @@ fun LoginScreen(
                 },
             )
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp),
+        )
     }
 }
 
