@@ -104,6 +104,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import androidx.compose.material.icons.filled.Star
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -117,6 +118,7 @@ fun ChatDetailScreen(
     serviceCategory: String? = null,
     servicePriceRange: String? = null,
     providerName: String? = null,
+    onNavigateToWriteReview: ((serviceId: String, providerId: String) -> Unit)? = null,
     viewModel: ChatDetailViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -479,6 +481,43 @@ fun ChatDetailScreen(
                 .padding(innerPadding)
                 .imePadding(),
         ) {
+            // Service completed auto-prompt banner
+            val activeServiceId = serviceId
+            val activeProviderId = state.otherUserId
+            if (!activeServiceId.isNullOrBlank() && onNavigateToWriteReview != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
+                        .clickable { onNavigateToWriteReview(activeServiceId, activeProviderId) }
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Service completed? Write a review",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                    Text(
+                        text = "Rate Now",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+
             // Messages list (reversed so it starts at the bottom)
             val reversedMessages = state.messages.reversed()
             Box(modifier = Modifier.weight(1f)) {

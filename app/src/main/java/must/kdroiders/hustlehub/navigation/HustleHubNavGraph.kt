@@ -295,6 +295,9 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     providerName = key.providerName,
                     onBackClick = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
+                    onNavigateToWriteReview = { serviceId, providerId ->
+                        backstack.add(WriteReview(serviceId = serviceId, providerId = providerId))
+                    },
                 )
             }
 
