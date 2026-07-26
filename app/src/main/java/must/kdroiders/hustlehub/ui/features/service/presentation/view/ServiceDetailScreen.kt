@@ -69,6 +69,7 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.FullScreenImageViewer
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.PortfolioGallery
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewCard
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewItem
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewSummaryCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailUiState
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailViewModel
@@ -89,6 +90,7 @@ fun ServiceDetailScreen(
     ) -> Unit = { _, _, _, _, _, _ -> },
     onNavigateToProviderProfile: (providerId: String) -> Unit = {},
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit = { _, _ -> },
+    onNavigateToAllReviews: (serviceId: String) -> Unit = {},
 ) {
     val state by serviceDetailViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -172,6 +174,7 @@ fun ServiceDetailScreen(
                     onImageClick = { index -> fullScreenImageIndex = index },
                     onProviderClick = { state.service?.providerId?.let { onNavigateToProviderProfile(it) } },
                     onNavigateToWriteReview = onNavigateToWriteReview,
+                    onNavigateToAllReviews = onNavigateToAllReviews,
                 )
             }
 
@@ -243,6 +246,7 @@ private fun ServiceDetailContent(
     onImageClick: (Int) -> Unit,
     onProviderClick: () -> Unit,
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit,
+    onNavigateToAllReviews: (serviceId: String) -> Unit,
 ) {
     val service = state.service ?: return
     val provider = state.provider
@@ -544,17 +548,18 @@ private fun ServiceDetailContent(
                 )
             }
         } else {
-            items(items = state.reviews, key = { it.id }) { review ->
-                ReviewCard(
+            val latestReviews = state.reviews.take(3)
+            items(items = latestReviews, key = { it.id }) { review ->
+                ReviewItem(
                     review = review,
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }
 
-            if (state.totalReviewCount > state.reviews.size) {
+            if (state.totalReviewCount > 0) {
                 item(key = "see_all") {
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        TextButton(onClick = {}) {
+                        TextButton(onClick = { onNavigateToAllReviews(service.id) }) {
                             Text("See all ${state.totalReviewCount} reviews")
                         }
                     }
