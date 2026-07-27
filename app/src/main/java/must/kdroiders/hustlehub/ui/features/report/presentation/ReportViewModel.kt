@@ -18,34 +18,35 @@ data class ReportUiState(
 )
 
 @HiltViewModel
-class ReportViewModel @Inject constructor(
-    private val reportRepository: ReportRepository,
-) : ViewModel() {
+class ReportViewModel
+    @Inject
+    constructor(
+        private val reportRepository: ReportRepository,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(ReportUiState())
+        val uiState: StateFlow<ReportUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow(ReportUiState())
-    val uiState: StateFlow<ReportUiState> = _uiState.asStateFlow()
+        fun submitReport(
+            targetId: String,
+            targetType: String,
+            reason: String,
+            description: String?,
+        ) {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isSubmitting = true, error = null, isSuccess = false) }
+                val result = reportRepository.submitReport(targetId, targetType, reason, description)
+                result.fold(
+                    onSuccess = {
+                        _uiState.update { it.copy(isSubmitting = false, isSuccess = true) }
+                    },
+                    onFailure = { e ->
+                        _uiState.update { it.copy(isSubmitting = false, error = e.message ?: "Failed to submit report") }
+                    },
+                )
+            }
+        }
 
-    fun submitReport(
-        targetId: String,
-        targetType: String,
-        reason: String,
-        description: String?,
-    ) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, error = null, isSuccess = false) }
-            val result = reportRepository.submitReport(targetId, targetType, reason, description)
-            result.fold(
-                onSuccess = {
-                    _uiState.update { it.copy(isSubmitting = false, isSuccess = true) }
-                },
-                onFailure = { e ->
-                    _uiState.update { it.copy(isSubmitting = false, error = e.message ?: "Failed to submit report") }
-                }
-            )
+        fun resetState() {
+            _uiState.value = ReportUiState()
         }
     }
-
-    fun resetState() {
-        _uiState.value = ReportUiState()
-    }
-}

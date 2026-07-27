@@ -968,7 +968,7 @@ fun ChatDetailScreen(
                 ReportDialog(
                     targetId = message.id,
                     targetType = "message",
-                    onDismiss = { messageToReport = null }
+                    onDismiss = { messageToReport = null },
                 )
             }
         }

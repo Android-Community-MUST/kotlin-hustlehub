@@ -184,7 +184,8 @@ object AppModule {
     fun provideReportRepository(
         reportApiService: must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService,
     ): must.kdroiders.hustlehub.ui.features.report.domain.repository.ReportRepository {
-        return must.kdroiders.hustlehub.ui.features.report.data.repository.ReportRepositoryImpl(reportApiService)
+        return must.kdroiders.hustlehub.ui.features.report.data.repository
+            .ReportRepositoryImpl(reportApiService)
     }
 }
 

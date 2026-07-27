@@ -127,7 +127,7 @@ class ProfileViewModel
                     user = currentUser.copy(isOnline = isOnline),
                     services = state.services.map { svc ->
                         svc.copy(
-                            availability = if (isOnline) ServiceAvailability.AVAILABLE else ServiceAvailability.OFFLINE
+                            availability = if (isOnline) ServiceAvailability.AVAILABLE else ServiceAvailability.OFFLINE,
                         )
                     },
                 )

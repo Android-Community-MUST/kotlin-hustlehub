@@ -63,20 +63,20 @@ fun ReportDialog(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
                     tint = must.kdroiders.hustlehub.ui.theme.HustleSuccess,
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier.padding(8.dp),
                 )
             },
             title = {
                 Text(
                     text = "Report Submitted",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             },
             text = {
                 Text(
                     text = "Thank you. Our moderators will review this reported $targetType shortly.",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             },
             confirmButton = {
@@ -84,11 +84,11 @@ fun ReportDialog(
                     onClick = {
                         onDismiss()
                         viewModel.resetState()
-                    }
+                    },
                 ) {
                     Text("OK")
                 }
-            }
+            },
         )
     } else {
         AlertDialog(
@@ -97,18 +97,18 @@ fun ReportDialog(
                 Text(
                     text = "Report $targetType",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             },
             text = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
                         text = "Why are you reporting this?",
                         style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
                     reasons.forEach { reason ->
@@ -118,16 +118,16 @@ fun ReportDialog(
                                 .clip(RoundedCornerShape(8.dp))
                                 .clickable { selectedReason = reason }
                                 .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             RadioButton(
                                 selected = selectedReason == reason,
-                                onClick = { selectedReason = reason }
+                                onClick = { selectedReason = reason },
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 text = reason,
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
                             )
                         }
                     }
@@ -139,13 +139,13 @@ fun ReportDialog(
                         onValueChange = { description = it },
                         label = {
                             Text(
-                                text = if (selectedReason == "Other") "Please specify (required)" else "Additional context (optional)"
+                                text = if (selectedReason == "Other") "Please specify (required)" else "Additional context (optional)",
                             )
                         },
                         placeholder = { Text("Provide details...") },
                         maxLines = 4,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
                     )
 
                     state.error?.let {
@@ -154,7 +154,7 @@ fun ReportDialog(
                             text = it,
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                     }
                 }
@@ -171,15 +171,15 @@ fun ReportDialog(
                                 targetId = targetId,
                                 targetType = targetType,
                                 reason = reason,
-                                description = description.ifBlank { null }
+                                description = description.ifBlank { null },
                             )
                         }
-                    }
+                    },
                 ) {
                     if (state.isSubmitting) {
                         CircularProgressIndicator(
                             modifier = Modifier.padding(horizontal = 8.dp),
-                            color = MaterialTheme.colorScheme.onPrimary
+                            color = MaterialTheme.colorScheme.onPrimary,
                         )
                     } else {
                         Text("Submit Report")
@@ -189,11 +189,11 @@ fun ReportDialog(
             dismissButton = {
                 TextButton(
                     enabled = !state.isSubmitting,
-                    onClick = onDismiss
+                    onClick = onDismiss,
                 ) {
                     Text("Cancel")
                 }
-            }
+            },
         )
     }
 }

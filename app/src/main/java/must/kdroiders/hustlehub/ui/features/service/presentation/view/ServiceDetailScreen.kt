@@ -38,7 +38,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import must.kdroiders.hustlehub.ui.features.report.presentation.ReportDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -68,6 +67,7 @@ import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.sharedComposables.SectionHeader
+import must.kdroiders.hustlehub.ui.features.report.presentation.ReportDialog
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.AvailabilityBadge
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.CategoryBadge
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.FullScreenImageViewer
@@ -208,7 +208,7 @@ fun ServiceDetailScreen(
                     // Share, Bookmark and More
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         IconButton(
                             onClick = { scope.launch { snackbarHostState.showSnackbar("Share feature coming soon!") } },
@@ -244,14 +244,14 @@ fun ServiceDetailScreen(
                             }
                             DropdownMenu(
                                 expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
+                                onDismissRequest = { showMenu = false },
                             ) {
                                 DropdownMenuItem(
                                     text = { Text("Report Service") },
                                     onClick = {
                                         showMenu = false
                                         showReportDialog = true
-                                    }
+                                    },
                                 )
                             }
                         }
@@ -260,7 +260,7 @@ fun ServiceDetailScreen(
                             ReportDialog(
                                 targetId = serviceId,
                                 targetType = "service",
-                                onDismiss = { showReportDialog = false }
+                                onDismiss = { showReportDialog = false },
                             )
                         }
                     }

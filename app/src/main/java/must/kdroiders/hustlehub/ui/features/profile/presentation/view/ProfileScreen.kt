@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view
 
+import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -16,6 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -26,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.launch
@@ -44,13 +50,6 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
-
-import android.content.Intent
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.ui.platform.LocalContext
 
 /**
  * Alias for ProfileScreen to satisfy MyProfileScreen naming convention.
@@ -100,7 +99,7 @@ fun ProfileScreen(
                         putExtra(Intent.EXTRA_SUBJECT, "Check out my profile on HustleHub")
                         putExtra(
                             Intent.EXTRA_TEXT,
-                            "Check out my profile on HustleHub: https://hustlehub.must.ac.ke/profile/$userId"
+                            "Check out my profile on HustleHub: https://hustlehub.must.ac.ke/profile/$userId",
                         )
                     }
                     context.startActivity(Intent.createChooser(shareIntent, "Share Profile"))
