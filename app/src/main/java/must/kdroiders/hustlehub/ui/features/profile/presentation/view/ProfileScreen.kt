@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ErrorState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.LoadingState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileAvatar
@@ -49,7 +50,6 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ServicesHeader
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
-import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
 /**
