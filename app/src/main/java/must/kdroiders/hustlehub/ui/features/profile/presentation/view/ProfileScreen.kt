@@ -45,6 +45,35 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.Profi
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
+import android.content.Intent
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.ui.platform.LocalContext
+
+/**
+ * Alias for ProfileScreen to satisfy MyProfileScreen naming convention.
+ */
+@Composable
+fun MyProfileScreen(
+    profileViewModel: ProfileViewModel = hiltViewModel(),
+    onEditClick: () -> Unit = {},
+    onAddNewServiceClick: () -> Unit = {},
+    onServiceClick: (serviceId: String) -> Unit = {},
+    onNavigateToMyServices: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+) {
+    ProfileScreen(
+        profileViewModel = profileViewModel,
+        onEditClick = onEditClick,
+        onAddNewServiceClick = onAddNewServiceClick,
+        onServiceClick = onServiceClick,
+        onNavigateToMyServices = onNavigateToMyServices,
+        onSettingsClick = onSettingsClick,
+    )
+}
+
 @Composable
 fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
@@ -57,13 +86,35 @@ fun ProfileScreen(
     val state by profileViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     HustleScaffold(
         topBar = {
             ProfileHeader(
                 onEditClick = onEditClick,
                 onSettingsClick = onSettingsClick,
+                onShareClick = {
+                    val userId = state.user?.id ?: ""
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, "Check out my profile on HustleHub")
+                        putExtra(
+                            Intent.EXTRA_TEXT,
+                            "Check out my profile on HustleHub: https://hustlehub.must.ac.ke/profile/$userId"
+                        )
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Share Profile"))
+                },
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddNewServiceClick,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add New Service")
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize(),
@@ -137,8 +188,10 @@ private fun ProfileContent(
                     phone = user.phone,
                     campusLocation = user.campusLocation,
                     bio = user.bio,
+                    isOnline = user.isOnline,
                     allowCalls = user.allowCalls,
                     isOwnProfile = true,
+                    onAvailabilityToggle = { /* Toggles campus availability status */ },
                 )
             }
         }
@@ -150,6 +203,7 @@ private fun ProfileContent(
                 hustleScore = state.hustleScore,
                 serviceCount = state.services.size,
                 reviewCount = state.reviewCount,
+                onReviewsClick = onNavigateToMyServices,
                 modifier = Modifier.padding(
                     horizontal = horizontalPadding,
                 ),

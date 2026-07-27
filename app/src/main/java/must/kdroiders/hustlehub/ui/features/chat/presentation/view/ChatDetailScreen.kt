@@ -100,6 +100,7 @@ import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSep
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.MessageBubble
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ServiceCompletionCard
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ChatDetailViewModel
+import must.kdroiders.hustlehub.ui.features.report.presentation.ReportDialog
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.FullScreenImageViewer
 import java.io.File
 import java.time.Duration
@@ -138,6 +139,7 @@ fun ChatDetailScreen(
     var selectedImageUrl by remember { mutableStateOf<String?>(null) }
     // Save-to-gallery bottom sheet
     var imageToSave by remember { mutableStateOf<String?>(null) }
+    var messageToReport by remember { mutableStateOf<must.kdroiders.hustlehub.ui.features.chat.domain.model.Message?>(null) }
 
     val voiceRecorder = remember { VoiceRecorder(context) }
 
@@ -608,6 +610,7 @@ fun ChatDetailScreen(
                             onReply = viewModel::startReplying,
                             onDeleteForMe = { msg -> viewModel.deleteMessageForMe(msg.id) },
                             onDeleteForEveryone = { msg -> viewModel.deleteMessageForEveryone(msg.id) },
+                            onReportMessage = { msg -> messageToReport = msg },
                             isOtherUserOnline = state.isOtherUserOnline,
                         )
                     }
@@ -959,6 +962,14 @@ fun ChatDetailScreen(
                         }
                     }
                 }
+            }
+
+            messageToReport?.let { message ->
+                ReportDialog(
+                    targetId = message.id,
+                    targetType = "message",
+                    onDismiss = { messageToReport = null }
+                )
             }
         }
     }

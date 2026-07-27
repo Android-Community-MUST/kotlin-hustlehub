@@ -28,13 +28,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import must.kdroiders.hustlehub.ui.features.report.presentation.ReportDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -201,8 +205,11 @@ fun ServiceDetailScreen(
                         )
                     }
 
-                    // Share and Bookmark
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // Share, Bookmark and More
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         IconButton(
                             onClick = { scope.launch { snackbarHostState.showSnackbar("Share feature coming soon!") } },
                             modifier = Modifier
@@ -220,6 +227,41 @@ fun ServiceDetailScreen(
                                 .background(Color.Black.copy(alpha = 0.3f)),
                         ) {
                             Icon(Icons.Default.BookmarkBorder, contentDescription = "Save", tint = Color.White)
+                        }
+
+                        var showMenu by remember { mutableStateOf(false) }
+                        var showReportDialog by remember { mutableStateOf(false) }
+
+                        Box {
+                            IconButton(
+                                onClick = { showMenu = true },
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.Black.copy(alpha = 0.3f)),
+                            ) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "More options", tint = Color.White)
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Report Service") },
+                                    onClick = {
+                                        showMenu = false
+                                        showReportDialog = true
+                                    }
+                                )
+                            }
+                        }
+
+                        if (showReportDialog) {
+                            ReportDialog(
+                                targetId = serviceId,
+                                targetType = "service",
+                                onDismiss = { showReportDialog = false }
+                            )
                         }
                     }
                 }

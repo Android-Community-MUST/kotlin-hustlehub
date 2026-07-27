@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
+import androidx.compose.foundation.clickable
+
 // Stats row — Score / Services / Reviews
 
 @Composable
@@ -38,6 +40,7 @@ fun ProfileStatsRow(
     serviceCount: Int,
     reviewCount: Int,
     modifier: Modifier = Modifier,
+    onReviewsClick: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -58,6 +61,7 @@ fun ProfileStatsRow(
         StatCard(
             value = reviewCount.toString(),
             label = "REVIEWS",
+            onClick = onReviewsClick,
             modifier = Modifier.weight(1f),
         )
     }
@@ -70,12 +74,14 @@ fun StatCard(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     iconTint: Color = HustleWarningAmber,
+    onClick: (() -> Unit)? = null,
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(vertical = 24.dp, horizontal = 8.dp),
         contentAlignment = Alignment.Center,
     ) {

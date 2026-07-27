@@ -101,6 +101,7 @@ fun MessageBubble(
     onReply: (Message) -> Unit = {},
     onDeleteForMe: (Message) -> Unit = {},
     onDeleteForEveryone: (Message) -> Unit = {},
+    onReportMessage: (Message) -> Unit = {},
     modifier: Modifier = Modifier,
     currentUserLocation: android.location.Location? = null,
     isOtherUserOnline: Boolean = false,
@@ -220,6 +221,13 @@ fun MessageBubble(
                         onClick = {
                             showMenu = false
                             onDeleteForMe(message)
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Report Message") },
+                        onClick = {
+                            showMenu = false
+                            onReportMessage(message)
                         },
                     )
                     if (isCurrentUser) {

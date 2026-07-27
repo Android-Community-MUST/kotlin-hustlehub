@@ -178,6 +178,14 @@ object AppModule {
     @Provides
     @Singleton
     fun provideMapRepository(discoveryApiService: DiscoveryApiService): MapRepository = MapRepositoryImpl(discoveryApiService)
+
+    @Provides
+    @Singleton
+    fun provideReportRepository(
+        reportApiService: must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService,
+    ): must.kdroiders.hustlehub.ui.features.report.domain.repository.ReportRepository {
+        return must.kdroiders.hustlehub.ui.features.report.data.repository.ReportRepositoryImpl(reportApiService)
+    }
 }
 
 private class NoopAuthRepository : AuthRepository {
