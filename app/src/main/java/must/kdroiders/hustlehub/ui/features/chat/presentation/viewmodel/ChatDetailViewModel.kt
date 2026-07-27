@@ -40,6 +40,8 @@ import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
 
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicateReviewUseCase
+
 data class ChatDetailUiState(
     val messages: List<Message> = emptyList(),
     val currentUserId: String = "",
@@ -58,6 +60,8 @@ data class ChatDetailUiState(
     /** Prevents the auto-generated service card from being re-sent on every re-open. */
     val serviceCardSent: Boolean = false,
     val replyingToMessage: Message? = null,
+    val isServiceCompleted: Boolean = false,
+    val hasReviewedService: Boolean = false,
 )
 
 @HiltViewModel
@@ -70,6 +74,7 @@ class ChatDetailViewModel
         private val mediaApiService: MediaApiService,
         private val conversationDao: ConversationDao,
         private val serviceRepository: ServiceRepository,
+        private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase,
         private val firebaseAuth: FirebaseAuth?,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ChatDetailUiState())
@@ -200,10 +205,24 @@ class ChatDetailViewModel
                     NotificationHelper.cancelConversationNotification(context, resolvedId)
                 }
 
-                // 4. Observe local database messages
+                // 4. Observe local database messages & completion status
                 messagesJob = launch {
                     chatRepository.getMessages(resolvedId).collect { messageList ->
-                        _uiState.update { it.copy(messages = messageList) }
+                        val hasCompletionMsg = messageList.any { it.type == MessageType.SERVICE_COMPLETED }
+                        _uiState.update { state ->
+                            state.copy(
+                                messages = messageList,
+                                isServiceCompleted = state.isServiceCompleted || hasCompletionMsg,
+                            )
+                        }
+                    }
+                }
+
+                val activeSvcId = serviceId ?: finalCached?.serviceId
+                if (!activeSvcId.isNullOrBlank()) {
+                    launch {
+                        val hasReviewed = checkDuplicateReviewUseCase(activeSvcId).getOrDefault(false)
+                        _uiState.update { it.copy(hasReviewedService = hasReviewed) }
                     }
                 }
 
@@ -397,6 +416,18 @@ class ChatDetailViewModel
                     metadata = metadata,
                 )
                 cancelReplying()
+            }
+        }
+
+        fun markServiceCompleted() {
+            val id = conversationId ?: return
+            viewModelScope.launch {
+                chatRepository.sendMessage(
+                    conversationId = id,
+                    type = MessageType.SERVICE_COMPLETED,
+                    content = "Service marked as complete [+]",
+                )
+                _uiState.update { it.copy(isServiceCompleted = true) }
             }
         }
 

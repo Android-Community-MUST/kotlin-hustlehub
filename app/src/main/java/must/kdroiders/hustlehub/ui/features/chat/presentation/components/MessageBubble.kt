@@ -421,6 +421,15 @@ fun MessageBubble(
                                     onClick = onServiceCardClick,
                                 )
                             }
+
+                            MessageType.SYSTEM, MessageType.SERVICE_COMPLETED -> {
+                                Text(
+                                    text = message.content,
+                                    color = textColor,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
                         }
                     }
 

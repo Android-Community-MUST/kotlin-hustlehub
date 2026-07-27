@@ -92,7 +92,9 @@ import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.core.utils.createTempCameraFile
 import must.kdroiders.hustlehub.core.utils.saveImageToGallery
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
+import androidx.compose.material.icons.filled.CheckCircle
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
+import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ServiceCompletionCard
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoiceRecorder
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ChatLocationPickerSheet
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSeparator
@@ -464,6 +466,17 @@ fun ChatDetailScreen(
                         )
                     }
                 },
+                actions = {
+                    if (state.isCurrentUserProvider && !state.isServiceCompleted) {
+                        IconButton(onClick = { viewModel.markServiceCompleted() }) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "Mark as Complete",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
@@ -481,41 +494,51 @@ fun ChatDetailScreen(
                 .padding(innerPadding)
                 .imePadding(),
         ) {
-            // Service completed auto-prompt banner
-            val activeServiceId = serviceId
-            val activeProviderId = state.otherUserId
-            if (!activeServiceId.isNullOrBlank() && onNavigateToWriteReview != null) {
+            // Mark as complete banner for provider when service not yet marked complete
+            if (state.isCurrentUserProvider && !state.isServiceCompleted) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
-                        .clickable { onNavigateToWriteReview(activeServiceId, activeProviderId) }
+                        .clickable { viewModel.markServiceCompleted() }
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.Star,
+                            imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp),
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = "Service completed? Write a review",
+                            text = "Service finished? Mark as complete",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
                     }
                     Text(
-                        text = "Rate Now",
+                        text = "Mark Complete",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
+            }
+
+            // Service completion review prompt card for customer
+            val activeServiceId = serviceId
+            val activeProviderId = state.otherUserId
+            if (!state.isCurrentUserProvider && state.isServiceCompleted && !state.hasReviewedService && !activeServiceId.isNullOrBlank() && onNavigateToWriteReview != null) {
+                ServiceCompletionCard(
+                    providerName = state.otherUserName,
+                    serviceTitle = serviceTitle,
+                    onWriteReviewClick = { onNavigateToWriteReview(activeServiceId, activeProviderId) },
+                    modifier = Modifier.padding(16.dp),
+                )
             }
 
             // Messages list (reversed so it starts at the bottom)
