@@ -49,6 +49,7 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ServicesHeader
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
 /**
@@ -162,6 +163,7 @@ private fun ProfileContent(
 ) {
     val user = state.user ?: return
     val horizontalPadding = LocalDimensions.current.horizontalPadding
+    val isProvider = user.role == UserRole.PROVIDER || user.role == UserRole.BOTH || state.services.isNotEmpty()
 
     LazyColumn(
         modifier = Modifier
@@ -192,6 +194,7 @@ private fun ProfileContent(
                     isOnline = user.isOnline,
                     allowCalls = user.allowCalls,
                     isOwnProfile = true,
+                    isProvider = isProvider,
                     onAvailabilityToggle = onToggleOverallAvailability,
                 )
             }

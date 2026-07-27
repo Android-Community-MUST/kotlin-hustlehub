@@ -38,6 +38,7 @@ fun ProfileInfo(
     isOnline: Boolean = true,
     allowCalls: Boolean = false,
     isOwnProfile: Boolean = false,
+    isProvider: Boolean = true,
     onAvailabilityToggle: ((Boolean) -> Unit)? = null,
 ) {
     Text(
@@ -50,51 +51,53 @@ fun ProfileInfo(
 
     Spacer(Modifier.height(8.dp))
 
-    // Live Availability Status Pill & Toggle
-    val successColor = HustleSuccess
-    val errorColor = MaterialTheme.colorScheme.error
-    val statusColor = if (isOnline) successColor else errorColor
-    val statusText = if (isOnline) "Available on Campus" else "Off Duty"
+    // Live Availability Status Pill & Toggle (Shown ONLY for Providers)
+    if (isProvider) {
+        val successColor = HustleSuccess
+        val errorColor = MaterialTheme.colorScheme.error
+        val statusColor = if (isOnline) successColor else errorColor
+        val statusText = if (isOnline) "Available on Campus" else "Off Duty"
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(20.dp))
-                .background(statusColor.copy(alpha = 0.12f))
-                .border(1.dp, statusColor.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
-                .padding(horizontal = 12.dp, vertical = 5.dp),
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(statusColor),
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = statusText,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = statusColor,
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(statusColor.copy(alpha = 0.12f))
+                    .border(1.dp, statusColor.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
+                    .padding(horizontal = 12.dp, vertical = 5.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(statusColor),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = statusText,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = statusColor,
+                    )
+                }
+            }
+
+            if (isOwnProfile && onAvailabilityToggle != null) {
+                Spacer(Modifier.width(8.dp))
+                Switch(
+                    checked = isOnline,
+                    onCheckedChange = onAvailabilityToggle,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = successColor,
+                        checkedTrackColor = successColor.copy(alpha = 0.2f),
+                        uncheckedThumbColor = errorColor,
+                        uncheckedTrackColor = errorColor.copy(alpha = 0.2f),
+                    ),
                 )
             }
-        }
-
-        if (isOwnProfile && onAvailabilityToggle != null) {
-            Spacer(Modifier.width(8.dp))
-            Switch(
-                checked = isOnline,
-                onCheckedChange = onAvailabilityToggle,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = successColor,
-                    checkedTrackColor = successColor.copy(alpha = 0.2f),
-                    uncheckedThumbColor = errorColor,
-                    uncheckedTrackColor = errorColor.copy(alpha = 0.2f),
-                ),
-            )
         }
     }
 
