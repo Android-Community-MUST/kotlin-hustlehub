@@ -284,7 +284,13 @@ fun WriteReviewScreen(
                 Text(
                     text = "${state.commentLength} / ${state.maxCommentLength} characters",
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (state.commentLength >= state.maxCommentLength) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (state.commentLength >=
+                        state.maxCommentLength
+                    ) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                     modifier = Modifier.align(Alignment.End),
                 )
 

@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
@@ -92,13 +93,12 @@ import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.core.utils.createTempCameraFile
 import must.kdroiders.hustlehub.core.utils.saveImageToGallery
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
-import androidx.compose.material.icons.filled.CheckCircle
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
-import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ServiceCompletionCard
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoiceRecorder
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ChatLocationPickerSheet
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSeparator
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.MessageBubble
+import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ServiceCompletionCard
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ChatDetailViewModel
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.FullScreenImageViewer
 import java.io.File
@@ -106,7 +106,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
-import androidx.compose.material.icons.filled.Star
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -532,7 +531,12 @@ fun ChatDetailScreen(
             // Service completion review prompt card for customer
             val activeServiceId = serviceId
             val activeProviderId = state.otherUserId
-            if (!state.isCurrentUserProvider && state.isServiceCompleted && !state.hasReviewedService && !activeServiceId.isNullOrBlank() && onNavigateToWriteReview != null) {
+            if (!state.isCurrentUserProvider &&
+                state.isServiceCompleted &&
+                !state.hasReviewedService &&
+                !activeServiceId.isNullOrBlank() &&
+                onNavigateToWriteReview != null
+            ) {
                 ServiceCompletionCard(
                     providerName = state.otherUserName,
                     serviceTitle = serviceTitle,

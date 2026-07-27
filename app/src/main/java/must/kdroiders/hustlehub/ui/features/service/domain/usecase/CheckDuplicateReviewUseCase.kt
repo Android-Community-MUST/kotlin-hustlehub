@@ -6,6 +6,5 @@ import javax.inject.Inject
 class CheckDuplicateReviewUseCase
     @Inject
     constructor(private val repository: ReviewRepository) {
-        suspend operator fun invoke(serviceId: String): Result<Boolean> =
-            repository.checkDuplicateReview(serviceId)
+        suspend operator fun invoke(serviceId: String): Result<Boolean> = repository.checkDuplicateReview(serviceId)
     }

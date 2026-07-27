@@ -68,7 +68,6 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.CategoryBadge
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.FullScreenImageViewer
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.PortfolioGallery
-import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewItem
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewSummaryCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailUiState

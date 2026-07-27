@@ -61,14 +61,12 @@ fun StarRatingBar(
         modifier = modifier
             .onGloballyPositioned { coordinates ->
                 rowWidth = coordinates.size.width
-            }
-            .pointerInput(Unit) {
+            }.pointerInput(Unit) {
                 detectTapGestures { offset ->
                     val newRating = calculateRating(offset.x)
                     onRatingChanged(newRating)
                 }
-            }
-            .pointerInput(Unit) {
+            }.pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = { offset ->
                         val newRating = calculateRating(offset.x)
@@ -80,8 +78,7 @@ fun StarRatingBar(
                         onRatingChanged(newRating)
                     },
                 )
-            }
-            .semantics {
+            }.semantics {
                 contentDescription = "Rating bar: $rating out of 5 stars"
             },
         horizontalArrangement = Arrangement.spacedBy(8.dp),

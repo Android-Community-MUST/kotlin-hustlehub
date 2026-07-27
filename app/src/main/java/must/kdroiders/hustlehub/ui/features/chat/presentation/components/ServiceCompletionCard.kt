@@ -47,8 +47,7 @@ fun ServiceCompletionCard(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
                 shape = RoundedCornerShape(20.dp),
-            )
-            .padding(18.dp),
+            ).padding(18.dp),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

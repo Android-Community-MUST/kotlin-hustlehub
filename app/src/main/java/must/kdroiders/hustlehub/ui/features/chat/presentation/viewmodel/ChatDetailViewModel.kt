@@ -33,14 +33,13 @@ import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.PlayerState
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoicePlayer
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicateReviewUseCase
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
-
-import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicateReviewUseCase
 
 data class ChatDetailUiState(
     val messages: List<Message> = emptyList(),
