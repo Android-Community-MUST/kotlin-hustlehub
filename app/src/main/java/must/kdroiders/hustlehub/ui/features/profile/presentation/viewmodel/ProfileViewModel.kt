@@ -52,17 +52,25 @@ class ProfileViewModel
                         val calculatedReviewCount = services.sumOf { it.reviewCount }
                         val calculatedScore = HustleScoreCalculator.calculate(services)
 
+                        val computedBadges = buildList {
+                            if (calculatedScore >= 4.0f && calculatedReviewCount >= 1) {
+                                add(Badge("Top Rated", BadgeType.BLUE))
+                            }
+                            if (calculatedReviewCount >= 1) {
+                                add(Badge("Fast Responder", BadgeType.GREEN))
+                            }
+                            if (user?.isVerified == true) {
+                                add(Badge("Verified Student", BadgeType.BLUE))
+                            }
+                        }
+
                         _uiState.update {
                             it.copy(
                                 user = user,
                                 services = services,
                                 hustleScore = calculatedScore,
                                 reviewCount = calculatedReviewCount,
-                                badges = listOf(
-                                    Badge("Top Rated", BadgeType.BLUE),
-                                    Badge("Fast Responder", BadgeType.GREEN),
-                                    Badge("Verified Student", BadgeType.BLUE),
-                                ),
+                                badges = computedBadges,
                                 isLoading = false,
                                 error = null,
                             )
