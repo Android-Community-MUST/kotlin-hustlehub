@@ -131,6 +131,7 @@ fun ProfileScreen(
                     state = state,
                     onEditClick = onEditClick,
                     onToggleService = profileViewModel::toggleServiceActive,
+                    onToggleOverallAvailability = profileViewModel::toggleOverallAvailability,
                     onAddNewServiceClick = onAddNewServiceClick,
                     onServiceClick = onServiceClick,
                     onNavigateToMyServices = onNavigateToMyServices,
@@ -153,6 +154,7 @@ private fun ProfileContent(
     state: ProfileUiState,
     onEditClick: () -> Unit,
     onToggleService: (String) -> Unit,
+    onToggleOverallAvailability: (Boolean) -> Unit = {},
     onAddNewServiceClick: () -> Unit,
     onServiceClick: (serviceId: String) -> Unit = {},
     onNavigateToMyServices: () -> Unit = {},
@@ -191,7 +193,7 @@ private fun ProfileContent(
                     isOnline = user.isOnline,
                     allowCalls = user.allowCalls,
                     isOwnProfile = true,
-                    onAvailabilityToggle = { /* Toggles campus availability status */ },
+                    onAvailabilityToggle = onToggleOverallAvailability,
                 )
             }
         }
