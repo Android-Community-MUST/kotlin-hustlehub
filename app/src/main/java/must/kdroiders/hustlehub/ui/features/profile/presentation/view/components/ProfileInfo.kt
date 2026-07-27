@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
+import must.kdroiders.hustlehub.ui.theme.HustleSuccess
 
 @Composable
 fun ProfileInfo(
@@ -52,7 +53,9 @@ fun ProfileInfo(
     Spacer(Modifier.height(8.dp))
 
     // Live Availability Status Pill & Toggle
-    val statusColor = if (isOnline) Color(0xFF00E676) else Color(0xFFFF5252)
+    val successColor = HustleSuccess
+    val errorColor = MaterialTheme.colorScheme.error
+    val statusColor = if (isOnline) successColor else errorColor
     val statusText = if (isOnline) "Available on Campus" else "Off Duty"
 
     Row(
@@ -88,10 +91,10 @@ fun ProfileInfo(
                 checked = isOnline,
                 onCheckedChange = onAvailabilityToggle,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFF00E676),
-                    checkedTrackColor = Color(0xFF00E676).copy(alpha = 0.2f),
-                    uncheckedThumbColor = Color(0xFFFF5252),
-                    uncheckedTrackColor = Color(0xFFFF5252).copy(alpha = 0.2f),
+                    checkedThumbColor = successColor,
+                    checkedTrackColor = successColor.copy(alpha = 0.2f),
+                    uncheckedThumbColor = errorColor,
+                    uncheckedTrackColor = errorColor.copy(alpha = 0.2f),
                 ),
             )
         }
