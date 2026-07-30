@@ -82,9 +82,10 @@ interface ServiceApiService {
         @Query("size") size: Int = 10,
     ): ApiResponse<PageResponse<ReviewResponse>>
 
-    /** Submits a new review. Maps to POST /api/v1/reviews. Returns 409 on duplicate (same user + service). */
-    @POST("reviews")
+    /** Submits a new review. Maps to POST /api/v1/services/{serviceId}/reviews. Returns 409 on duplicate (same user + service). */
+    @POST("services/{serviceId}/reviews")
     suspend fun submitReview(
+        @Path("serviceId") serviceId: String,
         @Body request: CreateReviewRequest,
     ): ApiResponse<ReviewResponse>
 }

@@ -40,7 +40,9 @@ import must.kdroiders.hustlehub.ui.features.profile.data.repository.UserReposito
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
 import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
+import must.kdroiders.hustlehub.ui.features.service.data.repository.ReviewRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.service.data.repository.ServiceRepositoryImpl
+import must.kdroiders.hustlehub.ui.features.service.domain.repository.ReviewRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import timber.log.Timber
 import javax.inject.Singleton
@@ -135,6 +137,15 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideReviewRepository(
+        serviceApiService: ServiceApiService,
+        userPreferences: UserPreferences,
+    ): ReviewRepository {
+        return ReviewRepositoryImpl(serviceApiService, userPreferences)
+    }
+
+    @Provides
+    @Singleton
     fun provideChatRepository(
         @ApplicationContext context: Context,
         conversationApiService: ConversationApiService,
@@ -167,6 +178,15 @@ object AppModule {
     @Provides
     @Singleton
     fun provideMapRepository(discoveryApiService: DiscoveryApiService): MapRepository = MapRepositoryImpl(discoveryApiService)
+
+    @Provides
+    @Singleton
+    fun provideReportRepository(
+        reportApiService: must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService,
+    ): must.kdroiders.hustlehub.ui.features.report.domain.repository.ReportRepository {
+        return must.kdroiders.hustlehub.ui.features.report.data.repository
+            .ReportRepositoryImpl(reportApiService)
+    }
 }
 
 private class NoopAuthRepository : AuthRepository {

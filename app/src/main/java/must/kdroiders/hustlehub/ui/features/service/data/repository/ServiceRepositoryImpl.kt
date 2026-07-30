@@ -312,17 +312,16 @@ class ServiceRepositoryImpl
             withContext(Dispatchers.IO) {
                 runCatching {
                     val request = CreateReviewRequest(
-                        serviceId = serviceId,
                         rating = rating,
                         comment = comment,
                         isAnonymous = isAnonymous,
                     )
-                    val response = apiService.submitReview(request)
+                    val response = apiService.submitReview(serviceId, request)
                     check(response.success && response.data != null) { response.message }
                     response.data.toDomain()
                 }.recoverCatching { e ->
                     if (e is CancellationException) throw e
-                    if (e is retrofit2.HttpException && e.code() == 409) {
+                    if (e is retrofit2.HttpException && (e.code() == 409 || e.code() == 400)) {
                         throw Exception("You have already reviewed this service.")
                     } else {
                         Timber.w(e, "submitReview failed for serviceId='$serviceId'")
@@ -359,9 +358,9 @@ private fun ReviewResponse.toDomain(): Review =
     Review(
         id = id,
         serviceId = serviceId,
-        providerId = providerId,
-        customerId = customerId,
-        customerName = if (isAnonymous) "Anonymous" else customerName,
+        providerId = providerId ?: "",
+        customerId = customerId ?: "",
+        customerName = if (isAnonymous) "Anonymous" else (customerName ?: "Student"),
         customerAvatarUrl = if (isAnonymous) "" else (customerAvatarUrl ?: ""),
         rating = rating,
         comment = comment,

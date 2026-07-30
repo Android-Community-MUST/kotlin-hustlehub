@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicateReviewUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.SubmitReviewUseCase
 import timber.log.Timber
@@ -21,6 +22,7 @@ class WriteReviewViewModel
         private val submitReviewUseCase: SubmitReviewUseCase,
         private val getServiceByIdUseCase: GetServiceByIdUseCase,
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
+        private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase,
     ) : ViewModel() {
         private var serviceId: String? = null
 
@@ -41,11 +43,15 @@ class WriteReviewViewModel
                     .onSuccess { service ->
                         getProviderProfileUseCase(service.providerId)
                             .onSuccess { provider ->
+                                val alreadyReviewed = checkDuplicateReviewUseCase(id).getOrDefault(false)
+
                                 _uiState.update {
                                     it.copy(
                                         service = service,
                                         provider = provider,
                                         isLoadingInfo = false,
+                                        hasAlreadyReviewed = alreadyReviewed,
+                                        error = if (alreadyReviewed) "You have already reviewed this service." else null,
                                     )
                                 }
                             }.onFailure { e ->
@@ -101,7 +107,16 @@ class WriteReviewViewModel
                     _uiState.update { it.copy(isSubmitting = false, submitSuccess = true) }
                 }.onFailure { e ->
                     Timber.e(e, "WriteReviewViewModel: submit failed for serviceId=$sid")
-                    _uiState.update { it.copy(isSubmitting = false, error = e.message ?: "Failed to submit review.") }
+                    val isDuplicate = e.message?.contains("409", ignoreCase = true) == true ||
+                        e.message?.contains("already reviewed", ignoreCase = true) == true
+                    val errorMsg = if (isDuplicate) "You have already reviewed this service." else e.message ?: "Failed to submit review."
+                    _uiState.update {
+                        it.copy(
+                            isSubmitting = false,
+                            hasAlreadyReviewed = isDuplicate,
+                            error = errorMsg,
+                        )
+                    }
                 }
             }
         }

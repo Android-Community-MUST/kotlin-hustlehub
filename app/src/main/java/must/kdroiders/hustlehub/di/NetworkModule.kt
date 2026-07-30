@@ -106,4 +106,10 @@ object NetworkModule {
     fun provideNotificationApiService(retrofit: Retrofit): NotificationApiService {
         return retrofit.create(NotificationApiService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideReportApiService(retrofit: Retrofit): must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService {
+        return retrofit.create(must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService::class.java)
+    }
 }

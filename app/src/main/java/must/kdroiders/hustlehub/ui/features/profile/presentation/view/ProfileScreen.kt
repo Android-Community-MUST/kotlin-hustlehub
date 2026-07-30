@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view
 
+import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -16,6 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -26,10 +31,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ErrorState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.LoadingState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileAvatar
@@ -45,6 +52,28 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.Profi
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
+/**
+ * Alias for ProfileScreen to satisfy MyProfileScreen naming convention.
+ */
+@Composable
+fun MyProfileScreen(
+    profileViewModel: ProfileViewModel = hiltViewModel(),
+    onEditClick: () -> Unit = {},
+    onAddNewServiceClick: () -> Unit = {},
+    onServiceClick: (serviceId: String) -> Unit = {},
+    onNavigateToMyServices: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+) {
+    ProfileScreen(
+        profileViewModel = profileViewModel,
+        onEditClick = onEditClick,
+        onAddNewServiceClick = onAddNewServiceClick,
+        onServiceClick = onServiceClick,
+        onNavigateToMyServices = onNavigateToMyServices,
+        onSettingsClick = onSettingsClick,
+    )
+}
+
 @Composable
 fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
@@ -57,13 +86,35 @@ fun ProfileScreen(
     val state by profileViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     HustleScaffold(
         topBar = {
             ProfileHeader(
                 onEditClick = onEditClick,
                 onSettingsClick = onSettingsClick,
+                onShareClick = {
+                    val userId = state.user?.id ?: ""
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, "Check out my profile on HustleHub")
+                        putExtra(
+                            Intent.EXTRA_TEXT,
+                            "Check out my profile on HustleHub: https://hustlehub.must.ac.ke/profile/$userId",
+                        )
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Share Profile"))
+                },
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddNewServiceClick,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add New Service")
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize(),
@@ -80,6 +131,7 @@ fun ProfileScreen(
                     state = state,
                     onEditClick = onEditClick,
                     onToggleService = profileViewModel::toggleServiceActive,
+                    onToggleOverallAvailability = profileViewModel::toggleOverallAvailability,
                     onAddNewServiceClick = onAddNewServiceClick,
                     onServiceClick = onServiceClick,
                     onNavigateToMyServices = onNavigateToMyServices,
@@ -102,6 +154,7 @@ private fun ProfileContent(
     state: ProfileUiState,
     onEditClick: () -> Unit,
     onToggleService: (String) -> Unit,
+    onToggleOverallAvailability: (Boolean) -> Unit = {},
     onAddNewServiceClick: () -> Unit,
     onServiceClick: (serviceId: String) -> Unit = {},
     onNavigateToMyServices: () -> Unit = {},
@@ -110,6 +163,7 @@ private fun ProfileContent(
 ) {
     val user = state.user ?: return
     val horizontalPadding = LocalDimensions.current.horizontalPadding
+    val isProvider = user.role == UserRole.PROVIDER || user.role == UserRole.BOTH || state.services.isNotEmpty()
 
     LazyColumn(
         modifier = Modifier
@@ -137,8 +191,11 @@ private fun ProfileContent(
                     phone = user.phone,
                     campusLocation = user.campusLocation,
                     bio = user.bio,
+                    isOnline = user.isOnline,
                     allowCalls = user.allowCalls,
                     isOwnProfile = true,
+                    isProvider = isProvider,
+                    onAvailabilityToggle = onToggleOverallAvailability,
                 )
             }
         }
@@ -150,6 +207,7 @@ private fun ProfileContent(
                 hustleScore = state.hustleScore,
                 serviceCount = state.services.size,
                 reviewCount = state.reviewCount,
+                onReviewsClick = onNavigateToMyServices,
                 modifier = Modifier.padding(
                     horizontal = horizontalPadding,
                 ),

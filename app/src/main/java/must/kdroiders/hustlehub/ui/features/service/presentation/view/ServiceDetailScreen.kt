@@ -28,10 +28,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -64,11 +67,12 @@ import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.sharedComposables.SectionHeader
+import must.kdroiders.hustlehub.ui.features.report.presentation.ReportDialog
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.AvailabilityBadge
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.CategoryBadge
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.FullScreenImageViewer
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.PortfolioGallery
-import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewCard
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewItem
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewSummaryCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailUiState
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailViewModel
@@ -89,6 +93,7 @@ fun ServiceDetailScreen(
     ) -> Unit = { _, _, _, _, _, _ -> },
     onNavigateToProviderProfile: (providerId: String) -> Unit = {},
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit = { _, _ -> },
+    onNavigateToAllReviews: (serviceId: String) -> Unit = {},
 ) {
     val state by serviceDetailViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -172,6 +177,7 @@ fun ServiceDetailScreen(
                     onImageClick = { index -> fullScreenImageIndex = index },
                     onProviderClick = { state.service?.providerId?.let { onNavigateToProviderProfile(it) } },
                     onNavigateToWriteReview = onNavigateToWriteReview,
+                    onNavigateToAllReviews = onNavigateToAllReviews,
                 )
             }
 
@@ -199,8 +205,11 @@ fun ServiceDetailScreen(
                         )
                     }
 
-                    // Share and Bookmark
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // Share, Bookmark and More
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         IconButton(
                             onClick = { scope.launch { snackbarHostState.showSnackbar("Share feature coming soon!") } },
                             modifier = Modifier
@@ -218,6 +227,41 @@ fun ServiceDetailScreen(
                                 .background(Color.Black.copy(alpha = 0.3f)),
                         ) {
                             Icon(Icons.Default.BookmarkBorder, contentDescription = "Save", tint = Color.White)
+                        }
+
+                        var showMenu by remember { mutableStateOf(false) }
+                        var showReportDialog by remember { mutableStateOf(false) }
+
+                        Box {
+                            IconButton(
+                                onClick = { showMenu = true },
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.Black.copy(alpha = 0.3f)),
+                            ) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "More options", tint = Color.White)
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Report Service") },
+                                    onClick = {
+                                        showMenu = false
+                                        showReportDialog = true
+                                    },
+                                )
+                            }
+                        }
+
+                        if (showReportDialog) {
+                            ReportDialog(
+                                targetId = serviceId,
+                                targetType = "service",
+                                onDismiss = { showReportDialog = false },
+                            )
                         }
                     }
                 }
@@ -243,6 +287,7 @@ private fun ServiceDetailContent(
     onImageClick: (Int) -> Unit,
     onProviderClick: () -> Unit,
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit,
+    onNavigateToAllReviews: (serviceId: String) -> Unit,
 ) {
     val service = state.service ?: return
     val provider = state.provider
@@ -544,17 +589,18 @@ private fun ServiceDetailContent(
                 )
             }
         } else {
-            items(items = state.reviews, key = { it.id }) { review ->
-                ReviewCard(
+            val latestReviews = state.reviews.take(3)
+            items(items = latestReviews, key = { it.id }) { review ->
+                ReviewItem(
                     review = review,
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }
 
-            if (state.totalReviewCount > state.reviews.size) {
+            if (state.totalReviewCount > 0) {
                 item(key = "see_all") {
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        TextButton(onClick = {}) {
+                        TextButton(onClick = { onNavigateToAllReviews(service.id) }) {
                             Text("See all ${state.totalReviewCount} reviews")
                         }
                     }

@@ -16,16 +16,18 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import must.kdroiders.hustlehub.ui.theme.HustleSuccess
 
 @Composable
 fun ProfileInfo(
@@ -36,6 +38,8 @@ fun ProfileInfo(
     isOnline: Boolean = true,
     allowCalls: Boolean = false,
     isOwnProfile: Boolean = false,
+    isProvider: Boolean = true,
+    onAvailabilityToggle: ((Boolean) -> Unit)? = null,
 ) {
     Text(
         text = name.ifBlank { "Hustler Provider" },
@@ -47,31 +51,53 @@ fun ProfileInfo(
 
     Spacer(Modifier.height(8.dp))
 
-    // Live Availability Status Pill
-    val statusColor = if (isOnline) Color(0xFF00E676) else Color(0xFFFF5252)
-    val statusText = if (isOnline) "Available on Campus" else "Off Duty"
+    // Live Availability Status Pill & Toggle (Shown ONLY for Providers)
+    if (isProvider) {
+        val successColor = HustleSuccess
+        val errorColor = MaterialTheme.colorScheme.error
+        val statusColor = if (isOnline) successColor else errorColor
+        val statusText = if (isOnline) "Available on Campus" else "Off Duty"
 
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(statusColor.copy(alpha = 0.12f))
-            .border(1.dp, statusColor.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
-            .padding(horizontal = 12.dp, vertical = 5.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Box(
                 modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(statusColor),
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = statusText,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = statusColor,
-            )
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(statusColor.copy(alpha = 0.12f))
+                    .border(1.dp, statusColor.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
+                    .padding(horizontal = 12.dp, vertical = 5.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(statusColor),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = statusText,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = statusColor,
+                    )
+                }
+            }
+
+            if (isOwnProfile && onAvailabilityToggle != null) {
+                Spacer(Modifier.width(8.dp))
+                Switch(
+                    checked = isOnline,
+                    onCheckedChange = onAvailabilityToggle,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = successColor,
+                        checkedTrackColor = successColor.copy(alpha = 0.2f),
+                        uncheckedThumbColor = errorColor,
+                        uncheckedTrackColor = errorColor.copy(alpha = 0.2f),
+                    ),
+                )
+            }
         }
     }
 

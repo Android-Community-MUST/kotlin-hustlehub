@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
@@ -97,7 +98,9 @@ import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoiceRecorde
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ChatLocationPickerSheet
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSeparator
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.MessageBubble
+import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ServiceCompletionCard
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ChatDetailViewModel
+import must.kdroiders.hustlehub.ui.features.report.presentation.ReportDialog
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.FullScreenImageViewer
 import java.io.File
 import java.time.Duration
@@ -117,6 +120,7 @@ fun ChatDetailScreen(
     serviceCategory: String? = null,
     servicePriceRange: String? = null,
     providerName: String? = null,
+    onNavigateToWriteReview: ((serviceId: String, providerId: String) -> Unit)? = null,
     viewModel: ChatDetailViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -135,6 +139,7 @@ fun ChatDetailScreen(
     var selectedImageUrl by remember { mutableStateOf<String?>(null) }
     // Save-to-gallery bottom sheet
     var imageToSave by remember { mutableStateOf<String?>(null) }
+    var messageToReport by remember { mutableStateOf<must.kdroiders.hustlehub.ui.features.chat.domain.model.Message?>(null) }
 
     val voiceRecorder = remember { VoiceRecorder(context) }
 
@@ -462,6 +467,17 @@ fun ChatDetailScreen(
                         )
                     }
                 },
+                actions = {
+                    if (state.isCurrentUserProvider && !state.isServiceCompleted) {
+                        IconButton(onClick = { viewModel.markServiceCompleted() }) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "Mark as Complete",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
@@ -479,6 +495,58 @@ fun ChatDetailScreen(
                 .padding(innerPadding)
                 .imePadding(),
         ) {
+            // Mark as complete banner for provider when service not yet marked complete
+            if (state.isCurrentUserProvider && !state.isServiceCompleted) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
+                        .clickable { viewModel.markServiceCompleted() }
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Service finished? Mark as complete",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                    Text(
+                        text = "Mark Complete",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+
+            // Service completion review prompt card for customer
+            val activeServiceId = serviceId
+            val activeProviderId = state.otherUserId
+            if (!state.isCurrentUserProvider &&
+                state.isServiceCompleted &&
+                !state.hasReviewedService &&
+                !activeServiceId.isNullOrBlank() &&
+                onNavigateToWriteReview != null
+            ) {
+                ServiceCompletionCard(
+                    providerName = state.otherUserName,
+                    serviceTitle = serviceTitle,
+                    onWriteReviewClick = { onNavigateToWriteReview(activeServiceId, activeProviderId) },
+                    modifier = Modifier.padding(16.dp),
+                )
+            }
+
             // Messages list (reversed so it starts at the bottom)
             val reversedMessages = state.messages.reversed()
             Box(modifier = Modifier.weight(1f)) {
@@ -542,6 +610,7 @@ fun ChatDetailScreen(
                             onReply = viewModel::startReplying,
                             onDeleteForMe = { msg -> viewModel.deleteMessageForMe(msg.id) },
                             onDeleteForEveryone = { msg -> viewModel.deleteMessageForEveryone(msg.id) },
+                            onReportMessage = { msg -> messageToReport = msg },
                             isOtherUserOnline = state.isOtherUserOnline,
                         )
                     }
@@ -893,6 +962,14 @@ fun ChatDetailScreen(
                         }
                     }
                 }
+            }
+
+            messageToReport?.let { message ->
+                ReportDialog(
+                    targetId = message.id,
+                    targetType = "message",
+                    onDismiss = { messageToReport = null },
+                )
             }
         }
     }

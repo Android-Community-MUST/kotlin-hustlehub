@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.ui.features.profile.presentation.view.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ fun ProfileStatsRow(
     serviceCount: Int,
     reviewCount: Int,
     modifier: Modifier = Modifier,
+    onReviewsClick: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -58,6 +60,7 @@ fun ProfileStatsRow(
         StatCard(
             value = reviewCount.toString(),
             label = "REVIEWS",
+            onClick = onReviewsClick,
             modifier = Modifier.weight(1f),
         )
     }
@@ -70,12 +73,14 @@ fun StatCard(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     iconTint: Color = HustleWarningAmber,
+    onClick: (() -> Unit)? = null,
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(vertical = 24.dp, horizontal = 8.dp),
         contentAlignment = Alignment.Center,
     ) {

@@ -52,17 +52,25 @@ class ProfileViewModel
                         val calculatedReviewCount = services.sumOf { it.reviewCount }
                         val calculatedScore = HustleScoreCalculator.calculate(services)
 
+                        val computedBadges = buildList {
+                            if (calculatedScore >= 4.0f && calculatedReviewCount >= 1) {
+                                add(Badge("Top Rated", BadgeType.BLUE))
+                            }
+                            if (calculatedReviewCount >= 1) {
+                                add(Badge("Fast Responder", BadgeType.GREEN))
+                            }
+                            if (user?.isVerified == true) {
+                                add(Badge("Verified Student", BadgeType.BLUE))
+                            }
+                        }
+
                         _uiState.update {
                             it.copy(
                                 user = user,
                                 services = services,
                                 hustleScore = calculatedScore,
                                 reviewCount = calculatedReviewCount,
-                                badges = listOf(
-                                    Badge("Top Rated", BadgeType.BLUE),
-                                    Badge("Fast Responder", BadgeType.GREEN),
-                                    Badge("Verified Student", BadgeType.BLUE),
-                                ),
+                                badges = computedBadges,
                                 isLoading = false,
                                 error = null,
                             )
@@ -106,6 +114,30 @@ class ProfileViewModel
                             error = "Failed to update service availability",
                         )
                     }
+                }
+            }
+        }
+
+        fun toggleOverallAvailability(isOnline: Boolean) {
+            val currentUser = _uiState.value.user ?: return
+
+            // Optimistically update UI
+            _uiState.update { state ->
+                state.copy(
+                    user = currentUser.copy(isOnline = isOnline),
+                    services = state.services.map { svc ->
+                        svc.copy(
+                            availability = if (isOnline) ServiceAvailability.AVAILABLE else ServiceAvailability.OFFLINE,
+                        )
+                    },
+                )
+            }
+
+            // Update each service availability status on backend
+            viewModelScope.launch {
+                val targetAvailability = if (isOnline) ServiceAvailability.AVAILABLE else ServiceAvailability.OFFLINE
+                _uiState.value.services.forEach { service ->
+                    updateAvailabilityUseCase(service.id, targetAvailability)
                 }
             }
         }

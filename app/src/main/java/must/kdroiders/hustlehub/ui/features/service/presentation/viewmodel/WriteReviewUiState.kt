@@ -15,9 +15,10 @@ data class WriteReviewUiState(
     val isAnonymous: Boolean = false,
     val isSubmitting: Boolean = false,
     val submitSuccess: Boolean = false,
+    val hasAlreadyReviewed: Boolean = false,
     val error: String? = null,
 ) {
-    val canSubmit: Boolean get() = rating in 1..5 && !isSubmitting && !isLoadingInfo
+    val canSubmit: Boolean get() = rating in 1..5 && !isSubmitting && !isLoadingInfo && !hasAlreadyReviewed
     val commentLength: Int get() = comment.length
     val maxCommentLength: Int get() = 200
 }

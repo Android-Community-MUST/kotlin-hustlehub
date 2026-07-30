@@ -6,6 +6,8 @@ enum class MessageType {
     IMAGE,
     LOCATION,
     SERVICE_CARD,
+    SYSTEM,
+    SERVICE_COMPLETED,
 }
 
 data class Message(

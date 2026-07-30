@@ -20,6 +20,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import must.kdroiders.hustlehub.core.auth.AuthStateViewModel
+import must.kdroiders.hustlehub.navigation.AllReviews
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
@@ -36,6 +37,7 @@ import must.kdroiders.hustlehub.ui.features.notification.presentation.view.Notif
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.EditProfileScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProviderProfileScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.AllReviewsScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.CreateServiceScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServicesScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.ServiceDetailScreen
@@ -295,6 +297,9 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     providerName = key.providerName,
                     onBackClick = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
+                    onNavigateToWriteReview = { serviceId, providerId ->
+                        backstack.add(WriteReview(serviceId = serviceId, providerId = providerId))
+                    },
                 )
             }
 
@@ -319,6 +324,17 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     onNavigateToWriteReview = { serviceId, providerId ->
                         backstack.add(WriteReview(serviceId = serviceId, providerId = providerId))
                     },
+                    onNavigateToAllReviews = { serviceId ->
+                        backstack.add(AllReviews(serviceId = serviceId))
+                    },
+                )
+            }
+
+            // All reviews
+            entry<AllReviews> { key ->
+                AllReviewsScreen(
+                    serviceId = key.serviceId,
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                 )
             }
 

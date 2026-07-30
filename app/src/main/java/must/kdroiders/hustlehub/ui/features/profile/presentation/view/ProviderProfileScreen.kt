@@ -20,6 +20,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +35,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -51,6 +57,7 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileStatsRow
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ServiceCard
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProviderProfileViewModel
+import must.kdroiders.hustlehub.ui.features.report.presentation.ReportDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,6 +90,38 @@ fun ProviderProfileScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    if (!state.isOwnProfile && state.provider != null) {
+                        var showMenu by remember { mutableStateOf(false) }
+                        var showReportDialog by remember { mutableStateOf(false) }
+
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Report Profile") },
+                                    onClick = {
+                                        showMenu = false
+                                        showReportDialog = true
+                                    },
+                                )
+                            }
+                        }
+
+                        if (showReportDialog) {
+                            ReportDialog(
+                                targetId = providerId,
+                                targetType = "user",
+                                onDismiss = { showReportDialog = false },
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
