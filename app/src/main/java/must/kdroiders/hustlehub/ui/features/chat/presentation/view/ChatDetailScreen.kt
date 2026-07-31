@@ -77,6 +77,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -398,13 +403,15 @@ fun ChatDetailScreen(
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { heading() },
                     ) {
                         // User Avatar
                         if (!state.otherUserAvatar.isNullOrBlank()) {
                             AsyncImage(
                                 model = state.otherUserAvatar,
-                                contentDescription = "Avatar",
+                                contentDescription = "Avatar of ${state.otherUserName}",
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape),
@@ -415,7 +422,8 @@ fun ChatDetailScreen(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
+                                    .background(MaterialTheme.colorScheme.primaryContainer)
+                                    .clearAndSetSemantics { },
                                 contentAlignment = Alignment.Center,
                             ) {
                                 val firstLetter = state.otherUserName.firstOrNull()?.uppercase() ?: "?"
@@ -501,7 +509,7 @@ fun ChatDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
-                        .clickable { viewModel.markServiceCompleted() }
+                        .clickable(role = Role.Button) { viewModel.markServiceCompleted() }
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -509,7 +517,7 @@ fun ChatDetailScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
+                            contentDescription = null, // decorative
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp),
                         )
@@ -983,7 +991,7 @@ private fun AttachmentOption(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(onClick = onClick),
+        modifier = Modifier.clickable(role = Role.Button, onClick = onClick),
     ) {
         Box(
             modifier = Modifier
@@ -994,7 +1002,7 @@ private fun AttachmentOption(
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = label,
+                contentDescription = null, // decorative since label announces it
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
             )
         }

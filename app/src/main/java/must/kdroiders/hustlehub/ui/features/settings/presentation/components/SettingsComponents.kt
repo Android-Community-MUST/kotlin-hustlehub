@@ -27,6 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,7 +45,9 @@ fun SettingsSectionLabel(text: String) {
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         letterSpacing = 1.2.sp,
-        modifier = Modifier.padding(start = 4.dp),
+        modifier = Modifier
+            .padding(start = 4.dp)
+            .semantics { heading() },
     )
 }
 
@@ -68,7 +76,11 @@ fun SettingsRowNavigate(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+            .semantics {
+                role = Role.Button
+                contentDescription = "$label${if (subtitle != null) ", $subtitle" else ""}"
+            },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SettingsIconBox(icon = icon)
@@ -117,7 +129,11 @@ fun SettingsRowExternalLink(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+            .semantics {
+                role = Role.Button
+                contentDescription = "$label, opens external link"
+            },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SettingsIconBox(icon = icon)
@@ -131,7 +147,7 @@ fun SettingsRowExternalLink(
         )
         Icon(
             imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-            contentDescription = "Opens externally",
+            contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(16.dp),
         )
@@ -149,7 +165,12 @@ fun SettingsRowToggle(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .semantics {
+                role = Role.Switch
+                stateDescription = if (checked) "On" else "Off"
+                contentDescription = label
+            },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SettingsIconBox(icon = icon)

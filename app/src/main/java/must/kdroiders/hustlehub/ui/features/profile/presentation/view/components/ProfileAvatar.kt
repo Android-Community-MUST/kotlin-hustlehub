@@ -27,6 +27,7 @@ fun ProfileAvatar(
     photoUrl: String?,
     modifier: Modifier = Modifier,
     isVerified: Boolean = false,
+    contentDescription: String? = "Profile photo",
 ) {
     Box(contentAlignment = Alignment.BottomEnd, modifier = modifier) {
         Box(
@@ -44,14 +45,14 @@ fun ProfileAvatar(
             if (photoUrl.isNullOrEmpty()) {
                 Icon(
                     imageVector = Icons.Default.Person,
-                    contentDescription = "Default Avatar",
+                    contentDescription = contentDescription,
                     modifier = Modifier.size(64.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
                 AsyncImage(
                     model = photoUrl,
-                    contentDescription = "Profile Photo",
+                    contentDescription = contentDescription,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                 )

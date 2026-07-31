@@ -25,6 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -75,13 +78,20 @@ fun StatCard(
     iconTint: Color = HustleWarningAmber,
     onClick: (() -> Unit)? = null,
 ) {
+    val cleanLabel = label.replace("\n", " ")
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
-            .padding(vertical = 24.dp, horizontal = 8.dp),
+            .padding(vertical = 24.dp, horizontal = 8.dp)
+            .semantics(mergeDescendants = true) {
+               contentDescription = "$value $cleanLabel"
+                if (onClick != null) {
+                    role = androidx.compose.ui.semantics.Role.Button
+                }
+            },
         contentAlignment = Alignment.Center,
     ) {
         Column(
