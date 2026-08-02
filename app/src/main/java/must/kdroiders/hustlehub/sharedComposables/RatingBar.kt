@@ -12,12 +12,14 @@ import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -89,14 +91,19 @@ fun RatingBar(
 
             Icon(
                 imageVector = icon,
-                contentDescription = if (onRatingChanged == null) null else "Set rating to $i",
+                contentDescription = if (onRatingChanged == null) null else "Rate $i out of $starCount stars",
                 tint = tint,
                 modifier = Modifier
                     .size(starSize)
                     .scale(scale)
                     .then(
                         if (onRatingChanged != null) {
-                            Modifier.clickable { onRatingChanged(i) }
+                            Modifier
+                                .minimumInteractiveComponentSize()
+                                .clickable (
+                                    onClick = { onRatingChanged(i) },
+                                    role = Role.Button,
+                                )
                         } else {
                             Modifier
                         },
