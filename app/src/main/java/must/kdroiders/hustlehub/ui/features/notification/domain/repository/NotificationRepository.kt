@@ -9,6 +9,7 @@ interface NotificationRepository {
         size: Int,
     ): Result<List<Notification>>
     suspend fun markRead(id: String): Result<Unit>
+    suspend fun deleteNotification(id: String): Result<Unit>
     suspend fun markAllRead(): Result<Unit>
     suspend fun getUnreadCount(): Result<Int>
     suspend fun getPreferences(): Result<NotificationPreferences>

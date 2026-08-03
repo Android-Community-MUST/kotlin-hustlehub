@@ -11,6 +11,8 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
+import retrofit2.http.DELETE
+
 interface NotificationApiService {
     @GET("notifications")
     suspend fun getNotifications(
@@ -20,6 +22,11 @@ interface NotificationApiService {
 
     @PUT("notifications/{notificationId}/read")
     suspend fun markRead(
+        @Path("notificationId") notificationId: String,
+    ): ApiResponse<Unit>
+
+    @DELETE("notifications/{notificationId}")
+    suspend fun deleteNotification(
         @Path("notificationId") notificationId: String,
     ): ApiResponse<Unit>
 

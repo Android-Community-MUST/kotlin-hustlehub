@@ -30,6 +30,11 @@ class NotificationRepositoryImpl
                 apiService.markRead(id)
             }.map { }
 
+        override suspend fun deleteNotification(id: String): Result<Unit> =
+            runCatching {
+                apiService.deleteNotification(id)
+            }.map { }
+
         override suspend fun markAllRead(): Result<Unit> =
             runCatching {
                 apiService.markAllRead()
