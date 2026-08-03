@@ -73,6 +73,16 @@ fun NotificationScreen(
     } else {
         null
     }
+    val unreadCountViewModel: must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.UnreadCountViewModel? = if (activity != null) {
+        hiltViewModel<must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.UnreadCountViewModel>(viewModelStoreOwner = activity)
+    } else {
+        null
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.markAllAsRead()
+        unreadCountViewModel?.clearNotificationsBadge()
+    }
 
     Box(
         modifier = modifier

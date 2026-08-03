@@ -89,16 +89,16 @@ fun MainShellScreen(
     // The currently active tab key is always the last element.
     val currentKey = innerBackstack.lastOrNull() ?: BottomHome
 
-    // Observe the total unread count reactively — zero allocation per recomposition.
+    // Observe unread chat message count reactively for bottom bar badge
     val unreadCountViewModel: UnreadCountViewModel = hiltViewModel()
-    val totalUnreadCount by unreadCountViewModel.totalUnreadCount.collectAsState(initial = 0)
+    val unreadMessageCount by unreadCountViewModel.unreadMessageCount.collectAsState(initial = 0)
 
     Scaffold(
         modifier = modifier,
         bottomBar = {
             HustleBottomBar(
                 currentKey = currentKey,
-                totalUnreadCount = totalUnreadCount,
+                unreadMessageCount = unreadMessageCount,
                 onTabSelected = { destination ->
                     // Replace entire stack with the selected tab (no accumulation).
                     innerBackstack.clear()

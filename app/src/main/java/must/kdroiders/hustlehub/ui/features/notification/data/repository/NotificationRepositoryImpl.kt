@@ -35,6 +35,12 @@ class NotificationRepositoryImpl
                 apiService.markAllRead()
             }.map { }
 
+        override suspend fun getUnreadCount(): Result<Int> =
+            runCatching {
+                val response = apiService.getUnreadCount()
+                (response.data?.unreadCount ?: 0L).toInt()
+            }
+
         override suspend fun getPreferences(): Result<NotificationPreferences> =
             runCatching {
                 val response = apiService.getPreferences()

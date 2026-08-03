@@ -26,6 +26,9 @@ interface NotificationApiService {
     @PUT("notifications/read-all")
     suspend fun markAllRead(): ApiResponse<Unit>
 
+    @GET("notifications/unread-count")
+    suspend fun getUnreadCount(): ApiResponse<must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.UnreadCountDto>
+
     @GET("notifications/preferences")
     suspend fun getPreferences(): ApiResponse<NotificationPreferencesDto>
 
