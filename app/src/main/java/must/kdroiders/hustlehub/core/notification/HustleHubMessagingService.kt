@@ -1,5 +1,7 @@
 package must.kdroiders.hustlehub.core.notification
 
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
@@ -18,9 +20,14 @@ class HustleHubMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         CoroutineScope(Dispatchers.IO).launch {
-            userRepository.updateFcmToken(token)
+            val currentUser = runCatching { Firebase.auth.currentUser }.getOrNull()
+            if (currentUser != null) {
+                userRepository.updateFcmToken(token)
+            }
         }
     }
+
+
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)

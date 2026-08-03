@@ -1,7 +1,8 @@
 package must.kdroiders.hustlehub.ui.features.auth.domain.usecase
 
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
+import kotlinx.coroutines.test.runTest
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import org.junit.Before
 import org.junit.Test
@@ -20,8 +21,9 @@ class SignOutUseCaseTest {
     }
 
     @Test
-    fun `should_call_authRepository_logout_when_invoked`() {
+    fun `should_call_authRepository_logout_when_invoked`() = runTest {
         signOutUseCase()
-        verify(exactly = 1) { authRepository.logout() }
+        coVerify(exactly = 1) { authRepository.logout() }
     }
 }
+

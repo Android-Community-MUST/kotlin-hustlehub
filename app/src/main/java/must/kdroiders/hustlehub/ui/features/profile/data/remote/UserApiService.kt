@@ -4,10 +4,12 @@ import must.kdroiders.hustlehub.core.api.ApiResponse
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+
 
 data class UpdateProfileRequest(
     val name: String? = null,
@@ -55,6 +57,12 @@ interface UserApiService {
     suspend fun updateFcmToken(
         @Body request: FcmTokenRequest,
     ): Response<Unit>
+
+    @DELETE("users/fcm-token")
+    suspend fun removeFcmToken(
+        @Query("token") token: String,
+    ): Response<Unit>
+
 
     @PUT("users/me/location")
     suspend fun updateLocation(

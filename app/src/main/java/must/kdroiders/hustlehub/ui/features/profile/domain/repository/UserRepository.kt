@@ -79,6 +79,13 @@ interface UserRepository {
     suspend fun updateFcmToken(token: String): Result<Unit>
 
     /**
+     * Removes an FCM token for the currently authenticated user.
+     * Wraps DELETE /api/v1/users/fcm-token.
+     */
+    suspend fun removeFcmToken(token: String): Result<Unit>
+
+
+    /**
      * Updates the user's location coordinates.
      * Wraps PUT /api/v1/users/me/location.
      */

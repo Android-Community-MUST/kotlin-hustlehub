@@ -30,5 +30,6 @@ interface AuthRepository {
         newPassword: String,
     ): Result<Unit>
     fun getCurrentUser(): FirebaseUser?
-    fun logout()
+    suspend fun logout()
 }
+
