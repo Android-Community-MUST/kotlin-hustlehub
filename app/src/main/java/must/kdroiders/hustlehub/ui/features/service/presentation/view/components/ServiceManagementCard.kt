@@ -25,11 +25,16 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -112,9 +117,14 @@ fun ServiceManagementCard(
                 ) {
                     Box(
                         modifier = Modifier
+                            .minimumInteractiveComponentSize()
                             .size(36.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.primaryContainer)
+                            .semantics{
+                                role = Role.Button
+                                contentDescription = "Edit service"
+                            }
                             .clickable(enabled = !isUpdating, onClick = onEditClick),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -128,15 +138,20 @@ fun ServiceManagementCard(
 
                     Box(
                         modifier = Modifier
+                            .minimumInteractiveComponentSize()
                             .size(36.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .semantics {
+                                role = Role.Button
+                                contentDescription = "Manage service photo gallery"
+                            }
                             .clickable(enabled = !isUpdating, onClick = onGalleryClick),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Default.PhotoLibrary,
-                            contentDescription = "Manage gallery",
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSecondaryContainer,
                             modifier = Modifier.size(18.dp),
                         )
@@ -144,15 +159,20 @@ fun ServiceManagementCard(
 
                     Box(
                         modifier = Modifier
+                            .minimumInteractiveComponentSize()
                             .size(36.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.errorContainer)
+                            .semantics {
+                                role = Role.Button
+                                contentDescription = "Delete service"
+                            }
                             .clickable(enabled = !isUpdating, onClick = onDeleteClick),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete service",
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.size(18.dp),
                         )
@@ -225,7 +245,10 @@ private fun StatItem(
     label: String,
     value: String,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.semantics(mergeDescendants = true) { },
+    ) {
         Text(
             text = value,
             style = MaterialTheme.typography.titleSmall,

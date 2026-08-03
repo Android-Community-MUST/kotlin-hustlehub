@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -23,6 +24,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,6 +73,10 @@ fun HomeSearchBar(
             },
             modifier = Modifier
                 .weight(1f)
+                .semantics {
+                    role = Role.Button
+                    contentDescription = "Search services"
+                }
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -75,9 +84,10 @@ fun HomeSearchBar(
                 ).testTag("home_search_field"),
         )
         Spacer(Modifier.width(8.dp))
-        // ✨ AI chip — placeholder; routes to AI Search screen (upcoming issue).
+        // AI chip — placeholder; routes to AI Search screen .
         Row(
             modifier = Modifier
+                .minimumInteractiveComponentSize()
                 .clip(RoundedCornerShape(20.dp))
                 .background(
                     Brush.linearGradient(
@@ -86,7 +96,10 @@ fun HomeSearchBar(
                             MaterialTheme.colorScheme.tertiary.copy(alpha = 0.9f),
                         ),
                     ),
-                ).clickable(onClick = onAiSearchClick)
+                ).clickable(
+                    onClick = onAiSearchClick,
+                    role = Role.Button
+                )
                 .padding(horizontal = 10.dp, vertical = 5.dp)
                 .testTag("home_ai_search_button"),
             verticalAlignment = Alignment.CenterVertically,

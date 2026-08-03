@@ -33,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +50,11 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -231,6 +237,7 @@ fun MapLocationPickerModal(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.semantics { heading() },
                     )
                     Text(
                         text = "Tap the map to drop a pin, or drag to center",
@@ -344,7 +351,12 @@ fun MapLocationPickerModal(
                         .padding(16.dp)
                         .shadow(4.dp, CircleShape)
                         .background(MaterialTheme.colorScheme.surface, CircleShape)
-                        .size(44.dp),
+                        .minimumInteractiveComponentSize()
+                        .size(44.dp)
+                        .semantics {
+                            role = Role.Button
+                            contentDescription = "Find my current location"
+                        },
                 ) {
                     Icon(
                         imageVector = Icons.Default.MyLocation,

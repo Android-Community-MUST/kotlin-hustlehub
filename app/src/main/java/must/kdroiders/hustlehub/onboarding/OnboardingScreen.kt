@@ -30,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -39,6 +40,9 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -125,13 +129,16 @@ fun OnboardingScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 if (!isFirstPage) {
-                    TextButton(onClick = {
+                    TextButton(
+                        onClick = {
                         scope.launch {
                             pagerState.animateScrollToPage(
                                 pagerState.currentPage - 1,
                             )
                         }
-                    }) {
+                    },
+                        modifier = Modifier.minimumInteractiveComponentSize(),
+                        ) {
                         Text(
                             "Back",
                             color = MaterialTheme.colorScheme
@@ -143,7 +150,10 @@ fun OnboardingScreen(
                 }
 
                 if (!isLastPage) {
-                    TextButton(onClick = onComplete) {
+                    TextButton(
+                        onClick = onComplete,
+                        modifier = Modifier.minimumInteractiveComponentSize(),
+                    ) {
                         Text(
                             "Skip",
                             color = MaterialTheme.colorScheme
@@ -190,6 +200,7 @@ fun OnboardingScreen(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme
                                 .onSurface,
+                            modifier = Modifier.semantics { heading() },
                         )
                         Text(
                             text = slide.titleHighlight,
@@ -315,7 +326,9 @@ private fun PageIndicator(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier,
+        modifier = modifier.semantics {
+            contentDescription = "Page ${pagerState.currentPage + 1} of $pageCount"
+        },
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
