@@ -1,17 +1,23 @@
 package must.kdroiders.hustlehub.navigation
 
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -20,6 +26,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import must.kdroiders.hustlehub.core.auth.AuthStateViewModel
+import must.kdroiders.hustlehub.core.notification.InAppBannerManager
+import must.kdroiders.hustlehub.core.notification.InAppNotificationBanner
 import must.kdroiders.hustlehub.navigation.AllReviews
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
@@ -145,9 +153,12 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
         }
     }
 
-    NavDisplay(
-        backStack = backstack,
-        onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+    val activeBanner by InAppBannerManager.activeBanner.collectAsState()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        NavDisplay(
+            backStack = backstack,
+            onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
         transitionSpec = {
             (slideInHorizontally(slideSpec) { it } + fadeIn(fadeSpec)) togetherWith
                 (slideOutHorizontally(slideSpec) { -it } + fadeOut(fadeSpec))
@@ -407,4 +418,25 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
             }
         },
     )
+
+    InAppNotificationBanner(
+        banner = activeBanner,
+        onTap = { banner ->
+            InAppBannerManager.dismissCurrentBanner()
+            if (!banner.conversationId.isNullOrBlank()) {
+                mainNavigationViewModel?.triggerDeepLink(DeepLinkAction.OpenChat(banner.conversationId))
+            } else if (!banner.deepLinkUri.isNullOrBlank()) {
+                val uri = Uri.parse(banner.deepLinkUri)
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                activity?.let {
+                    it.intent = intent
+                }
+            }
+        },
+        onDismiss = {
+            InAppBannerManager.dismissCurrentBanner()
+        },
+        modifier = Modifier.align(Alignment.TopCenter),
+    )
+    }
 }

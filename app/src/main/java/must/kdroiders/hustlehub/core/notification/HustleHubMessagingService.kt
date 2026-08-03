@@ -46,6 +46,15 @@ class HustleHubMessagingService : FirebaseMessagingService() {
 
                 if (conversationId == ActiveConversationTracker.activeConversationId) return
                 NotificationHelper.postMessageNotification(this, conversationId, senderName, content)
+                InAppBannerManager.postBanner(
+                    InAppBannerData(
+                        title = senderName,
+                        body = content,
+                        senderPhotoUrl = remoteMessage.data["senderPhotoUrl"],
+                        conversationId = conversationId,
+                        deepLinkUri = "hustlehub://chat/$conversationId",
+                    )
+                )
             }
             "new_review" -> {
                 val deepLink = customDeepLink ?: run {
@@ -60,6 +69,13 @@ class HustleHubMessagingService : FirebaseMessagingService() {
                     }
                 }
                 NotificationHelper.postReviewNotification(this, title, body, deepLink)
+                InAppBannerManager.postBanner(
+                    InAppBannerData(
+                        title = title,
+                        body = body,
+                        deepLinkUri = deepLink,
+                    )
+                )
             }
             "inquiry" -> {
                 val deepLink = customDeepLink ?: run {
@@ -71,6 +87,13 @@ class HustleHubMessagingService : FirebaseMessagingService() {
                     }
                 }
                 NotificationHelper.postInquiryNotification(this, title, body, deepLink)
+                InAppBannerManager.postBanner(
+                    InAppBannerData(
+                        title = title,
+                        body = body,
+                        deepLinkUri = deepLink,
+                    )
+                )
             }
             else -> {
                 Timber.d("Received unknown FCM message type: $type")
