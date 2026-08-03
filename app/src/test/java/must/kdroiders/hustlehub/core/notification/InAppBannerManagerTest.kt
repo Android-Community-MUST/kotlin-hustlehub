@@ -6,7 +6,6 @@ import org.junit.Before
 import org.junit.Test
 
 class InAppBannerManagerTest {
-
     @Before
     fun setup() {
         InAppBannerManager.clearQueue()

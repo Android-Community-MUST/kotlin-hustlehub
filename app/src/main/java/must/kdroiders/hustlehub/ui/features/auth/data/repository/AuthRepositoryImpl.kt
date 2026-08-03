@@ -33,7 +33,6 @@ class AuthRepositoryImpl
         private val firebaseAuth: FirebaseAuth,
         private val userRepositoryProvider: Provider<UserRepository>,
     ) : AuthRepository {
-
         /**
          * Signs in an existing user with email and password.
          *
@@ -235,7 +234,6 @@ class AuthRepositoryImpl
 
             firebaseAuth.signOut()
         }
-
 
         /** Sends a password reset email to the given email address. */
         override suspend fun sendPasswordResetEmail(email: String) {

@@ -84,7 +84,6 @@ interface UserRepository {
      */
     suspend fun removeFcmToken(token: String): Result<Unit>
 
-
     /**
      * Updates the user's location coordinates.
      * Wraps PUT /api/v1/users/me/location.

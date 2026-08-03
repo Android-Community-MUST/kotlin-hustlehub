@@ -9,7 +9,10 @@ object AppBadgeHelper {
      * Updates the app launcher icon badge count across device launchers (Android 8+ & OEM launchers).
      * If [count] is > 0, sets badge count; otherwise removes the badge.
      */
-    fun applyBadgeCount(context: Context, count: Int) {
+    fun applyBadgeCount(
+        context: Context,
+        count: Int,
+    ) {
         try {
             if (count > 0) {
                 ShortcutBadger.applyCount(context, count)

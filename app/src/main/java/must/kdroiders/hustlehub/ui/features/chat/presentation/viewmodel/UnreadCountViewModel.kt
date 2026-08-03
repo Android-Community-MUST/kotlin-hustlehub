@@ -29,7 +29,6 @@ class UnreadCountViewModel
         conversationDao: ConversationDao,
         private val notificationRepository: NotificationRepository,
     ) : ViewModel() {
-
         val unreadMessageCount: StateFlow<Int> =
             conversationDao
                 .getTotalUnreadCount()
@@ -62,7 +61,8 @@ class UnreadCountViewModel
 
         fun refreshUnreadNotifications() {
             viewModelScope.launch {
-                notificationRepository.getUnreadCount()
+                notificationRepository
+                    .getUnreadCount()
                     .onSuccess { count ->
                         _unreadNotificationCount.value = count
                     }

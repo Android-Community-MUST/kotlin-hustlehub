@@ -36,11 +36,11 @@ class NotificationPreferencesViewModel
         private fun loadPreferences() {
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
-                notificationRepository.getPreferences()
+                notificationRepository
+                    .getPreferences()
                     .onSuccess { prefs ->
                         _uiState.update { it.copy(preferences = prefs, isLoading = false) }
-                    }
-                    .onFailure { e ->
+                    }.onFailure { e ->
                         Timber.e(e, "Failed to load notification preferences")
                         _uiState.update { it.copy(isLoading = false, error = "Failed to load preferences") }
                     }
@@ -65,11 +65,11 @@ class NotificationPreferencesViewModel
         private fun savePreferences(preferences: NotificationPreferences) {
             viewModelScope.launch {
                 _uiState.update { it.copy(isSaving = true, error = null) }
-                notificationRepository.updatePreferences(preferences)
+                notificationRepository
+                    .updatePreferences(preferences)
                     .onSuccess {
                         _uiState.update { it.copy(isSaving = false) }
-                    }
-                    .onFailure { e ->
+                    }.onFailure { e ->
                         Timber.e(e, "Failed to save notification preferences")
                         _uiState.update { it.copy(isSaving = false, error = "Failed to save preferences") }
                     }

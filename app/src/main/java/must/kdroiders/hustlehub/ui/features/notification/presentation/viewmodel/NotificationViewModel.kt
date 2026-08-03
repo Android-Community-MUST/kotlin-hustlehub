@@ -138,7 +138,8 @@ class NotificationViewModel
             }
 
             viewModelScope.launch {
-                repository.deleteNotification(notificationId)
+                repository
+                    .deleteNotification(notificationId)
                     .onFailure {
                         _uiState.update { current ->
                             current.copy(

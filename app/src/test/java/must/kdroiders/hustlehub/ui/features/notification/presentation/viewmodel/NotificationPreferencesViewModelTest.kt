@@ -50,66 +50,71 @@ class NotificationPreferencesViewModelTest {
                 vibrationEnabled = true,
                 quietHoursStart = 22,
                 quietHoursEnd = 7,
-            )
+            ),
         )
         viewModel = NotificationPreferencesViewModel(repository)
     }
 
     @Test
-    fun `init loads preferences from repository`() = runTest {
-        val state = viewModel.uiState.value
-        assertTrue(state.preferences.newMessages)
-        assertFalse(state.preferences.marketing)
-        assertEquals(22, state.preferences.quietHoursStart)
-        assertEquals(7, state.preferences.quietHoursEnd)
-        coVerify(exactly = 1) { repository.getPreferences() }
-    }
+    fun `init loads preferences from repository`() =
+        runTest {
+            val state = viewModel.uiState.value
+            assertTrue(state.preferences.newMessages)
+            assertFalse(state.preferences.marketing)
+            assertEquals(22, state.preferences.quietHoursStart)
+            assertEquals(7, state.preferences.quietHoursEnd)
+            coVerify(exactly = 1) { repository.getPreferences() }
+        }
 
     @Test
-    fun `onNewMessagesToggled updates state and calls updatePreferences`() = runTest {
-        coEvery { repository.updatePreferences(any()) } returns Result.success(
-            NotificationPreferences(newMessages = false)
-        )
+    fun `onNewMessagesToggled updates state and calls updatePreferences`() =
+        runTest {
+            coEvery { repository.updatePreferences(any()) } returns Result.success(
+                NotificationPreferences(newMessages = false),
+            )
 
-        viewModel.onNewMessagesToggled(false)
+            viewModel.onNewMessagesToggled(false)
 
-        assertFalse(viewModel.uiState.value.preferences.newMessages)
-        coVerify { repository.updatePreferences(match { !it.newMessages }) }
-    }
-
-    @Test
-    fun `onMarketingToggled updates state and calls updatePreferences`() = runTest {
-        coEvery { repository.updatePreferences(any()) } returns Result.success(
-            NotificationPreferences(marketing = true)
-        )
-
-        viewModel.onMarketingToggled(true)
-
-        assertTrue(viewModel.uiState.value.preferences.marketing)
-        coVerify { repository.updatePreferences(match { it.marketing }) }
-    }
+            assertFalse(viewModel.uiState.value.preferences.newMessages)
+            coVerify { repository.updatePreferences(match { !it.newMessages }) }
+        }
 
     @Test
-    fun `onQuietHoursStartChanged updates state and saves`() = runTest {
-        coEvery { repository.updatePreferences(any()) } returns Result.success(
-            NotificationPreferences(quietHoursStart = 23)
-        )
+    fun `onMarketingToggled updates state and calls updatePreferences`() =
+        runTest {
+            coEvery { repository.updatePreferences(any()) } returns Result.success(
+                NotificationPreferences(marketing = true),
+            )
 
-        viewModel.onQuietHoursStartChanged(23)
+            viewModel.onMarketingToggled(true)
 
-        assertEquals(23, viewModel.uiState.value.preferences.quietHoursStart)
-        coVerify { repository.updatePreferences(match { it.quietHoursStart == 23 }) }
-    }
+            assertTrue(viewModel.uiState.value.preferences.marketing)
+            coVerify { repository.updatePreferences(match { it.marketing }) }
+        }
 
     @Test
-    fun `onQuietHoursEndChanged updates state and saves`() = runTest {
-        coEvery { repository.updatePreferences(any()) } returns Result.success(
-            NotificationPreferences(quietHoursEnd = 6)
-        )
+    fun `onQuietHoursStartChanged updates state and saves`() =
+        runTest {
+            coEvery { repository.updatePreferences(any()) } returns Result.success(
+                NotificationPreferences(quietHoursStart = 23),
+            )
 
-        viewModel.onQuietHoursEndChanged(6)
+            viewModel.onQuietHoursStartChanged(23)
 
-        assertEquals(6, viewModel.uiState.value.preferences.quietHoursEnd)
-        coVerify { repository.updatePreferences(match { it.quietHoursEnd == 6 }) }
-    }
+            assertEquals(23, viewModel.uiState.value.preferences.quietHoursStart)
+            coVerify { repository.updatePreferences(match { it.quietHoursStart == 23 }) }
+        }
+
+    @Test
+    fun `onQuietHoursEndChanged updates state and saves`() =
+        runTest {
+            coEvery { repository.updatePreferences(any()) } returns Result.success(
+                NotificationPreferences(quietHoursEnd = 6),
+            )
+
+            viewModel.onQuietHoursEndChanged(6)
+
+            assertEquals(6, viewModel.uiState.value.preferences.quietHoursEnd)
+            coVerify { repository.updatePreferences(match { it.quietHoursEnd == 6 }) }
+        }
 }

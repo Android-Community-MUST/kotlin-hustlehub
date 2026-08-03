@@ -20,4 +20,3 @@ class SignOutUseCase
             authRepository.logout()
         }
     }
-

@@ -27,8 +27,6 @@ class HustleHubMessagingService : FirebaseMessagingService() {
         }
     }
 
-
-
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
@@ -53,7 +51,7 @@ class HustleHubMessagingService : FirebaseMessagingService() {
                         senderPhotoUrl = remoteMessage.data["senderPhotoUrl"],
                         conversationId = conversationId,
                         deepLinkUri = "hustlehub://chat/$conversationId",
-                    )
+                    ),
                 )
             }
             "new_review" -> {
@@ -74,7 +72,7 @@ class HustleHubMessagingService : FirebaseMessagingService() {
                         title = title,
                         body = body,
                         deepLinkUri = deepLink,
-                    )
+                    ),
                 )
             }
             "inquiry" -> {
@@ -92,7 +90,7 @@ class HustleHubMessagingService : FirebaseMessagingService() {
                         title = title,
                         body = body,
                         deepLinkUri = deepLink,
-                    )
+                    ),
                 )
             }
             else -> {

@@ -12,7 +12,6 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class DeepLinkHandlerTest {
-
     private fun parseDeepLink(uriString: String): DeepLinkAction? {
         val uri = Uri.parse(uriString)
         if (uri.scheme != "hustlehub") return null

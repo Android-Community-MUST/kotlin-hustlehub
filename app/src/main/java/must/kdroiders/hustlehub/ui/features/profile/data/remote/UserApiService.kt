@@ -10,7 +10,6 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-
 data class UpdateProfileRequest(
     val name: String? = null,
     val bio: String? = null,
@@ -62,7 +61,6 @@ interface UserApiService {
     suspend fun removeFcmToken(
         @Query("token") token: String,
     ): Response<Unit>
-
 
     @PUT("users/me/location")
     suspend fun updateLocation(

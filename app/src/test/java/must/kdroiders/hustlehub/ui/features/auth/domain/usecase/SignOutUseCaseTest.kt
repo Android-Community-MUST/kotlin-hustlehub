@@ -21,9 +21,9 @@ class SignOutUseCaseTest {
     }
 
     @Test
-    fun `should_call_authRepository_logout_when_invoked`() = runTest {
-        signOutUseCase()
-        coVerify(exactly = 1) { authRepository.logout() }
-    }
+    fun `should_call_authRepository_logout_when_invoked`() =
+        runTest {
+            signOutUseCase()
+            coVerify(exactly = 1) { authRepository.logout() }
+        }
 }
-

@@ -198,7 +198,6 @@ class UserRepositoryImpl
                 Timber.e(e, "UserRepositoryImpl: failed to remove FCM token")
             }
 
-
         override suspend fun updateUserLocation(
             lat: Double,
             lng: Double,

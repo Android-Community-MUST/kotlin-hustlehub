@@ -40,22 +40,24 @@ class UserRepositoryImplTest {
     }
 
     @Test
-    fun `updateFcmToken calls userApiService updateFcmToken`() = runTest {
-        coEvery { userApiService.updateFcmToken(FcmTokenRequest("test-token")) } returns Response.success(Unit)
+    fun `updateFcmToken calls userApiService updateFcmToken`() =
+        runTest {
+            coEvery { userApiService.updateFcmToken(FcmTokenRequest("test-token")) } returns Response.success(Unit)
 
-        val result = userRepository.updateFcmToken("test-token")
+            val result = userRepository.updateFcmToken("test-token")
 
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { userApiService.updateFcmToken(FcmTokenRequest("test-token")) }
-    }
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { userApiService.updateFcmToken(FcmTokenRequest("test-token")) }
+        }
 
     @Test
-    fun `removeFcmToken calls userApiService removeFcmToken`() = runTest {
-        coEvery { userApiService.removeFcmToken("test-token") } returns Response.success(Unit)
+    fun `removeFcmToken calls userApiService removeFcmToken`() =
+        runTest {
+            coEvery { userApiService.removeFcmToken("test-token") } returns Response.success(Unit)
 
-        val result = userRepository.removeFcmToken("test-token")
+            val result = userRepository.removeFcmToken("test-token")
 
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { userApiService.removeFcmToken("test-token") }
-    }
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { userApiService.removeFcmToken("test-token") }
+        }
 }

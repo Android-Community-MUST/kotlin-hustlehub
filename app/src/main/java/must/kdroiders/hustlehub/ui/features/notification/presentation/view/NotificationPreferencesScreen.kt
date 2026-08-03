@@ -92,7 +92,6 @@ fun NotificationPreferencesScreen(
             Spacer(Modifier.size(48.dp))
         }
 
-
         Column(
             modifier = Modifier
                 .fillMaxSize()

@@ -6,12 +6,11 @@ import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.Notific
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.NotificationResponse
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.UpdateNotificationPreferencesRequest
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
-
-import retrofit2.http.DELETE
 
 interface NotificationApiService {
     @GET("notifications")
@@ -44,4 +43,3 @@ interface NotificationApiService {
         @Body request: UpdateNotificationPreferencesRequest,
     ): ApiResponse<NotificationPreferencesDto>
 }
-

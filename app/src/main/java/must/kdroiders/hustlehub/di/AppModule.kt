@@ -48,7 +48,6 @@ import timber.log.Timber
 import javax.inject.Provider
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
@@ -78,8 +77,6 @@ object AppModule {
             NoopAuthRepository()
         }
     }
-
-
 
     @Provides
     @Singleton
@@ -230,4 +227,3 @@ private class NoopAuthRepository : AuthRepository {
 
     override suspend fun logout() {}
 }
-

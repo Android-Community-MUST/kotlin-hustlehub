@@ -87,14 +87,15 @@ class NotificationRepositoryImpl
             )
         }
 
-        private fun NotificationPreferencesDto.toDomain() = NotificationPreferences(
-            newMessages = newMessages,
-            newReviews = newReviews,
-            serviceInquiries = serviceInquiries,
-            marketing = marketing,
-            soundEnabled = soundEnabled,
-            vibrationEnabled = vibrationEnabled,
-            quietHoursStart = quietHoursStart,
-            quietHoursEnd = quietHoursEnd,
-        )
+        private fun NotificationPreferencesDto.toDomain() =
+            NotificationPreferences(
+                newMessages = newMessages,
+                newReviews = newReviews,
+                serviceInquiries = serviceInquiries,
+                marketing = marketing,
+                soundEnabled = soundEnabled,
+                vibrationEnabled = vibrationEnabled,
+                quietHoursStart = quietHoursStart,
+                quietHoursEnd = quietHoursEnd,
+            )
     }

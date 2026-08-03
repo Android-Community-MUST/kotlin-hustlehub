@@ -32,4 +32,3 @@ interface AuthRepository {
     fun getCurrentUser(): FirebaseUser?
     suspend fun logout()
 }
-

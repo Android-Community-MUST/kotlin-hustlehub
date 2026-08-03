@@ -416,7 +416,8 @@ fun groupNotificationsByDate(notifications: List<Notification>): Map<String, Lis
 
     return notifications.groupBy { notification ->
         val date = try {
-            Instant.parse(notification.sentAt)
+            Instant
+                .parse(notification.sentAt)
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate()
         } catch (e: Exception) {
