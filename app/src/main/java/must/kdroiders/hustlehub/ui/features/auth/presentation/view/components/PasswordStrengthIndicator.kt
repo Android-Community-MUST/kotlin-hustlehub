@@ -69,7 +69,7 @@ fun PasswordStrengthIndicator(strength: PasswordStrength) {
             .fillMaxWidth()
             .padding(top = 4.dp, bottom = 8.dp)
             .semantics(mergeDescendants = true) {
-               contentDescription = "Password strength level: $strengthText"
+                contentDescription = "Password strength level: $strengthText"
             },
     ) {
         Row(

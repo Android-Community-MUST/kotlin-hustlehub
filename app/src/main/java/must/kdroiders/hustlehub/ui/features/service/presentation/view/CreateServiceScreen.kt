@@ -137,7 +137,7 @@ fun CreateServiceScreen(
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.semantics { heading()}
+                    modifier = Modifier.semantics { heading() },
                 )
             }
 
@@ -319,8 +319,7 @@ fun CreateServiceScreen(
                             .semantics {
                                 role = Role.Button
                                 contentDescription = "Add tag"
-                            }
-                            .clickable { createServiceViewModel.addTag() },
+                            }.clickable { createServiceViewModel.addTag() },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(

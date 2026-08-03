@@ -87,7 +87,7 @@ fun StatCard(
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(vertical = 24.dp, horizontal = 8.dp)
             .semantics(mergeDescendants = true) {
-               contentDescription = "$value $cleanLabel"
+                contentDescription = "$value $cleanLabel"
                 if (onClick != null) {
                     role = androidx.compose.ui.semantics.Role.Button
                 }

@@ -64,7 +64,7 @@ fun ProviderOnboardingCard(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.semantics { heading () }
+                modifier = Modifier.semantics { heading() },
             )
 
             Spacer(Modifier.height(6.dp))

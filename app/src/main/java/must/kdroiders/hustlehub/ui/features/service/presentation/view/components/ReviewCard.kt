@@ -38,7 +38,7 @@ fun ReviewCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .semantics(mergeDescendants = true) { }
+            .semantics(mergeDescendants = true) { },
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

@@ -61,7 +61,7 @@ fun HomeTopBar(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.semantics(mergeDescendants = true) {
                 heading()
-            }
+            },
         ) {
             Box(
                 modifier = Modifier
@@ -71,8 +71,7 @@ fun HomeTopBar(
                         Brush.linearGradient(
                             colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF7C4DFF)),
                         ),
-                    )
-                    .clearAndSetSemantics { }, // Hides "Capital H" from TalkBack,
+                    ).clearAndSetSemantics { }, // Hides "Capital H" from TalkBack,
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -138,13 +137,11 @@ fun HomeTopBar(
                             colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF7C4DFF)),
                         ),
                         shape = CircleShape,
-                    )
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    ).background(MaterialTheme.colorScheme.surfaceVariant)
                     .semantics {
                         role = Role.Button
                         contentDescription = "User profile, initials $initials"
-                    }
-                    .clickable {
+                    }.clickable {
                         if (onProfileClick != null) {
                             onProfileClick()
                         } else {

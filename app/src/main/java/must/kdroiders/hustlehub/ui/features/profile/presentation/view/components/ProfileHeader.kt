@@ -100,7 +100,7 @@ fun ProfileHeader(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .semantics {
-                      role =
+                        role =
                             Role.Button
                         contentDescription = "Settings"
                     },

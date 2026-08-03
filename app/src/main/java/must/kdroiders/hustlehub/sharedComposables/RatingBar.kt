@@ -100,7 +100,7 @@ fun RatingBar(
                         if (onRatingChanged != null) {
                             Modifier
                                 .minimumInteractiveComponentSize()
-                                .clickable (
+                                .clickable(
                                     onClick = { onRatingChanged(i) },
                                     role = Role.Button,
                                 )

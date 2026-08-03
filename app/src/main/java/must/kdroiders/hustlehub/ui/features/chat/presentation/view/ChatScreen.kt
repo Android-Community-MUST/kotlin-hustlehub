@@ -210,8 +210,7 @@ private fun ConversationItem(
             .fillMaxWidth()
             .semantics(mergeDescendants = true) {
                 role = Role.Button
-            }
-            .clickable(onClick = onClick)
+            }.clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

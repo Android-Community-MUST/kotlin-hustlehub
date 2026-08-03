@@ -79,7 +79,7 @@ fun FilterBottomSheet(
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.semantics {heading()}
+                    modifier = Modifier.semantics { heading() },
                 )
                 TextButton(
                     onClick = onReset,
@@ -225,6 +225,6 @@ private fun FilterSectionLabel(text: String) {
         style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(bottom = 8.dp) .semantics{heading()},
+        modifier = Modifier.padding(bottom = 8.dp).semantics { heading() },
     )
 }

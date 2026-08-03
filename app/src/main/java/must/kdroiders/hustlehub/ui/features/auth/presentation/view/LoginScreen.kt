@@ -42,6 +42,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -50,8 +52,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
@@ -327,7 +327,7 @@ private fun LoginBackground() {
     val bgColor = MaterialTheme.colorScheme.background
     val density = LocalDensity.current
 
-    Canvas(modifier = Modifier.fillMaxSize().clearAndSetSemantics{}) {
+    Canvas(modifier = Modifier.fillMaxSize().clearAndSetSemantics {}) {
         val w = size.width
         val h = size.height
 

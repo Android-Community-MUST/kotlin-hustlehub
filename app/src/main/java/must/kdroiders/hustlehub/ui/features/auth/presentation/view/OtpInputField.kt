@@ -54,7 +54,8 @@ fun OtpInputField(
                     .focusRequester(focusRequesters[index])
                     .semantics {
                         traversalIndex = index.toFloat()
-                        contentDescription = "OTP digit ${index + 1} of ${otpValues.size}, ${if (value.isEmpty()) "empty" else "digit $value"}"
+                        contentDescription =
+                            "OTP digit ${index + 1} of ${otpValues.size}, ${if (value.isEmpty()) "empty" else "digit $value"}"
                     },
                 textStyle = LocalTextStyle.current.copy(
                     textAlign = TextAlign.Center,

@@ -84,8 +84,7 @@ fun HustleButton(
                     .graphicsLayer {
                         scaleX = scale
                         scaleY = scale
-                    }
-                    .semantics {
+                    }.semantics {
                         if (loading) {
                             stateDescription = "Loading"
                         }

@@ -76,8 +76,7 @@ fun HustleCard(
         .graphicsLayer {
             scaleX = scale
             scaleY = scale
-        }
-        .semantics(mergeDescendants = true) {
+        }.semantics(mergeDescendants = true) {
             if (onClick != null) {
                 role = Role.Button
             }

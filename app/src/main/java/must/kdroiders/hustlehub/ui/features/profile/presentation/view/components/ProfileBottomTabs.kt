@@ -70,8 +70,7 @@ fun TabButton(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
                 shape = RoundedCornerShape(24.dp),
-            )
-            .clickable(onClick = onClick)
+            ).clickable(onClick = onClick)
             .padding(vertical = 18.dp, horizontal = 20.dp)
             .semantics {
                 role = androidx.compose.ui.semantics.Role.Tab

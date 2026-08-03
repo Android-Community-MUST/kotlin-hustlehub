@@ -76,8 +76,7 @@ fun HomeSearchBar(
                 .semantics {
                     role = Role.Button
                     contentDescription = "Search services"
-                }
-                .clickable(
+                }.clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = onSearchClick,
@@ -98,9 +97,8 @@ fun HomeSearchBar(
                     ),
                 ).clickable(
                     onClick = onAiSearchClick,
-                    role = Role.Button
-                )
-                .padding(horizontal = 10.dp, vertical = 5.dp)
+                    role = Role.Button,
+                ).padding(horizontal = 10.dp, vertical = 5.dp)
                 .testTag("home_ai_search_button"),
             verticalAlignment = Alignment.CenterVertically,
         ) {

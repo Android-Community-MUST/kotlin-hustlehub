@@ -46,8 +46,7 @@ fun SectionHeader(
                     .clickable(
                         onClick = onAction,
                         role = Role.Button,
-                    )
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                    ).padding(horizontal = 4.dp, vertical = 2.dp),
             )
         }
     }

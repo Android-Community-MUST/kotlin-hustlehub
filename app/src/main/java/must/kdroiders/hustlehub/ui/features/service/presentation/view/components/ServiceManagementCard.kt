@@ -121,11 +121,10 @@ fun ServiceManagementCard(
                             .size(36.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.primaryContainer)
-                            .semantics{
+                            .semantics {
                                 role = Role.Button
                                 contentDescription = "Edit service"
-                            }
-                            .clickable(enabled = !isUpdating, onClick = onEditClick),
+                            }.clickable(enabled = !isUpdating, onClick = onEditClick),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -145,8 +144,7 @@ fun ServiceManagementCard(
                             .semantics {
                                 role = Role.Button
                                 contentDescription = "Manage service photo gallery"
-                            }
-                            .clickable(enabled = !isUpdating, onClick = onGalleryClick),
+                            }.clickable(enabled = !isUpdating, onClick = onGalleryClick),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -166,8 +164,7 @@ fun ServiceManagementCard(
                             .semantics {
                                 role = Role.Button
                                 contentDescription = "Delete service"
-                            }
-                            .clickable(enabled = !isUpdating, onClick = onDeleteClick),
+                            }.clickable(enabled = !isUpdating, onClick = onDeleteClick),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(

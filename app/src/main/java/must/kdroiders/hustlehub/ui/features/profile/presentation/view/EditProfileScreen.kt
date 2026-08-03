@@ -108,14 +108,15 @@ fun EditProfileScreen(
                         text = "Edit Profile",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.semantics { heading() }
+                        modifier = Modifier.semantics { heading() },
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate Back")
+                            contentDescription = "Navigate Back",
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -156,8 +157,7 @@ fun EditProfileScreen(
                         .semantics {
                             role = Role.Button
                             contentDescription = "Change Profile Photo"
-                        }
-                        .clickable {
+                        }.clickable {
                             photoPicker.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                             )

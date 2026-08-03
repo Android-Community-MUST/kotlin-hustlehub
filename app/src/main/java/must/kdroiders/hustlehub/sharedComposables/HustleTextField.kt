@@ -204,8 +204,8 @@ fun HustleTextField(
             exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.fastEffectsSpec()),
         ) {
             Row(
-                modifier = Modifier.
-                padding(start = 12.dp, top = 6.dp)
+                modifier = Modifier
+                    .padding(start = 12.dp, top = 6.dp)
                     .semantics {
                         liveRegion = LiveRegionMode.Polite
                     },

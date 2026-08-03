@@ -131,14 +131,14 @@ fun OnboardingScreen(
                 if (!isFirstPage) {
                     TextButton(
                         onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(
-                                pagerState.currentPage - 1,
-                            )
-                        }
-                    },
+                            scope.launch {
+                                pagerState.animateScrollToPage(
+                                    pagerState.currentPage - 1,
+                                )
+                            }
+                        },
                         modifier = Modifier.minimumInteractiveComponentSize(),
-                        ) {
+                    ) {
                         Text(
                             "Back",
                             color = MaterialTheme.colorScheme

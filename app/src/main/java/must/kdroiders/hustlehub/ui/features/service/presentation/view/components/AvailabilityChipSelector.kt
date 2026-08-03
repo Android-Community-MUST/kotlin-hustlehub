@@ -92,12 +92,11 @@ private fun AvailabilityChip(
             .background(bgColor)
             .border(1.dp, borderColor, RoundedCornerShape(20.dp))
             .clickable(enabled = enabled) { onClick() }
-            .semantics{
+            .semantics {
                 role = Role.RadioButton
                 this.selected = selected
                 stateDescription = if (selected) "Selected" else "Not selected"
-            }
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            }.padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
