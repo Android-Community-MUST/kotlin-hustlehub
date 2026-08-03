@@ -49,7 +49,7 @@ object NotificationHelper {
         try {
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                data = Uri.parse("hustlehub://app/chat?conversationId=$conversationId")
+                data = Uri.parse("hustlehub://chat/$conversationId")
             }
             val pendingIntent = PendingIntent.getActivity(
                 context,
@@ -80,11 +80,12 @@ object NotificationHelper {
         context: Context,
         title: String,
         body: String,
+        deepLinkUri: String = "hustlehub://notifications",
     ) {
         try {
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                data = Uri.parse("hustlehub://app/profile")
+                data = Uri.parse(deepLinkUri)
             }
             val pendingIntent = PendingIntent.getActivity(
                 context,
@@ -115,11 +116,12 @@ object NotificationHelper {
         context: Context,
         title: String,
         body: String,
+        deepLinkUri: String = "hustlehub://notifications",
     ) {
         try {
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                data = Uri.parse("hustlehub://app/inquiries")
+                data = Uri.parse(deepLinkUri)
             }
             val pendingIntent = PendingIntent.getActivity(
                 context,

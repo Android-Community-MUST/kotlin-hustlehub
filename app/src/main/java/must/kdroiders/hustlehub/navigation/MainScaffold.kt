@@ -78,8 +78,9 @@ fun MainShellScreen(
                     innerBackstack.clear()
                     innerBackstack.add(BottomChat)
                 }
-                is DeepLinkAction.OpenChat -> {
-                    // Handled at the root graph level (HustleHubNavGraph)
+                else -> {
+                    // OpenChat, OpenServiceDetail, OpenProviderProfile, OpenWriteReview, OpenNotifications
+                    // are handled at the root graph level (HustleHubNavGraph)
                 }
             }
         }

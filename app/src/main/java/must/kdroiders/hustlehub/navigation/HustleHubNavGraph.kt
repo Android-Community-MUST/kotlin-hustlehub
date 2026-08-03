@@ -108,25 +108,36 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
 
     LaunchedEffect(mainNavigationViewModel) {
         mainNavigationViewModel?.deepLinkEvent?.collect { action ->
-            if (action is DeepLinkAction.OpenChat) {
-                val currentTop = backstack.lastOrNull()
-                if (currentTop is ChatDetail && currentTop.chatId == action.conversationId) {
-                    return@collect
+            if (backstack.none { it is MainShell }) {
+                backstack.clear()
+                backstack.add(MainShell)
+            }
+            when (action) {
+                is DeepLinkAction.OpenChat -> {
+                    val currentTop = backstack.lastOrNull()
+                    if (currentTop is ChatDetail && currentTop.chatId == action.conversationId) return@collect
+                    backstack.add(ChatDetail(chatId = action.conversationId))
                 }
-                // Make sure MainShell is present under ChatDetail
-                if (backstack.none { it is MainShell }) {
-                    backstack.clear()
-                    backstack.add(MainShell)
+                is DeepLinkAction.OpenServiceDetail -> {
+                    val currentTop = backstack.lastOrNull()
+                    if (currentTop is ServiceDetail && currentTop.serviceId == action.serviceId) return@collect
+                    backstack.add(ServiceDetail(serviceId = action.serviceId))
                 }
-                backstack.add(ChatDetail(chatId = action.conversationId))
-            } else {
-                // For other actions (OpenProfile, OpenChatList), make sure we return to MainShell
-                if (backstack.none { it is MainShell }) {
-                    backstack.clear()
-                    backstack.add(MainShell)
-                } else {
-                    // Pop any detail screens on top of MainShell
-                    while (backstack.isNotEmpty() && backstack.last() != MainShell) {
+                is DeepLinkAction.OpenProviderProfile -> {
+                    val currentTop = backstack.lastOrNull()
+                    if (currentTop is ProviderProfile && currentTop.providerId == action.providerId) return@collect
+                    backstack.add(ProviderProfile(providerId = action.providerId))
+                }
+                is DeepLinkAction.OpenWriteReview -> {
+                    backstack.add(WriteReview(serviceId = action.serviceId, providerId = action.providerId))
+                }
+                is DeepLinkAction.OpenNotifications -> {
+                    if (backstack.lastOrNull() !is Notifications) {
+                        backstack.add(Notifications)
+                    }
+                }
+                is DeepLinkAction.OpenProfile, is DeepLinkAction.OpenChatList -> {
+                    while (backstack.size > 1 && backstack.last() != MainShell) {
                         backstack.remove(backstack.last())
                     }
                 }

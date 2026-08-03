@@ -36,6 +36,8 @@ class HustleHubMessagingService : FirebaseMessagingService() {
         val title = remoteMessage.data["title"] ?: remoteMessage.notification?.title ?: "HustleHub"
         val body = remoteMessage.data["body"] ?: remoteMessage.notification?.body ?: ""
 
+        val customDeepLink = remoteMessage.data["deepLink"] ?: remoteMessage.data["targetUri"]
+
         when (type) {
             "new_message" -> {
                 val conversationId = remoteMessage.data["conversationId"] ?: return
@@ -46,10 +48,29 @@ class HustleHubMessagingService : FirebaseMessagingService() {
                 NotificationHelper.postMessageNotification(this, conversationId, senderName, content)
             }
             "new_review" -> {
-                NotificationHelper.postReviewNotification(this, title, body)
+                val deepLink = customDeepLink ?: run {
+                    val serviceId = remoteMessage.data["serviceId"]
+                    val providerId = remoteMessage.data["providerId"]
+                    if (!serviceId.isNullOrBlank() && !providerId.isNullOrBlank()) {
+                        "hustlehub://review/$serviceId?providerId=$providerId"
+                    } else if (!serviceId.isNullOrBlank()) {
+                        "hustlehub://service/$serviceId"
+                    } else {
+                        "hustlehub://notifications"
+                    }
+                }
+                NotificationHelper.postReviewNotification(this, title, body, deepLink)
             }
             "inquiry" -> {
-                NotificationHelper.postInquiryNotification(this, title, body)
+                val deepLink = customDeepLink ?: run {
+                    val conversationId = remoteMessage.data["conversationId"]
+                    if (!conversationId.isNullOrBlank()) {
+                        "hustlehub://chat/$conversationId"
+                    } else {
+                        "hustlehub://notifications"
+                    }
+                }
+                NotificationHelper.postInquiryNotification(this, title, body, deepLink)
             }
             else -> {
                 Timber.d("Received unknown FCM message type: $type")
