@@ -144,3 +144,8 @@ data object Notifications : NavKey
 /** All reviews screen for a specific service. */
 @Serializable
 data class AllReviews(val serviceId: String) : NavKey
+
+/** Notification preferences screen — pushed from SettingsScreen. */
+@Serializable
+data object NotificationPreferences : NavKey
+

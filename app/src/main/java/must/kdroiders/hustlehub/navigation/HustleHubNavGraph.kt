@@ -33,6 +33,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginVie
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatDetailScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.AiSearchScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.SearchScreen
+import must.kdroiders.hustlehub.ui.features.notification.presentation.view.NotificationPreferencesScreen
 import must.kdroiders.hustlehub.ui.features.notification.presentation.view.NotificationScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.EditProfileScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProviderProfileScreen
@@ -260,11 +261,18 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 SettingsScreen(
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     onNavigateToChangePassword = { backstack.add(ChangePassword) },
+                    onNavigateToNotificationPreferences = { backstack.add(NotificationPreferences) },
                 )
             }
 
             entry<ChangePassword> {
                 ChangePasswordScreen(
+                    onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                )
+            }
+
+            entry<NotificationPreferences> {
+                NotificationPreferencesScreen(
                     onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                 )
             }

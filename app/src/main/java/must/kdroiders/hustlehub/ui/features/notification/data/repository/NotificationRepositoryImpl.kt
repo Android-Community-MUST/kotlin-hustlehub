@@ -1,8 +1,11 @@
 package must.kdroiders.hustlehub.ui.features.notification.data.repository
 
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
+import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.NotificationPreferencesDto
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.NotificationResponse
+import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.UpdateNotificationPreferencesRequest
 import must.kdroiders.hustlehub.ui.features.notification.domain.model.Notification
+import must.kdroiders.hustlehub.ui.features.notification.domain.model.NotificationPreferences
 import must.kdroiders.hustlehub.ui.features.notification.domain.model.NotificationType
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import javax.inject.Inject
@@ -32,6 +35,28 @@ class NotificationRepositoryImpl
                 apiService.markAllRead()
             }.map { }
 
+        override suspend fun getPreferences(): Result<NotificationPreferences> =
+            runCatching {
+                val response = apiService.getPreferences()
+                response.data?.toDomain() ?: NotificationPreferences()
+            }
+
+        override suspend fun updatePreferences(preferences: NotificationPreferences): Result<NotificationPreferences> =
+            runCatching {
+                val request = UpdateNotificationPreferencesRequest(
+                    newMessages = preferences.newMessages,
+                    newReviews = preferences.newReviews,
+                    serviceInquiries = preferences.serviceInquiries,
+                    marketing = preferences.marketing,
+                    soundEnabled = preferences.soundEnabled,
+                    vibrationEnabled = preferences.vibrationEnabled,
+                    quietHoursStart = preferences.quietHoursStart,
+                    quietHoursEnd = preferences.quietHoursEnd,
+                )
+                val response = apiService.updatePreferences(request)
+                response.data?.toDomain() ?: preferences
+            }
+
         private fun NotificationResponse.toDomain(): Notification {
             val typeEnum = when (type.uppercase()) {
                 "NEW_MESSAGE" -> NotificationType.NEW_MESSAGE
@@ -50,4 +75,15 @@ class NotificationRepositoryImpl
                 sentAt = sentAt,
             )
         }
+
+        private fun NotificationPreferencesDto.toDomain() = NotificationPreferences(
+            newMessages = newMessages,
+            newReviews = newReviews,
+            serviceInquiries = serviceInquiries,
+            marketing = marketing,
+            soundEnabled = soundEnabled,
+            vibrationEnabled = vibrationEnabled,
+            quietHoursStart = quietHoursStart,
+            quietHoursEnd = quietHoursEnd,
+        )
     }
