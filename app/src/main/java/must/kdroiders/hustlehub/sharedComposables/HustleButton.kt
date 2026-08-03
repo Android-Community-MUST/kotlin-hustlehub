@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -275,7 +276,7 @@ fun HustleButtonLoadingPreview() {
             HustleButton(
                 text = "With Icon",
                 onClick = {},
-                icon = Icons.Default.ArrowForward,
+                icon = Icons.AutoMirrored.Filled.ArrowForward,
                 variant = HustleButtonVariant.Outlined,
             )
         }
