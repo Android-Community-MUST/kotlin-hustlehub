@@ -4,6 +4,7 @@ import must.kdroiders.hustlehub.core.api.ApiResponse
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -54,6 +55,11 @@ interface UserApiService {
     @PUT("users/fcm-token")
     suspend fun updateFcmToken(
         @Body request: FcmTokenRequest,
+    ): Response<Unit>
+
+    @DELETE("users/fcm-token")
+    suspend fun removeFcmToken(
+        @Query("token") token: String,
     ): Response<Unit>
 
     @PUT("users/me/location")

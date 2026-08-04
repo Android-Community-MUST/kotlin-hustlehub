@@ -2,7 +2,11 @@ package must.kdroiders.hustlehub.ui.features.notification.data.remote
 
 import must.kdroiders.hustlehub.core.api.ApiResponse
 import must.kdroiders.hustlehub.core.api.PageResponse
+import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.NotificationPreferencesDto
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.NotificationResponse
+import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.UpdateNotificationPreferencesRequest
+import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -20,6 +24,22 @@ interface NotificationApiService {
         @Path("notificationId") notificationId: String,
     ): ApiResponse<Unit>
 
+    @DELETE("notifications/{notificationId}")
+    suspend fun deleteNotification(
+        @Path("notificationId") notificationId: String,
+    ): ApiResponse<Unit>
+
     @PUT("notifications/read-all")
     suspend fun markAllRead(): ApiResponse<Unit>
+
+    @GET("notifications/unread-count")
+    suspend fun getUnreadCount(): ApiResponse<must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.UnreadCountDto>
+
+    @GET("notifications/preferences")
+    suspend fun getPreferences(): ApiResponse<NotificationPreferencesDto>
+
+    @PUT("notifications/preferences")
+    suspend fun updatePreferences(
+        @Body request: UpdateNotificationPreferencesRequest,
+    ): ApiResponse<NotificationPreferencesDto>
 }

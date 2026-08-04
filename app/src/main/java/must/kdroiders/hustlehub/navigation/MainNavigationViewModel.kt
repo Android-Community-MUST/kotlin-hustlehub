@@ -9,6 +9,10 @@ import javax.inject.Inject
 
 sealed interface DeepLinkAction {
     data class OpenChat(val conversationId: String) : DeepLinkAction
+    data class OpenServiceDetail(val serviceId: String) : DeepLinkAction
+    data class OpenProviderProfile(val providerId: String) : DeepLinkAction
+    data class OpenWriteReview(val serviceId: String, val providerId: String) : DeepLinkAction
+    data object OpenNotifications : DeepLinkAction
     data object OpenProfile : DeepLinkAction
     data object OpenChatList : DeepLinkAction
 }

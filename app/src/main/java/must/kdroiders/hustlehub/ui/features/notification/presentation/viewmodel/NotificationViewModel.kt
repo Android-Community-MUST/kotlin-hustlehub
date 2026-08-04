@@ -125,6 +125,32 @@ class NotificationViewModel
             }
         }
 
+        fun deleteNotification(notificationId: String) {
+            val currentList = _uiState.value.notifications
+            val target = currentList.find { it.id == notificationId } ?: return
+
+            val updatedList = currentList.filterNot { it.id == notificationId }
+            _uiState.update { current ->
+                current.copy(
+                    notifications = updatedList,
+                    unreadCount = updatedList.count { !it.isRead },
+                )
+            }
+
+            viewModelScope.launch {
+                repository
+                    .deleteNotification(notificationId)
+                    .onFailure {
+                        _uiState.update { current ->
+                            current.copy(
+                                notifications = currentList,
+                                unreadCount = currentList.count { !it.isRead },
+                            )
+                        }
+                    }
+            }
+        }
+
         fun clearError() {
             _uiState.update { it.copy(error = null) }
         }

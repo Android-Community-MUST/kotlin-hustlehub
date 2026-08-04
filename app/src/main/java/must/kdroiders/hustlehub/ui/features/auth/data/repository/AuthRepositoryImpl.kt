@@ -7,13 +7,16 @@ import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.core.api.FirebaseAuthErrorMapper
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import timber.log.Timber
 import javax.inject.Inject
+import javax.inject.Provider
 import javax.inject.Singleton
 
 /**
@@ -28,6 +31,7 @@ class AuthRepositoryImpl
     @Inject
     constructor(
         private val firebaseAuth: FirebaseAuth,
+        private val userRepositoryProvider: Provider<UserRepository>,
     ) : AuthRepository {
         /**
          * Signs in an existing user with email and password.
@@ -209,8 +213,25 @@ class AuthRepositoryImpl
         /** Returns the currently signed-in [FirebaseUser], or null if logged out. */
         override fun getCurrentUser(): FirebaseUser? = firebaseAuth.currentUser
 
-        /** Signs the current user out of Firebase Auth. */
-        override fun logout() {
+        /** Signs the current user out of Firebase Auth and removes FCM token from backend. */
+        override suspend fun logout() {
+            runCatching {
+                val token = FirebaseMessaging.getInstance().token.await()
+                if (!token.isNullOrBlank()) {
+                    userRepositoryProvider.get().removeFcmToken(token)
+                }
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                Timber.e(e, "Failed to remove FCM token from backend during logout")
+            }
+
+            runCatching {
+                FirebaseMessaging.getInstance().deleteToken().await()
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                Timber.e(e, "Failed to delete FCM instance token during logout")
+            }
+
             firebaseAuth.signOut()
         }
 

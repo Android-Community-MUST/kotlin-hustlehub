@@ -126,6 +126,9 @@ dependencies {
     // Image Loading
     implementation(libs.coil.compose)
 
+    // ShortcutBadger App Launcher Icon Badging
+    implementation(libs.shortcut.badger)
+
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

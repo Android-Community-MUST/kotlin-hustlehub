@@ -31,12 +31,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+// import androidx.hilt.navigation.compose.hiltViewModel
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.LogOutButton
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.ProfileIdentityCard
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsDivider
@@ -50,6 +49,9 @@ import must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.Sett
 import must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.SettingsViewModel
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 /**
  * Settings screen — full-screen destination pushed over MainShell.
@@ -61,21 +63,23 @@ import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 fun SettingsScreen(
     onBack: () -> Unit = {},
     onNavigateToChangePassword: () -> Unit = {},
-    viewModel: SettingsViewModel = hiltViewModel(),
+    onNavigateToNotificationPreferences: () -> Unit = {},
+    settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by settingsViewModel.uiState.collectAsState()
 
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
 
     // Consume one-shot navigation events
     LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
+        settingsViewModel.events.collect { event ->
             when (event) {
-                is SettingsEvent.LoggedOut -> onBack() // parent nav graph pops to Login
+                is SettingsEvent.LoggedOut -> onBack()
                 is SettingsEvent.NavigateToChangePassword -> onNavigateToChangePassword()
+                is SettingsEvent.NavigateToNotifications -> onNavigateToNotificationPreferences()
                 else -> {
-                    android.widget.Toast
-                        .makeText(context, "Coming soon", android.widget.Toast.LENGTH_SHORT)
+                    Toast
+                        .makeText(context, "Coming soon", Toast.LENGTH_SHORT)
                         .show()
                 }
             }
@@ -105,7 +109,7 @@ fun SettingsScreen(
                 displayName = state.displayName,
                 username = state.username,
                 avatarUrl = state.avatarUrl,
-                onEditClick = viewModel::onEditProfileClicked,
+                onEditClick = settingsViewModel::onEditProfileClicked,
             )
 
             Spacer(Modifier.height(28.dp))
@@ -119,14 +123,14 @@ fun SettingsScreen(
                     label = "Verification Status",
                     subtitle = if (state.isVerified) "Verified Student" else "Not Verified",
                     subtitleColor = if (state.isVerified) HustleActiveGreen else MaterialTheme.colorScheme.error,
-                    onClick = viewModel::onVerificationClicked,
+                    onClick = settingsViewModel::onVerificationClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.CreditCard,
                     label = "Payment Methods",
                     trailing = state.paymentMethod,
-                    onClick = viewModel::onPaymentMethodsClicked,
+                    onClick = settingsViewModel::onPaymentMethodsClicked,
                 )
             }
 
@@ -139,26 +143,26 @@ fun SettingsScreen(
                 SettingsRowNavigate(
                     icon = Icons.Default.Notifications,
                     label = "Notifications",
-                    onClick = viewModel::onNotificationsClicked,
+                    onClick = settingsViewModel::onNotificationsClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.Lock,
                     label = "Privacy & Security",
-                    onClick = viewModel::onPrivacyClicked,
+                    onClick = settingsViewModel::onPrivacyClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.Lock,
                     label = "Change Password",
-                    onClick = viewModel::onChangePasswordClicked,
+                    onClick = settingsViewModel::onChangePasswordClicked,
                 )
                 SettingsDivider()
                 SettingsRowToggle(
                     icon = Icons.Default.DarkMode,
                     label = "Dark Mode",
                     checked = state.isDarkMode,
-                    onCheckedChange = viewModel::onDarkModeToggled,
+                    onCheckedChange = settingsViewModel::onDarkModeToggled,
                 )
             }
 
@@ -171,13 +175,13 @@ fun SettingsScreen(
                 SettingsRowExternalLink(
                     icon = Icons.AutoMirrored.Filled.Help,
                     label = "Help Center",
-                    onClick = viewModel::onHelpCenterClicked,
+                    onClick = settingsViewModel::onHelpCenterClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.ReportProblem,
                     label = "Report a Problem",
-                    onClick = viewModel::onReportProblemClicked,
+                    onClick = settingsViewModel::onReportProblemClicked,
                 )
             }
 
@@ -186,7 +190,7 @@ fun SettingsScreen(
             // Log Out button
             LogOutButton(
                 isLoading = state.isLoggingOut,
-                onClick = viewModel::onLogOutClicked,
+                onClick = settingsViewModel::onLogOutClicked,
             )
 
             Spacer(Modifier.height(16.dp))
@@ -203,7 +207,7 @@ fun SettingsScreen(
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier
                         .clip(RoundedCornerShape(4.dp))
-                        .clickable(role = Role.Button) { viewModel.onDeleteAccountClicked() }
+                        .clickable(role = Role.Button) { settingsViewModel.onDeleteAccountClicked() }
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
             }

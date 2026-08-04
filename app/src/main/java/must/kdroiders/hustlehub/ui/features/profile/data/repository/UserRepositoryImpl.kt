@@ -188,6 +188,16 @@ class UserRepositoryImpl
                 Timber.e(e, "UserRepositoryImpl: failed to update FCM token")
             }
 
+        override suspend fun removeFcmToken(token: String): Result<Unit> =
+            runCatching {
+                val response = userApiService.removeFcmToken(token)
+                if (!response.isSuccessful) {
+                    throw Exception("FCM token removal failed: code ${response.code()}")
+                }
+            }.onFailure { e ->
+                Timber.e(e, "UserRepositoryImpl: failed to remove FCM token")
+            }
+
         override suspend fun updateUserLocation(
             lat: Double,
             lng: Double,

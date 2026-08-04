@@ -45,6 +45,7 @@ import must.kdroiders.hustlehub.ui.features.service.data.repository.ServiceRepos
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ReviewRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import timber.log.Timber
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -66,9 +67,12 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAuthRepository(firebaseAuth: FirebaseAuth?): AuthRepository {
+    fun provideAuthRepository(
+        firebaseAuth: FirebaseAuth?,
+        userRepositoryProvider: Provider<UserRepository>,
+    ): AuthRepository {
         return if (firebaseAuth != null) {
-            AuthRepositoryImpl(firebaseAuth)
+            AuthRepositoryImpl(firebaseAuth, userRepositoryProvider)
         } else {
             NoopAuthRepository()
         }
@@ -221,5 +225,5 @@ private class NoopAuthRepository : AuthRepository {
 
     override fun getCurrentUser() = null
 
-    override fun logout() {}
+    override suspend fun logout() {}
 }

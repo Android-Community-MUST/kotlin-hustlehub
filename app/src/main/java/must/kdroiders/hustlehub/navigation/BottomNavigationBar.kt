@@ -80,7 +80,7 @@ private val bottomTabs = listOf(
 fun HustleBottomBar(
     currentKey: NavKey,
     onTabSelected: (NavKey) -> Unit,
-    totalUnreadCount: Int = 1,
+    unreadMessageCount: Int = 0,
     modifier: Modifier = Modifier,
 ) {
     NavigationBar(
@@ -96,12 +96,12 @@ fun HustleBottomBar(
                 onClick = { onTabSelected(item.key) },
                 icon = {
                     val isChatTab = item.key == BottomChat
-                    if (isChatTab && totalUnreadCount > 0) {
+                    if (isChatTab && unreadMessageCount > 0) {
                         BadgedBox(
                             badge = {
                                 Badge {
                                     Text(
-                                        text = if (totalUnreadCount > 99) "99+" else totalUnreadCount.toString(),
+                                        text = if (unreadMessageCount > 99) "99+" else unreadMessageCount.toString(),
                                     )
                                 }
                             },

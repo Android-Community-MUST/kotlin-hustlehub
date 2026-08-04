@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsNone
@@ -34,29 +35,38 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.navigation.DeepLinkAction
 import must.kdroiders.hustlehub.navigation.MainNavigationViewModel
+import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.UnreadCountViewModel
 import must.kdroiders.hustlehub.ui.features.notification.domain.model.Notification
 import must.kdroiders.hustlehub.ui.features.notification.domain.model.NotificationType
 import must.kdroiders.hustlehub.ui.features.notification.presentation.viewmodel.NotificationViewModel
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,6 +83,16 @@ fun NotificationScreen(
     } else {
         null
     }
+    val unreadCountViewModel: UnreadCountViewModel? = if (activity != null) {
+        hiltViewModel<UnreadCountViewModel>(viewModelStoreOwner = activity)
+    } else {
+        null
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.markAllAsRead()
+        unreadCountViewModel?.clearNotificationsBadge()
+    }
 
     Box(
         modifier = modifier
@@ -80,14 +100,14 @@ fun NotificationScreen(
             .background(MaterialTheme.colorScheme.background),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Header Top Bar
+            // Top Bar
             NotificationHeader(
                 unreadCount = state.unreadCount,
                 onBack = onBack,
                 onMarkAllRead = { viewModel.markAllAsRead() },
             )
 
-            // Notifications List / Empty State / PullToRefresh
+            // Notifications Content with Date Grouping & Pull-to-refresh
             PullToRefreshBox(
                 isRefreshing = state.isRefreshing,
                 onRefresh = { viewModel.loadNotifications(isRefresh = true) },
@@ -96,22 +116,31 @@ fun NotificationScreen(
                 if (state.notifications.isEmpty() && !state.isLoading) {
                     NotificationEmptyState()
                 } else {
+                    val grouped = groupNotificationsByDate(state.notifications)
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(bottom = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        items(
-                            items = state.notifications,
-                            key = { it.id },
-                        ) { notification ->
-                            NotificationItem(
-                                notification = notification,
-                                onClick = {
-                                    viewModel.markAsRead(notification.id)
-                                    handleNotificationTap(notification, onBack, mainNavigationViewModel)
-                                },
-                            )
+                        grouped.forEach { (dateGroup, notificationsInGroup) ->
+                            item(key = "header_$dateGroup") {
+                                DateHeaderGroup(text = dateGroup)
+                            }
+                            items(
+                                items = notificationsInGroup,
+                                key = { it.id },
+                            ) { notification ->
+                                SwipeableNotificationItem(
+                                    notification = notification,
+                                    onClick = {
+                                        viewModel.markAsRead(notification.id)
+                                        handleNotificationTap(notification, onBack, mainNavigationViewModel)
+                                    },
+                                    onDelete = {
+                                        viewModel.deleteNotification(notification.id)
+                                    },
+                                )
+                            }
                         }
                     }
                 }
@@ -136,7 +165,7 @@ fun NotificationHeader(
         IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = "Navigate back",
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
@@ -173,7 +202,7 @@ fun NotificationHeader(
             ) {
                 Icon(
                     imageVector = Icons.Default.DoneAll,
-                    contentDescription = "Mark all read",
+                    contentDescription = "Mark all as read",
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.primary,
                 )
@@ -185,6 +214,65 @@ fun NotificationHeader(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun DateHeaderGroup(text: String) {
+    Text(
+        text = text.uppercase(),
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+            .semantics { heading() },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SwipeableNotificationItem(
+    notification: Notification,
+    onClick: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { dismissValue ->
+            if (dismissValue == SwipeToDismissBoxValue.EndToStart || dismissValue == SwipeToDismissBoxValue.StartToEnd) {
+                onDelete()
+                true
+            } else {
+                false
+            }
+        },
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = Modifier.padding(horizontal = 16.dp),
+        backgroundContent = {
+            val color = when (dismissState.targetValue) {
+                SwipeToDismissBoxValue.EndToStart, SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.errorContainer
+                else -> Color.Transparent
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete notification",
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                )
+            }
+        },
+    ) {
+        NotificationItem(notification = notification, onClick = onClick)
     }
 }
 
@@ -235,7 +323,6 @@ fun NotificationItem(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Left circular icon
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -253,7 +340,6 @@ fun NotificationItem(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Body text
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = notification.title,
@@ -277,7 +363,6 @@ fun NotificationItem(
                 )
             }
 
-            // Blue unread indicator dot
             if (!notification.isRead) {
                 Spacer(modifier = Modifier.width(12.dp))
                 Box(
@@ -308,7 +393,7 @@ fun NotificationEmptyState() {
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "Your inbox is empty",
+            text = "No notifications yet",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -319,15 +404,38 @@ fun NotificationEmptyState() {
             text = "We will notify you here when you receive new messages, reviews, or inquiries.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            textAlign = TextAlign.Center,
         )
+    }
+}
+
+fun groupNotificationsByDate(notifications: List<Notification>): Map<String, List<Notification>> {
+    val today = LocalDate.now(ZoneId.systemDefault())
+    val yesterday = today.minusDays(1)
+    val weekAgo = today.minusDays(7)
+
+    return notifications.groupBy { notification ->
+        val date = try {
+            Instant
+                .parse(notification.sentAt)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+        } catch (e: Exception) {
+            today
+        }
+        when {
+            date.isEqual(today) -> "Today"
+            date.isEqual(yesterday) -> "Yesterday"
+            date.isAfter(weekAgo) -> "This Week"
+            else -> "Older"
+        }
     }
 }
 
 fun formatRelativeTime(dateString: String): String {
     return try {
-        val instant = java.time.Instant.parse(dateString)
-        val now = java.time.Instant.now()
+        val instant = Instant.parse(dateString)
+        val now = Instant.now()
         val duration = Duration.between(instant, now)
         val diffSeconds = duration.seconds
         when {
@@ -352,7 +460,7 @@ private fun handleNotificationTap(
         NotificationType.NEW_MESSAGE -> {
             val conversationId = notification.data?.get("conversationId")
             if (!conversationId.isNullOrBlank()) {
-                onBack() // Close notifications overlay
+                onBack()
                 mainNavigationViewModel.triggerDeepLink(DeepLinkAction.OpenChat(conversationId))
             }
         }
@@ -365,7 +473,7 @@ private fun handleNotificationTap(
             mainNavigationViewModel.triggerDeepLink(DeepLinkAction.OpenChatList)
         }
         NotificationType.SYSTEM -> {
-            // No action needed for system notifications
+            // No navigation needed for system notifications
         }
     }
 }

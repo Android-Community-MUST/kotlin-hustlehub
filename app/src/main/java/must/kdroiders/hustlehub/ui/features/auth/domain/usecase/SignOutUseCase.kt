@@ -16,7 +16,7 @@ class SignOutUseCase
         private val authRepository: AuthRepository,
     ) {
         /** Calls [AuthRepository.logout] to sign the user out immediately. */
-        operator fun invoke() {
+        suspend operator fun invoke() {
             authRepository.logout()
         }
     }

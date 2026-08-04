@@ -65,7 +65,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="hustlehub" />
-                <data android:host="app" />
             </intent-filter>
         </activity>
 

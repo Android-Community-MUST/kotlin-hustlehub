@@ -116,22 +116,45 @@ class MainActivity : ComponentActivity() {
 
     private fun handleIntent(intent: Intent?) {
         val uri = intent?.data ?: return
-        val path = uri.path
-        if (uri.scheme == "hustlehub" && uri.host == "app") {
-            when {
-                path?.contains("chat") == true -> {
-                    val conversationId = uri.getQueryParameter("conversationId")
-                    if (!conversationId.isNullOrBlank()) {
-                        mainNavigationViewModel.triggerDeepLink(DeepLinkAction.OpenChat(conversationId))
+        if (uri.scheme != "hustlehub") return
+        val host = uri.host ?: return
+        val lastSegment = uri.lastPathSegment
+
+        val action: DeepLinkAction? = when (host) {
+            "chat" -> {
+                val conversationId = lastSegment ?: uri.getQueryParameter("conversationId")
+                if (!conversationId.isNullOrBlank()) DeepLinkAction.OpenChat(conversationId) else null
+            }
+            "service" -> {
+                if (!lastSegment.isNullOrBlank()) DeepLinkAction.OpenServiceDetail(lastSegment) else null
+            }
+            "profile" -> {
+                if (!lastSegment.isNullOrBlank()) DeepLinkAction.OpenProviderProfile(lastSegment) else null
+            }
+            "review" -> {
+                val serviceId = lastSegment
+                val providerId = uri.getQueryParameter("providerId") ?: ""
+                if (!serviceId.isNullOrBlank()) DeepLinkAction.OpenWriteReview(serviceId, providerId) else null
+            }
+            "notifications" -> DeepLinkAction.OpenNotifications
+            "app" -> {
+                when {
+                    uri.path?.contains("chat") == true -> {
+                        val conversationId = uri.getQueryParameter("conversationId")
+                        if (!conversationId.isNullOrBlank()) DeepLinkAction.OpenChat(conversationId) else null
                     }
-                }
-                path?.contains("profile") == true -> {
-                    mainNavigationViewModel.triggerDeepLink(DeepLinkAction.OpenProfile)
-                }
-                path?.contains("inquiries") == true -> {
-                    mainNavigationViewModel.triggerDeepLink(DeepLinkAction.OpenChatList)
+                    uri.path?.contains("profile") == true -> DeepLinkAction.OpenProfile
+                    uri.path?.contains("inquiries") == true -> DeepLinkAction.OpenChatList
+                    else -> null
                 }
             }
+            else -> null
+        }
+
+        if (action != null) {
+            mainNavigationViewModel.triggerDeepLink(action)
+        } else {
+            Timber.w("Invalid or unhandled deep link URI: $uri")
         }
     }
 
