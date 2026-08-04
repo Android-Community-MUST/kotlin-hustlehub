@@ -29,6 +29,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,7 +57,12 @@ fun HomeTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         // Logo + wordmark
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.semantics(mergeDescendants = true) {
+                heading()
+            },
+        ) {
             Box(
                 modifier = Modifier
                     .size(36.dp)
@@ -60,7 +71,7 @@ fun HomeTopBar(
                         Brush.linearGradient(
                             colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF7C4DFF)),
                         ),
-                    ),
+                    ).clearAndSetSemantics { }, // Hides "Capital H" from TalkBack,
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -74,6 +85,7 @@ fun HomeTopBar(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.semantics { heading() },
             )
         }
 
@@ -107,7 +119,7 @@ fun HomeTopBar(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notifications",
+                        contentDescription = "Notifications${if (notificationCount > 0) ", $notificationCount unread" else ""}",
                         tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(20.dp),
                     )
@@ -126,7 +138,10 @@ fun HomeTopBar(
                         ),
                         shape = CircleShape,
                     ).background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable {
+                    .semantics {
+                        role = Role.Button
+                        contentDescription = "User profile, initials $initials"
+                    }.clickable {
                         if (onProfileClick != null) {
                             onProfileClick()
                         } else {
@@ -140,6 +155,7 @@ fun HomeTopBar(
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.clearAndSetSemantics { }, // Suppresses raw text reading
                 )
             }
         }

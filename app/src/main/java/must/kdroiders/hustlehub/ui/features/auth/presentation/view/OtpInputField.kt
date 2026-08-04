@@ -14,6 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -27,7 +31,11 @@ fun OtpInputField(
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics {
+                isTraversalGroup = true
+            },
     ) {
         otpValues.forEachIndexed { index, value ->
             OutlinedTextField(
@@ -43,7 +51,12 @@ fun OtpInputField(
                 modifier = Modifier
                     .weight(1f)
                     .aspectRatio(1f)
-                    .focusRequester(focusRequesters[index]),
+                    .focusRequester(focusRequesters[index])
+                    .semantics {
+                        traversalIndex = index.toFloat()
+                        contentDescription =
+                            "OTP digit ${index + 1} of ${otpValues.size}, ${if (value.isEmpty()) "empty" else "digit $value"}"
+                    },
                 textStyle = LocalTextStyle.current.copy(
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold,

@@ -39,6 +39,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -201,7 +204,11 @@ fun HustleTextField(
             exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.fastEffectsSpec()),
         ) {
             Row(
-                modifier = Modifier.padding(start = 12.dp, top = 6.dp),
+                modifier = Modifier
+                    .padding(start = 12.dp, top = 6.dp)
+                    .semantics {
+                        liveRegion = LiveRegionMode.Polite
+                    },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(

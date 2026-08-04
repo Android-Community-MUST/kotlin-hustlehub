@@ -47,6 +47,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -79,6 +84,8 @@ fun ChatScreen(
                         text = "Messages",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.semantics { heading() },
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -201,7 +208,9 @@ private fun ConversationItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .semantics(mergeDescendants = true) {
+                role = Role.Button
+            }.clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -210,7 +219,7 @@ private fun ConversationItem(
         if (!avatarUrl.isNullOrBlank()) {
             AsyncImage(
                 model = avatarUrl,
-                contentDescription = "User Avatar",
+                contentDescription = null,
                 modifier = Modifier
                     .size(52.dp)
                     .clip(CircleShape),
@@ -222,7 +231,8 @@ private fun ConversationItem(
                 modifier = Modifier
                     .size(52.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .clearAndSetSemantics { },
                 contentAlignment = Alignment.Center,
             ) {
                 val firstLetter = conversation.otherUserName.firstOrNull()?.uppercase() ?: "?"

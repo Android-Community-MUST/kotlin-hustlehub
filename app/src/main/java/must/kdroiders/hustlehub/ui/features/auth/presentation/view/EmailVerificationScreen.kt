@@ -15,6 +15,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -48,7 +51,9 @@ fun EmailVerificationScreen(
             text = "Verify your email",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 8.dp),
+            modifier = Modifier
+                .padding(bottom = 8.dp)
+                .semantics { heading() },
         )
 
         Text(
@@ -68,13 +73,16 @@ fun EmailVerificationScreen(
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Error message
+                // Error message with liveRegion
                 uiState.errorMessage?.let { error ->
                     Text(
                         text = error,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center,
+                        modifier = Modifier.semantics {
+                            liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite
+                        },
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }

@@ -50,6 +50,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -102,11 +108,15 @@ fun EditProfileScreen(
                         text = "Edit Profile",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.semantics { heading() },
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Navigate Back",
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -144,7 +154,10 @@ fun EditProfileScreen(
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                        .clickable {
+                        .semantics {
+                            role = Role.Button
+                            contentDescription = "Change Profile Photo"
+                        }.clickable {
                             photoPicker.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                             )
@@ -223,7 +236,12 @@ fun EditProfileScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(16.dp)
+                        .semantics {
+                            role = Role.Switch
+                            stateDescription = if (state.allowCalls) "On" else "Off"
+                            contentDescription = "Allow Direct Calls"
+                        },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {

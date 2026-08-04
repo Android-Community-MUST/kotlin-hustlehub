@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -39,9 +41,12 @@ fun SectionHeader(
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
+                    .minimumInteractiveComponentSize()
                     .clip(RoundedCornerShape(4.dp))
-                    .clickable(onClick = onAction)
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                    .clickable(
+                        onClick = onAction,
+                        role = Role.Button,
+                    ).padding(horizontal = 4.dp, vertical = 2.dp),
             )
         }
     }

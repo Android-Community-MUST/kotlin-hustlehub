@@ -30,6 +30,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -201,7 +203,7 @@ fun SettingsScreen(
                     textDecoration = TextDecoration.Underline,
                     modifier = Modifier
                         .clip(RoundedCornerShape(4.dp))
-                        .clickable { viewModel.onDeleteAccountClicked() }
+                        .clickable(role = Role.Button) { viewModel.onDeleteAccountClicked() }
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
             }

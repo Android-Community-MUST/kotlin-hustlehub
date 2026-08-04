@@ -60,6 +60,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -183,6 +186,7 @@ fun MessageBubble(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .semantics(mergeDescendants = true) {}
                 .then(
                     if (message.isDeleted) {
                         Modifier
@@ -364,7 +368,7 @@ fun MessageBubble(
                                             if (isUploading) {
                                                 this
                                             } else {
-                                                clickable { onImageClick(imageUrl) }
+                                                clickable(role = Role.Button) { onImageClick(imageUrl) }
                                             }
                                         },
                                     contentAlignment = Alignment.Center,
@@ -523,7 +527,7 @@ private fun VoiceMessageContent(
         // Play/Pause or Buffering spinner
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(38.dp),
+            modifier = Modifier.size(48.dp),
         ) {
             if (isBufferingThis) {
                 CircularWavyProgressIndicator(
@@ -538,7 +542,7 @@ private fun VoiceMessageContent(
                         containerColor = textColor.copy(alpha = 0.15f),
                         contentColor = textColor,
                     ),
-                    modifier = Modifier.size(38.dp),
+                    modifier = Modifier.size(48.dp),
                 ) {
                     Icon(
                         imageVector = if (isPlayingThis) Icons.Default.Pause else Icons.Default.PlayArrow,
@@ -597,7 +601,7 @@ private fun VoiceMessageContent(
                         color = textColor.copy(alpha = 0.85f),
                         modifier = Modifier
                             .clip(RoundedCornerShape(4.dp))
-                            .clickable { onSpeedToggle() }
+                            .clickable(role = Role.Button) { onSpeedToggle() }
                             .padding(horizontal = 4.dp, vertical = 2.dp),
                     )
                 }
@@ -700,7 +704,7 @@ private fun LocationMessageContent(
     Column(
         modifier = Modifier
             .width(250.dp)
-            .clickable {
+            .clickable(role = Role.Button) {
                 if (locationData != null) {
                     onClick(
                         locationData.lat,
@@ -717,7 +721,7 @@ private fun LocationMessageContent(
         ) {
             Icon(
                 imageVector = Icons.Default.LocationOn,
-                contentDescription = "Location",
+                contentDescription = null, // decorative
                 tint = textColor,
                 modifier = Modifier.size(20.dp),
             )

@@ -29,6 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -51,10 +53,15 @@ fun ChangePasswordScreen(
     HustleScaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Change Password") },
+                title = {
+                    Text(
+                        "Change Password",
+                        modifier = Modifier.semantics { heading() },
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Navigate back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -77,6 +84,7 @@ fun ChangePasswordScreen(
                 text = "Secure your account",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() },
             )
 
             Spacer(modifier = Modifier.height(8.dp))

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,6 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -82,6 +85,10 @@ fun HustleButton(
                     .graphicsLayer {
                         scaleX = scale
                         scaleY = scale
+                    }.semantics {
+                        if (loading) {
+                            stateDescription = "Loading"
+                        }
                     },
                 enabled = isActive,
                 shape = ButtonShape,
@@ -269,7 +276,7 @@ fun HustleButtonLoadingPreview() {
             HustleButton(
                 text = "With Icon",
                 onClick = {},
-                icon = Icons.Default.ArrowForward,
+                icon = Icons.AutoMirrored.Filled.ArrowForward,
                 variant = HustleButtonVariant.Outlined,
             )
         }
