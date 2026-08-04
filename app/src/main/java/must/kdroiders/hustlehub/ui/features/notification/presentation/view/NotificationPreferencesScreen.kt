@@ -9,29 +9,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Campaign
-import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.HourglassFull
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,11 +41,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.notification.presentation.viewmodel.NotificationPreferencesViewModel
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsDivider
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsGroup
@@ -61,40 +59,29 @@ fun NotificationPreferencesScreen(
     val state by notificationPreferencesViewModel.uiState.collectAsState()
     val prefs = state.preferences
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding(),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Navigate back",
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-            Spacer(Modifier.weight(1f))
-            Text(
-                text = "Notification Preferences",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.semantics { heading() },
+    HustleScaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Notification Settings") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Navigate back",
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
             )
-            Spacer(Modifier.weight(1f))
-            Spacer(Modifier.size(48.dp))
-        }
-
+        },
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
@@ -105,7 +92,7 @@ fun NotificationPreferencesScreen(
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
                 SettingsRowToggle(
-                    icon = Icons.Default.Chat,
+                    icon = Icons.AutoMirrored.Filled.Chat,
                     label = "New Messages",
                     checked = prefs.newMessages,
                     onCheckedChange = notificationPreferencesViewModel::onNewMessagesToggled,
@@ -127,7 +114,7 @@ fun NotificationPreferencesScreen(
                 SettingsDivider()
                 SettingsRowToggle(
                     icon = Icons.Default.Campaign,
-                    label = "Marketing & Announcements",
+                    label = "Marketing & Promotions",
                     checked = prefs.marketing,
                     onCheckedChange = notificationPreferencesViewModel::onMarketingToggled,
                 )
@@ -135,49 +122,43 @@ fun NotificationPreferencesScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Alert style
-            SettingsSectionLabel("ALERT STYLE")
+            // Quiet hours
+            SettingsSectionLabel("QUIET HOURS")
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
-                SettingsRowToggle(
-                    icon = Icons.Default.MusicNote,
-                    label = "Sound",
-                    checked = prefs.soundEnabled,
-                    onCheckedChange = notificationPreferencesViewModel::onSoundToggled,
+                HourPickerDropdownRow(
+                    label = "Quiet Hours Start",
+                    icon = Icons.Default.HourglassFull,
+                    selectedHour = prefs.quietHoursStart,
+                    onHourSelected = notificationPreferencesViewModel::onQuietHoursStartChanged,
                 )
                 SettingsDivider()
+                HourPickerDropdownRow(
+                    label = "Quiet Hours End",
+                    icon = Icons.Default.HourglassFull,
+                    selectedHour = prefs.quietHoursEnd,
+                    onHourSelected = notificationPreferencesViewModel::onQuietHoursEndChanged,
+                )
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            // Preferences
+            SettingsSectionLabel("PREFERENCES")
+            Spacer(Modifier.height(8.dp))
+            SettingsGroup {
                 SettingsRowToggle(
                     icon = Icons.Default.Vibration,
                     label = "Vibration",
                     checked = prefs.vibrationEnabled,
                     onCheckedChange = notificationPreferencesViewModel::onVibrationToggled,
                 )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            // Quiet hours
-            SettingsSectionLabel("QUIET HOURS")
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "No push notifications will be delivered during this window.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
-            )
-            SettingsGroup {
-                HourPickerRow(
-                    icon = Icons.Default.HourglassFull,
-                    label = "Start time",
-                    selectedHour = prefs.quietHoursStart,
-                    onHourSelected = notificationPreferencesViewModel::onQuietHoursStartChanged,
-                )
                 SettingsDivider()
-                HourPickerRow(
-                    icon = Icons.Default.Notifications,
-                    label = "End time",
-                    selectedHour = prefs.quietHoursEnd,
-                    onHourSelected = notificationPreferencesViewModel::onQuietHoursEndChanged,
+                SettingsRowToggle(
+                    icon = Icons.Default.MusicNote,
+                    label = "Notification Sound",
+                    checked = prefs.soundEnabled,
+                    onCheckedChange = notificationPreferencesViewModel::onSoundToggled,
                 )
             }
 
@@ -188,9 +169,9 @@ fun NotificationPreferencesScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HourPickerRow(
-    icon: ImageVector,
+private fun HourPickerDropdownRow(
     label: String,
+    icon: ImageVector,
     selectedHour: Int,
     onHourSelected: (Int) -> Unit,
 ) {
@@ -198,24 +179,27 @@ private fun HourPickerRow(
 
     Row(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .fillMaxWidth()
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(end = 16.dp),
+            modifier = Modifier.size(24.dp),
         )
+        Spacer(Modifier.size(16.dp))
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
         )
+
         ExposedDropdownMenuBox(
             expanded = expanded,
-            onExpandedChange = { expanded = it },
+            onExpandedChange = { expanded = !expanded },
         ) {
             OutlinedTextField(
                 value = formatHour(selectedHour),
@@ -223,7 +207,7 @@ private fun HourPickerRow(
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                     .padding(0.dp),
                 textStyle = MaterialTheme.typography.bodyMedium,
                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
