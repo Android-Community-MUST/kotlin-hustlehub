@@ -298,13 +298,12 @@ class ChatDetailViewModel
                     .onSuccess {
                         _uiState.update { it.copy(isLoading = false) }
                         val noMessages = _uiState.value.messages.isEmpty()
-                        val hasServiceContext = !serviceId.isNullOrBlank() && !serviceTitle.isNullOrBlank()
                         val cardNotYetSent = !_uiState.value.serviceCardSent
-                        if (noMessages && hasServiceContext && cardNotYetSent) {
+                        if (noMessages && !serviceId.isNullOrBlank() && !serviceTitle.isNullOrBlank() && cardNotYetSent) {
                             _uiState.update { it.copy(serviceCardSent = true) }
                             sendServiceCardMessage(
-                                serviceId = serviceId!!,
-                                title = serviceTitle!!,
+                                serviceId = serviceId,
+                                title = serviceTitle,
                                 priceRange = "KES ${servicePriceRange ?: ""}",
                                 providerName = providerName ?: "",
                                 category = serviceCategory ?: "",
@@ -334,13 +333,12 @@ class ChatDetailViewModel
                     .onSuccess {
                         _uiState.update { it.copy(isLoading = false) }
                         val noMessages = _uiState.value.messages.isEmpty()
-                        val hasServiceContext = !serviceId.isNullOrBlank() && !serviceTitle.isNullOrBlank()
                         val cardNotYetSent = !_uiState.value.serviceCardSent
-                        if (noMessages && hasServiceContext && cardNotYetSent) {
+                        if (noMessages && !serviceId.isNullOrBlank() && !serviceTitle.isNullOrBlank() && cardNotYetSent) {
                             _uiState.update { it.copy(serviceCardSent = true) }
                             sendServiceCardMessage(
-                                serviceId = serviceId!!,
-                                title = serviceTitle!!,
+                                serviceId = serviceId,
+                                title = serviceTitle,
                                 priceRange = "KES ${servicePriceRange ?: ""}",
                                 providerName = providerName ?: "",
                                 category = serviceCategory ?: "",
