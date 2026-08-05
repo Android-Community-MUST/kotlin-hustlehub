@@ -29,14 +29,18 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingExcept
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
+import must.kdroiders.hustlehub.datastore.AppTheme
 import must.kdroiders.hustlehub.navigation.DeepLinkAction
 import must.kdroiders.hustlehub.navigation.HustleHubNav
 import must.kdroiders.hustlehub.navigation.MainNavigationViewModel
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
+import must.kdroiders.hustlehub.ui.theme.ThemeViewModel
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -49,6 +53,7 @@ class MainActivity : ComponentActivity() {
 
     private val loginViewModel: LoginViewModel by viewModels()
     private val mainNavigationViewModel: MainNavigationViewModel by viewModels()
+    private val themeViewModel: ThemeViewModel by viewModels()
 
     // For older Android versions (below API 34)
     private lateinit var googleSignInClient: GoogleSignInClient
@@ -90,8 +95,15 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+            val appTheme by themeViewModel.theme.collectAsState()
+            val isDark = when (appTheme) {
+                AppTheme.DARK -> true
+                AppTheme.LIGHT -> false
+                AppTheme.SYSTEM -> isSystemInDarkTheme()
+            }
+
             HustleHubTheme(
-                darkTheme = isSystemInDarkTheme(),
+                darkTheme = isDark,
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),

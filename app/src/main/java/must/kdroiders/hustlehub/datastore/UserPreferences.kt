@@ -50,6 +50,7 @@ class UserPreferences
             val USER_ROLE = stringPreferencesKey("user_role")
             val USER_AVATAR_URL = stringPreferencesKey("user_avatar_url")
             val USER_UUID = stringPreferencesKey("user_uuid")
+            val APP_THEME = stringPreferencesKey("app_theme")
             val RECENT_SEARCHES = stringSetPreferencesKey("recent_searches")
             val LAST_SELECTED_CATEGORY = stringPreferencesKey("last_selected_category")
             val PROVIDER_BANNER_DISMISSED = booleanPreferencesKey("provider_banner_dismissed")
@@ -58,6 +59,33 @@ class UserPreferences
         }
 
         // Reads
+
+        /**
+         * Emits the user's selected [AppTheme] preference (defaults to [AppTheme.SYSTEM]).
+         */
+        val appTheme: Flow<AppTheme> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading app theme preference")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs ->
+                val raw = prefs[APP_THEME] ?: AppTheme.SYSTEM.name
+                runCatching { AppTheme.valueOf(raw) }.getOrDefault(AppTheme.SYSTEM)
+            }
+
+        /** Saves the user's chosen [AppTheme] preference. */
+        suspend fun saveTheme(theme: AppTheme) {
+            try {
+                dataStore.edit { prefs ->
+                    prefs[APP_THEME] = theme.name
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error saving app theme preference")
+            }
+        }
 
         /**
          * Emits true on first launch (or on DataStore read error so onboarding is

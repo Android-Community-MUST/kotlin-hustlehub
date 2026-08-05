@@ -48,6 +48,7 @@ class SettingsViewModelTest {
             every { isEmailVerified } returns true
         }
         every { authRepository.getCurrentUser() } returns mockUser
+        every { userPreferences.appTheme } returns kotlinx.coroutines.flow.flowOf(must.kdroiders.hustlehub.datastore.AppTheme.SYSTEM)
 
         viewModel = SettingsViewModel(
             authRepository = authRepository,

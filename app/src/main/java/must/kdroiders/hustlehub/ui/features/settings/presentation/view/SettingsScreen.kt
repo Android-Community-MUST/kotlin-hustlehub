@@ -53,6 +53,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.RadioButton
+import must.kdroiders.hustlehub.datastore.AppTheme
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
@@ -61,7 +65,6 @@ import must.kdroiders.hustlehub.ui.features.settings.presentation.components.Pro
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsDivider
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsGroup
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsRowNavigate
-import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsRowToggle
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsSectionLabel
 import must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.SettingsEvent
 import must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.SettingsViewModel
@@ -92,6 +95,47 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    // Theme selection dialog
+    if (state.showThemeDialog) {
+        AlertDialog(
+            onDismissRequest = settingsViewModel::onThemeDismissed,
+            title = { Text("Choose Theme") },
+            text = {
+                Column {
+                    AppTheme.entries.forEach { theme ->
+                        val label = when (theme) {
+                            AppTheme.SYSTEM -> "System Default"
+                            AppTheme.LIGHT -> "Light"
+                            AppTheme.DARK -> "Dark"
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(role = Role.RadioButton) {
+                                    settingsViewModel.onThemeSelected(theme)
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(
+                                selected = state.selectedTheme == theme,
+                                onClick = { settingsViewModel.onThemeSelected(theme) },
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = settingsViewModel::onThemeDismissed) {
+                    Text("Cancel")
+                }
+            },
+        )
     }
 
     // Delete Account confirmation dialog
@@ -219,11 +263,15 @@ fun SettingsScreen(
             SettingsSectionLabel("APPEARANCE")
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
-                SettingsRowToggle(
+                SettingsRowNavigate(
                     icon = Icons.Default.DarkMode,
-                    label = "Dark Mode",
-                    checked = state.isDarkMode,
-                    onCheckedChange = settingsViewModel::onDarkModeToggled,
+                    label = "Theme",
+                    trailing = when (state.selectedTheme) {
+                        AppTheme.SYSTEM -> "System Default"
+                        AppTheme.LIGHT -> "Light"
+                        AppTheme.DARK -> "Dark"
+                    },
+                    onClick = settingsViewModel::onThemeClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(

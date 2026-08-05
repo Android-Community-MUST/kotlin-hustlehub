@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.data.local.AppDatabase
+import must.kdroiders.hustlehub.datastore.AppTheme
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignOutUseCase
@@ -33,6 +34,7 @@ data class SettingsUiState(
 
     // Preferences & Appearance
     val isDarkMode: Boolean = true,
+    val selectedTheme: AppTheme = AppTheme.SYSTEM,
     val selectedLanguage: String = "English",
 
     // App meta
@@ -40,6 +42,7 @@ data class SettingsUiState(
     val buildNumber: String = BuildConfig.VERSION_CODE.toString(),
 
     // Dialog & async states
+    val showThemeDialog: Boolean = false,
     val showDeleteAccountDialog: Boolean = false,
     val isLoggingOut: Boolean = false,
     val isDeletingAccount: Boolean = false,
@@ -87,6 +90,7 @@ class SettingsViewModel
 
         init {
             loadCurrentUser()
+            observeAppTheme()
         }
 
         private fun loadCurrentUser() {
@@ -107,10 +111,45 @@ class SettingsViewModel
             }
         }
 
+        private fun observeAppTheme() {
+            viewModelScope.launch {
+                userPreferences.appTheme.collect { theme ->
+                    _uiState.update {
+                        it.copy(
+                            selectedTheme = theme,
+                            isDarkMode = theme == AppTheme.DARK,
+                        )
+                    }
+                }
+            }
+        }
+
         // Preferences
 
+        fun onThemeClicked() {
+            _uiState.update { it.copy(showThemeDialog = true) }
+        }
+
+        fun onThemeDismissed() {
+            _uiState.update { it.copy(showThemeDialog = false) }
+        }
+
+        fun onThemeSelected(theme: AppTheme) {
+            _uiState.update {
+                it.copy(
+                    showThemeDialog = false,
+                    selectedTheme = theme,
+                    isDarkMode = theme == AppTheme.DARK,
+                )
+            }
+            viewModelScope.launch {
+                userPreferences.saveTheme(theme)
+            }
+        }
+
         fun onDarkModeToggled(enabled: Boolean) {
-            _uiState.update { it.copy(isDarkMode = enabled) }
+            val newTheme = if (enabled) AppTheme.DARK else AppTheme.LIGHT
+            onThemeSelected(newTheme)
         }
 
         // Navigation triggers
