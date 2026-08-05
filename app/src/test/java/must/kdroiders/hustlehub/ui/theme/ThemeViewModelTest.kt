@@ -41,20 +41,22 @@ class ThemeViewModelTest {
     }
 
     @Test
-    fun `theme stateFlow emits persisted theme from UserPreferences`() = runTest {
-        backgroundScope.launch { viewModel.theme.collect {} }
-        advanceUntilIdle()
+    fun `theme stateFlow emits persisted theme from UserPreferences`() =
+        runTest {
+            backgroundScope.launch { viewModel.theme.collect {} }
+            advanceUntilIdle()
 
-        assertEquals(AppTheme.DARK, viewModel.theme.value)
-    }
+            assertEquals(AppTheme.DARK, viewModel.theme.value)
+        }
 
     @Test
-    fun `setTheme calls saveTheme on UserPreferences`() = runTest {
-        coEvery { userPreferences.saveTheme(any()) } returns Unit
+    fun `setTheme calls saveTheme on UserPreferences`() =
+        runTest {
+            coEvery { userPreferences.saveTheme(any()) } returns Unit
 
-        viewModel.setTheme(AppTheme.LIGHT)
-        advanceUntilIdle()
+            viewModel.setTheme(AppTheme.LIGHT)
+            advanceUntilIdle()
 
-        coVerify(exactly = 1) { userPreferences.saveTheme(AppTheme.LIGHT) }
-    }
+            coVerify(exactly = 1) { userPreferences.saveTheme(AppTheme.LIGHT) }
+        }
 }

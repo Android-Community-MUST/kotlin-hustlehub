@@ -43,7 +43,11 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -56,6 +60,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -484,6 +489,53 @@ fun ChatDetailScreen(
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                         }
+                    }
+
+                    var showMenu by remember { mutableStateOf(false) }
+                    var showBlockDialog by remember { mutableStateOf(false) }
+
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Block User", color = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    showMenu = false
+                                    showBlockDialog = true
+                                },
+                            )
+                        }
+                    }
+
+                    if (showBlockDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showBlockDialog = false },
+                            title = { Text("Block ${state.otherUserName.ifBlank { "User" }}?") },
+                            text = { Text("They will no longer be able to message you, view your profile, or see your map pins.") },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showBlockDialog = false
+                                        viewModel.blockUser {
+                                            Toast.makeText(context, "User blocked", Toast.LENGTH_SHORT).show()
+                                            onBackClick()
+                                        }
+                                    },
+                                ) {
+                                    Text("Block", color = MaterialTheme.colorScheme.error)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showBlockDialog = false }) {
+                                    Text("Cancel")
+                                }
+                            },
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

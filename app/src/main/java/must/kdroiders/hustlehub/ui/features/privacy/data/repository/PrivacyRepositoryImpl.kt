@@ -28,9 +28,7 @@ class PrivacyRepositoryImpl
             }
         }
 
-        override suspend fun updatePrivacySettings(
-            request: UpdatePrivacySettingsRequestDto,
-        ): Result<PrivacySettingsDto> {
+        override suspend fun updatePrivacySettings(request: UpdatePrivacySettingsRequestDto): Result<PrivacySettingsDto> {
             return try {
                 val response = apiService.updatePrivacySettings(request)
                 if (response.success && response.data != null) {

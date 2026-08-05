@@ -76,8 +76,7 @@ fun PrivacySettingsScreen(
                                 .fillMaxWidth()
                                 .clickable(role = Role.RadioButton) {
                                     viewModel.onMessagingPermissionSelected(permission)
-                                }
-                                .padding(vertical = 12.dp),
+                                }.padding(vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             RadioButton(

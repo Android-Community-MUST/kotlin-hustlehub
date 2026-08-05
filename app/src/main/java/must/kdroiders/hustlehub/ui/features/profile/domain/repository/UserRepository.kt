@@ -102,4 +102,13 @@ interface UserRepository {
         lng: Double,
         radiusMeters: Double = 1000.0,
     ): Result<List<User>>
+
+    /** Blocks a user by their UUID. */
+    suspend fun blockUser(targetId: String): Result<Unit>
+
+    /** Unblocks a user by their UUID. */
+    suspend fun unblockUser(targetId: String): Result<Unit>
+
+    /** Fetches list of all users currently blocked by the authenticated user. */
+    suspend fun getBlockedUsers(): Result<List<User>>
 }

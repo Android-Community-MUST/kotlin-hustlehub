@@ -226,6 +226,38 @@ class UserRepositoryImpl
             }.onFailure { e ->
                 Timber.e(e, "UserRepositoryImpl: failed to fetch nearby providers")
             }
+
+        override suspend fun blockUser(targetId: String): Result<Unit> =
+            runCatching {
+                val response = userApiService.blockUser(targetId)
+                if (!response.isSuccessful) {
+                    throw Exception("Block user failed: code ${response.code()}")
+                }
+            }.onFailure { e ->
+                Timber.e(e, "UserRepositoryImpl: failed to block user $targetId")
+            }
+
+        override suspend fun unblockUser(targetId: String): Result<Unit> =
+            runCatching {
+                val response = userApiService.unblockUser(targetId)
+                if (!response.isSuccessful) {
+                    throw Exception("Unblock user failed: code ${response.code()}")
+                }
+            }.onFailure { e ->
+                Timber.e(e, "UserRepositoryImpl: failed to unblock user $targetId")
+            }
+
+        override suspend fun getBlockedUsers(): Result<List<User>> =
+            runCatching {
+                val response = userApiService.getBlockedUsers()
+                if (response.success && response.data != null) {
+                    response.data.map { it.toDomain() }
+                } else {
+                    throw Exception(response.message)
+                }
+            }.onFailure { e ->
+                Timber.e(e, "UserRepositoryImpl: failed to fetch blocked users")
+            }
     }
 
 // DTO → Domain mapper (private to this file)

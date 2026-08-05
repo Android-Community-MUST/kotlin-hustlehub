@@ -95,6 +95,10 @@ data object Settings : NavKey
 @Serializable
 data object PrivacySettings : NavKey
 
+/** Blocked users screen — pushed from SettingsScreen. */
+@Serializable
+data object BlockedUsers : NavKey
+
 /**
  * Create or edit a service listing.
  * When [serviceId] is provided the screen loads existing data for editing.

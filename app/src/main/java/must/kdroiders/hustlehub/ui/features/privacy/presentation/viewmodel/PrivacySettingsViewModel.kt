@@ -42,7 +42,8 @@ class PrivacySettingsViewModel
         fun loadPrivacySettings() {
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-                privacyRepository.getPrivacySettings()
+                privacyRepository
+                    .getPrivacySettings()
                     .onSuccess { settings ->
                         _uiState.update {
                             it.copy(
@@ -97,7 +98,8 @@ class PrivacySettingsViewModel
         private fun saveSetting(request: UpdatePrivacySettingsRequestDto) {
             viewModelScope.launch {
                 _uiState.update { it.copy(isSaving = true) }
-                privacyRepository.updatePrivacySettings(request)
+                privacyRepository
+                    .updatePrivacySettings(request)
                     .onSuccess { settings ->
                         _uiState.update {
                             it.copy(

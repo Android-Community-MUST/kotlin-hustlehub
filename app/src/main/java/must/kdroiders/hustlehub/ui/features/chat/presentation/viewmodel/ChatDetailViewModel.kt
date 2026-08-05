@@ -75,9 +75,26 @@ class ChatDetailViewModel
         private val serviceRepository: ServiceRepository,
         private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase,
         private val firebaseAuth: FirebaseAuth?,
+        private val userRepository: must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ChatDetailUiState())
         val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
+
+        fun blockUser(onSuccess: () -> Unit) {
+            val targetId = _uiState.value.otherUserId
+            if (targetId.isBlank()) return
+            viewModelScope.launch {
+                userRepository
+                    .blockUser(targetId)
+                    .onSuccess {
+                        withContext(Dispatchers.Main) {
+                            onSuccess()
+                        }
+                    }.onFailure { e ->
+                        Timber.e(e, "Failed to block user $targetId")
+                    }
+            }
+        }
 
         private var conversationId: String? = null
         private val voicePlayer = VoicePlayer(context)

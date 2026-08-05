@@ -65,53 +65,59 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `loadCurrentUser populates user details on init`() = runTest {
-        val state = viewModel.uiState.value
+    fun `loadCurrentUser populates user details on init`() =
+        runTest {
+            val state = viewModel.uiState.value
 
-        assertEquals("John Doe", state.displayName)
-        assertEquals("@JohnDoe_Hustler", state.username)
-        assertTrue(state.isVerified)
-        assertEquals(must.kdroiders.hustlehub.BuildConfig.VERSION_NAME, state.appVersion)
-    }
-
-    @Test
-    fun `onDarkModeToggled updates isDarkMode in uiState`() = runTest {
-        viewModel.onDarkModeToggled(false)
-
-        assertFalse(viewModel.uiState.value.isDarkMode)
-    }
+            assertEquals("John Doe", state.displayName)
+            assertEquals("@JohnDoe_Hustler", state.username)
+            assertTrue(state.isVerified)
+            assertEquals(must.kdroiders.hustlehub.BuildConfig.VERSION_NAME, state.appVersion)
+        }
 
     @Test
-    fun `navigation actions emit corresponding SettingsEvents`() = runTest {
-        viewModel.onNotificationsClicked()
-        val event = viewModel.events.first()
+    fun `onDarkModeToggled updates isDarkMode in uiState`() =
+        runTest {
+            viewModel.onDarkModeToggled(false)
 
-        assertEquals(SettingsEvent.NavigateToNotifications, event)
-    }
-
-    @Test
-    fun `onDeleteAccountClicked shows confirmation dialog`() = runTest {
-        viewModel.onDeleteAccountClicked()
-
-        assertTrue(viewModel.uiState.value.showDeleteAccountDialog)
-    }
+            assertFalse(viewModel.uiState.value.isDarkMode)
+        }
 
     @Test
-    fun `onDeleteAccountDismissed hides confirmation dialog`() = runTest {
-        viewModel.onDeleteAccountClicked()
-        viewModel.onDeleteAccountDismissed()
+    fun `navigation actions emit corresponding SettingsEvents`() =
+        runTest {
+            viewModel.onNotificationsClicked()
+            val event = viewModel.events.first()
 
-        assertFalse(viewModel.uiState.value.showDeleteAccountDialog)
-    }
+            assertEquals(SettingsEvent.NavigateToNotifications, event)
+        }
 
     @Test
-    fun `onLogOutClicked performs signout and emits LoggedOut event`() = runTest {
-        coEvery { signOutUseCase() } returns Unit
+    fun `onDeleteAccountClicked shows confirmation dialog`() =
+        runTest {
+            viewModel.onDeleteAccountClicked()
 
-        viewModel.onLogOutClicked()
-        advanceUntilIdle()
+            assertTrue(viewModel.uiState.value.showDeleteAccountDialog)
+        }
 
-        coVerify(exactly = 1) { signOutUseCase() }
-        coVerify(exactly = 1) { userPreferences.clearUser() }
-    }
+    @Test
+    fun `onDeleteAccountDismissed hides confirmation dialog`() =
+        runTest {
+            viewModel.onDeleteAccountClicked()
+            viewModel.onDeleteAccountDismissed()
+
+            assertFalse(viewModel.uiState.value.showDeleteAccountDialog)
+        }
+
+    @Test
+    fun `onLogOutClicked performs signout and emits LoggedOut event`() =
+        runTest {
+            coEvery { signOutUseCase() } returns Unit
+
+            viewModel.onLogOutClicked()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { signOutUseCase() }
+            coVerify(exactly = 1) { userPreferences.clearUser() }
+        }
 }

@@ -51,42 +51,47 @@ class PrivacySettingsViewModelTest {
     }
 
     @Test
-    fun `loadPrivacySettings populates state on init`() = runTest {
-        advanceUntilIdle()
+    fun `loadPrivacySettings populates state on init`() =
+        runTest {
+            advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertTrue(state.showLocationOnMap)
-        assertEquals(MessagingPermission.EVERYONE, state.messagingPermission)
-        assertTrue(state.showOnlineStatus)
-    }
+            val state = viewModel.uiState.value
+            assertTrue(state.showLocationOnMap)
+            assertEquals(MessagingPermission.EVERYONE, state.messagingPermission)
+            assertTrue(state.showOnlineStatus)
+        }
 
     @Test
-    fun `onLocationSharingToggled updates state and calls repository`() = runTest {
-        coEvery { privacyRepository.updatePrivacySettings(any()) } returns Result.success(
-            PrivacySettingsDto(showLocationOnMap = false),
-        )
+    fun `onLocationSharingToggled updates state and calls repository`() =
+        runTest {
+            coEvery { privacyRepository.updatePrivacySettings(any()) } returns Result.success(
+                PrivacySettingsDto(showLocationOnMap = false),
+            )
 
-        viewModel.onLocationSharingToggled(false)
-        advanceUntilIdle()
+            viewModel.onLocationSharingToggled(false)
+            advanceUntilIdle()
 
-        assertFalse(viewModel.uiState.value.showLocationOnMap)
-        coVerify(exactly = 1) {
-            privacyRepository.updatePrivacySettings(UpdatePrivacySettingsRequestDto(showLocationOnMap = false))
+            assertFalse(viewModel.uiState.value.showLocationOnMap)
+            coVerify(exactly = 1) {
+                privacyRepository.updatePrivacySettings(UpdatePrivacySettingsRequestDto(showLocationOnMap = false))
+            }
         }
-    }
 
     @Test
-    fun `onMessagingPermissionSelected updates messaging permission`() = runTest {
-        coEvery { privacyRepository.updatePrivacySettings(any()) } returns Result.success(
-            PrivacySettingsDto(messagingPermission = MessagingPermission.VERIFIED_ONLY),
-        )
+    fun `onMessagingPermissionSelected updates messaging permission`() =
+        runTest {
+            coEvery { privacyRepository.updatePrivacySettings(any()) } returns Result.success(
+                PrivacySettingsDto(messagingPermission = MessagingPermission.VERIFIED_ONLY),
+            )
 
-        viewModel.onMessagingPermissionSelected(MessagingPermission.VERIFIED_ONLY)
-        advanceUntilIdle()
+            viewModel.onMessagingPermissionSelected(MessagingPermission.VERIFIED_ONLY)
+            advanceUntilIdle()
 
-        assertEquals(MessagingPermission.VERIFIED_ONLY, viewModel.uiState.value.messagingPermission)
-        coVerify(exactly = 1) {
-            privacyRepository.updatePrivacySettings(UpdatePrivacySettingsRequestDto(messagingPermission = MessagingPermission.VERIFIED_ONLY))
+            assertEquals(MessagingPermission.VERIFIED_ONLY, viewModel.uiState.value.messagingPermission)
+            coVerify(exactly = 1) {
+                privacyRepository.updatePrivacySettings(
+                    UpdatePrivacySettingsRequestDto(messagingPermission = MessagingPermission.VERIFIED_ONLY),
+                )
+            }
         }
-    }
 }

@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.ui.features.profile.presentation.view
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -96,6 +99,7 @@ fun ProviderProfileScreen(
                     if (!state.isOwnProfile && state.provider != null) {
                         var showMenu by remember { mutableStateOf(false) }
                         var showReportDialog by remember { mutableStateOf(false) }
+                        var showBlockDialog by remember { mutableStateOf(false) }
 
                         Box {
                             IconButton(onClick = { showMenu = true }) {
@@ -112,7 +116,40 @@ fun ProviderProfileScreen(
                                         showReportDialog = true
                                     },
                                 )
+                                DropdownMenuItem(
+                                    text = { Text("Block User", color = MaterialTheme.colorScheme.error) },
+                                    onClick = {
+                                        showMenu = false
+                                        showBlockDialog = true
+                                    },
+                                )
                             }
+                        }
+
+                        if (showBlockDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showBlockDialog = false },
+                                title = { Text("Block ${state.provider?.name ?: "User"}?") },
+                                text = { Text("They will no longer be able to message you, view your profile, or see your map pins.") },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            showBlockDialog = false
+                                            providerProfileViewModel.blockUser {
+                                                Toast.makeText(context, "User blocked", Toast.LENGTH_SHORT).show()
+                                                onBack()
+                                            }
+                                        },
+                                    ) {
+                                        Text("Block", color = MaterialTheme.colorScheme.error)
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showBlockDialog = false }) {
+                                        Text("Cancel")
+                                    }
+                                },
+                            )
                         }
 
                         if (showReportDialog) {

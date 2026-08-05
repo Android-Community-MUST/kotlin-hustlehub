@@ -197,7 +197,8 @@ object AppModule {
     fun providePrivacyRepository(
         privacyApiService: must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiService,
     ): must.kdroiders.hustlehub.ui.features.privacy.domain.repository.PrivacyRepository {
-        return must.kdroiders.hustlehub.ui.features.privacy.data.repository.PrivacyRepositoryImpl(privacyApiService)
+        return must.kdroiders.hustlehub.ui.features.privacy.data.repository
+            .PrivacyRepositoryImpl(privacyApiService)
     }
 }
 

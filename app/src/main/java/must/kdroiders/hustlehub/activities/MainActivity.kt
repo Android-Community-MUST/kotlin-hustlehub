@@ -15,6 +15,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
@@ -29,8 +31,6 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingExcept
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.datastore.AppTheme

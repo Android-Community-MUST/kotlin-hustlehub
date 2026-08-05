@@ -6,6 +6,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -73,4 +74,17 @@ interface UserApiService {
         @Query("lng") lng: Double,
         @Query("radiusMeters") radiusMeters: Double,
     ): ApiResponse<List<UserResponseDto>>
+
+    @POST("users/{id}/block")
+    suspend fun blockUser(
+        @Path("id") id: String,
+    ): Response<Unit>
+
+    @DELETE("users/{id}/block")
+    suspend fun unblockUser(
+        @Path("id") id: String,
+    ): Response<Unit>
+
+    @GET("users/me/blocked")
+    suspend fun getBlockedUsers(): ApiResponse<List<UserResponseDto>>
 }
