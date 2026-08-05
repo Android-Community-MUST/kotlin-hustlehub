@@ -75,9 +75,26 @@ class ChatDetailViewModel
         private val serviceRepository: ServiceRepository,
         private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase,
         private val firebaseAuth: FirebaseAuth?,
+        private val userRepository: must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ChatDetailUiState())
         val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
+
+        fun blockUser(onSuccess: () -> Unit) {
+            val targetId = _uiState.value.otherUserId
+            if (targetId.isBlank()) return
+            viewModelScope.launch {
+                userRepository
+                    .blockUser(targetId)
+                    .onSuccess {
+                        withContext(Dispatchers.Main) {
+                            onSuccess()
+                        }
+                    }.onFailure { e ->
+                        Timber.e(e, "Failed to block user $targetId")
+                    }
+            }
+        }
 
         private var conversationId: String? = null
         private val voicePlayer = VoicePlayer(context)
@@ -281,13 +298,12 @@ class ChatDetailViewModel
                     .onSuccess {
                         _uiState.update { it.copy(isLoading = false) }
                         val noMessages = _uiState.value.messages.isEmpty()
-                        val hasServiceContext = !serviceId.isNullOrBlank() && !serviceTitle.isNullOrBlank()
                         val cardNotYetSent = !_uiState.value.serviceCardSent
-                        if (noMessages && hasServiceContext && cardNotYetSent) {
+                        if (noMessages && !serviceId.isNullOrBlank() && !serviceTitle.isNullOrBlank() && cardNotYetSent) {
                             _uiState.update { it.copy(serviceCardSent = true) }
                             sendServiceCardMessage(
-                                serviceId = serviceId!!,
-                                title = serviceTitle!!,
+                                serviceId = serviceId,
+                                title = serviceTitle,
                                 priceRange = "KES ${servicePriceRange ?: ""}",
                                 providerName = providerName ?: "",
                                 category = serviceCategory ?: "",
@@ -317,13 +333,12 @@ class ChatDetailViewModel
                     .onSuccess {
                         _uiState.update { it.copy(isLoading = false) }
                         val noMessages = _uiState.value.messages.isEmpty()
-                        val hasServiceContext = !serviceId.isNullOrBlank() && !serviceTitle.isNullOrBlank()
                         val cardNotYetSent = !_uiState.value.serviceCardSent
-                        if (noMessages && hasServiceContext && cardNotYetSent) {
+                        if (noMessages && !serviceId.isNullOrBlank() && !serviceTitle.isNullOrBlank() && cardNotYetSent) {
                             _uiState.update { it.copy(serviceCardSent = true) }
                             sendServiceCardMessage(
-                                serviceId = serviceId!!,
-                                title = serviceTitle!!,
+                                serviceId = serviceId,
+                                title = serviceTitle,
                                 priceRange = "KES ${servicePriceRange ?: ""}",
                                 providerName = providerName ?: "",
                                 category = serviceCategory ?: "",

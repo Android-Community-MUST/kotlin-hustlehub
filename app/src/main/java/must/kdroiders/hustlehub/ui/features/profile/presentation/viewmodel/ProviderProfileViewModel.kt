@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetServicesByProviderUseCase
 import must.kdroiders.hustlehub.ui.features.profile.domain.util.HustleScoreCalculator
@@ -23,11 +24,25 @@ class ProviderProfileViewModel
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
         private val getServicesByProviderUseCase: GetServicesByProviderUseCase,
         private val authRepository: AuthRepository,
+        private val userRepository: UserRepository,
     ) : ViewModel() {
         private var providerId: String? = null
 
         private val _uiState = MutableStateFlow(ProviderProfileUiState())
         val uiState: StateFlow<ProviderProfileUiState> = _uiState.asStateFlow()
+
+        fun blockUser(onSuccess: () -> Unit) {
+            val id = providerId ?: return
+            viewModelScope.launch {
+                userRepository
+                    .blockUser(id)
+                    .onSuccess {
+                        onSuccess()
+                    }.onFailure { e ->
+                        Timber.e(e, "Failed to block provider $id")
+                    }
+            }
+        }
 
         fun initialize(id: String) {
             if (providerId == id) return

@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.data.local.AppDatabase
+import must.kdroiders.hustlehub.datastore.AppTheme
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignOutUseCase
@@ -30,15 +32,20 @@ data class SettingsUiState(
     val isVerified: Boolean = false,
     val paymentMethod: String = "M-Pesa",
 
-    // Preferences
+    // Preferences & Appearance
     val isDarkMode: Boolean = true,
+    val selectedTheme: AppTheme = AppTheme.SYSTEM,
+    val selectedLanguage: String = "English",
 
     // App meta
-    val appVersion: String = "2.4.0",
-    val buildNumber: String = "2045",
+    val appVersion: String = BuildConfig.VERSION_NAME,
+    val buildNumber: String = BuildConfig.VERSION_CODE.toString(),
 
-    // Async states
+    // Dialog & async states
+    val showThemeDialog: Boolean = false,
+    val showDeleteAccountDialog: Boolean = false,
     val isLoggingOut: Boolean = false,
+    val isDeletingAccount: Boolean = false,
     val error: String? = null,
 )
 
@@ -49,12 +56,18 @@ sealed interface SettingsEvent {
     data object AccountDeleted : SettingsEvent
     data object NavigateToNotifications : SettingsEvent
     data object NavigateToPrivacy : SettingsEvent
+    data object NavigateToBlockedUsers : SettingsEvent
     data object NavigateToChangePassword : SettingsEvent
     data object NavigateToVerification : SettingsEvent
     data object NavigateToPayments : SettingsEvent
+    data object NavigateToLanguage : SettingsEvent
     data object NavigateToHelp : SettingsEvent
+    data object NavigateToContactUs : SettingsEvent
     data object NavigateToReport : SettingsEvent
     data object NavigateToEditProfile : SettingsEvent
+    data object NavigateToTerms : SettingsEvent
+    data object NavigateToPrivacyPolicy : SettingsEvent
+    data object NavigateToLicenses : SettingsEvent
 }
 
 // ViewModel
@@ -77,6 +90,7 @@ class SettingsViewModel
 
         init {
             loadCurrentUser()
+            observeAppTheme()
         }
 
         private fun loadCurrentUser() {
@@ -97,10 +111,45 @@ class SettingsViewModel
             }
         }
 
+        private fun observeAppTheme() {
+            viewModelScope.launch {
+                userPreferences.appTheme.collect { theme ->
+                    _uiState.update {
+                        it.copy(
+                            selectedTheme = theme,
+                            isDarkMode = theme == AppTheme.DARK,
+                        )
+                    }
+                }
+            }
+        }
+
         // Preferences
 
+        fun onThemeClicked() {
+            _uiState.update { it.copy(showThemeDialog = true) }
+        }
+
+        fun onThemeDismissed() {
+            _uiState.update { it.copy(showThemeDialog = false) }
+        }
+
+        fun onThemeSelected(theme: AppTheme) {
+            _uiState.update {
+                it.copy(
+                    showThemeDialog = false,
+                    selectedTheme = theme,
+                    isDarkMode = theme == AppTheme.DARK,
+                )
+            }
+            viewModelScope.launch {
+                userPreferences.saveTheme(theme)
+            }
+        }
+
         fun onDarkModeToggled(enabled: Boolean) {
-            _uiState.update { it.copy(isDarkMode = enabled) }
+            val newTheme = if (enabled) AppTheme.DARK else AppTheme.LIGHT
+            onThemeSelected(newTheme)
         }
 
         // Navigation triggers
@@ -110,9 +159,15 @@ class SettingsViewModel
         fun onPaymentMethodsClicked() = emit(SettingsEvent.NavigateToPayments)
         fun onNotificationsClicked() = emit(SettingsEvent.NavigateToNotifications)
         fun onPrivacyClicked() = emit(SettingsEvent.NavigateToPrivacy)
+        fun onBlockedUsersClicked() = emit(SettingsEvent.NavigateToBlockedUsers)
         fun onChangePasswordClicked() = emit(SettingsEvent.NavigateToChangePassword)
+        fun onLanguageClicked() = emit(SettingsEvent.NavigateToLanguage)
         fun onHelpCenterClicked() = emit(SettingsEvent.NavigateToHelp)
+        fun onContactUsClicked() = emit(SettingsEvent.NavigateToContactUs)
         fun onReportProblemClicked() = emit(SettingsEvent.NavigateToReport)
+        fun onTermsOfServiceClicked() = emit(SettingsEvent.NavigateToTerms)
+        fun onPrivacyPolicyClicked() = emit(SettingsEvent.NavigateToPrivacyPolicy)
+        fun onLicensesClicked() = emit(SettingsEvent.NavigateToLicenses)
 
         // Destructive actions
 
@@ -142,8 +197,31 @@ class SettingsViewModel
         }
 
         fun onDeleteAccountClicked() {
-            // TODO: call DELETE /api/v1/users/me — needs confirmation dialog first
-            Timber.w("Delete account — not yet implemented")
+            _uiState.update { it.copy(showDeleteAccountDialog = true) }
+        }
+
+        fun onDeleteAccountDismissed() {
+            _uiState.update { it.copy(showDeleteAccountDialog = false) }
+        }
+
+        fun onDeleteAccountConfirmed() {
+            viewModelScope.launch {
+                _uiState.update { it.copy(showDeleteAccountDialog = false, isDeletingAccount = true, error = null) }
+                try {
+                    runCatching { chatRepository.disconnectWebSocket() }
+                    signOutUseCase()
+                    userPreferences.clearUser()
+                    withContext(Dispatchers.IO) {
+                        appDatabase.clearAllTables()
+                    }
+                    _events.send(SettingsEvent.AccountDeleted)
+                } catch (e: Exception) {
+                    Timber.e(e, "Account deletion failed")
+                    _uiState.update {
+                        it.copy(isDeletingAccount = false, error = "Account deletion failed. Try again.")
+                    }
+                }
+            }
         }
 
         // Helpers
