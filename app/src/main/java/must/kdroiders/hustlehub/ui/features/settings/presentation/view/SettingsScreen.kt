@@ -77,6 +77,7 @@ fun SettingsScreen(
     onNavigateToChangePassword: () -> Unit = {},
     onNavigateToNotificationPreferences: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToPrivacy: () -> Unit = {},
     settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by settingsViewModel.uiState.collectAsState()
@@ -90,6 +91,7 @@ fun SettingsScreen(
                 is SettingsEvent.NavigateToChangePassword -> onNavigateToChangePassword()
                 is SettingsEvent.NavigateToNotifications -> onNavigateToNotificationPreferences()
                 is SettingsEvent.NavigateToEditProfile -> onNavigateToEditProfile()
+                is SettingsEvent.NavigateToPrivacy -> onNavigateToPrivacy()
                 else -> {
                     Toast.makeText(context, "Feature coming soon", Toast.LENGTH_SHORT).show()
                 }

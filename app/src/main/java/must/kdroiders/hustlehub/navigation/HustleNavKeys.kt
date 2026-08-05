@@ -91,6 +91,10 @@ data class ChatDetail(
 @Serializable
 data object Settings : NavKey
 
+/** Privacy settings screen — pushed from SettingsScreen. */
+@Serializable
+data object PrivacySettings : NavKey
+
 /**
  * Create or edit a service listing.
  * When [serviceId] is provided the screen loads existing data for editing.

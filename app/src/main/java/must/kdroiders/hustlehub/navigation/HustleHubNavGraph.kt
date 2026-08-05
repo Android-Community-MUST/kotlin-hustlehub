@@ -284,6 +284,13 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                         onNavigateToChangePassword = { backstack.add(ChangePassword) },
                         onNavigateToNotificationPreferences = { backstack.add(NotificationPreferences) },
+                        onNavigateToPrivacy = { backstack.add(PrivacySettings) },
+                    )
+                }
+
+                entry<PrivacySettings> {
+                    must.kdroiders.hustlehub.ui.features.privacy.presentation.view.PrivacySettingsScreen(
+                        onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     )
                 }
 

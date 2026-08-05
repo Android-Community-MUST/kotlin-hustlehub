@@ -112,4 +112,10 @@ object NetworkModule {
     fun provideReportApiService(retrofit: Retrofit): must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService {
         return retrofit.create(must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun providePrivacyApiService(retrofit: Retrofit): must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiService {
+        return retrofit.create(must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiService::class.java)
+    }
 }
