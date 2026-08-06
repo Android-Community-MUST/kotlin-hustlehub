@@ -43,6 +43,7 @@ import must.kdroiders.hustlehub.ui.features.home.presentation.view.AiSearchScree
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.SearchScreen
 import must.kdroiders.hustlehub.ui.features.notification.presentation.view.NotificationPreferencesScreen
 import must.kdroiders.hustlehub.ui.features.notification.presentation.view.NotificationScreen
+import must.kdroiders.hustlehub.ui.features.privacy.presentation.view.PrivacySettingsScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.EditProfileScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProviderProfileScreen
 import must.kdroiders.hustlehub.ui.features.profilesetup.presentation.view.ProfileSetupScreen
@@ -51,6 +52,7 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.CreateServ
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServicesScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.ServiceDetailScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.WriteReviewScreen
+import must.kdroiders.hustlehub.ui.features.settings.presentation.view.BlockedUsersScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
 
 /**
@@ -272,8 +274,8 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         onNavigateToEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
                         onNavigateToChatDetail = { chatId -> backstack.add(ChatDetail(chatId = chatId)) },
                         onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
-                        onNavigateToSearch = { backstack.add(must.kdroiders.hustlehub.navigation.SearchScreen) },
-                        onNavigateToAiSearch = { backstack.add(must.kdroiders.hustlehub.navigation.AiSearchScreen) },
+                        onNavigateToSearch = { backstack.add(SearchScreen) },
+                        onNavigateToAiSearch = { backstack.add(AiSearchScreen) },
                         onNavigateToEditProfile = { backstack.add(EditProfile) },
                         onNavigateToNotifications = { backstack.add(Notifications) },
                     )
@@ -290,13 +292,13 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 }
 
                 entry<PrivacySettings> {
-                    must.kdroiders.hustlehub.ui.features.privacy.presentation.view.PrivacySettingsScreen(
+                    PrivacySettingsScreen(
                         onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     )
                 }
 
                 entry<BlockedUsers> {
-                    must.kdroiders.hustlehub.ui.features.settings.presentation.view.BlockedUsersScreen(
+                    BlockedUsersScreen(
                         onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     )
                 }
@@ -410,7 +412,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     )
                 }
 
-                entry<must.kdroiders.hustlehub.navigation.SearchScreen> {
+                entry<SearchScreen> {
                     SearchScreen(
                         onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                         onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },
@@ -418,7 +420,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     )
                 }
 
-                entry<must.kdroiders.hustlehub.navigation.AiSearchScreen> {
+                entry<AiSearchScreen> {
                     AiSearchScreen(
                         onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                         onNavigateToServiceDetail = { serviceId -> backstack.add(ServiceDetail(serviceId = serviceId)) },

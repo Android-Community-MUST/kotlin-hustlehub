@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.components
 
+import android.location.Location
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -54,7 +55,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -63,6 +66,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -73,6 +77,7 @@ import coil.compose.AsyncImage
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
@@ -260,7 +265,7 @@ fun MessageBubble(
                         try {
                             if (message.metadata != null && !message.isDeleted) {
                                 val gson = Gson()
-                                val obj = gson.fromJson(message.metadata, com.google.gson.JsonObject::class.java)
+                                val obj = gson.fromJson(message.metadata, JsonObject::class.java)
                                 if (obj.has("replyToId")) {
                                     ReplyMetadata(
                                         replyToId = obj.get("replyToId")?.asString,
@@ -342,7 +347,7 @@ fun MessageBubble(
                             text = if (isCurrentUser) "You deleted this message" else "This message was deleted",
                             color = textColor.copy(alpha = 0.65f),
                             style = MaterialTheme.typography.bodyMedium.copy(
-                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                fontStyle = FontStyle.Italic,
                             ),
                         )
                     } else {
@@ -649,7 +654,7 @@ private fun WaveformProgress(
                 start = Offset(barX + barWidth / 2f, midY - barHeight / 2f),
                 end = Offset(barX + barWidth / 2f, midY + barHeight / 2f),
                 strokeWidth = barWidth,
-                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                cap = StrokeCap.Round,
             )
         }
     }
@@ -661,7 +666,7 @@ private const val WAVEFORM_BAR_COUNT = 40
 private fun LocationMessageContent(
     message: Message,
     textColor: Color,
-    currentUserLocation: android.location.Location?,
+    currentUserLocation: Location?,
     onClick: (Double, Double, String) -> Unit,
 ) {
     val gson = remember { Gson() }
@@ -680,7 +685,7 @@ private fun LocationMessageContent(
         if (locationData != null && currentUserLocation != null) {
             val results = FloatArray(1)
             try {
-                android.location.Location.distanceBetween(
+                Location.distanceBetween(
                     locationData.lat,
                     locationData.lng,
                     currentUserLocation.latitude,
@@ -986,7 +991,7 @@ private data class ReplyMetadata(
 
 @Composable
 fun Modifier.swipeToReply(
-    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
+    haptic: HapticFeedback,
     onReply: () -> Unit,
     onDragStateChanged: (dragX: Float, thresholdPx: Float) -> Unit,
 ): Modifier {

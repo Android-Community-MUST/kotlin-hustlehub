@@ -64,15 +64,15 @@ fun AiSearchScreen(
     onBack: () -> Unit,
     onNavigateToServiceDetail: (serviceId: String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: AiSearchViewModel = hiltViewModel(),
+    aiSearchViewModel: AiSearchViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by aiSearchViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.clearError()
+            aiSearchViewModel.clearError()
         }
     }
 
@@ -117,7 +117,7 @@ fun AiSearchScreen(
                     Column {
                         HustleTextField(
                             value = state.query,
-                            onValueChange = viewModel::onQueryChanged,
+                            onValueChange = aiSearchViewModel::onQueryChanged,
                             label = "What do you need?",
                             placeholder = "e.g. braids near Hostel C under 500",
                             singleLine = true,
@@ -128,7 +128,7 @@ fun AiSearchScreen(
                         Spacer(Modifier.height(12.dp))
                         HustleButton(
                             text = "Find Match",
-                            onClick = { viewModel.onSearch() },
+                            onClick = { aiSearchViewModel.onSearch() },
                             enabled = state.query.isNotBlank(),
                             loading = state.isLoading,
                             icon = Icons.Default.Search,

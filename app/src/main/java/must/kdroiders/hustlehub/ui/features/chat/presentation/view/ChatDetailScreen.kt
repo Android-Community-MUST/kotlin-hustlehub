@@ -1,7 +1,9 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.view
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -80,12 +82,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -93,7 +95,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
@@ -103,6 +105,7 @@ import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.core.utils.createTempCameraFile
 import must.kdroiders.hustlehub.core.utils.saveImageToGallery
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoiceRecorder
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ChatLocationPickerSheet
@@ -131,10 +134,10 @@ fun ChatDetailScreen(
     servicePriceRange: String? = null,
     providerName: String? = null,
     onNavigateToWriteReview: ((serviceId: String, providerId: String) -> Unit)? = null,
-    viewModel: ChatDetailViewModel = hiltViewModel(),
+    chatDetailViewModel: ChatDetailViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val state by viewModel.uiState.collectAsState()
+    val state by chatDetailViewModel.uiState.collectAsState()
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -149,7 +152,7 @@ fun ChatDetailScreen(
     var selectedImageUrl by remember { mutableStateOf<String?>(null) }
     // Save-to-gallery bottom sheet
     var imageToSave by remember { mutableStateOf<String?>(null) }
-    var messageToReport by remember { mutableStateOf<must.kdroiders.hustlehub.ui.features.chat.domain.model.Message?>(null) }
+    var messageToReport by remember { mutableStateOf<Message?>(null) }
 
     val voiceRecorder = remember { VoiceRecorder(context) }
 
@@ -163,7 +166,7 @@ fun ChatDetailScreen(
     }
 
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
-    var currentUserLocation by remember { mutableStateOf<android.location.Location?>(null) }
+    var currentUserLocation by remember { mutableStateOf<Location?>(null) }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
@@ -224,7 +227,7 @@ fun ChatDetailScreen(
 
     // Initialize the conversation when screen loads or ID changes
     LaunchedEffect(conversationId) {
-        viewModel.initialize(
+        chatDetailViewModel.initialize(
             conversationId = conversationId,
             serviceId = serviceId,
             serviceTitle = serviceTitle,
@@ -238,7 +241,7 @@ fun ChatDetailScreen(
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.clearError()
+            chatDetailViewModel.clearError()
         }
     }
 
@@ -257,7 +260,7 @@ fun ChatDetailScreen(
             try {
                 val bytes = ImageCompressor.compressImage(context, uri)
                 if (bytes != null) {
-                    viewModel.sendImageMessage(bytes)
+                    chatDetailViewModel.sendImageMessage(bytes)
                 } else {
                     Toast.makeText(context, "Failed to compress image", Toast.LENGTH_SHORT).show()
                 }
@@ -339,7 +342,7 @@ fun ChatDetailScreen(
         ChatLocationPickerSheet(
             onDismiss = { showLocationPickerSheet = false },
             onLocationSelected = { lat, lng, label ->
-                viewModel.sendLocationMessage(lat, lng, label)
+                chatDetailViewModel.sendLocationMessage(lat, lng, label)
                 showLocationPickerSheet = false
             },
         )
@@ -482,7 +485,7 @@ fun ChatDetailScreen(
                 },
                 actions = {
                     if (state.isCurrentUserProvider && !state.isServiceCompleted) {
-                        IconButton(onClick = { viewModel.markServiceCompleted() }) {
+                        IconButton(onClick = { chatDetailViewModel.markServiceCompleted() }) {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
                                 contentDescription = "Mark as Complete",
@@ -521,7 +524,7 @@ fun ChatDetailScreen(
                                 TextButton(
                                     onClick = {
                                         showBlockDialog = false
-                                        viewModel.blockUser {
+                                        chatDetailViewModel.blockUser {
                                             Toast.makeText(context, "User blocked", Toast.LENGTH_SHORT).show()
                                             onBackClick()
                                         }
@@ -561,7 +564,7 @@ fun ChatDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
-                        .clickable(role = Role.Button) { viewModel.markServiceCompleted() }
+                        .clickable(role = Role.Button) { chatDetailViewModel.markServiceCompleted() }
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -653,11 +656,11 @@ fun ChatDetailScreen(
                             isCurrentUser = isSelf,
                             playerState = state.playerState,
                             currentUserLocation = currentUserLocation,
-                            onVoicePlayClick = viewModel::playVoice,
-                            onVoiceSpeedToggle = viewModel::toggleVoicePlaybackSpeed,
+                            onVoicePlayClick = chatDetailViewModel::playVoice,
+                            onVoiceSpeedToggle = chatDetailViewModel::toggleVoicePlaybackSpeed,
                             onLocationClick = { lat, lng, label ->
                                 val mapUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng($label)")
-                                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, mapUri)
+                                val intent = Intent(Intent.ACTION_VIEW, mapUri)
                                 try {
                                     context.startActivity(intent)
                                 } catch (e: Exception) {
@@ -667,9 +670,9 @@ fun ChatDetailScreen(
                             onServiceCardClick = onNavigateToServiceDetail,
                             onImageClick = { url -> selectedImageUrl = url },
                             onImageLongClick = { url -> imageToSave = url },
-                            onReply = viewModel::startReplying,
-                            onDeleteForMe = { msg -> viewModel.deleteMessageForMe(msg.id) },
-                            onDeleteForEveryone = { msg -> viewModel.deleteMessageForEveryone(msg.id) },
+                            onReply = chatDetailViewModel::startReplying,
+                            onDeleteForMe = { msg -> chatDetailViewModel.deleteMessageForMe(msg.id) },
+                            onDeleteForEveryone = { msg -> chatDetailViewModel.deleteMessageForEveryone(msg.id) },
                             onReportMessage = { msg -> messageToReport = msg },
                             isOtherUserOnline = state.isOtherUserOnline,
                         )
@@ -782,7 +785,7 @@ fun ChatDetailScreen(
                     quickReplies.forEach { reply ->
                         SuggestionChip(
                             onClick = {
-                                viewModel.sendTextMessage(reply)
+                                chatDetailViewModel.sendTextMessage(reply)
                             },
                             label = {
                                 Text(
@@ -857,7 +860,7 @@ fun ChatDetailScreen(
                             )
                         }
                         IconButton(
-                            onClick = viewModel::cancelReplying,
+                            onClick = chatDetailViewModel::cancelReplying,
                             modifier = Modifier.size(24.dp),
                         ) {
                             Icon(
@@ -924,7 +927,7 @@ fun ChatDetailScreen(
                                 onClick = {
                                     val file = voiceRecorder.stopRecording()
                                     if (file != null && file.exists()) {
-                                        viewModel.sendVoiceNote(file, recordingDurationSeconds)
+                                        chatDetailViewModel.sendVoiceNote(file, recordingDurationSeconds)
                                     }
                                     isRecording = false
                                 },
@@ -956,7 +959,7 @@ fun ChatDetailScreen(
                         value = textInput,
                         onValueChange = { newText ->
                             textInput = newText
-                            viewModel.onTypingChanged(newText)
+                            chatDetailViewModel.onTypingChanged(newText)
                         },
                         placeholder = { Text("Type a message...") },
                         modifier = Modifier
@@ -1006,7 +1009,7 @@ fun ChatDetailScreen(
                         // Send text button
                         IconButton(
                             onClick = {
-                                viewModel.sendTextMessage(textInput)
+                                chatDetailViewModel.sendTextMessage(textInput)
                                 textInput = ""
                             },
                             colors = IconButtonDefaults.iconButtonColors(
@@ -1037,7 +1040,7 @@ fun ChatDetailScreen(
 
 @Composable
 private fun AttachmentOption(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
     onClick: () -> Unit,
 ) {

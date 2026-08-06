@@ -14,6 +14,8 @@ import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.MessageDao
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationEntity
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.MessageEntity
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toDomain
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toEntity
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
@@ -30,6 +32,7 @@ import timber.log.Timber
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence
 
 @Singleton
 class ChatRepositoryImpl
@@ -323,7 +326,7 @@ class ChatRepositoryImpl
 
         override suspend fun subscribeToPresence(
             otherUserId: String,
-        ): Flow<must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence> {
+        ): Flow<UserPresence> {
             return chatWebSocketService.subscribeToPresence(otherUserId)
         }
 
@@ -490,8 +493,8 @@ private fun ConversationResponse.toDomainModel(): Conversation =
         createdAt = createdAt,
     )
 
-private fun ConversationResponse.toEntity(): must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationEntity =
-    must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationEntity(
+private fun ConversationResponse.toEntity(): ConversationEntity =
+    ConversationEntity(
         id = id,
         otherUserId = otherUserId,
         otherUserName = otherUserName,
@@ -519,8 +522,8 @@ private fun MessageResponse.toDomainModel(): Message =
         readAt = readAt,
     )
 
-private fun MessageResponse.toEntity(): must.kdroiders.hustlehub.ui.features.chat.data.local.entity.MessageEntity =
-    must.kdroiders.hustlehub.ui.features.chat.data.local.entity.MessageEntity(
+private fun MessageResponse.toEntity(): MessageEntity =
+    MessageEntity(
         id = id,
         conversationId = conversationId,
         senderId = senderId,

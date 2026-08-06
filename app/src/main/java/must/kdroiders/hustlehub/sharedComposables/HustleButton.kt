@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.sharedComposables
 
+import android.graphics.Color
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -217,7 +218,7 @@ private fun ButtonContent(
     icon: ImageVector?,
     painter: Painter?,
     iconSize: Dp,
-    loadingColor: @Composable () -> androidx.compose.ui.graphics.Color,
+    loadingColor: @Composable () -> Color,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (loading) {

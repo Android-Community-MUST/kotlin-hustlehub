@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.ui.theme.HustleSuccess
 
 @Composable
 fun ServiceCompletionCard(
@@ -61,7 +62,7 @@ fun ServiceCompletionCard(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(must.kdroiders.hustlehub.ui.theme.HustleSuccess),
+                        .background(HustleSuccess),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(

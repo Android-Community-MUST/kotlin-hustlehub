@@ -15,6 +15,7 @@ import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
+import must.kdroiders.hustlehub.ui.features.privacy.data.repository.PrivacyRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.auth.data.repository.AuthRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
@@ -35,9 +36,14 @@ import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepos
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
 import must.kdroiders.hustlehub.ui.features.notification.data.repository.NotificationRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
+import must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiService
+import must.kdroiders.hustlehub.ui.features.privacy.domain.repository.PrivacyRepository
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.profile.data.repository.UserRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
+import must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService
+import must.kdroiders.hustlehub.ui.features.report.data.repository.ReportRepositoryImpl
+import must.kdroiders.hustlehub.ui.features.report.domain.repository.ReportRepository
 import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
 import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
 import must.kdroiders.hustlehub.ui.features.service.data.repository.ReviewRepositoryImpl
@@ -186,19 +192,17 @@ object AppModule {
     @Provides
     @Singleton
     fun provideReportRepository(
-        reportApiService: must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService,
-    ): must.kdroiders.hustlehub.ui.features.report.domain.repository.ReportRepository {
-        return must.kdroiders.hustlehub.ui.features.report.data.repository
-            .ReportRepositoryImpl(reportApiService)
+        reportApiService: ReportApiService,
+    ): ReportRepository {
+        return ReportRepositoryImpl(reportApiService)
     }
 
     @Provides
     @Singleton
     fun providePrivacyRepository(
-        privacyApiService: must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiService,
-    ): must.kdroiders.hustlehub.ui.features.privacy.domain.repository.PrivacyRepository {
-        return must.kdroiders.hustlehub.ui.features.privacy.data.repository
-            .PrivacyRepositoryImpl(privacyApiService)
+        privacyApiService: PrivacyApiService,
+    ): PrivacyRepository {
+        return PrivacyRepositoryImpl(privacyApiService)
     }
 }
 

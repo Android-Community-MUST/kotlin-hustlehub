@@ -14,7 +14,9 @@ import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiServ
 import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
+import must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiService
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
+import must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService
 import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -109,13 +111,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideReportApiService(retrofit: Retrofit): must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService {
-        return retrofit.create(must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService::class.java)
+    fun provideReportApiService(retrofit: Retrofit): ReportApiService {
+        return retrofit.create(ReportApiService::class.java)
     }
 
     @Provides
     @Singleton
-    fun providePrivacyApiService(retrofit: Retrofit): must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiService {
-        return retrofit.create(must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiService::class.java)
+    fun providePrivacyApiService(retrofit: Retrofit): PrivacyApiService {
+        return retrofit.create(PrivacyApiService::class.java)
     }
 }

@@ -23,7 +23,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchMatch
+import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 import kotlin.math.roundToInt
 
 /**
@@ -108,14 +111,14 @@ fun AiMatchCard(
 
             Spacer(Modifier.height(12.dp))
 
-            OutlinedButton(
+            HustleButton(
+                text = "View Service",
                 onClick = onViewClick,
+                variant = HustleButtonVariant.Outlined,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("ai_match_view_button_${match.serviceId}"),
-            ) {
-                Text("View Service")
-            }
+            )
         }
     }
 }
