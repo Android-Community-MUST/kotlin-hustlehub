@@ -33,6 +33,9 @@ import must.kdroiders.hustlehub.ui.features.map.domain.repository.MapRepository
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.media.data.repository.StorageRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
+import must.kdroiders.hustlehub.ui.features.monetization.data.remote.PaymentApiService
+import must.kdroiders.hustlehub.ui.features.monetization.data.repository.PaymentRepositoryImpl
+import must.kdroiders.hustlehub.ui.features.monetization.domain.repository.PaymentRepository
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
 import must.kdroiders.hustlehub.ui.features.notification.data.repository.NotificationRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
@@ -204,6 +207,12 @@ object AppModule {
     ): PrivacyRepository {
         return PrivacyRepositoryImpl(privacyApiService)
     }
+
+    @Provides
+    @Singleton
+    fun providePaymentRepository(
+        paymentApiService: PaymentApiService,
+    ): PaymentRepository = PaymentRepositoryImpl(paymentApiService)
 }
 
 private class NoopAuthRepository : AuthRepository {

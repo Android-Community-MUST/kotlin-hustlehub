@@ -54,6 +54,8 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.ServiceDet
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.WriteReviewScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.BlockedUsersScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
+import must.kdroiders.hustlehub.ui.features.monetization.presentation.PaymentStatusScreen
+import must.kdroiders.hustlehub.ui.features.monetization.presentation.SubscriptionScreen
 
 /**
  * Root Navigation 3 navigator for HustleHub.
@@ -288,6 +290,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         onNavigateToNotificationPreferences = { backstack.add(NotificationPreferences) },
                         onNavigateToPrivacy = { backstack.add(PrivacySettings) },
                         onNavigateToBlockedUsers = { backstack.add(BlockedUsers) },
+                        onNavigateToSubscription = { backstack.add(Subscription) },
                     )
                 }
 
@@ -321,6 +324,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         serviceId = key.serviceId,
                         onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                         onSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                        onNavigateToSubscription = { backstack.add(Subscription) },
                     )
                 }
 
@@ -430,6 +434,37 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 entry<Notifications> {
                     NotificationScreen(
                         onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    )
+                }
+
+                // Subscription & Pro upgrade
+                entry<Subscription> {
+                    SubscriptionScreen(
+                        onNavigateBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                        onNavigateToPaymentStatus = { checkoutRequestId ->
+                            backstack.add(PaymentStatus(checkoutRequestId = checkoutRequestId))
+                        },
+                    )
+                }
+
+                // Subscription from a specific service (Boost This Service)
+                // Handled via SubscriptionScreen's serviceId parameter — pass it through
+
+                // M-Pesa payment status polling
+                entry<PaymentStatus> { key ->
+                    PaymentStatusScreen(
+                        checkoutRequestId = key.checkoutRequestId,
+                        onNavigateBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                        onNavigateToProfile = {
+                            // Pop back to MainShell
+                            while (backstack.size > 1 && backstack.last() !is MainShell) {
+                                backstack.remove(backstack.last())
+                            }
+                        },
+                        onRetryPayment = {
+                            // Pop PaymentStatus and go back to Subscription
+                            if (backstack.size > 1) backstack.remove(backstack.last())
+                        },
                     )
                 }
             },

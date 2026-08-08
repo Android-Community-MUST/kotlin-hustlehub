@@ -17,6 +17,7 @@ data class User(
     val profilePhotoUrl: String = "",
     val bio: String = "",
     val isVerified: Boolean = false,
+    val isVerifiedPro: Boolean = false,
     val isOnline: Boolean = true,
     val hustleScore: Float = 0f,
     val reviewCount: Int = 0,

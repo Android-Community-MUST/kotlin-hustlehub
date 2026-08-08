@@ -13,6 +13,7 @@ import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
 import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.monetization.data.remote.PaymentApiService
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
 import must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiService
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
@@ -120,4 +121,9 @@ object NetworkModule {
     fun providePrivacyApiService(retrofit: Retrofit): PrivacyApiService {
         return retrofit.create(PrivacyApiService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun providePaymentApiService(retrofit: Retrofit): PaymentApiService =
+        retrofit.create(PaymentApiService::class.java)
 }

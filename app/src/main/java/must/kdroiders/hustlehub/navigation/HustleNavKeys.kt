@@ -156,3 +156,14 @@ data class AllReviews(val serviceId: String) : NavKey
 /** Notification preferences screen — pushed from SettingsScreen. */
 @Serializable
 data object NotificationPreferences : NavKey
+
+/** Subscription & Pro upgrade screen — navigable from Profile, Settings, and service creation. */
+@Serializable
+data object Subscription : NavKey
+
+/**
+ * Payment status polling screen — pushed after a successful STK push trigger.
+ * Carries the [checkoutRequestId] to poll M-Pesa payment confirmation.
+ */
+@Serializable
+data class PaymentStatus(val checkoutRequestId: String) : NavKey

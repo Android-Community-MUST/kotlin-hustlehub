@@ -1,6 +1,6 @@
 package must.kdroiders.hustlehub.sharedComposables
 
-import android.graphics.Color
+import androidx.compose.ui.graphics.Color
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image

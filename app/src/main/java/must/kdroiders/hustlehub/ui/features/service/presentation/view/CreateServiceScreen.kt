@@ -83,6 +83,7 @@ fun CreateServiceScreen(
     createServiceViewModel: CreateServiceViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onSuccess: () -> Unit,
+    onNavigateToSubscription: () -> Unit = {},
 ) {
     val state by createServiceViewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current

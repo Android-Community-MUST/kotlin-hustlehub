@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.PrivacyTip
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -77,6 +78,7 @@ fun SettingsScreen(
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToPrivacy: () -> Unit = {},
     onNavigateToBlockedUsers: () -> Unit = {},
+    onNavigateToSubscription: () -> Unit = {},
     settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by settingsViewModel.uiState.collectAsState()
@@ -223,6 +225,13 @@ fun SettingsScreen(
                     subtitle = if (state.isVerified) "Verified Student" else "Not Verified",
                     subtitleColor = if (state.isVerified) HustleActiveGreen else MaterialTheme.colorScheme.error,
                     onClick = settingsViewModel::onVerificationClicked,
+                )
+                SettingsDivider()
+                SettingsRowNavigate(
+                    icon = Icons.Default.Star,
+                    label = "Subscription & Billing",
+                    subtitle = "Manage HustleHub Pro",
+                    onClick = onNavigateToSubscription,
                 )
             }
 

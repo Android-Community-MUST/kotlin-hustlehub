@@ -67,6 +67,7 @@ import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.sharedComposables.SectionHeader
+import must.kdroiders.hustlehub.sharedComposables.ServiceProviderBadge
 import must.kdroiders.hustlehub.ui.features.report.presentation.ReportDialog
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.AvailabilityBadge
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.CategoryBadge
@@ -451,10 +452,9 @@ private fun ServiceDetailContent(
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = provider?.name ?: "Loading…",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                    ServiceProviderBadge(
+                        name = provider?.name ?: "Loading…",
+                        isVerifiedPro = provider?.isVerifiedPro == true,
                     )
                     provider?.campusLocation?.takeIf { it.isNotBlank() }?.let { location ->
                         Spacer(Modifier.height(4.dp))
