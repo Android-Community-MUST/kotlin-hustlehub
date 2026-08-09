@@ -280,6 +280,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         onNavigateToAiSearch = { backstack.add(AiSearchScreen) },
                         onNavigateToEditProfile = { backstack.add(EditProfile) },
                         onNavigateToNotifications = { backstack.add(Notifications) },
+                        onNavigateToSubscription = { backstack.add(Subscription) },
                     )
                 }
 

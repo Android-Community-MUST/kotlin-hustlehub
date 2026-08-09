@@ -25,9 +25,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
 
     private val authRepository: AuthRepository = mockk(relaxed = true)
     private val signOutUseCase: SignOutUseCase = mockk(relaxed = true)

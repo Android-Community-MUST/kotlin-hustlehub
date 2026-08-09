@@ -47,6 +47,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustleCardVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
+import must.kdroiders.hustlehub.sharedComposables.ProBadge
 
 /**
  * NavKey: [must.kdroiders.hustlehub.navigation.Subscription]
@@ -113,17 +114,31 @@ fun SubscriptionScreen(
         ) {
             Spacer(Modifier.height(8.dp))
 
+            var selectedPlanType by rememberSaveable { mutableStateOf("PRO") }
+            var showExtendOptions by rememberSaveable { mutableStateOf(false) }
+
+            val activeSub = (subscriptionState as? SubscriptionUiState.Success)?.data
+            val hasActivePro = activeSub != null && (activeSub.isActive || activeSub.status == "ACTIVE")
+
             // Active subscription status card
             when (val state = subscriptionState) {
                 is SubscriptionUiState.Loading -> LoadingIndicator()
                 is SubscriptionUiState.Error -> ErrorView(message = state.message, onRetry = viewModel::loadSubscription)
                 is SubscriptionUiState.Success -> {
                     val subscription = state.data
-                    if (subscription?.isActive == true) {
+                    if (subscription != null && (subscription.isActive || subscription.status == "ACTIVE")) {
                         ActiveSubscriptionCard(
                             planType = subscription.planType,
                             expiresAt = subscription.endDate,
                         )
+                        if (!showExtendOptions) {
+                            HustleButton(
+                                text = "Extend / Renew Subscription",
+                                onClick = { showExtendOptions = true },
+                                variant = HustleButtonVariant.Outlined,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                         HorizontalDivider()
                     }
                 }
@@ -164,59 +179,158 @@ fun SubscriptionScreen(
                 }
             }
 
-            // M-Pesa payment section
-            Text(
-                text = "Pay with M-Pesa",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            HustleTextField(
-                value = phoneNumber,
-                onValueChange = { phoneNumber = it },
-                label = "Phone Number",
-                placeholder = "e.g. 0712345678",
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            // Payment error
-            if (paymentState is PaymentUiState.Failed) {
+            // Show purchase section only if user does NOT have active PRO or explicitly clicked Extend
+            if (!hasActivePro || showExtendOptions) {
+                // Selectable Plans Section
                 Text(
-                    text = (paymentState as PaymentUiState.Failed).message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
+                    text = if (hasActivePro) "Extend Subscription" else "Select Subscription Plan",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
                 )
-            }
 
-            val isPaymentBusy = paymentState is PaymentUiState.Submitting
+                // 1. Pro Monthly Card
+                HustleCard(
+                    variant = if (selectedPlanType == "PRO") HustleCardVariant.Elevated else HustleCardVariant.Outlined,
+                    onClick = { selectedPlanType = "PRO" },
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column {
+                            Text(
+                                text = "HustleHub Pro (1 Month)",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "Full Pro benefits & badge for 30 days",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Text(
+                            text = "KES 150",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
+                }
 
-            // Upgrade to Pro button
-            HustleButton(
-                text = "Upgrade to Pro — KES 150/month",
-                onClick = {
-                    viewModel.triggerPayment(
-                        rawPhone = phoneNumber,
-                        planType = "PRO",
-                        serviceId = null,
+                // 2. Pro Quarterly Card (Save KES 50!)
+                HustleCard(
+                    variant = if (selectedPlanType == "PRO_QUARTERLY") HustleCardVariant.Elevated else HustleCardVariant.Outlined,
+                    onClick = { selectedPlanType = "PRO_QUARTERLY" },
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    text = "HustleHub Pro (3 Months)",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    text = "SAVE KES 50",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                )
+                            }
+                            Text(
+                                text = "Full Pro benefits & badge for 90 days",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Text(
+                            text = "KES 400",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
+                }
+
+                // 3. Featured Boost
+                HustleCard(
+                    variant = if (selectedPlanType == "FEATURED") HustleCardVariant.Elevated else HustleCardVariant.Outlined,
+                    onClick = { selectedPlanType = "FEATURED" },
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column {
+                            Text(
+                                text = "Featured Listing Boost",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "Boost service to top of search for 3 days",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Text(
+                            text = "KES 50",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
+                }
+
+                // M-Pesa payment section
+                Text(
+                    text = "Pay with M-Pesa",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                HustleTextField(
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
+                    label = "Phone Number",
+                    placeholder = "e.g. 0712345678",
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                // Payment error
+                if (paymentState is PaymentUiState.Failed) {
+                    Text(
+                        text = (paymentState as PaymentUiState.Failed).message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
                     )
-                },
-                loading = isPaymentBusy,
-                enabled = phoneNumber.isNotBlank() && !isPaymentBusy,
-                modifier = Modifier.fillMaxWidth(),
-            )
+                }
 
-            // Boost listing button (shown when coming from a service context)
-            if (serviceId != null) {
+                val isPaymentBusy = paymentState is PaymentUiState.Submitting
+
+                val buttonText = when (selectedPlanType) {
+                    "PRO_QUARTERLY" -> "Upgrade to Pro (3 Months) — KES 400"
+                    "FEATURED" -> "Boost Listing (3 Days) — KES 50"
+                    else -> "Upgrade to Pro (1 Month) — KES 150"
+                }
+
+                // Action button
                 HustleButton(
-                    text = "Boost This Service — KES 50 / 3 days",
+                    text = buttonText,
                     onClick = {
                         viewModel.triggerPayment(
                             rawPhone = phoneNumber,
-                            planType = "FEATURED",
+                            planType = selectedPlanType,
                             serviceId = serviceId,
                         )
                     },
-                    variant = HustleButtonVariant.Outlined,
                     loading = isPaymentBusy,
                     enabled = phoneNumber.isNotBlank() && !isPaymentBusy,
                     modifier = Modifier.fillMaxWidth(),
@@ -233,30 +347,75 @@ private fun ActiveSubscriptionCard(
     planType: String,
     expiresAt: String,
 ) {
+    val remainingFormatted = formatRemainingTime(expiresAt)
     HustleCard(variant = HustleCardVariant.Tonal) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.tertiary,
-            )
-            Column {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiary,
+                    )
+                    Column {
+                        Text(
+                            text = "ACTIVE PRO MEMBER",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                        Text(
+                            text = "Plan: $planType",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                ProBadge(isVisible = true)
+            }
+            HorizontalDivider()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
-                    text = "Active: $planType Plan",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.tertiary,
+                    text = "Time Remaining:",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Medium,
                 )
                 Text(
-                    text = "Renews on $expiresAt",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = remainingFormatted,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
+    }
+}
+
+private fun formatRemainingTime(expiresAtString: String): String {
+    val expiryInstant = runCatching { java.time.Instant.parse(expiresAtString) }.getOrNull()
+        ?: return "Expires: $expiresAtString"
+    val now = java.time.Instant.now()
+    val totalSeconds = java.time.Duration.between(now, expiryInstant).seconds
+    if (totalSeconds <= 0) return "Subscription Expired"
+
+    val days = totalSeconds / (24 * 3600)
+    val hours = (totalSeconds % (24 * 3600)) / 3600
+
+    return when {
+        days > 0 -> "$days ${if (days == 1L) "day" else "days"}, $hours ${if (hours == 1L) "hour" else "hours"} left"
+        hours > 0 -> "$hours ${if (hours == 1L) "hour" else "hours"} left"
+        else -> "< 1 hour left"
     }
 }
 

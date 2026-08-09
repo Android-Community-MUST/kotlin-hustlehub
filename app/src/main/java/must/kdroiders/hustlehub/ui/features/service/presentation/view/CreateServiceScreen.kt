@@ -151,13 +151,13 @@ fun CreateServiceScreen(
                 Spacer(Modifier.height(8.dp))
 
                 // Portfolio section
+                val totalImages = state.existingPortfolioUrls.size + state.portfolioUris.size
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     SectionLabel(text = "Portfolio")
-                    val totalImages = state.existingPortfolioUrls.size + state.portfolioUris.size
                     Text(
                         text = "Max 3 images • $totalImages/3",
                         fontSize = 12.sp,
@@ -169,15 +169,31 @@ fun CreateServiceScreen(
                     existingUrls = state.existingPortfolioUrls,
                     newUris = state.portfolioUris,
                     onAddClick = {
-                        imagePicker.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly,
-                            ),
-                        )
+                        if (totalImages >= 3) {
+                            onNavigateToSubscription()
+                        } else {
+                            imagePicker.launch(
+                                PickVisualMediaRequest(
+                                    ActivityResultContracts.PickVisualMedia.ImageOnly,
+                                ),
+                            )
+                        }
                     },
                     onRemoveExisting = createServiceViewModel::onPortfolioExistingImageRemoved,
                     onRemoveNew = createServiceViewModel::onPortfolioNewImageRemoved,
                 )
+                if (totalImages >= 3) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = "Free limit reached (3/3 photos). Upgrade to PRO to upload up to 15 portfolio photos!",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier
+                            .clickable { onNavigateToSubscription() }
+                            .padding(vertical = 4.dp),
+                    )
+                }
                 Spacer(Modifier.height(20.dp))
 
                 // Service title

@@ -273,6 +273,7 @@ private fun UserResponseDto.toDomain(): User =
         profilePhotoUrl = avatarUrl ?: "",
         bio = bio ?: "",
         isVerified = verified,
+        isVerifiedPro = isVerifiedPro,
         isOnline = active,
         allowCalls = allowCalls ?: false,
         hustleScore = hustleScore ?: 0f,

@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.ui.theme.HustleSuccess
 
+import must.kdroiders.hustlehub.sharedComposables.ServiceProviderBadge
+
 @Composable
 fun ProfileInfo(
     name: String,
@@ -39,14 +41,12 @@ fun ProfileInfo(
     allowCalls: Boolean = false,
     isOwnProfile: Boolean = false,
     isProvider: Boolean = true,
+    isVerifiedPro: Boolean = false,
     onAvailabilityToggle: ((Boolean) -> Unit)? = null,
 ) {
-    Text(
-        text = name.ifBlank { "Hustler Provider" },
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onBackground,
-        textAlign = TextAlign.Center,
+    ServiceProviderBadge(
+        name = name.ifBlank { "Hustler Provider" },
+        isVerifiedPro = isVerifiedPro,
     )
 
     Spacer(Modifier.height(8.dp))

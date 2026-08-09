@@ -125,6 +125,7 @@ class UserPreferences
                         ?.let { runCatching { UserRole.valueOf(it) }.getOrDefault(UserRole.CUSTOMER) }
                         ?: UserRole.CUSTOMER,
                     profilePhotoUrl = prefs[USER_AVATAR_URL] ?: "",
+                    isVerifiedPro = prefs[IS_PRO_USER] ?: false,
                 )
             }
 
@@ -156,6 +157,7 @@ class UserPreferences
                     prefs[USER_EMAIL] = user.email
                     prefs[USER_ROLE] = user.role.name
                     prefs[USER_AVATAR_URL] = user.profilePhotoUrl
+                    prefs[IS_PRO_USER] = user.isVerifiedPro
                 }
                 Timber.d("User written to DataStore: uid=%s", user.id)
             } catch (e: IOException) {
