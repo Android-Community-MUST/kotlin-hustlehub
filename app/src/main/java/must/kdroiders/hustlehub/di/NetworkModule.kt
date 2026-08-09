@@ -9,6 +9,7 @@ import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.core.api.AuthInterceptor
 import must.kdroiders.hustlehub.core.api.TokenAuthenticator
 import must.kdroiders.hustlehub.core.auth.AuthManager
+import must.kdroiders.hustlehub.ui.features.analytics.data.remote.AnalyticsApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
 import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
@@ -126,4 +127,9 @@ object NetworkModule {
     @Singleton
     fun providePaymentApiService(retrofit: Retrofit): PaymentApiService =
         retrofit.create(PaymentApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideAnalyticsApiService(retrofit: Retrofit): AnalyticsApiService =
+        retrofit.create(AnalyticsApiService::class.java)
 }

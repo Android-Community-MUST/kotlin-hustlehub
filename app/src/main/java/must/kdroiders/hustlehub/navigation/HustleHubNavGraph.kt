@@ -33,7 +33,9 @@ import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthState
+import must.kdroiders.hustlehub.ui.features.analytics.presentation.view.AnalyticsScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.ChangePasswordScreen
+
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.EmailVerificationScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
@@ -281,6 +283,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         onNavigateToEditProfile = { backstack.add(EditProfile) },
                         onNavigateToNotifications = { backstack.add(Notifications) },
                         onNavigateToSubscription = { backstack.add(Subscription) },
+                        onNavigateToAnalytics = { tab -> backstack.add(Analytics(initialTab = tab)) },
                     )
                 }
 
@@ -466,6 +469,13 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             // Pop PaymentStatus and go back to Subscription
                             if (backstack.size > 1) backstack.remove(backstack.last())
                         },
+                    )
+                }
+
+                // Pro Analytics dashboard
+                entry<Analytics> {
+                    AnalyticsScreen(
+                        onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     )
                 }
             },

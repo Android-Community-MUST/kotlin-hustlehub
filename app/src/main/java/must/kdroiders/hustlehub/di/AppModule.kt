@@ -14,6 +14,9 @@ import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
+import must.kdroiders.hustlehub.ui.features.analytics.data.remote.AnalyticsApiService
+import must.kdroiders.hustlehub.ui.features.analytics.data.repository.AnalyticsRepository
+import must.kdroiders.hustlehub.ui.features.analytics.data.repository.AnalyticsRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.privacy.data.repository.PrivacyRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.auth.data.repository.AuthRepositoryImpl
@@ -213,6 +216,12 @@ object AppModule {
     fun providePaymentRepository(
         paymentApiService: PaymentApiService,
     ): PaymentRepository = PaymentRepositoryImpl(paymentApiService)
+
+    @Provides
+    @Singleton
+    fun provideAnalyticsRepository(
+        analyticsApiService: AnalyticsApiService,
+    ): AnalyticsRepository = AnalyticsRepositoryImpl(analyticsApiService)
 }
 
 private class NoopAuthRepository : AuthRepository {

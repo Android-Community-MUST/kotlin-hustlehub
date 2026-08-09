@@ -167,3 +167,8 @@ data object Subscription : NavKey
  */
 @Serializable
 data class PaymentStatus(val checkoutRequestId: String) : NavKey
+
+/** Pro Analytics dashboard screen — pushed from Profile screen. */
+@Serializable
+data class Analytics(val initialTab: String = "OVERVIEW") : NavKey
+

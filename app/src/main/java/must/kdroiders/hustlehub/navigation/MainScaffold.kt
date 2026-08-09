@@ -56,8 +56,10 @@ fun MainShellScreen(
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
+    onNavigateToAnalytics: (tab: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+
     val innerBackstack = rememberNavBackStack(BottomHome)
 
     val context = LocalContext.current
@@ -144,8 +146,10 @@ fun MainShellScreen(
                         onNavigateToMyServices = onNavigateToMyServices,
                         onSettingsClick = onNavigateToSettings,
                         onNavigateToSubscription = onNavigateToSubscription,
+                        onNavigateToAnalytics = onNavigateToAnalytics,
                     )
                 }
+
             },
         )
     }

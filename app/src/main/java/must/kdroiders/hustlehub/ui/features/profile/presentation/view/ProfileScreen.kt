@@ -74,6 +74,7 @@ fun MyProfileScreen(
     onNavigateToMyServices: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
+    onNavigateToAnalytics: (tab: String) -> Unit = {},
 ) {
     ProfileScreen(
         profileViewModel = profileViewModel,
@@ -83,6 +84,7 @@ fun MyProfileScreen(
         onNavigateToMyServices = onNavigateToMyServices,
         onSettingsClick = onSettingsClick,
         onNavigateToSubscription = onNavigateToSubscription,
+        onNavigateToAnalytics = onNavigateToAnalytics,
     )
 }
 
@@ -95,10 +97,10 @@ fun ProfileScreen(
     onNavigateToMyServices: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
+    onNavigateToAnalytics: (tab: String) -> Unit = {},
 ) {
     val state by profileViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
     HustleScaffold(
@@ -150,6 +152,7 @@ fun ProfileScreen(
                     onNavigateToMyServices = onNavigateToMyServices,
                     onSettingsClick = onSettingsClick,
                     onNavigateToSubscription = onNavigateToSubscription,
+                    onNavigateToAnalytics = onNavigateToAnalytics,
                 )
             }
         }
@@ -169,17 +172,17 @@ private fun ProfileContent(
     onNavigateToMyServices: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
+    onNavigateToAnalytics: (tab: String) -> Unit = {},
 ) {
     val user = state.user ?: return
     val horizontalPadding = LocalDimensions.current.horizontalPadding
     val isProvider = user.role == UserRole.PROVIDER || user.role == UserRole.BOTH || state.services.isNotEmpty()
-    var activeAnalyticsTab by rememberSaveable { mutableStateOf<String?>(null) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             top = 16.dp,
-            bottom = 100.dp,
+            bottom = 80.dp, // FAB clearance
         ),
     ) {
         item(key = "avatar") {
@@ -274,88 +277,19 @@ private fun ProfileContent(
                 modifier = Modifier.padding(horizontal = horizontalPadding),
                 onAnalyticsClick = {
                     if (user.isVerifiedPro) {
-                        activeAnalyticsTab = "Analytics"
+                        onNavigateToAnalytics("OVERVIEW")
                     } else {
                         onNavigateToSubscription()
                     }
                 },
                 onEarningsClick = {
                     if (user.isVerifiedPro) {
-                        activeAnalyticsTab = "Earnings"
+                        onNavigateToAnalytics("PAYMENTS")
                     } else {
                         onNavigateToSubscription()
                     }
                 },
             )
         }
-    }
-
-    activeAnalyticsTab?.let { tabType ->
-        ProAnalyticsDialog(
-            type = tabType,
-            onDismiss = { activeAnalyticsTab = null },
-        )
-    }
-}
-
-@Composable
-private fun ProAnalyticsDialog(
-    type: String,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
-            }
-        },
-        title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                ProBadge(isVisible = true)
-                Text(
-                    text = if (type == "Analytics") "PRO Performance Analytics" else "PRO Revenue & Earnings",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (type == "Analytics") {
-                    AnalyticsMetricRow("Profile Views", "142 views (+18% this week)")
-                    AnalyticsMetricRow("Search Impressions", "520 appearances")
-                    AnalyticsMetricRow("Customer Reach", "28 direct calls & chats")
-                } else {
-                    AnalyticsMetricRow("Total Earnings (30 Days)", "KES 8,500")
-                    AnalyticsMetricRow("Completed Bookings", "14 services completed")
-                    AnalyticsMetricRow("Average Booking Value", "KES 607")
-                }
-            }
-        },
-    )
-}
-
-@Composable
-private fun AnalyticsMetricRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-        )
     }
 }
