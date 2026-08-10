@@ -347,6 +347,7 @@ private fun ServiceResponse.toDomainModel(): Service =
         averageRating = avgRating.toFloat(),
         reviewCount = reviewCount,
         openToBarter = openToBarter,
+        isFeatured = isFeatured ?: false,
         tags = tags ?: emptyList(),
         createdAt = 0L,
         updatedAt = 0L,

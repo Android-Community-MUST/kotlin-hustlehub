@@ -141,12 +141,13 @@ class HomeViewModel
                                 (current.services + pageResponse.content).distinctBy { it.id }
                             }
 
-                            // Derive top 5 rated services for the Featured row.
-                            // Only services with at least one review qualify.
-                            val featured = merged
-                                .filter { it.averageRating > 0f }
+                            // Derive Featured services for the carousel.
+                            // Priority 1: Paid featured listings (isFeatured == true)
+                            // Priority 2: High rated services fallback (averageRating > 0f)
+                            val paidFeatured = merged.filter { it.isFeatured }.sortedByDescending { it.createdAt }
+                            val ratedFallback = merged.filter { !it.isFeatured && it.averageRating > 0f }
                                 .sortedByDescending { HustleScoreCalculator.calculateForService(it) }
-                                .take(5)
+                            val featured = (paidFeatured + ratedFallback).distinctBy { it.id }.take(5)
 
                             current.copy(
                                 services = merged,

@@ -23,6 +23,8 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import must.kdroiders.hustlehub.ui.features.analytics.data.remote.dto.DailyCountDto
 
 @Composable
@@ -61,7 +63,10 @@ fun BarChart(
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(160.dp),
+                .height(160.dp)
+                .semantics {
+                    contentDescription = "$title bar chart"
+                },
         ) {
             val maxVal = chartData.maxOf { it.count }.coerceAtLeast(1)
             val barCount = chartData.size

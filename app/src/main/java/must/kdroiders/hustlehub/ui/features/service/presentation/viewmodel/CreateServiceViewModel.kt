@@ -35,6 +35,7 @@ enum class LocationSelectionMode {
 data class CreateServiceUiState(
     val isEditMode: Boolean = false,
     val isLoadingExisting: Boolean = false,
+    val isProUser: Boolean = false,
     val title: String = "",
     val titleError: String? = null,
     val category: ServiceCategory? = null,
@@ -60,7 +61,9 @@ data class CreateServiceUiState(
     val availability: ServiceAvailability = ServiceAvailability.AVAILABLE,
     val isLoading: Boolean = false,
     val error: String? = null,
-)
+) {
+    val maxAllowedPhotos: Int get() = if (isProUser) 15 else 3
+}
 
 sealed class CreateServiceEvent {
     data object Success : CreateServiceEvent()
@@ -74,9 +77,22 @@ class CreateServiceViewModel
         private val storageRepository: StorageRepository,
         @ApplicationContext private val context: Context,
         private val getServiceById: GetServiceByIdUseCase,
+        private val userPreferences: must.kdroiders.hustlehub.datastore.UserPreferences,
     ) : ViewModel() {
         private var editServiceId: String? = null
         private var originalAvailability: ServiceAvailability = ServiceAvailability.AVAILABLE
+
+        init {
+            observeUserProStatus()
+        }
+
+        private fun observeUserProStatus() {
+            viewModelScope.launch {
+                userPreferences.cachedUser.collect { user ->
+                    _uiState.update { it.copy(isProUser = user.isVerifiedPro) }
+                }
+            }
+        }
 
         companion object {
             private const val MAX_PORTFOLIO_IMAGES_CREATE = 3
@@ -195,17 +211,35 @@ class CreateServiceViewModel
 
         // --- Portfolio ---
 
-        fun onPortfolioImageAdded(uri: Uri) {
+        fun onPortfolioImagesPicked(uris: List<Uri>) {
             val state = _uiState.value
-            val totalCount = state.portfolioUris.size + state.existingPortfolioUrls.size
-            val maxAllowed = if (state.isEditMode) MAX_PORTFOLIO_IMAGES_EDIT else MAX_PORTFOLIO_IMAGES_CREATE
-            if (totalCount < maxAllowed) {
-                _uiState.update { it.copy(portfolioUris = it.portfolioUris + uri) }
-            } else {
-                val message = "You can only upload $maxAllowed images " +
-                    if (!state.isEditMode) "initially. You can add more later from the Manage screen." else "in total."
-                showTemporaryError(message)
+            val currentTotal = state.portfolioUris.size + state.existingPortfolioUrls.size
+            val availableSlots = state.maxAllowedPhotos - currentTotal
+            if (availableSlots <= 0) {
+                val msg = if (state.isProUser) {
+                    "You have reached the PRO maximum limit of 15 portfolio photos."
+                } else {
+                    "Free limit reached (3 photos). Upgrade to PRO to upload up to 15 portfolio photos!"
+                }
+                showTemporaryError(msg)
+                return
             }
+
+            val toAdd = uris.take(availableSlots)
+            _uiState.update { it.copy(portfolioUris = it.portfolioUris + toAdd) }
+
+            if (uris.size > availableSlots) {
+                val msg = if (state.isProUser) {
+                    "Added ${toAdd.size} photos. PRO limit is 15 photos max."
+                } else {
+                    "Added ${toAdd.size} photos. Upgrade to PRO to upload up to 15 portfolio photos!"
+                }
+                showTemporaryError(msg)
+            }
+        }
+
+        fun onPortfolioImageAdded(uri: Uri) {
+            onPortfolioImagesPicked(listOf(uri))
         }
 
         fun onPortfolioNewImageRemoved(index: Int) {

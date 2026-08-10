@@ -7,7 +7,9 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -88,10 +90,9 @@ class SettingsViewModelTest {
     @Test
     fun `navigation actions emit corresponding SettingsEvents`() =
         runTest {
+            val eventDeferred = async { viewModel.events.first() }
             viewModel.onNotificationsClicked()
-            val event = viewModel.events.first()
-
-            assertEquals(SettingsEvent.NavigateToNotifications, event)
+            assertEquals(SettingsEvent.NavigateToNotifications, eventDeferred.await())
         }
 
     @Test

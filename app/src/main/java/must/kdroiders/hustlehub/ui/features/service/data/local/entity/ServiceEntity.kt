@@ -19,6 +19,7 @@ data class ServiceEntity(
     val reviewCount: Int,
     val availability: String,
     val openToBarter: Boolean,
+    val isFeatured: Boolean = false,
     val portfolioJson: String, // JSON array of image URLs
     val tagsJson: String, // JSON array of tags
     val iconUrl: String,

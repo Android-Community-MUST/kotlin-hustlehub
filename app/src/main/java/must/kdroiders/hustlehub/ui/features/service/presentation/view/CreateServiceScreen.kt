@@ -90,9 +90,11 @@ fun CreateServiceScreen(
     val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 
     val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-    ) { uri: Uri? ->
-        uri?.let { createServiceViewModel.onPortfolioImageAdded(it) }
+        contract = ActivityResultContracts.PickMultipleVisualMedia(15),
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            createServiceViewModel.onPortfolioImagesPicked(uris)
+        }
     }
 
     LaunchedEffect(serviceId) {
@@ -152,6 +154,7 @@ fun CreateServiceScreen(
 
                 // Portfolio section
                 val totalImages = state.existingPortfolioUrls.size + state.portfolioUris.size
+                val maxAllowed = state.maxAllowedPhotos
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -159,18 +162,22 @@ fun CreateServiceScreen(
                 ) {
                     SectionLabel(text = "Portfolio")
                     Text(
-                        text = "Max 3 images • $totalImages/3",
+                        text = if (state.isProUser) "PRO • $totalImages/$maxAllowed photos" else "Max $maxAllowed photos • $totalImages/$maxAllowed",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (state.isProUser) FontWeight.Bold else FontWeight.Normal,
+                        color = if (state.isProUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Spacer(Modifier.height(8.dp))
                 PortfolioSlots(
                     existingUrls = state.existingPortfolioUrls,
                     newUris = state.portfolioUris,
+                    maxSlots = maxAllowed,
                     onAddClick = {
-                        if (totalImages >= 3) {
+                        if (!state.isProUser && totalImages >= 3) {
                             onNavigateToSubscription()
+                        } else if (totalImages >= maxAllowed) {
+                            // Max limit reached
                         } else {
                             imagePicker.launch(
                                 PickVisualMediaRequest(
@@ -182,10 +189,14 @@ fun CreateServiceScreen(
                     onRemoveExisting = createServiceViewModel::onPortfolioExistingImageRemoved,
                     onRemoveNew = createServiceViewModel::onPortfolioNewImageRemoved,
                 )
-                if (totalImages >= 3) {
+                if (!state.isProUser && totalImages >= 3) {
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        text = "Free limit reached (3/3 photos). Upgrade to PRO to upload up to 15 portfolio photos!",
+                        text = if (totalImages > 3) {
+                            "You have $totalImages photos attached to this service. Upgrade to PRO to add or swap more photos!"
+                        } else {
+                            "Free limit reached (3/3 photos). Upgrade to PRO to upload up to 15 portfolio photos!"
+                        },
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.tertiary,
