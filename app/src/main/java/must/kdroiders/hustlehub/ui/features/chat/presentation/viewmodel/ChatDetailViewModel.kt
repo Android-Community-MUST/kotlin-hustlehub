@@ -116,6 +116,7 @@ class ChatDetailViewModel
         private var webSocketJob: Job? = null
         private var presenceJob: Job? = null
 
+        @OptIn(kotlinx.coroutines.FlowPreview::class)
         init {
             // Observe voice player state changes
             viewModelScope.launch {

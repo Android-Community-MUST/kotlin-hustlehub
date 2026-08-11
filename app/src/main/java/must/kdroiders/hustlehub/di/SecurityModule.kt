@@ -15,6 +15,7 @@ import must.kdroiders.hustlehub.ui.features.chat.data.remote.KeyExchangeApiServi
 import javax.inject.Singleton
 
 /** Hilt module for E2EE security dependencies. */
+@Suppress("DEPRECATION")
 @Module
 @InstallIn(SingletonComponent::class)
 object SecurityModule {
