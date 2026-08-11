@@ -15,9 +15,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -31,13 +33,13 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.EmailVer
 fun EmailVerificationScreen(
     email: String,
     onVerified: () -> Unit,
-    viewModel: EmailVerificationViewModel = hiltViewModel(),
+    emailVerificationViewModel: EmailVerificationViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by emailVerificationViewModel.uiState.collectAsState()
 
     // Pass the email into the ViewModel as soon as screen loads
     LaunchedEffect(email) {
-        viewModel.setEmail(email)
+        emailVerificationViewModel.setEmail(email)
     }
 
     Column(
@@ -50,7 +52,7 @@ fun EmailVerificationScreen(
         Text(
             text = "Verify your email",
             style = MaterialTheme.typography.headlineLarge,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .padding(bottom = 8.dp)
                 .semantics { heading() },
@@ -81,7 +83,7 @@ fun EmailVerificationScreen(
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.semantics {
-                            liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite
+                            liveRegion = LiveRegionMode.Polite
                         },
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -91,7 +93,7 @@ fun EmailVerificationScreen(
                 HustleButton(
                     text = if (uiState.isLoading) "Verifying..." else "Verify Status",
                     onClick = {
-                        viewModel.verifyOtp("", onVerified)
+                        emailVerificationViewModel.verifyOtp("", onVerified)
                     },
                     loading = uiState.isLoading,
                     enabled = true,
@@ -110,7 +112,7 @@ fun EmailVerificationScreen(
                 } else {
                     HustleButton(
                         text = "Resend Verification Email",
-                        onClick = { viewModel.resendOtp() },
+                        onClick = { emailVerificationViewModel.resendOtp() },
                         variant = HustleButtonVariant.Outlined,
                         modifier = Modifier.fillMaxWidth(),
                     )

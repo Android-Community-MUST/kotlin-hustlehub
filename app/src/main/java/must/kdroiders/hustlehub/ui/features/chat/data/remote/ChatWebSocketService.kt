@@ -11,6 +11,7 @@ import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.SendMessageRequest
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.TypingIndicator
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence
 import okhttp3.OkHttpClient
 import org.hildan.krossbow.stomp.StompClient
 import org.hildan.krossbow.stomp.StompSession
@@ -30,7 +31,7 @@ class ChatWebSocketService
     ) {
         private var stompSession: StompSession? = null
         private val gson = Gson()
-        private val connectMutex = kotlinx.coroutines.sync.Mutex()
+        private val connectMutex = Mutex()
 
         suspend fun connect() {
             connectMutex.withLock {
@@ -71,11 +72,11 @@ class ChatWebSocketService
             }
         }
 
-        suspend fun subscribeToPresence(otherUserId: String): Flow<must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence> {
+        suspend fun subscribeToPresence(otherUserId: String): Flow<UserPresence> {
             val session = stompSession ?: throw IllegalStateException("STOMP session not initialized")
             val destination = "/topic/user/$otherUserId/presence"
             return session.subscribe(StompSubscribeHeaders(destination)).map { frame ->
-                gson.fromJson(frame.bodyAsText, must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence::class.java)
+                gson.fromJson(frame.bodyAsText, UserPresence::class.java)
             }
         }
 

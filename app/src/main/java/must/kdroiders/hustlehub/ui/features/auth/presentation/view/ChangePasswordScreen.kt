@@ -45,9 +45,9 @@ import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 @Composable
 fun ChangePasswordScreen(
     onBack: () -> Unit,
-    viewModel: ChangePasswordViewModel = hiltViewModel(),
+    changePasswordViewModel: ChangePasswordViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by changePasswordViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
     HustleScaffold(
@@ -99,7 +99,7 @@ fun ChangePasswordScreen(
 
             HustleTextField(
                 value = uiState.currentPassword,
-                onValueChange = viewModel::onCurrentPasswordChange,
+                onValueChange = changePasswordViewModel::onCurrentPasswordChange,
                 placeholder = "Current Password",
                 isPassword = true,
                 leadingIcon = Icons.Default.Lock,
@@ -110,7 +110,7 @@ fun ChangePasswordScreen(
 
             HustleTextField(
                 value = uiState.newPassword,
-                onValueChange = viewModel::onNewPasswordChange,
+                onValueChange = changePasswordViewModel::onNewPasswordChange,
                 placeholder = "New Password",
                 isPassword = true,
                 leadingIcon = Icons.Default.Lock,
@@ -120,14 +120,14 @@ fun ChangePasswordScreen(
             // Password strength indicator
             if (uiState.newPassword.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                PasswordStrengthIndicator(strength = viewModel.getPasswordStrength())
+                PasswordStrengthIndicator(strength = changePasswordViewModel.getPasswordStrength())
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             HustleTextField(
                 value = uiState.confirmPassword,
-                onValueChange = viewModel::onConfirmPasswordChange,
+                onValueChange = changePasswordViewModel::onConfirmPasswordChange,
                 placeholder = "Confirm New Password",
                 isPassword = true,
                 leadingIcon = Icons.Default.Lock,
@@ -148,7 +148,7 @@ fun ChangePasswordScreen(
             HustleButton(
                 text = "Save Password",
                 onClick = {
-                    viewModel.changePassword(
+                    changePasswordViewModel.changePassword(
                         onSuccess = {
                             Toast.makeText(context, "Password changed successfully", Toast.LENGTH_SHORT).show()
                             onBack()

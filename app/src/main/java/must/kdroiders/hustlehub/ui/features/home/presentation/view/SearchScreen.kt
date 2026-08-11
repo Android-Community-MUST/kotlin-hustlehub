@@ -32,7 +32,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -86,9 +86,9 @@ fun SearchScreen(
     onNavigateToServiceDetail: (serviceId: String) -> Unit,
     onNavigateToChat: (providerId: String) -> Unit = {},
     modifier: Modifier = Modifier,
-    viewModel: SearchViewModel = hiltViewModel(),
+    searchViewModel: SearchViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by searchViewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
     val focusRequester = remember { FocusRequester() }
@@ -111,23 +111,23 @@ fun SearchScreen(
         }
     }
     LaunchedEffect(listState) {
-        snapshotFlow { shouldLoadMore }.distinctUntilChanged().collect { if (it) viewModel.loadNextPage() }
+        snapshotFlow { shouldLoadMore }.distinctUntilChanged().collect { if (it) searchViewModel.loadNextPage() }
     }
 
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.clearError()
+            searchViewModel.clearError()
         }
     }
 
     if (state.isFilterSheetOpen) {
         FilterBottomSheet(
             draft = state.draftFilters,
-            onDraftChanged = viewModel::onDraftFilterChanged,
-            onApply = viewModel::onFiltersApplied,
-            onReset = viewModel::onFiltersReset,
-            onDismiss = viewModel::onFilterSheetToggle,
+            onDraftChanged = searchViewModel::onDraftFilterChanged,
+            onApply = searchViewModel::onFiltersApplied,
+            onReset = searchViewModel::onFiltersReset,
+            onDismiss = searchViewModel::onFilterSheetToggle,
         )
     }
 
@@ -148,9 +148,9 @@ fun SearchScreen(
             item(key = "topbar") {
                 SearchTopBar(
                     query = state.query,
-                    onQueryChanged = viewModel::onQueryChanged,
+                    onQueryChanged = searchViewModel::onQueryChanged,
                     onBack = onBack,
-                    onFilterClick = viewModel::onFilterSheetToggle,
+                    onFilterClick = searchViewModel::onFilterSheetToggle,
                     focusRequester = focusRequester,
                     hasActiveFilters = !state.filters.isDefault,
                 )
@@ -162,29 +162,29 @@ fun SearchScreen(
                     ActiveFilterChipRow(
                         filters = state.filters,
                         onRemoveCategory = { cat ->
-                            viewModel.onFiltersApplied()
-                            viewModel.onDraftFilterChanged(
+                            searchViewModel.onFiltersApplied()
+                            searchViewModel.onDraftFilterChanged(
                                 state.filters.copy(categories = state.filters.categories - cat),
                             )
-                            viewModel.onFiltersApplied()
+                            searchViewModel.onFiltersApplied()
                         },
                         onRemoveRating = {
-                            viewModel.onDraftFilterChanged(state.filters.copy(minRating = 0f))
-                            viewModel.onFiltersApplied()
+                            searchViewModel.onDraftFilterChanged(state.filters.copy(minRating = 0f))
+                            searchViewModel.onFiltersApplied()
                         },
                         onRemovePrice = {
-                            viewModel.onDraftFilterChanged(state.filters.copy(maxPrice = 5000))
-                            viewModel.onFiltersApplied()
+                            searchViewModel.onDraftFilterChanged(state.filters.copy(maxPrice = 5000))
+                            searchViewModel.onFiltersApplied()
                         },
                         onRemoveAvailability = {
-                            viewModel.onDraftFilterChanged(state.filters.copy(availability = null))
-                            viewModel.onFiltersApplied()
+                            searchViewModel.onDraftFilterChanged(state.filters.copy(availability = null))
+                            searchViewModel.onFiltersApplied()
                         },
                         onRemoveSort = {
-                            viewModel.onDraftFilterChanged(state.filters.copy(sortOrder = SortOrder.NEWEST))
-                            viewModel.onFiltersApplied()
+                            searchViewModel.onDraftFilterChanged(state.filters.copy(sortOrder = SortOrder.NEWEST))
+                            searchViewModel.onFiltersApplied()
                         },
-                        onClearAll = viewModel::onFiltersReset,
+                        onClearAll = searchViewModel::onFiltersReset,
                     )
                 }
             }
@@ -205,7 +205,7 @@ fun SearchScreen(
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        TextButton(onClick = { viewModel.clearRecentSearches() }) {
+                        TextButton(onClick = { searchViewModel.clearRecentSearches() }) {
                             Text("Clear", style = MaterialTheme.typography.labelMedium)
                         }
                     }
@@ -220,7 +220,7 @@ fun SearchScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { viewModel.onQueryChanged(term) }
+                                    .clickable { searchViewModel.onQueryChanged(term) }
                                     .padding(horizontal = 20.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
@@ -276,10 +276,9 @@ fun SearchScreen(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        CircularProgressIndicator(
+                        CircularWavyProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
                             color = MaterialTheme.colorScheme.primary,
-                            strokeWidth = 2.dp,
-                            modifier = Modifier.padding(8.dp),
                         )
                     }
                 }

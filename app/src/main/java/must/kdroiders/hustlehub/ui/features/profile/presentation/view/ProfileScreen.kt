@@ -28,13 +28,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ErrorState
@@ -63,6 +62,8 @@ fun MyProfileScreen(
     onServiceClick: (serviceId: String) -> Unit = {},
     onNavigateToMyServices: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
+    onNavigateToSubscription: () -> Unit = {},
+    onNavigateToAnalytics: (tab: String) -> Unit = {},
 ) {
     ProfileScreen(
         profileViewModel = profileViewModel,
@@ -71,6 +72,8 @@ fun MyProfileScreen(
         onServiceClick = onServiceClick,
         onNavigateToMyServices = onNavigateToMyServices,
         onSettingsClick = onSettingsClick,
+        onNavigateToSubscription = onNavigateToSubscription,
+        onNavigateToAnalytics = onNavigateToAnalytics,
     )
 }
 
@@ -82,10 +85,11 @@ fun ProfileScreen(
     onServiceClick: (serviceId: String) -> Unit = {},
     onNavigateToMyServices: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
+    onNavigateToSubscription: () -> Unit = {},
+    onNavigateToAnalytics: (tab: String) -> Unit = {},
 ) {
     val state by profileViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
     HustleScaffold(
@@ -136,11 +140,8 @@ fun ProfileScreen(
                     onServiceClick = onServiceClick,
                     onNavigateToMyServices = onNavigateToMyServices,
                     onSettingsClick = onSettingsClick,
-                    onShowSnackbar = { message ->
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar(message)
-                        }
-                    },
+                    onNavigateToSubscription = onNavigateToSubscription,
+                    onNavigateToAnalytics = onNavigateToAnalytics,
                 )
             }
         }
@@ -159,21 +160,20 @@ private fun ProfileContent(
     onServiceClick: (serviceId: String) -> Unit = {},
     onNavigateToMyServices: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
-    onShowSnackbar: (String) -> Unit = {},
+    onNavigateToSubscription: () -> Unit = {},
+    onNavigateToAnalytics: (tab: String) -> Unit = {},
 ) {
     val user = state.user ?: return
     val horizontalPadding = LocalDimensions.current.horizontalPadding
     val isProvider = user.role == UserRole.PROVIDER || user.role == UserRole.BOTH || state.services.isNotEmpty()
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             top = 16.dp,
-            bottom = 100.dp,
+            bottom = 80.dp, // FAB clearance
         ),
     ) {
-        // Avatar + info
         item(key = "avatar") {
             Column(
                 modifier = Modifier
@@ -195,12 +195,12 @@ private fun ProfileContent(
                     allowCalls = user.allowCalls,
                     isOwnProfile = true,
                     isProvider = isProvider,
+                    isVerifiedPro = user.isVerifiedPro,
                     onAvailabilityToggle = onToggleOverallAvailability,
                 )
             }
         }
 
-        // Stats row
         item(key = "stats") {
             Spacer(Modifier.height(20.dp))
             ProfileStatsRow(
@@ -208,24 +208,18 @@ private fun ProfileContent(
                 serviceCount = state.services.size,
                 reviewCount = state.reviewCount,
                 onReviewsClick = onNavigateToMyServices,
-                modifier = Modifier.padding(
-                    horizontal = horizontalPadding,
-                ),
+                modifier = Modifier.padding(horizontal = horizontalPadding),
             )
         }
 
-        // Badges
         item(key = "badges") {
             Spacer(Modifier.height(16.dp))
             ProfileBadges(
                 badges = state.badges,
-                modifier = Modifier.padding(
-                    horizontal = horizontalPadding,
-                ),
+                modifier = Modifier.padding(horizontal = horizontalPadding),
             )
         }
 
-        // Services header
         item(key = "services_header") {
             Spacer(Modifier.height(24.dp))
             ServicesHeader(
@@ -249,7 +243,6 @@ private fun ProfileContent(
             }
         }
 
-        // Service cards — each tappable to manage that specific service
         items(
             items = state.services,
             key = { it.id },
@@ -267,13 +260,24 @@ private fun ProfileContent(
             )
         }
 
-        // Bottom tabs
         item(key = "bottom_tabs") {
             Spacer(Modifier.height(20.dp))
             ProfileBottomTabs(
                 modifier = Modifier.padding(horizontal = horizontalPadding),
-                onAnalyticsClick = { onShowSnackbar("Pay for premium to access it") },
-                onEarningsClick = { onShowSnackbar("Pay for premium to access it") },
+                onAnalyticsClick = {
+                    if (user.isVerifiedPro) {
+                        onNavigateToAnalytics("OVERVIEW")
+                    } else {
+                        onNavigateToSubscription()
+                    }
+                },
+                onEarningsClick = {
+                    if (user.isVerifiedPro) {
+                        onNavigateToAnalytics("PAYMENTS")
+                    } else {
+                        onNavigateToSubscription()
+                    }
+                },
             )
         }
     }

@@ -12,6 +12,7 @@ data class ServiceResponse(
     val avgRating: Double,
     val reviewCount: Int,
     val openToBarter: Boolean,
+    val isFeatured: Boolean? = false,
     val tags: List<String>?,
     val location: LocationDto?,
     val distanceMeters: Double?,

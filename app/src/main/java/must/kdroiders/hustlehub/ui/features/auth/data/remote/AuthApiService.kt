@@ -27,6 +27,8 @@ data class UserResponseDto(
     // Jackson strips the "is" prefix from Kotlin Boolean properties when serializing:
     // isVerified → "verified", isActive → "active" in the JSON response.
     val verified: Boolean,
+    @com.google.gson.annotations.SerializedName("isVerifiedPro")
+    val isVerifiedPro: Boolean = false,
     val active: Boolean,
     val allowCalls: Boolean? = null,
     val hustleScore: Float? = null,

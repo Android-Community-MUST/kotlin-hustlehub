@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.chat.domain.repository
 
 import kotlinx.coroutines.flow.Flow
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
@@ -34,7 +35,7 @@ interface ChatRepository {
 
     suspend fun connectWebSocket(conversationId: String): Flow<Message>
 
-    suspend fun subscribeToPresence(otherUserId: String): Flow<must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence>
+    suspend fun subscribeToPresence(otherUserId: String): Flow<UserPresence>
 
     suspend fun disconnectWebSocket()
 

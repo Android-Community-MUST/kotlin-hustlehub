@@ -281,6 +281,7 @@ fun ProviderProfileScreen(
                                 isOnline = provider.isOnline,
                                 allowCalls = provider.allowCalls,
                                 isOwnProfile = state.isOwnProfile,
+                                isVerifiedPro = provider.isVerifiedPro,
                             )
                         }
                     }

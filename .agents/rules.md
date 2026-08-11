@@ -96,7 +96,7 @@ must.kdroiders.hustlehub/
 ├── 📁 datastore/
 │   └── UserPreferences.kt           # DataStore: auth state, user prefs
 │
-├── 📁 feature/                      # All features live here
+├── 📁 ui/features/                  # All features live here (actual package: ui.features.*)
 │   ├── 📁 auth/
 │   │   ├── 📁 data/
 │   │   │   ├── remote/AuthApiService.kt
@@ -177,9 +177,28 @@ must.kdroiders.hustlehub/
 │   │       ├── NotificationScreen.kt
 │   │       └── NotificationViewModel.kt
 │   │
-│   └── 📁 media/                    # Upload images, voice notes to backend
+│   ├── 📁 media/                    # Upload images, voice notes to backend
+│   │   ├── 📁 data/
+│   │   └── MediaUploadService.kt
+│   │
+│   ├── 📁 privacy/
+│   ├── 📁 report/
+│   ├── 📁 settings/
+│   └── 📁 monetization/             # Lane 8 — M-Pesa payments & Pro subscriptions
 │       ├── 📁 data/
-│       └── MediaUploadService.kt
+│       │   ├── remote/PaymentApiService.kt
+│       │   ├── remote/dto/
+│       │   └── repository/PaymentRepositoryImpl.kt
+│       ├── 📁 domain/
+│       │   ├── repository/PaymentRepository.kt
+│       │   └── usecase/
+│       │       ├── InitiateStkPushUseCase.kt
+│       │       ├── PollPaymentStatusUseCase.kt
+│       │       └── GetSubscriptionUseCase.kt
+│       └── 📁 presentation/
+│           ├── MonetizationViewModel.kt
+│           ├── SubscriptionScreen.kt
+│           └── PaymentStatusScreen.kt
 │
 └── 📁 local/                        # Room database (offline cache)
     ├── HustleDatabase.kt
@@ -192,6 +211,8 @@ must.kdroiders.hustlehub/
         ├── CachedMessage.kt
         └── CachedConversation.kt
 ```
+
+> **Package Convention**: All features use `must.kdroiders.hustlehub.ui.features.*` — NOT `feature.*`. This is the established codebase convention and must be followed for all new features.
 
 ---
 

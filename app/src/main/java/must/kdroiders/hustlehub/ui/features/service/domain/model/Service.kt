@@ -16,6 +16,7 @@ data class Service(
     val averageRating: Float = 0f,
     val reviewCount: Int = 0,
     val openToBarter: Boolean = false,
+    val isFeatured: Boolean = false,
     val tags: List<String> = emptyList(),
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,

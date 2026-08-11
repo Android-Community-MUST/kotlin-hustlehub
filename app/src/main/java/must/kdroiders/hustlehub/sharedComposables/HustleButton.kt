@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -217,7 +218,7 @@ private fun ButtonContent(
     icon: ImageVector?,
     painter: Painter?,
     iconSize: Dp,
-    loadingColor: @Composable () -> androidx.compose.ui.graphics.Color,
+    loadingColor: @Composable () -> Color,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (loading) {

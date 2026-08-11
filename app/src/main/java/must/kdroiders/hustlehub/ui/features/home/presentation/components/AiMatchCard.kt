@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +22,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchMatch
 import kotlin.math.roundToInt
 
@@ -108,14 +109,14 @@ fun AiMatchCard(
 
             Spacer(Modifier.height(12.dp))
 
-            OutlinedButton(
+            HustleButton(
+                text = "View Service",
                 onClick = onViewClick,
+                variant = HustleButtonVariant.Outlined,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("ai_match_view_button_${match.serviceId}"),
-            ) {
-                Text("View Service")
-            }
+            )
         }
     }
 }

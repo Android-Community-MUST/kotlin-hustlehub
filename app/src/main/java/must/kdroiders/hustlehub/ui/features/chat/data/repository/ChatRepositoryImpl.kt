@@ -14,6 +14,8 @@ import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.MessageDao
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationEntity
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.MessageEntity
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toDomain
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toEntity
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
@@ -22,6 +24,7 @@ import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.ConversationRes
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.CreateConversationRequest
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.SendMessageRequest
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
@@ -321,9 +324,7 @@ class ChatRepositoryImpl
                 }
             }
 
-        override suspend fun subscribeToPresence(
-            otherUserId: String,
-        ): Flow<must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence> {
+        override suspend fun subscribeToPresence(otherUserId: String): Flow<UserPresence> {
             return chatWebSocketService.subscribeToPresence(otherUserId)
         }
 
@@ -490,8 +491,8 @@ private fun ConversationResponse.toDomainModel(): Conversation =
         createdAt = createdAt,
     )
 
-private fun ConversationResponse.toEntity(): must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationEntity =
-    must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationEntity(
+private fun ConversationResponse.toEntity(): ConversationEntity =
+    ConversationEntity(
         id = id,
         otherUserId = otherUserId,
         otherUserName = otherUserName,
@@ -519,8 +520,8 @@ private fun MessageResponse.toDomainModel(): Message =
         readAt = readAt,
     )
 
-private fun MessageResponse.toEntity(): must.kdroiders.hustlehub.ui.features.chat.data.local.entity.MessageEntity =
-    must.kdroiders.hustlehub.ui.features.chat.data.local.entity.MessageEntity(
+private fun MessageResponse.toEntity(): MessageEntity =
+    MessageEntity(
         id = id,
         conversationId = conversationId,
         senderId = senderId,

@@ -31,6 +31,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -98,6 +103,7 @@ fun ReportDialog(
                     text = "Report $targetType",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics { heading() },
                 )
             },
             text = {
@@ -117,12 +123,16 @@ fun ReportDialog(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
                                 .clickable { selectedReason = reason }
-                                .padding(vertical = 4.dp),
+                                .padding(vertical = 8.dp, horizontal = 4.dp)
+                                .semantics {
+                                    role = Role.RadioButton
+                                    selected = selectedReason == reason
+                                },
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             RadioButton(
                                 selected = selectedReason == reason,
-                                onClick = { selectedReason = reason },
+                                onClick = null,
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(

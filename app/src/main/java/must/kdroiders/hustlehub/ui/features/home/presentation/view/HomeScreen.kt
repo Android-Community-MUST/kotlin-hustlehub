@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -78,14 +79,14 @@ private const val SHIMMER_COUNT = 6
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel(),
     onNavigateToServiceDetail: (serviceId: String) -> Unit = {},
     onNavigateToSearch: () -> Unit = {},
     onNavigateToAiSearch: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToCreateService: () -> Unit = {},
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by homeViewModel.uiState.collectAsState()
     val gridState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -108,14 +109,14 @@ fun HomeScreen(
     LaunchedEffect(gridState) {
         snapshotFlow { shouldLoadMore }
             .distinctUntilChanged()
-            .collect { atEnd -> if (atEnd) viewModel.loadNextPage() }
+            .collect { atEnd -> if (atEnd) homeViewModel.loadNextPage() }
     }
 
     // Surface errors as snackbars so the grid stays visible (offline-first UX).
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.clearError()
+            homeViewModel.clearError()
         }
     }
 
@@ -130,7 +131,7 @@ fun HomeScreen(
 
         PullToRefreshBox(
             isRefreshing = state.isRefreshing,
-            onRefresh = viewModel::onRefresh,
+            onRefresh = homeViewModel::onRefresh,
             modifier = Modifier.fillMaxSize(),
             state = pullToRefreshState,
             indicator = {
@@ -154,9 +155,9 @@ fun HomeScreen(
                     end = dimensions.horizontalPadding,
                     bottom = 100.dp,
                 ),
-                verticalArrangement = androidx.compose.foundation.layout.Arrangement
+                verticalArrangement = Arrangement
                     .spacedBy(dimensions.gridSpacing),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement
+                horizontalArrangement = Arrangement
                     .spacedBy(dimensions.gridSpacing),
             ) {
                 // Header items span both columns.
@@ -177,7 +178,7 @@ fun HomeScreen(
                     ) {
                         ProviderBannerCard(
                             onListServiceClick = onNavigateToCreateService,
-                            onDismiss = viewModel::dismissProviderBanner,
+                            onDismiss = homeViewModel::dismissProviderBanner,
                             modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
                         )
                     }
@@ -186,7 +187,7 @@ fun HomeScreen(
                 item(key = "searchbar", span = { GridItemSpan(maxLineSpan) }) {
                     HomeSearchBar(
                         query = state.searchQuery,
-                        onQueryChanged = viewModel::onSearchQueryChanged,
+                        onQueryChanged = homeViewModel::onSearchQueryChanged,
                         onSearchClick = onNavigateToSearch,
                         onAiSearchClick = onNavigateToAiSearch,
                         modifier = Modifier
@@ -199,7 +200,7 @@ fun HomeScreen(
                     Spacer(Modifier.height(4.dp))
                     CategoryChipRow(
                         selected = state.selectedCategory,
-                        onSelected = viewModel::onCategorySelected,
+                        onSelected = homeViewModel::onCategorySelected,
                     )
                 }
 
@@ -212,11 +213,11 @@ fun HomeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 4.dp),
-                            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "Top Hustlers",
+                                text = "Featured Hustlers",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground,

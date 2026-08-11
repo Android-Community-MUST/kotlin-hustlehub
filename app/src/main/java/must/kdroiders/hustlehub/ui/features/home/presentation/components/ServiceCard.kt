@@ -66,13 +66,22 @@ fun ServiceCard(
                 )
             }
 
-            // Availability badge overlay
-            AvailabilityBadge(
-                availability = service.availability,
+            // Availability or Featured badge overlay
+            Row(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(8.dp),
-            )
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement
+                    .spacedBy(6.dp),
+            ) {
+                AvailabilityBadge(
+                    availability = service.availability,
+                )
+                if (service.isFeatured) {
+                    must.kdroiders.hustlehub.sharedComposables
+                        .FeaturedBadge()
+                }
+            }
         }
 
         Spacer(Modifier.height(10.dp))

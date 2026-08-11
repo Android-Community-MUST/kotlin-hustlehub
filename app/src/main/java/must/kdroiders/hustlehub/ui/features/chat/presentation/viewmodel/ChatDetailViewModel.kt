@@ -26,12 +26,14 @@ import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.TypingIndicator
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.PlayerState
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoicePlayer
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicateReviewUseCase
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -40,6 +42,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
+import kotlin.math.min
 
 data class ChatDetailUiState(
     val messages: List<Message> = emptyList(),
@@ -75,7 +78,7 @@ class ChatDetailViewModel
         private val serviceRepository: ServiceRepository,
         private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase,
         private val firebaseAuth: FirebaseAuth?,
-        private val userRepository: must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository,
+        private val userRepository: UserRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ChatDetailUiState())
         val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
@@ -287,7 +290,7 @@ class ChatDetailViewModel
                             Timber.e(e, "WebSocket connection failed or disconnected, retrying...")
                             chatWebSocketService.disconnect()
                             attempt++
-                            kotlinx.coroutines.delay(kotlin.math.min(2000L * attempt, 10000L))
+                            delay(min(2000L * attempt, 10000L))
                         }
                     }
                 }
@@ -576,7 +579,7 @@ class ChatDetailViewModel
             viewModelScope.launch {
                 try {
                     chatWebSocketService.sendTypingIndicator(
-                        must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.TypingIndicator(
+                        TypingIndicator(
                             conversationId = id,
                             senderId = "", // Filled by server
                             isTyping = isTyping,

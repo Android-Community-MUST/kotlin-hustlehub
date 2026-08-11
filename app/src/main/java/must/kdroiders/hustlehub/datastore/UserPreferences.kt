@@ -54,6 +54,8 @@ class UserPreferences
             val RECENT_SEARCHES = stringSetPreferencesKey("recent_searches")
             val LAST_SELECTED_CATEGORY = stringPreferencesKey("last_selected_category")
             val PROVIDER_BANNER_DISMISSED = booleanPreferencesKey("provider_banner_dismissed")
+            val IS_PRO_USER = booleanPreferencesKey("is_pro_user")
+            val PRO_EXPIRES_AT = stringPreferencesKey("pro_expires_at")
 
             const val MAX_RECENT_SEARCHES = 10
         }
@@ -123,6 +125,7 @@ class UserPreferences
                         ?.let { runCatching { UserRole.valueOf(it) }.getOrDefault(UserRole.CUSTOMER) }
                         ?: UserRole.CUSTOMER,
                     profilePhotoUrl = prefs[USER_AVATAR_URL] ?: "",
+                    isVerifiedPro = prefs[IS_PRO_USER] ?: false,
                 )
             }
 
@@ -154,6 +157,7 @@ class UserPreferences
                     prefs[USER_EMAIL] = user.email
                     prefs[USER_ROLE] = user.role.name
                     prefs[USER_AVATAR_URL] = user.profilePhotoUrl
+                    prefs[IS_PRO_USER] = user.isVerifiedPro
                 }
                 Timber.d("User written to DataStore: uid=%s", user.id)
             } catch (e: IOException) {
@@ -176,10 +180,46 @@ class UserPreferences
                     prefs.remove(USER_ROLE)
                     prefs.remove(USER_AVATAR_URL)
                     prefs.remove(PROVIDER_BANNER_DISMISSED)
+                    prefs.remove(IS_PRO_USER)
+                    prefs.remove(PRO_EXPIRES_AT)
                 }
                 Timber.d("User cleared from DataStore")
             } catch (e: IOException) {
                 Timber.e(e, "Error clearing user from DataStore")
+            }
+        }
+
+        /**
+         * Emits whether the current user has an active HustleHub Pro subscription.
+         * Cached locally so the badge appears immediately without a network call.
+         * Refreshed on app launch via [GetSubscriptionUseCase].
+         */
+        val isProUser: Flow<Boolean> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading pro status")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs -> prefs[IS_PRO_USER] ?: false }
+
+        /** Caches Pro subscription status locally after a successful [GetSubscriptionUseCase] call. */
+        suspend fun saveProStatus(
+            isActive: Boolean,
+            expiresAt: String?,
+        ) {
+            try {
+                dataStore.edit { prefs ->
+                    prefs[IS_PRO_USER] = isActive
+                    if (expiresAt != null) {
+                        prefs[PRO_EXPIRES_AT] = expiresAt
+                    } else {
+                        prefs.remove(PRO_EXPIRES_AT)
+                    }
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error saving pro status")
             }
         }
 

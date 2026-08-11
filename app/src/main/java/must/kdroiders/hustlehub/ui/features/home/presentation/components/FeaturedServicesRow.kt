@@ -124,6 +124,14 @@ private fun FeaturedServiceCard(
                 )
             }
 
+            if (service.isFeatured) {
+                must.kdroiders.hustlehub.sharedComposables.FeaturedBadge(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(8.dp),
+                )
+            }
+
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
