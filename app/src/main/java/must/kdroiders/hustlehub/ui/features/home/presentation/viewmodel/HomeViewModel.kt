@@ -145,7 +145,8 @@ class HomeViewModel
                             // Priority 1: Paid featured listings (isFeatured == true)
                             // Priority 2: High rated services fallback (averageRating > 0f)
                             val paidFeatured = merged.filter { it.isFeatured }.sortedByDescending { it.createdAt }
-                            val ratedFallback = merged.filter { !it.isFeatured && it.averageRating > 0f }
+                            val ratedFallback = merged
+                                .filter { !it.isFeatured && it.averageRating > 0f }
                                 .sortedByDescending { HustleScoreCalculator.calculateForService(it) }
                             val featured = (paidFeatured + ratedFallback).distinctBy { it.id }.take(5)
 

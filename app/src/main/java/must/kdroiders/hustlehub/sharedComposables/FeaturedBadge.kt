@@ -9,13 +9,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 
 @Composable
 fun FeaturedBadge(
@@ -30,8 +28,7 @@ fun FeaturedBadge(
             .background(
                 color = MaterialTheme.colorScheme.tertiaryContainer,
                 shape = RoundedCornerShape(12.dp),
-            )
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            ).padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(

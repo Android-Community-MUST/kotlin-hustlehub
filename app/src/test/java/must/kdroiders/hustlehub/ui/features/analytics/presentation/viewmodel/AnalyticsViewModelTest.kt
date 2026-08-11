@@ -15,7 +15,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.math.BigDecimal
@@ -52,51 +51,55 @@ class AnalyticsViewModelTest {
     }
 
     @Test
-    fun loadAnalytics_success_populatesState() = runTest {
-        coEvery { getProviderAnalyticsUseCase() } returns Result.success(sampleAnalytics)
+    fun loadAnalytics_success_populatesState() =
+        runTest {
+            coEvery { getProviderAnalyticsUseCase() } returns Result.success(sampleAnalytics)
 
-        val savedStateHandle = SavedStateHandle()
-        val viewModel = AnalyticsViewModel(getProviderAnalyticsUseCase, savedStateHandle)
+            val savedStateHandle = SavedStateHandle()
+            val viewModel = AnalyticsViewModel(getProviderAnalyticsUseCase, savedStateHandle)
 
-        val state = viewModel.state.value
-        assertFalse(state.isLoading)
-        assertNull(state.error)
-        assertEquals(sampleAnalytics, state.analytics)
-        assertEquals(AnalyticsTab.OVERVIEW, state.selectedTab)
-    }
-
-    @Test
-    fun loadAnalytics_failure_setsErrorState() = runTest {
-        coEvery { getProviderAnalyticsUseCase() } returns Result.failure(RuntimeException("Network error"))
-
-        val savedStateHandle = SavedStateHandle()
-        val viewModel = AnalyticsViewModel(getProviderAnalyticsUseCase, savedStateHandle)
-
-        val state = viewModel.state.value
-        assertFalse(state.isLoading)
-        assertEquals("Network error", state.error)
-        assertNull(state.analytics)
-    }
+            val state = viewModel.state.value
+            assertFalse(state.isLoading)
+            assertNull(state.error)
+            assertEquals(sampleAnalytics, state.analytics)
+            assertEquals(AnalyticsTab.OVERVIEW, state.selectedTab)
+        }
 
     @Test
-    fun selectTab_updatesSelectedTab() = runTest {
-        coEvery { getProviderAnalyticsUseCase() } returns Result.success(sampleAnalytics)
+    fun loadAnalytics_failure_setsErrorState() =
+        runTest {
+            coEvery { getProviderAnalyticsUseCase() } returns Result.failure(RuntimeException("Network error"))
 
-        val savedStateHandle = SavedStateHandle()
-        val viewModel = AnalyticsViewModel(getProviderAnalyticsUseCase, savedStateHandle)
+            val savedStateHandle = SavedStateHandle()
+            val viewModel = AnalyticsViewModel(getProviderAnalyticsUseCase, savedStateHandle)
 
-        viewModel.selectTab(AnalyticsTab.PAYMENTS)
-
-        assertEquals(AnalyticsTab.PAYMENTS, viewModel.state.value.selectedTab)
-    }
+            val state = viewModel.state.value
+            assertFalse(state.isLoading)
+            assertEquals("Network error", state.error)
+            assertNull(state.analytics)
+        }
 
     @Test
-    fun initWithPaymentsTab_selectsPaymentsTabOnStart() = runTest {
-        coEvery { getProviderAnalyticsUseCase() } returns Result.success(sampleAnalytics)
+    fun selectTab_updatesSelectedTab() =
+        runTest {
+            coEvery { getProviderAnalyticsUseCase() } returns Result.success(sampleAnalytics)
 
-        val savedStateHandle = SavedStateHandle(mapOf("initialTab" to "PAYMENTS"))
-        val viewModel = AnalyticsViewModel(getProviderAnalyticsUseCase, savedStateHandle)
+            val savedStateHandle = SavedStateHandle()
+            val viewModel = AnalyticsViewModel(getProviderAnalyticsUseCase, savedStateHandle)
 
-        assertEquals(AnalyticsTab.PAYMENTS, viewModel.state.value.selectedTab)
-    }
+            viewModel.selectTab(AnalyticsTab.PAYMENTS)
+
+            assertEquals(AnalyticsTab.PAYMENTS, viewModel.state.value.selectedTab)
+        }
+
+    @Test
+    fun initWithPaymentsTab_selectsPaymentsTabOnStart() =
+        runTest {
+            coEvery { getProviderAnalyticsUseCase() } returns Result.success(sampleAnalytics)
+
+            val savedStateHandle = SavedStateHandle(mapOf("initialTab" to "PAYMENTS"))
+            val viewModel = AnalyticsViewModel(getProviderAnalyticsUseCase, savedStateHandle)
+
+            assertEquals(AnalyticsTab.PAYMENTS, viewModel.state.value.selectedTab)
+        }
 }

@@ -167,9 +167,25 @@ fun SubscriptionScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Text("Feature", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                        Text("Free", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                        Text("Pro", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.weight(1f))
+                        Text(
+                            "Feature",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            "Free",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            "Pro",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.weight(1f),
+                        )
                     }
                     ComparisonRow(label = "Photos", free = "3", pro = "15")
                     ComparisonRow(label = "Video pitch", free = "No", pro = "Yes")
@@ -406,7 +422,9 @@ private fun formatRemainingTime(expiresAtString: String): String {
     val expiryInstant = runCatching { java.time.Instant.parse(expiresAtString) }.getOrNull()
         ?: return "Expires: $expiresAtString"
     val now = java.time.Instant.now()
-    val totalSeconds = java.time.Duration.between(now, expiryInstant).seconds
+    val totalSeconds = java.time.Duration
+        .between(now, expiryInstant)
+        .seconds
     if (totalSeconds <= 0) return "Subscription Expired"
 
     val days = totalSeconds / (24 * 3600)
@@ -445,7 +463,12 @@ private fun ComparisonRow(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(text = label, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-        Text(text = free, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+        Text(
+            text = free,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
         Text(
             text = pro,
             style = MaterialTheme.typography.bodySmall,

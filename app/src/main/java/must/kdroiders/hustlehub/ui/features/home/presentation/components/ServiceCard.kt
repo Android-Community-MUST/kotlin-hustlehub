@@ -71,13 +71,15 @@ fun ServiceCard(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(8.dp),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement
+                    .spacedBy(6.dp),
             ) {
                 AvailabilityBadge(
                     availability = service.availability,
                 )
                 if (service.isFeatured) {
-                    must.kdroiders.hustlehub.sharedComposables.FeaturedBadge()
+                    must.kdroiders.hustlehub.sharedComposables
+                        .FeaturedBadge()
                 }
             }
         }

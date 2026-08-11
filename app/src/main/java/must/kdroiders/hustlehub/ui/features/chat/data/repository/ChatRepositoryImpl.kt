@@ -24,6 +24,7 @@ import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.ConversationRes
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.CreateConversationRequest
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.SendMessageRequest
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
@@ -32,7 +33,6 @@ import timber.log.Timber
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
-import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence
 
 @Singleton
 class ChatRepositoryImpl
@@ -324,9 +324,7 @@ class ChatRepositoryImpl
                 }
             }
 
-        override suspend fun subscribeToPresence(
-            otherUserId: String,
-        ): Flow<UserPresence> {
+        override suspend fun subscribeToPresence(otherUserId: String): Flow<UserPresence> {
             return chatWebSocketService.subscribeToPresence(otherUserId)
         }
 

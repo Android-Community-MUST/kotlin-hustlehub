@@ -26,7 +26,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import must.kdroiders.hustlehub.ui.features.monetization.domain.usecase.PollPaymentStatusUseCase
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +38,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustleCard
 import must.kdroiders.hustlehub.sharedComposables.HustleCardVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
+import must.kdroiders.hustlehub.ui.features.monetization.domain.usecase.PollPaymentStatusUseCase
 
 /**
  * NavKey: [must.kdroiders.hustlehub.navigation.PaymentStatus]

@@ -33,34 +33,36 @@ class PollPaymentStatusUseCase
     constructor(
         private val paymentRepository: PaymentRepository,
     ) {
-    companion object {
-        const val MAX_ATTEMPTS = 10
-        const val POLL_INTERVAL_MS = 3_000L
-    }
-
-    operator fun invoke(checkoutRequestId: String): Flow<PaymentPollState> = flow {
-        for (attempt in 1..MAX_ATTEMPTS) {
-            emit(PaymentPollState.Polling(attempt))
-            val result = paymentRepository.pollPaymentStatus(checkoutRequestId)
-            result.onSuccess { response ->
-                when (response.status) {
-                    "COMPLETED" -> {
-                        emit(PaymentPollState.Completed(response.mpesaReceiptNumber ?: ""))
-                        return@flow
-                    }
-                    "FAILED" -> {
-                        emit(PaymentPollState.Failed("Payment was declined or cancelled."))
-                        return@flow
-                    }
-                    // PENDING — continue polling
-                }
-            }.onFailure {
-                // Network error during poll — treat as transient and keep retrying
-            }
-            if (attempt < MAX_ATTEMPTS) {
-                delay(POLL_INTERVAL_MS)
-            }
+        companion object {
+            const val MAX_ATTEMPTS = 10
+            const val POLL_INTERVAL_MS = 3_000L
         }
-        emit(PaymentPollState.Timeout)
+
+        operator fun invoke(checkoutRequestId: String): Flow<PaymentPollState> =
+            flow {
+                for (attempt in 1..MAX_ATTEMPTS) {
+                    emit(PaymentPollState.Polling(attempt))
+                    val result = paymentRepository.pollPaymentStatus(checkoutRequestId)
+                    result
+                        .onSuccess { response ->
+                            when (response.status) {
+                                "COMPLETED" -> {
+                                    emit(PaymentPollState.Completed(response.mpesaReceiptNumber ?: ""))
+                                    return@flow
+                                }
+                                "FAILED" -> {
+                                    emit(PaymentPollState.Failed("Payment was declined or cancelled."))
+                                    return@flow
+                                }
+                                // PENDING — continue polling
+                            }
+                        }.onFailure {
+                            // Network error during poll — treat as transient and keep retrying
+                        }
+                    if (attempt < MAX_ATTEMPTS) {
+                        delay(POLL_INTERVAL_MS)
+                    }
+                }
+                emit(PaymentPollState.Timeout)
+            }
     }
-}

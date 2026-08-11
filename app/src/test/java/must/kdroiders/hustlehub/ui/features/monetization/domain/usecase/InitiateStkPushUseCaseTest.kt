@@ -39,22 +39,24 @@ class InitiateStkPushUseCaseTest {
     }
 
     @Test
-    fun invoke_successWhenPhoneIsValid() = runTest {
-        val expectedResponse = StkPushResponseDto(checkoutRequestId = "ws_123", responseDescription = "Success")
-        coEvery { paymentRepository.initiateStkPush("254712345678", "PRO", null) } returns Result.success(expectedResponse)
+    fun invoke_successWhenPhoneIsValid() =
+        runTest {
+            val expectedResponse = StkPushResponseDto(checkoutRequestId = "ws_123", responseDescription = "Success")
+            coEvery { paymentRepository.initiateStkPush("254712345678", "PRO", null) } returns Result.success(expectedResponse)
 
-        val result = useCase("0712345678", "PRO")
+            val result = useCase("0712345678", "PRO")
 
-        assertTrue(result.isSuccess)
-        assertEquals(expectedResponse, result.getOrNull())
-        coVerify(exactly = 1) { paymentRepository.initiateStkPush("254712345678", "PRO", null) }
-    }
+            assertTrue(result.isSuccess)
+            assertEquals(expectedResponse, result.getOrNull())
+            coVerify(exactly = 1) { paymentRepository.initiateStkPush("254712345678", "PRO", null) }
+        }
 
     @Test
-    fun invoke_failureWhenPhoneIsInvalid() = runTest {
-        val result = useCase("invalid_phone", "PRO")
+    fun invoke_failureWhenPhoneIsInvalid() =
+        runTest {
+            val result = useCase("invalid_phone", "PRO")
 
-        assertTrue(result.isFailure)
-        coVerify(exactly = 0) { paymentRepository.initiateStkPush(any(), any(), any()) }
-    }
+            assertTrue(result.isFailure)
+            coVerify(exactly = 0) { paymentRepository.initiateStkPush(any(), any(), any()) }
+        }
 }

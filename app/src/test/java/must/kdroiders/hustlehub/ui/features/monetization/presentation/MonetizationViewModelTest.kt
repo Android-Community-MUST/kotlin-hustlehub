@@ -2,7 +2,6 @@ package must.kdroiders.hustlehub.ui.features.monetization.presentation
 
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -51,48 +50,52 @@ class MonetizationViewModelTest {
     }
 
     @Test
-    fun loadSubscription_successOnStart() = runTest {
-        val sub = SubscriptionResponseDto("PRO", "ACTIVE", "2026-01-01", "2026-02-01", true)
-        coEvery { getSubscriptionUseCase() } returns Result.success(sub)
+    fun loadSubscription_successOnStart() =
+        runTest {
+            val sub = SubscriptionResponseDto("PRO", "ACTIVE", "2026-01-01", "2026-02-01", true)
+            coEvery { getSubscriptionUseCase() } returns Result.success(sub)
 
-        viewModel.loadSubscription()
+            viewModel.loadSubscription()
 
-        val state = viewModel.subscriptionState.value
-        assertTrue(state is SubscriptionUiState.Success)
-        assertEquals(sub, (state as SubscriptionUiState.Success).data)
-    }
-
-    @Test
-    fun triggerPayment_successSetsPendingCheckoutId() = runTest {
-        val rawPhone = "0712345678"
-        val stkResponse = StkPushResponseDto("checkout_999", "Accept")
-        coEvery { initiateStkPushUseCase(rawPhone, "PRO", null) } returns Result.success(stkResponse)
-
-        viewModel.triggerPayment(rawPhone, "PRO")
-
-        assertEquals("checkout_999", viewModel.pendingCheckoutId.value)
-    }
+            val state = viewModel.subscriptionState.value
+            assertTrue(state is SubscriptionUiState.Success)
+            assertEquals(sub, (state as SubscriptionUiState.Success).data)
+        }
 
     @Test
-    fun pollStatus_updatesPaymentStateToSuccessOnCompleted() = runTest {
-        val checkoutId = "checkout_999"
-        coEvery { pollPaymentStatusUseCase(checkoutId) } returns flowOf(
-            PaymentPollState.Polling(1),
-            PaymentPollState.Completed("REC123"),
-        )
-        coEvery { getSubscriptionUseCase() } returns Result.success(null)
+    fun triggerPayment_successSetsPendingCheckoutId() =
+        runTest {
+            val rawPhone = "0712345678"
+            val stkResponse = StkPushResponseDto("checkout_999", "Accept")
+            coEvery { initiateStkPushUseCase(rawPhone, "PRO", null) } returns Result.success(stkResponse)
 
-        viewModel.pollStatus(checkoutId)
+            viewModel.triggerPayment(rawPhone, "PRO")
 
-        assertEquals(PaymentUiState.Success("REC123"), viewModel.paymentState.value)
-        coVerify { getSubscriptionUseCase() }
-    }
+            assertEquals("checkout_999", viewModel.pendingCheckoutId.value)
+        }
 
     @Test
-    fun resetPaymentState_clearsStateToIdle() = runTest {
-        viewModel.resetPaymentState()
+    fun pollStatus_updatesPaymentStateToSuccessOnCompleted() =
+        runTest {
+            val checkoutId = "checkout_999"
+            coEvery { pollPaymentStatusUseCase(checkoutId) } returns flowOf(
+                PaymentPollState.Polling(1),
+                PaymentPollState.Completed("REC123"),
+            )
+            coEvery { getSubscriptionUseCase() } returns Result.success(null)
 
-        assertEquals(PaymentUiState.Idle, viewModel.paymentState.value)
-        assertNull(viewModel.pendingCheckoutId.value)
-    }
+            viewModel.pollStatus(checkoutId)
+
+            assertEquals(PaymentUiState.Success("REC123"), viewModel.paymentState.value)
+            coVerify { getSubscriptionUseCase() }
+        }
+
+    @Test
+    fun resetPaymentState_clearsStateToIdle() =
+        runTest {
+            viewModel.resetPaymentState()
+
+            assertEquals(PaymentUiState.Idle, viewModel.paymentState.value)
+            assertNull(viewModel.pendingCheckoutId.value)
+        }
 }

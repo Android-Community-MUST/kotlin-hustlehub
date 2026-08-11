@@ -4,11 +4,14 @@ import must.kdroiders.hustlehub.ui.features.analytics.data.remote.AnalyticsApiSe
 import must.kdroiders.hustlehub.ui.features.analytics.data.remote.dto.ProviderAnalyticsDto
 import javax.inject.Inject
 
-class AnalyticsRepositoryImpl @Inject constructor(
-    private val api: AnalyticsApiService,
-) : AnalyticsRepository {
-    override suspend fun getProviderAnalytics(): Result<ProviderAnalyticsDto> = runCatching {
-        val response = api.getProviderAnalytics()
-        response.data ?: throw IllegalStateException("No analytics data returned")
+class AnalyticsRepositoryImpl
+    @Inject
+    constructor(
+        private val api: AnalyticsApiService,
+    ) : AnalyticsRepository {
+        override suspend fun getProviderAnalytics(): Result<ProviderAnalyticsDto> =
+            runCatching {
+                val response = api.getProviderAnalytics()
+                response.data ?: throw IllegalStateException("No analytics data returned")
+            }
     }
-}

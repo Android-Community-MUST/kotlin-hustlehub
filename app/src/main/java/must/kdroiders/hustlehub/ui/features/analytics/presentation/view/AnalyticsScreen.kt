@@ -1,9 +1,5 @@
 package must.kdroiders.hustlehub.ui.features.analytics.presentation.view
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,12 +16,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.MiscellaneousServices
 import androidx.compose.material.icons.filled.MonetizationOn
+import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.MiscellaneousServices
-import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip

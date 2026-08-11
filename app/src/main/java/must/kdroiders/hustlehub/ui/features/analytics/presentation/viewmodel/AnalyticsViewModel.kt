@@ -22,42 +22,42 @@ data class AnalyticsUiState(
 )
 
 @HiltViewModel
-class AnalyticsViewModel @Inject constructor(
-    private val getProviderAnalytics: GetProviderAnalyticsUseCase,
-    savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+class AnalyticsViewModel
+    @Inject
+    constructor(
+        private val getProviderAnalytics: GetProviderAnalyticsUseCase,
+        savedStateHandle: SavedStateHandle,
+    ) : ViewModel() {
+        private val _state = MutableStateFlow(AnalyticsUiState())
+        val state: StateFlow<AnalyticsUiState> = _state.asStateFlow()
 
-    private val _state = MutableStateFlow(AnalyticsUiState())
-    val state: StateFlow<AnalyticsUiState> = _state.asStateFlow()
-
-    init {
-        val initialTab = savedStateHandle.get<String>("initialTab")
-        if (initialTab == "PAYMENTS") {
-            _state.value = _state.value.copy(selectedTab = AnalyticsTab.PAYMENTS)
+        init {
+            val initialTab = savedStateHandle.get<String>("initialTab")
+            if (initialTab == "PAYMENTS") {
+                _state.value = _state.value.copy(selectedTab = AnalyticsTab.PAYMENTS)
+            }
+            loadAnalytics()
         }
-        loadAnalytics()
-    }
 
-    fun selectTab(tab: AnalyticsTab) {
-        _state.value = _state.value.copy(selectedTab = tab)
-    }
+        fun selectTab(tab: AnalyticsTab) {
+            _state.value = _state.value.copy(selectedTab = tab)
+        }
 
-    fun loadAnalytics() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            getProviderAnalytics()
-                .onSuccess { data ->
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        analytics = data,
-                    )
-                }
-                .onFailure { e ->
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        error = e.message ?: "Failed to load analytics",
-                    )
-                }
+        fun loadAnalytics() {
+            viewModelScope.launch {
+                _state.value = _state.value.copy(isLoading = true, error = null)
+                getProviderAnalytics()
+                    .onSuccess { data ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            analytics = data,
+                        )
+                    }.onFailure { e ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            error = e.message ?: "Failed to load analytics",
+                        )
+                    }
+            }
         }
     }
-}

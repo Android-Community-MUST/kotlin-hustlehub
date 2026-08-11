@@ -17,15 +17,15 @@ class GetSubscriptionUseCase
         private val paymentRepository: PaymentRepository,
         private val userPreferences: UserPreferences,
     ) {
-    suspend operator fun invoke(): Result<SubscriptionResponseDto?> {
-        val result = paymentRepository.getMySubscription()
-        result.onSuccess { subscription ->
-            // Cache Pro status so badge renders immediately on next launch
-            userPreferences.saveProStatus(
-                isActive = subscription?.isActive == true,
-                expiresAt = subscription?.endDate,
-            )
+        suspend operator fun invoke(): Result<SubscriptionResponseDto?> {
+            val result = paymentRepository.getMySubscription()
+            result.onSuccess { subscription ->
+                // Cache Pro status so badge renders immediately on next launch
+                userPreferences.saveProStatus(
+                    isActive = subscription?.isActive == true,
+                    expiresAt = subscription?.endDate,
+                )
+            }
+            return result
         }
-        return result
     }
-}

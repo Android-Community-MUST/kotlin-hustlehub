@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchMatch
-import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 import kotlin.math.roundToInt
 
 /**

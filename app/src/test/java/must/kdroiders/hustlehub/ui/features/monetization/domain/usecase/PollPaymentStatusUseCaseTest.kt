@@ -21,44 +21,47 @@ class PollPaymentStatusUseCaseTest {
     }
 
     @Test
-    fun invoke_emitsCompletedWhenStatusIsCompleted() = runTest {
-        val checkoutId = "checkout_123"
-        coEvery { paymentRepository.pollPaymentStatus(checkoutId) } returns Result.success(
-            PaymentStatusResponseDto(status = "COMPLETED", mpesaReceiptNumber = "QWE123RTY"),
-        )
+    fun invoke_emitsCompletedWhenStatusIsCompleted() =
+        runTest {
+            val checkoutId = "checkout_123"
+            coEvery { paymentRepository.pollPaymentStatus(checkoutId) } returns Result.success(
+                PaymentStatusResponseDto(status = "COMPLETED", mpesaReceiptNumber = "QWE123RTY"),
+            )
 
-        val states = useCase(checkoutId).toList()
+            val states = useCase(checkoutId).toList()
 
-        assertEquals(2, states.size)
-        assertEquals(PaymentPollState.Polling(1), states[0])
-        assertEquals(PaymentPollState.Completed("QWE123RTY"), states[1])
-    }
-
-    @Test
-    fun invoke_emitsFailedWhenStatusIsFailed() = runTest {
-        val checkoutId = "checkout_123"
-        coEvery { paymentRepository.pollPaymentStatus(checkoutId) } returns Result.success(
-            PaymentStatusResponseDto(status = "FAILED", mpesaReceiptNumber = null),
-        )
-
-        val states = useCase(checkoutId).toList()
-
-        assertEquals(2, states.size)
-        assertEquals(PaymentPollState.Polling(1), states[0])
-        assertTrue(states[1] is PaymentPollState.Failed)
-    }
+            assertEquals(2, states.size)
+            assertEquals(PaymentPollState.Polling(1), states[0])
+            assertEquals(PaymentPollState.Completed("QWE123RTY"), states[1])
+        }
 
     @Test
-    fun invoke_emitsTimeoutWhenMaxAttemptsReached() = runTest {
-        val checkoutId = "checkout_123"
-        coEvery { paymentRepository.pollPaymentStatus(checkoutId) } returns Result.success(
-            PaymentStatusResponseDto(status = "PENDING", mpesaReceiptNumber = null),
-        )
+    fun invoke_emitsFailedWhenStatusIsFailed() =
+        runTest {
+            val checkoutId = "checkout_123"
+            coEvery { paymentRepository.pollPaymentStatus(checkoutId) } returns Result.success(
+                PaymentStatusResponseDto(status = "FAILED", mpesaReceiptNumber = null),
+            )
 
-        val states = useCase(checkoutId).toList()
+            val states = useCase(checkoutId).toList()
 
-        // 10 Polling + 1 Timeout = 11 emissions
-        assertEquals(11, states.size)
-        assertTrue(states.last() is PaymentPollState.Timeout)
-    }
+            assertEquals(2, states.size)
+            assertEquals(PaymentPollState.Polling(1), states[0])
+            assertTrue(states[1] is PaymentPollState.Failed)
+        }
+
+    @Test
+    fun invoke_emitsTimeoutWhenMaxAttemptsReached() =
+        runTest {
+            val checkoutId = "checkout_123"
+            coEvery { paymentRepository.pollPaymentStatus(checkoutId) } returns Result.success(
+                PaymentStatusResponseDto(status = "PENDING", mpesaReceiptNumber = null),
+            )
+
+            val states = useCase(checkoutId).toList()
+
+            // 10 Polling + 1 Timeout = 11 emissions
+            assertEquals(11, states.size)
+            assertTrue(states.last() is PaymentPollState.Timeout)
+        }
 }

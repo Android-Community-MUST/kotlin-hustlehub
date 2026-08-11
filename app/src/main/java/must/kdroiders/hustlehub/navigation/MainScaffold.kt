@@ -59,7 +59,6 @@ fun MainShellScreen(
     onNavigateToAnalytics: (tab: String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-
     val innerBackstack = rememberNavBackStack(BottomHome)
 
     val context = LocalContext.current
@@ -149,7 +148,6 @@ fun MainShellScreen(
                         onNavigateToAnalytics = onNavigateToAnalytics,
                     )
                 }
-
             },
         )
     }

@@ -18,7 +18,6 @@ import must.kdroiders.hustlehub.ui.features.analytics.data.remote.AnalyticsApiSe
 import must.kdroiders.hustlehub.ui.features.analytics.data.repository.AnalyticsRepository
 import must.kdroiders.hustlehub.ui.features.analytics.data.repository.AnalyticsRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
-import must.kdroiders.hustlehub.ui.features.privacy.data.repository.PrivacyRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.auth.data.repository.AuthRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
@@ -43,6 +42,7 @@ import must.kdroiders.hustlehub.ui.features.notification.data.remote.Notificatio
 import must.kdroiders.hustlehub.ui.features.notification.data.repository.NotificationRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiService
+import must.kdroiders.hustlehub.ui.features.privacy.data.repository.PrivacyRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.privacy.domain.repository.PrivacyRepository
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.profile.data.repository.UserRepositoryImpl
@@ -197,31 +197,24 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideReportRepository(
-        reportApiService: ReportApiService,
-    ): ReportRepository {
+    fun provideReportRepository(reportApiService: ReportApiService): ReportRepository {
         return ReportRepositoryImpl(reportApiService)
     }
 
     @Provides
     @Singleton
-    fun providePrivacyRepository(
-        privacyApiService: PrivacyApiService,
-    ): PrivacyRepository {
+    fun providePrivacyRepository(privacyApiService: PrivacyApiService): PrivacyRepository {
         return PrivacyRepositoryImpl(privacyApiService)
     }
 
     @Provides
     @Singleton
-    fun providePaymentRepository(
-        paymentApiService: PaymentApiService,
-    ): PaymentRepository = PaymentRepositoryImpl(paymentApiService)
+    fun providePaymentRepository(paymentApiService: PaymentApiService): PaymentRepository = PaymentRepositoryImpl(paymentApiService)
 
     @Provides
     @Singleton
-    fun provideAnalyticsRepository(
-        analyticsApiService: AnalyticsApiService,
-    ): AnalyticsRepository = AnalyticsRepositoryImpl(analyticsApiService)
+    fun provideAnalyticsRepository(analyticsApiService: AnalyticsApiService): AnalyticsRepository =
+        AnalyticsRepositoryImpl(analyticsApiService)
 }
 
 private class NoopAuthRepository : AuthRepository {

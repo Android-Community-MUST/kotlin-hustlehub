@@ -125,11 +125,9 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun providePaymentApiService(retrofit: Retrofit): PaymentApiService =
-        retrofit.create(PaymentApiService::class.java)
+    fun providePaymentApiService(retrofit: Retrofit): PaymentApiService = retrofit.create(PaymentApiService::class.java)
 
     @Provides
     @Singleton
-    fun provideAnalyticsApiService(retrofit: Retrofit): AnalyticsApiService =
-        retrofit.create(AnalyticsApiService::class.java)
+    fun provideAnalyticsApiService(retrofit: Retrofit): AnalyticsApiService = retrofit.create(AnalyticsApiService::class.java)
 }

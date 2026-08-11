@@ -30,12 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -117,8 +117,7 @@ private fun FilledSlot(
                 .semantics {
                     contentDescription = "Remove portfolio image ${index + 1}"
                     role = Role.Button
-                }
-                .clickable { onRemove() },
+                }.clickable { onRemove() },
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -145,8 +144,7 @@ private fun EmptySlot(onClick: (() -> Unit)?) {
             .semantics {
                 contentDescription = "Add portfolio image"
                 if (onClick != null) role = Role.Button
-            }
-            .clickable(enabled = onClick != null) { onClick?.invoke() },
+            }.clickable(enabled = onClick != null) { onClick?.invoke() },
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
