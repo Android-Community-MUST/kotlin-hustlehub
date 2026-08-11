@@ -212,7 +212,7 @@ Any user can report fraudulent or inappropriate services, providers, or chat beh
 
 ---
 
-## Lane 10 — Security Hardening & E2EE Chat
+## Lane 10 — Security Hardening & E2EE Chat [COMPLETED]
 
 **Branch**: `lane/security-e2ee`
 **Depends on**: Backend Lane 10 deployed (key exchange endpoints + encrypted message relay live)

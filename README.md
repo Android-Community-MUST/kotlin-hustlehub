@@ -11,7 +11,7 @@
 [![Language](https://img.shields.io/badge/Language-Kotlin-purple.svg)](https://kotlinlang.org)
 [![Framework](https://img.shields.io/badge/UI-Jetpack%20Compose-blue.svg)](https://developer.android.com/jetpack/compose)
 [![Backend](https://img.shields.io/badge/Backend-Spring%20Boot-green.svg)](https://spring.io/projects/spring-boot)
-[![License](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](docs/CONTRIBUTING.md)
 
 *Connecting campus hustlers with customers through trust, convenience, and innovation*
@@ -281,9 +281,20 @@ See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for full guidelines.
 
 ---
 
+## 👥 Team & Contributors
+
+Built and maintained with ❤️ by the **Android Community MUST** engineering team at Meru University of Science & Technology:
+
+- **Korir Aldo** — [@korryrdev](https://github.com/korryrdev) — *Lead Android Engineer & Backend Architect*
+- **Vertigo** — [@vertigo0628](https://github.com/vertigo0628) — *Android Developer*
+- **Botmaster Kenya** — [@Botmasterkenya](https://github.com/Botmasterkenya) — *Android Developer*
+- **Nancy** — [@NancyN00](https://github.com/NancyN00) — *Android & KMP Developer*
+
+---
+
 ## 📜 License
 
-MIT License — see [LICENSE](LICENSE) for details.
+Proprietary & Confidential License — see [LICENSE](LICENSE) for details.
 
 ---
 

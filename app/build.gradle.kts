@@ -173,6 +173,9 @@ dependencies {
     // DataStore Preferences
     implementation(libs.datastore.preferences)
 
+    // Jetpack Security — EncryptedSharedPreferences for E2EE key caching
+    implementation(libs.androidx.security.crypto)
+
     // Credentials & Google Authentication
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)

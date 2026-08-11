@@ -12,6 +12,7 @@ import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.ui.features.analytics.data.remote.AnalyticsApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.KeyExchangeApiService
 import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.monetization.data.remote.PaymentApiService
@@ -20,6 +21,7 @@ import must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiServic
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService
 import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
+import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -50,14 +52,28 @@ object NetworkModule {
         authInterceptor: AuthInterceptor,
         tokenAuthenticator: TokenAuthenticator,
     ): OkHttpClient {
-        return OkHttpClient
+        val builder = OkHttpClient
             .Builder()
             .addInterceptor(authInterceptor)
             .authenticator(tokenAuthenticator)
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
-            .build()
+
+        // Certificate pinning — release builds only.
+        // In debug, we allow user-installed CAs (Charles/mitmproxy).
+        if (!BuildConfig.DEBUG) {
+            val certificatePinner = CertificatePinner
+                .Builder()
+                .add(
+                    "api.hustlehub.app",
+                    // TODO: replace with real SHA-256 pin before production
+                    "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+                ).build()
+            builder.certificatePinner(certificatePinner)
+        }
+
+        return builder.build()
     }
 
     @Provides
@@ -130,4 +146,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideAnalyticsApiService(retrofit: Retrofit): AnalyticsApiService = retrofit.create(AnalyticsApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideKeyExchangeApiService(retrofit: Retrofit): KeyExchangeApiService = retrofit.create(KeyExchangeApiService::class.java)
 }

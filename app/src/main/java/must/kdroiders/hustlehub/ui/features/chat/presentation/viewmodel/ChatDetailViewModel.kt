@@ -24,6 +24,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.TypingIndicator
@@ -64,8 +65,10 @@ data class ChatDetailUiState(
     val replyingToMessage: Message? = null,
     val isServiceCompleted: Boolean = false,
     val hasReviewedService: Boolean = false,
+    val isEncryptionReady: Boolean = false,
 )
 
+@OptIn(kotlinx.coroutines.FlowPreview::class)
 @HiltViewModel
 class ChatDetailViewModel
     @Inject
@@ -79,6 +82,7 @@ class ChatDetailViewModel
         private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase,
         private val firebaseAuth: FirebaseAuth?,
         private val userRepository: UserRepository,
+        private val keyExchangeHandler: KeyExchangeHandler,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ChatDetailUiState())
         val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
@@ -157,6 +161,10 @@ class ChatDetailViewModel
 
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
+
+                // Initiate E2EE key exchange
+                val secretKey = keyExchangeHandler.ensureKeysExchanged(conversationId)
+                _uiState.update { it.copy(isEncryptionReady = secretKey != null) }
 
                 // 1. Resolve conversation ID (the input could be a conversation ID or a provider/user ID)
                 val cached = withContext(Dispatchers.IO) { conversationDao.getById(conversationId) }
@@ -262,10 +270,7 @@ class ChatDetailViewModel
                                 chatWebSocketService
                                     .subscribeToTyping(resolvedId)
                                     .onEach { typingIndicator ->
-                                        if (typingIndicator.senderId != null) {
-                                            val isOtherUser = typingIndicator.isTyping
-                                            _uiState.update { it.copy(isTyping = isOtherUser) }
-                                        }
+                                        _uiState.update { it.copy(isTyping = typingIndicator.isTyping) }
                                     }.catch { e -> Timber.e(e, "Error in WebSocket typing flow") }
                                     .launchIn(this)
 

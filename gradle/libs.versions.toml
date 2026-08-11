@@ -11,7 +11,7 @@ composeBom = "2026.06.01"
 hilt = "2.60.1"
 navigation = "2.9.8"
 hiltnav = "1.4.0"
-navigation3 = "1.1.4"
+navigation3 = "1.1.5"
 adaptiveNavigation3 = "1.0.0-alpha03"
 room = "2.8.4"
 retrofit = "3.0.0"
@@ -33,6 +33,7 @@ firebasePerfPlugin = "2.0.2"
 secretsGradlePlugin = "2.0.1"
 timber = "5.0.1"
 datastore = "1.2.1"
+securityCrypto = "1.1.0"
 materialIcons = "1.7.8"
 ktlint = "14.2.0"
 detekt = "1.23.8"
@@ -41,7 +42,7 @@ credentials = "1.6.0"
 playServicesAuth = "21.6.0"
 googleid = "1.2.0"
 krossbow = "7.0.0"
-media3 = "1.10.1"
+media3 = "1.11.0"
 desugarJdkLibs = "2.1.5"
 shortcutBadger = "1.1.22"
 
@@ -133,6 +134,9 @@ timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "tim
 
 # DataStore
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+
+# Security (EncryptedSharedPreferences)
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 
 # Credentials & Google Auth
 #noinspection LoginCredentials
