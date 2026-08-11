@@ -68,6 +68,7 @@ data class ChatDetailUiState(
     val isEncryptionReady: Boolean = false,
 )
 
+@OptIn(kotlinx.coroutines.FlowPreview::class)
 @HiltViewModel
 class ChatDetailViewModel
     @Inject
@@ -116,7 +117,6 @@ class ChatDetailViewModel
         private var webSocketJob: Job? = null
         private var presenceJob: Job? = null
 
-        @OptIn(kotlinx.coroutines.FlowPreview::class)
         init {
             // Observe voice player state changes
             viewModelScope.launch {
@@ -270,10 +270,7 @@ class ChatDetailViewModel
                                 chatWebSocketService
                                     .subscribeToTyping(resolvedId)
                                     .onEach { typingIndicator ->
-                                        if (typingIndicator.senderId != null) {
-                                            val isOtherUser = typingIndicator.isTyping
-                                            _uiState.update { it.copy(isTyping = isOtherUser) }
-                                        }
+                                        _uiState.update { it.copy(isTyping = typingIndicator.isTyping) }
                                     }.catch { e -> Timber.e(e, "Error in WebSocket typing flow") }
                                     .launchIn(this)
 
