@@ -39,6 +39,7 @@ import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicat
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -64,6 +65,7 @@ data class ChatDetailUiState(
     val replyingToMessage: Message? = null,
     val isServiceCompleted: Boolean = false,
     val hasReviewedService: Boolean = false,
+    val isEncryptionReady: Boolean = false,
 )
 
 @HiltViewModel
@@ -79,6 +81,7 @@ class ChatDetailViewModel
         private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase,
         private val firebaseAuth: FirebaseAuth?,
         private val userRepository: UserRepository,
+        private val keyExchangeHandler: KeyExchangeHandler,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ChatDetailUiState())
         val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
@@ -157,6 +160,10 @@ class ChatDetailViewModel
 
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
+
+                // Initiate E2EE key exchange
+                val secretKey = keyExchangeHandler.ensureKeysExchanged(conversationId)
+                _uiState.update { it.copy(isEncryptionReady = secretKey != null) }
 
                 // 1. Resolve conversation ID (the input could be a conversation ID or a provider/user ID)
                 val cached = withContext(Dispatchers.IO) { conversationDao.getById(conversationId) }

@@ -126,7 +126,8 @@ object AppModule {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "hustlehub.db",
-            ).fallbackToDestructiveMigration()
+            ).addMigrations(AppDatabase.MIGRATION_4_5)
+            .fallbackToDestructiveMigration()
             .build()
 
     @Provides
