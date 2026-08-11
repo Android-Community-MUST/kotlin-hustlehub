@@ -17,7 +17,6 @@ import retrofit2.http.Path
  * 3. Both sides do ECDH locally to derive the same shared AES key.
  */
 interface KeyExchangeApiService {
-
     /**
      * Uploads this device's ECDH public key for a conversation.
      * Called once per conversation (or on re-install to re-key).

@@ -18,13 +18,13 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object SecurityModule {
-
     @Provides
     @Singleton
     fun provideMasterKey(
         @ApplicationContext context: Context,
     ): MasterKey =
-        MasterKey.Builder(context)
+        MasterKey
+            .Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
 
@@ -52,6 +52,5 @@ object SecurityModule {
         cryptoManager: CryptoManager,
         keyExchangeApiService: KeyExchangeApiService,
         encryptedPrefs: SharedPreferences,
-    ): KeyExchangeHandler =
-        KeyExchangeHandler(cryptoManager, keyExchangeApiService, encryptedPrefs)
+    ): KeyExchangeHandler = KeyExchangeHandler(cryptoManager, keyExchangeApiService, encryptedPrefs)
 }

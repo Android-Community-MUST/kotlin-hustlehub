@@ -24,6 +24,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.TypingIndicator
@@ -39,7 +40,6 @@ import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicat
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject

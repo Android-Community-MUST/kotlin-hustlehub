@@ -11,7 +11,6 @@ import javax.crypto.KeyGenerator
 
 @RunWith(RobolectricTestRunner::class)
 class CryptoManagerTest {
-
     private val cryptoManager = CryptoManager()
 
     @Test

@@ -63,13 +63,13 @@ object NetworkModule {
         // Certificate pinning — release builds only.
         // In debug, we allow user-installed CAs (Charles/mitmproxy).
         if (!BuildConfig.DEBUG) {
-            val certificatePinner = CertificatePinner.Builder()
+            val certificatePinner = CertificatePinner
+                .Builder()
                 .add(
                     "api.hustlehub.app",
                     // TODO: replace with real SHA-256 pin before production
                     "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-                )
-                .build()
+                ).build()
             builder.certificatePinner(certificatePinner)
         }
 
@@ -149,6 +149,5 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideKeyExchangeApiService(retrofit: Retrofit): KeyExchangeApiService =
-        retrofit.create(KeyExchangeApiService::class.java)
+    fun provideKeyExchangeApiService(retrofit: Retrofit): KeyExchangeApiService = retrofit.create(KeyExchangeApiService::class.java)
 }
