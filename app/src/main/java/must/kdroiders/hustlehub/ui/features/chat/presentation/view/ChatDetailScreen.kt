@@ -496,6 +496,7 @@ fun ChatDetailScreen(
 
                     var showMenu by remember { mutableStateOf(false) }
                     var showBlockDialog by remember { mutableStateOf(false) }
+                    var showReportDialog by remember { mutableStateOf(false) }
 
                     Box {
                         IconButton(onClick = { showMenu = true }) {
@@ -506,6 +507,13 @@ fun ChatDetailScreen(
                             onDismissRequest = { showMenu = false },
                         ) {
                             DropdownMenuItem(
+                                text = { Text("Report User") },
+                                onClick = {
+                                    showMenu = false
+                                    showReportDialog = true
+                                },
+                            )
+                            DropdownMenuItem(
                                 text = { Text("Block User", color = MaterialTheme.colorScheme.error) },
                                 onClick = {
                                     showMenu = false
@@ -513,6 +521,14 @@ fun ChatDetailScreen(
                                 },
                             )
                         }
+                    }
+
+                    if (showReportDialog) {
+                        must.kdroiders.hustlehub.ui.features.report.presentation.ReportDialog(
+                            targetId = state.otherUserId,
+                            targetType = "user",
+                            onDismiss = { showReportDialog = false },
+                        )
                     }
 
                     if (showBlockDialog) {

@@ -19,6 +19,8 @@ data class User(
     val isVerified: Boolean = false,
     val isVerifiedPro: Boolean = false,
     val isOnline: Boolean = true,
+    val isSuspended: Boolean = false,
+    val suspendedReason: String? = null,
     val hustleScore: Float = 0f,
     val reviewCount: Int = 0,
     val lat: Double? = null,
