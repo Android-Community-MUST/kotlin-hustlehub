@@ -10,10 +10,18 @@ import must.kdroiders.hustlehub.ui.features.notification.domain.model.Notificati
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import javax.inject.Inject
 
+import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao
+import must.kdroiders.hustlehub.ui.features.notification.data.local.entity.toDomain
+import must.kdroiders.hustlehub.ui.features.notification.data.local.entity.toEntity
+import timber.log.Timber
+
+import kotlinx.coroutines.flow.firstOrNull
+
 class NotificationRepositoryImpl
     @Inject
     constructor(
         private val apiService: NotificationApiService,
+        private val notificationDao: NotificationDao,
     ) : NotificationRepository {
         override suspend fun getNotifications(
             page: Int,
@@ -22,7 +30,13 @@ class NotificationRepositoryImpl
             runCatching {
                 val apiResponse = apiService.getNotifications(page, size)
                 val pageResponse = apiResponse.data ?: return@runCatching emptyList()
-                pageResponse.content.map { it.toDomain() }
+                val list = pageResponse.content.map { it.toDomain() }
+                notificationDao.upsertAll(list.map { it.toEntity() })
+                list
+            }.recoverCatching { e ->
+                Timber.w(e, "NotificationRepositoryImpl: network miss, returning Room cached notifications")
+                val entities = notificationDao.getNotificationsFlow().firstOrNull() ?: emptyList()
+                entities.map { it.toDomain() }
             }
 
         override suspend fun markRead(id: String): Result<Unit> =

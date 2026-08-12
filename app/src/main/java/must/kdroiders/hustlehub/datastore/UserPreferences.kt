@@ -309,6 +309,18 @@ class UserPreferences
             }
         }
 
+        /** Restores a list of recent searches (used for Snackbar Undo action). */
+        suspend fun restoreRecentSearches(searches: List<String>) {
+            try {
+                dataStore.edit { prefs ->
+                    val set = searches.mapIndexed { idx, query -> "$idx:$query" }.toSet()
+                    prefs[RECENT_SEARCHES] = set
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error restoring recent searches")
+            }
+        }
+
         /**
          * Emits the last selected map filter category.
          */

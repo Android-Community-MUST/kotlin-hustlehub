@@ -6,8 +6,18 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import must.kdroiders.hustlehub.ui.features.service.data.local.entity.ServiceEntity
 
+import kotlinx.coroutines.flow.Flow
+
 @Dao
 interface ServiceDao {
+    /** Returns all cached services ordered by most recently updated as a reactive Flow. */
+    @Query("SELECT * FROM cached_services ORDER BY lastUpdated DESC")
+    fun getAllServicesFlow(): Flow<List<ServiceEntity>>
+
+    /** Returns services belonging to a specific category as a reactive Flow. */
+    @Query("SELECT * FROM cached_services WHERE category = :category ORDER BY lastUpdated DESC")
+    fun getServicesByCategoryFlow(category: String): Flow<List<ServiceEntity>>
+
     /** Returns all cached services ordered by most recently updated. */
     @Query("SELECT * FROM cached_services ORDER BY lastUpdated DESC")
     suspend fun getAllServices(): List<ServiceEntity>

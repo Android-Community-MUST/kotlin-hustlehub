@@ -27,6 +27,10 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import must.kdroiders.hustlehub.ui.features.profile.data.local.dao.UserDao
+import must.kdroiders.hustlehub.ui.features.profile.data.local.entity.toDomain
+import must.kdroiders.hustlehub.ui.features.profile.data.local.entity.toEntity
+
 /**
  * Concrete implementation of [UserRepository].
  *
@@ -42,6 +46,7 @@ class UserRepositoryImpl
         private val userApiService: UserApiService,
         private val mediaApiService: MediaApiService,
         private val serviceApiService: ServiceApiService,
+        private val userDao: UserDao,
     ) : UserRepository {
         override suspend fun uploadProfilePhoto(
             userId: String,
@@ -106,12 +111,15 @@ class UserRepositoryImpl
             runCatching {
                 val response = userApiService.getMe()
                 if (response.success && response.data != null) {
-                    response.data.toDomain()
+                    val user = response.data.toDomain()
+                    userDao.upsert(user.toEntity())
+                    user
                 } else {
-                    null
+                    userDao.getUserById(userId)?.toDomain()
                 }
-            }.onFailure { e ->
-                Timber.e(e, "UserRepositoryImpl: failed to get user profile")
+            }.recoverCatching { e ->
+                Timber.w(e, "UserRepositoryImpl: network miss, checking Room cache for user: %s", userId)
+                userDao.getUserById(userId)?.toDomain() ?: throw e
             }
 
         override suspend fun hasUserProfile(userId: String): Result<Boolean> =

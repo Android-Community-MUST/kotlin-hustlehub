@@ -112,8 +112,9 @@ object AppModule {
         userApiService: UserApiService,
         mediaApiService: MediaApiService,
         serviceApiService: ServiceApiService,
+        userDao: must.kdroiders.hustlehub.ui.features.profile.data.local.dao.UserDao,
     ): UserRepository {
-        return UserRepositoryImpl(context, authApiService, userApiService, mediaApiService, serviceApiService)
+        return UserRepositoryImpl(context, authApiService, userApiService, mediaApiService, serviceApiService, userDao)
     }
 
     @Provides
@@ -126,7 +127,7 @@ object AppModule {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "hustlehub.db",
-            ).addMigrations(AppDatabase.MIGRATION_4_5)
+            ).addMigrations(AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6)
             .fallbackToDestructiveMigration()
             .build()
 
@@ -144,6 +145,22 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideUserDao(db: AppDatabase): must.kdroiders.hustlehub.ui.features.profile.data.local.dao.UserDao = db.userDao()
+
+    @Provides
+    @Singleton
+    fun provideNotificationDao(db: AppDatabase): must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao = db.notificationDao()
+
+    @Provides
+    @Singleton
+    fun provideReviewDao(db: AppDatabase): must.kdroiders.hustlehub.ui.features.service.data.local.dao.ReviewDao = db.reviewDao()
+
+    @Provides
+    @Singleton
+    fun provideMapPinDao(db: AppDatabase): must.kdroiders.hustlehub.ui.features.map.data.local.dao.MapPinDao = db.mapPinDao()
+
+    @Provides
+    @Singleton
     fun provideServiceRepository(
         serviceApiService: ServiceApiService,
         serviceDao: ServiceDao,
@@ -157,8 +174,9 @@ object AppModule {
     fun provideReviewRepository(
         serviceApiService: ServiceApiService,
         userPreferences: UserPreferences,
+        reviewDao: must.kdroiders.hustlehub.ui.features.service.data.local.dao.ReviewDao,
     ): ReviewRepository {
-        return ReviewRepositoryImpl(serviceApiService, userPreferences)
+        return ReviewRepositoryImpl(serviceApiService, userPreferences, reviewDao)
     }
 
     @Provides
@@ -188,13 +206,19 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideNotificationRepository(notificationApiService: NotificationApiService): NotificationRepository {
-        return NotificationRepositoryImpl(notificationApiService)
+    fun provideNotificationRepository(
+        notificationApiService: NotificationApiService,
+        notificationDao: must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao,
+    ): NotificationRepository {
+        return NotificationRepositoryImpl(notificationApiService, notificationDao)
     }
 
     @Provides
     @Singleton
-    fun provideMapRepository(discoveryApiService: DiscoveryApiService): MapRepository = MapRepositoryImpl(discoveryApiService)
+    fun provideMapRepository(
+        discoveryApiService: DiscoveryApiService,
+        mapPinDao: must.kdroiders.hustlehub.ui.features.map.data.local.dao.MapPinDao,
+    ): MapRepository = MapRepositoryImpl(discoveryApiService, mapPinDao)
 
     @Provides
     @Singleton
