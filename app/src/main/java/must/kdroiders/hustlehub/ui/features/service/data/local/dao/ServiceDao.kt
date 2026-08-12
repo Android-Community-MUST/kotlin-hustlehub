@@ -4,9 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import must.kdroiders.hustlehub.ui.features.service.data.local.entity.ServiceEntity
-
 import kotlinx.coroutines.flow.Flow
+import must.kdroiders.hustlehub.ui.features.service.data.local.entity.ServiceEntity
 
 @Dao
 interface ServiceDao {

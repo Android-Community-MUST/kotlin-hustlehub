@@ -8,6 +8,9 @@ import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.RegisterRequest
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.profile.data.local.dao.UserDao
+import must.kdroiders.hustlehub.ui.features.profile.data.local.entity.toDomain
+import must.kdroiders.hustlehub.ui.features.profile.data.local.entity.toEntity
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.FcmTokenRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.LocationUpdateRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UpdateProfileRequest
@@ -26,10 +29,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
-
-import must.kdroiders.hustlehub.ui.features.profile.data.local.dao.UserDao
-import must.kdroiders.hustlehub.ui.features.profile.data.local.entity.toDomain
-import must.kdroiders.hustlehub.ui.features.profile.data.local.entity.toEntity
 
 /**
  * Concrete implementation of [UserRepository].

@@ -37,7 +37,10 @@ fun NotificationEntity.toDomain(gson: Gson = Gson()): Notification {
     )
 }
 
-fun Notification.toEntity(gson: Gson = Gson(), cachedAt: Long = System.currentTimeMillis()): NotificationEntity =
+fun Notification.toEntity(
+    gson: Gson = Gson(),
+    cachedAt: Long = System.currentTimeMillis(),
+): NotificationEntity =
     NotificationEntity(
         id = id,
         userId = userId,

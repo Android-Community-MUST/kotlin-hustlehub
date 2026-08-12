@@ -1,5 +1,9 @@
 package must.kdroiders.hustlehub.ui.features.notification.data.repository
 
+import kotlinx.coroutines.flow.firstOrNull
+import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao
+import must.kdroiders.hustlehub.ui.features.notification.data.local.entity.toDomain
+import must.kdroiders.hustlehub.ui.features.notification.data.local.entity.toEntity
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.NotificationPreferencesDto
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.NotificationResponse
@@ -8,14 +12,8 @@ import must.kdroiders.hustlehub.ui.features.notification.domain.model.Notificati
 import must.kdroiders.hustlehub.ui.features.notification.domain.model.NotificationPreferences
 import must.kdroiders.hustlehub.ui.features.notification.domain.model.NotificationType
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
-import javax.inject.Inject
-
-import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao
-import must.kdroiders.hustlehub.ui.features.notification.data.local.entity.toDomain
-import must.kdroiders.hustlehub.ui.features.notification.data.local.entity.toEntity
 import timber.log.Timber
-
-import kotlinx.coroutines.flow.firstOrNull
+import javax.inject.Inject
 
 class NotificationRepositoryImpl
     @Inject
