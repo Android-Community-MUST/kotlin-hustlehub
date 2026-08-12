@@ -169,7 +169,6 @@ class ServiceRepositoryImpl
         override suspend fun getMyServices(): Result<List<Service>> =
             withContext(Dispatchers.IO) {
                 val now = System.currentTimeMillis()
-                serviceDao.deleteStaleEntries(now - CACHE_TTL_MS)
 
                 runCatching {
                     val response = apiService.getMyServices()
@@ -205,7 +204,6 @@ class ServiceRepositoryImpl
         ): Result<PageResponse<Service>> =
             withContext(Dispatchers.IO) {
                 val now = System.currentTimeMillis()
-                serviceDao.deleteStaleEntries(now - CACHE_TTL_MS)
 
                 runCatching {
                     val categoryStr = if (category == ServiceCategory.ALL) null else category?.name

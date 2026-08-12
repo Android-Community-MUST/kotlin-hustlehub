@@ -30,12 +30,14 @@ class UserRepositoryImplTest {
         userApiService = mockk(relaxed = true)
         mediaApiService = mockk(relaxed = true)
         serviceApiService = mockk(relaxed = true)
+        val userDao: must.kdroiders.hustlehub.ui.features.profile.data.local.dao.UserDao = mockk(relaxed = true)
         userRepository = UserRepositoryImpl(
             context = context,
             authApiService = authApiService,
             userApiService = userApiService,
             mediaApiService = mediaApiService,
             serviceApiService = serviceApiService,
+            userDao = userDao,
         )
     }
 

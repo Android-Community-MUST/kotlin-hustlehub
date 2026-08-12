@@ -1,5 +1,9 @@
 package must.kdroiders.hustlehub.ui.features.notification.data.repository
 
+import kotlinx.coroutines.flow.firstOrNull
+import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao
+import must.kdroiders.hustlehub.ui.features.notification.data.local.entity.toDomain
+import must.kdroiders.hustlehub.ui.features.notification.data.local.entity.toEntity
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.NotificationPreferencesDto
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.dto.NotificationResponse
@@ -8,12 +12,14 @@ import must.kdroiders.hustlehub.ui.features.notification.domain.model.Notificati
 import must.kdroiders.hustlehub.ui.features.notification.domain.model.NotificationPreferences
 import must.kdroiders.hustlehub.ui.features.notification.domain.model.NotificationType
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
+import timber.log.Timber
 import javax.inject.Inject
 
 class NotificationRepositoryImpl
     @Inject
     constructor(
         private val apiService: NotificationApiService,
+        private val notificationDao: NotificationDao,
     ) : NotificationRepository {
         override suspend fun getNotifications(
             page: Int,
@@ -22,7 +28,13 @@ class NotificationRepositoryImpl
             runCatching {
                 val apiResponse = apiService.getNotifications(page, size)
                 val pageResponse = apiResponse.data ?: return@runCatching emptyList()
-                pageResponse.content.map { it.toDomain() }
+                val list = pageResponse.content.map { it.toDomain() }
+                notificationDao.upsertAll(list.map { it.toEntity() })
+                list
+            }.recoverCatching { e ->
+                Timber.w(e, "NotificationRepositoryImpl: network miss, returning Room cached notifications")
+                val entities = notificationDao.getNotificationsFlow().firstOrNull() ?: emptyList()
+                entities.map { it.toDomain() }
             }
 
         override suspend fun markRead(id: String): Result<Unit> =
