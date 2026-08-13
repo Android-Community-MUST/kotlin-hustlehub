@@ -247,6 +247,17 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     )
                 }
 
+                // Account Suspended
+                entry<AccountSuspendedKey> { key ->
+                    AccountSuspendedScreen(
+                        reason = key.reason.ifBlank { "Violation of terms of service." },
+                        onLogout = {
+                            backstack.clear()
+                            backstack.add(Login())
+                        },
+                    )
+                }
+
                 // Onboarding
                 entry<Onboarding> {
                     OnboardingScreen(

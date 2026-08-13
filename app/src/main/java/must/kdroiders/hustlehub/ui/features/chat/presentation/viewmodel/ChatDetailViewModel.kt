@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.core.network.NetworkMonitor
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
@@ -118,7 +119,17 @@ class ChatDetailViewModel
         private var webSocketJob: Job? = null
         private var presenceJob: Job? = null
 
+        private val networkMonitor = NetworkMonitor(context)
+
         init {
+            viewModelScope.launch {
+                networkMonitor.isOnline.collect { isOnline ->
+                    if (isOnline) {
+                        chatRepository.resendUnsyncedMessages()
+                    }
+                }
+            }
+
             // Observe voice player state changes
             viewModelScope.launch {
                 voicePlayer.playerState.collect { pState ->
@@ -620,7 +631,7 @@ class ChatDetailViewModel
             chatRepository.setActiveConversation(null)
             voicePlayer.release()
 
-            viewModelScope.launch(NonCancellable) {
+            kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
                 chatRepository.disconnectWebSocket()
             }
         }
