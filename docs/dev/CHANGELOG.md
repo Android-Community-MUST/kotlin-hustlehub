@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Performance & Optimization (Sprint 6)**:
+  - `GzipRequestInterceptor.kt` — compresses POST/PUT request bodies for network bandwidth savings.
+  - `CoilModule.kt` — Hilt module providing a custom Coil `ImageLoader` with 25% RAM memory cache, 100 MB disk cache, and 300 ms crossfade.
+  - `BaselineProfileGenerator.kt` & `baseline-prof.txt` — ART Baseline Profiles to optimize cold start (< 2s target) and critical navigation paths.
+  - `PERFORMANCE.md` — comprehensive performance and memory guide for team members.
+  - LeakCanary 2.14 (`debugImplementation`) for automatic memory leak detection in debug builds.
+  - OkHttp 10 MB response disk cache in `NetworkModule.kt`.
+
 ### Changed
 - **Backend migration**: Removed all Supabase Storage and Firebase Firestore/Realtime Database dependencies. All data operations now go through the HustleHub Spring Boot (Kotlin) REST API (`/api/v1/`). Firebase is retained only for Authentication (ID tokens) and Cloud Messaging (FCM).
 - **Networking**: Replaced direct Firebase SDK data calls with Retrofit 3 + OkHttp 5 HTTP client. Added `AuthInterceptor` (attaches Firebase ID token) and `TokenAuthenticator` (auto-refreshes on 401).

@@ -161,8 +161,12 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    // Baseline Profile generator — run on rooted emulator to regenerate baseline-prof.txt
+    androidTestImplementation(libs.androidx.benchmark.macro.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    // LeakCanary — debug-only memory leak detection, never ships in release
+    debugImplementation(libs.leakcanary.android)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation("io.mockk:mockk:1.13.10")
     testImplementation("org.robolectric:robolectric:4.11.1")
@@ -184,4 +188,7 @@ dependencies {
 
     // Detekt formatting rules
     detektPlugins(libs.detekt.formatting)
+
+    // Baseline Profile — compiles ART profile on first app launch
+    implementation(libs.androidx.profileinstaller)
 }

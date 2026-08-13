@@ -1,21 +1,42 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class must.kdroiders.hustlehub.**.dto.** { *; }
+-keep class must.kdroiders.hustlehub.**.model.** { *; }
+-keep class must.kdroiders.hustlehub.**.entity.** { *; }
+-keep class must.kdroiders.hustlehub.data.model.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-keep,allowobfuscation,allowshrinking interface retrofit2.Call
+-keep,allowobfuscation,allowshrinking class retrofit2.Response
+-keep interface must.kdroiders.hustlehub.**.remote.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+-keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Dao class * { *; }
+-keepclassmembers @androidx.room.Entity class * { *; }
+
+-keep class coil.** { *; }
+-keep interface coil.** { *; }
+
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.AnnotationsKt
+-keepclassmembers class kotlinx.serialization.json.** { *** Companion; }
+-keepclasseswithmembers class **$$serializer { *; }
+-keep @kotlinx.serialization.Serializable class * { *; }
+
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-keep class okhttp3.** { *; }
+
+-keep class dagger.hilt.** { *; }
+-keepnames @dagger.hilt.android.lifecycle.HiltViewModel class *
+
+-dontwarn org.hildan.krossbow.**
+-keep class org.hildan.krossbow.** { *; }
+
+-dontwarn com.google.ai.client.generativeai.**
+-keep class com.google.ai.client.generativeai.** { *; }
