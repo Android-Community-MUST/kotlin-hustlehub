@@ -15,22 +15,26 @@ trim_trailing_whitespace = true
 # Disable annoying formatting rules
 ktlint_standard_class-naming = disabled
 ktlint_standard_filename = disabled
+ktlint_standard_function-naming = disabled
+ktlint_function_naming_ignore_when_annotated_with = Composable
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_backing-property-naming = disabled
+ktlint_standard_block-comment-initial-line = disabled
 
 # Disable strict multiline formatting
 ktlint_standard_multiline-expression-wrapping = disabled
 ktlint_standard_string-template-indent = disabled
 ktlint_standard_function-expression-body = disabled
 ktlint_standard_class-signature = disabled
+ktlint_standard_property-naming = disabled
+ktlint_standard_comment-spacing = disabled
+
+# Disable max line length check
+ktlint_standard_max-line-length = disabled
 
 # Disable blank line rules that are too opinionated
 ktlint_standard_no-blank-line-in-list = disabled
 ktlint_standard_blank-line-before-declaration = disabled
-
-# Keep these ENABLED (they're actually useful):
-# - import-ordering (auto-fixable)
-# - no-unused-imports (catches bugs)
-# - no-wildcard-imports (cleaner imports)
-# - indentation (consistency)
 
 [*.md]
 trim_trailing_whitespace = false

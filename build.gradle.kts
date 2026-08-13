@@ -16,13 +16,12 @@ plugins {
 subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
     configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-        // Don't fail build on style issues during development
-        ignoreFailures.set(true)
+        // Enforce ktlint formatting check
+        ignoreFailures.set(false)
 
         // Use the .editorconfig for rule configuration
         android.set(true)
 
-        // Report but don't fail
         reporters {
             reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
             reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
@@ -44,14 +43,22 @@ subprojects {
         tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
             buildUponDefaultConfig = true
             allRules = false
+            ignoreFailures = true
             config.setFrom(files("$rootDir/detekt.yml"))
         }
     }
 }
 
+// Ensure ktlintCheck runs AFTER ktlintFormat automatically
+subprojects {
+    tasks.matching { it.name.startsWith("ktlint") && it.name.endsWith("Check") }.configureEach {
+        mustRunAfter(tasks.matching { it.name.startsWith("ktlint") && it.name.endsWith("Format") })
+    }
+}
+
 tasks.register("qualityCheck") {
     group = "verification"
-    description = "Runs ktlintFormat, ktlintCheck, detekt, and Android lint."
+    description = "Runs ktlintFormat, ktlintCheck, detekt, and Android lint in strict sequence."
     dependsOn(":app:ktlintFormat", ":app:ktlintCheck", ":app:detekt", ":app:lint")
 }
 

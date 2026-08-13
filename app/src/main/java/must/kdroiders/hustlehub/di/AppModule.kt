@@ -149,8 +149,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideNotificationDao(db: AppDatabase): must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao =
-        db.notificationDao()
+    fun provideNotificationDao(db: AppDatabase): must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao = db.notificationDao()
 
     @Provides
     @Singleton
@@ -202,8 +201,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAiSearchRepository(discoveryApiService: DiscoveryApiService): AiSearchRepository =
-        AiSearchRepositoryImpl(discoveryApiService)
+    fun provideAiSearchRepository(discoveryApiService: DiscoveryApiService): AiSearchRepository = AiSearchRepositoryImpl(discoveryApiService)
 
     @Provides
     @Singleton
@@ -239,8 +237,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAnalyticsRepository(analyticsApiService: AnalyticsApiService): AnalyticsRepository =
-        AnalyticsRepositoryImpl(analyticsApiService)
+    fun provideAnalyticsRepository(analyticsApiService: AnalyticsApiService): AnalyticsRepository = AnalyticsRepositoryImpl(analyticsApiService)
 }
 
 private class NoopAuthRepository : AuthRepository {
