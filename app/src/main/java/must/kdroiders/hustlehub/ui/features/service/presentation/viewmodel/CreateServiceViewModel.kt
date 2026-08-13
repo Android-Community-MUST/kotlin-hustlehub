@@ -14,11 +14,13 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
@@ -424,6 +426,10 @@ class CreateServiceViewModel
                                 )
                             }
                         } else {
+                            val user = userPreferences.cachedUser.firstOrNull()
+                            if (user != null && user.role == UserRole.CUSTOMER) {
+                                userPreferences.writeUser(user.copy(role = UserRole.PROVIDER))
+                            }
                             resetForm()
                             _events.emit(CreateServiceEvent.Success)
                         }
