@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
@@ -58,6 +59,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -556,6 +560,7 @@ private fun ServiceDetailContent(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.semantics { heading() },
                 )
                 if (!state.isOwnService) {
                     Button(
@@ -581,11 +586,11 @@ private fun ServiceDetailContent(
 
         if (state.reviews.isEmpty()) {
             item(key = "no_reviews") {
-                Text(
-                    text = "No reviews yet. Be the first to leave one!",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 20.dp),
+                EmptyStateView(
+                    title = "No reviews yet",
+                    description = "Complete a service to leave the first review!",
+                    icon = Icons.Default.RateReview,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
                 )
             }
         } else {

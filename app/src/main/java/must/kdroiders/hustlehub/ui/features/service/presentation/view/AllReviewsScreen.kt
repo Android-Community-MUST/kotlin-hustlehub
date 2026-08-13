@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
+import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewItem
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewSummaryCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.AllReviewsViewModel
@@ -106,12 +107,9 @@ fun AllReviewsScreen(
                 .background(MaterialTheme.colorScheme.background),
         ) {
             if (state.isLoading && !state.isRefreshing) {
-                Box(
+                LoadingIndicator(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
+                )
             } else if (state.reviews.isEmpty() && !state.isLoading) {
                 EmptyStateView(
                     title = "No reviews yet",

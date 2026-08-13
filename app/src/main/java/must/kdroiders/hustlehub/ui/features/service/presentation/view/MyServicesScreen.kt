@@ -47,12 +47,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.DeleteConfirmDialog
@@ -217,38 +217,38 @@ fun MyServicesScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            when {
-                state.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-
-                state.services.isEmpty() -> {
-                    EmptyServicesPlaceholder(
-                        onCreateClick = onCreateService,
-                        modifier = Modifier.align(Alignment.Center),
-                    )
-                }
-
-                else -> {
-                    val pullToRefreshState = rememberPullToRefreshState()
-                    PullToRefreshBox(
+            val pullToRefreshState = rememberPullToRefreshState()
+            PullToRefreshBox(
+                isRefreshing = state.isLoading,
+                onRefresh = viewModel::loadServices,
+                modifier = Modifier.fillMaxSize(),
+                state = pullToRefreshState,
+                indicator = {
+                    PullToRefreshDefaults.Indicator(
+                        modifier = Modifier.align(Alignment.TopCenter),
                         isRefreshing = state.isLoading,
-                        onRefresh = viewModel::loadServices,
-                        modifier = Modifier.fillMaxSize(),
                         state = pullToRefreshState,
-                        indicator = {
-                            PullToRefreshDefaults.Indicator(
-                                modifier = Modifier.align(Alignment.TopCenter),
-                                isRefreshing = state.isLoading,
-                                state = pullToRefreshState,
-                                color = MaterialTheme.colorScheme.primary,
-                                containerColor = MaterialTheme.colorScheme.surface,
-                            )
-                        },
-                    ) {
+                        color = MaterialTheme.colorScheme.primary,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    )
+                },
+            ) {
+                when {
+                    state.isLoading && state.services.isEmpty() -> {
+                        CircularWavyProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+
+                    state.services.isEmpty() -> {
+                        EmptyServicesPlaceholder(
+                            onCreateClick = onCreateService,
+                            modifier = Modifier.align(Alignment.Center),
+                        )
+                    }
+
+                    else -> {
                         LazyColumn(
                             contentPadding = PaddingValues(
                                 horizontal = 16.dp,
@@ -285,29 +285,16 @@ private fun EmptyServicesPlaceholder(
     onCreateClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Icon(
-            imageVector = Icons.Default.WorkOff,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = "No services yet",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = "Tap + to publish your first service and start earning.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-    }
+    EmptyStateView(
+        title = "No service listings",
+        description = "List your first service to start earning on campus.",
+        icon = Icons.Default.WorkOff,
+        modifier = modifier,
+        action = {
+            HustleButton(
+                text = "Add Service",
+                onClick = onCreateClick,
+            )
+        },
+    )
 }

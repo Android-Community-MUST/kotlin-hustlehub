@@ -43,6 +43,7 @@ import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
+import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.BlockedUsersViewModel
 
@@ -87,14 +88,9 @@ fun BlockedUsersScreen(
         ) {
             when {
                 state.isLoading -> {
-                    Box(
+                    LoadingIndicator(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularWavyProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
+                    )
                 }
 
                 state.blockedUsers.isEmpty() -> {
@@ -103,7 +99,7 @@ fun BlockedUsersScreen(
                             .fillMaxSize()
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+                        verticalArrangement = Arrangement.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Block,
@@ -123,7 +119,7 @@ fun BlockedUsersScreen(
                             text = "Users you block will appear here. They won't be able to message you or see your profile.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }

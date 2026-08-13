@@ -14,6 +14,7 @@ data class ProfileUiState(
     val reviewCount: Int = 0,
     val badges: List<Badge> = emptyList(),
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val error: String? = null,
 )
 

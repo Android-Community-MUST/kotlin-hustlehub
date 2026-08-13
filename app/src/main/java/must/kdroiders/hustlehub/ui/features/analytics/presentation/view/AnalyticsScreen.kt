@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
+import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.sharedComposables.ProBadge
 import must.kdroiders.hustlehub.ui.features.analytics.presentation.view.charts.BarChart
 import must.kdroiders.hustlehub.ui.features.analytics.presentation.view.charts.RatingDistributionChart
@@ -84,14 +85,11 @@ fun AnalyticsScreen(
     ) { innerPadding ->
         when {
             uiState.isLoading -> {
-                Box(
+                LoadingIndicator(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
+                )
             }
             uiState.error != null -> {
                 Box(

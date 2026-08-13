@@ -103,40 +103,40 @@ fun ChatScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            when {
-                state.isLoading && !state.isRefreshing -> {
-                    CircularWavyProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-
-                state.conversations.isEmpty() -> {
-                    EmptyStateView(
-                        title = "No messages yet",
-                        description = "Start a conversation with a service provider to chat about tasks.",
-                        icon = Icons.AutoMirrored.Filled.Chat,
-                        modifier = Modifier.align(Alignment.Center),
-                    )
-                }
-
-                else -> {
-                    val pullToRefreshState = rememberPullToRefreshState()
-                    PullToRefreshBox(
+            val pullToRefreshState = rememberPullToRefreshState()
+            PullToRefreshBox(
+                isRefreshing = state.isRefreshing,
+                onRefresh = conversationListViewModel::refreshConversations,
+                modifier = Modifier.fillMaxSize(),
+                state = pullToRefreshState,
+                indicator = {
+                    PullToRefreshDefaults.Indicator(
+                        modifier = Modifier.align(Alignment.TopCenter),
                         isRefreshing = state.isRefreshing,
-                        onRefresh = conversationListViewModel::refreshConversations,
-                        modifier = Modifier.fillMaxSize(),
                         state = pullToRefreshState,
-                        indicator = {
-                            PullToRefreshDefaults.Indicator(
-                                modifier = Modifier.align(Alignment.TopCenter),
-                                isRefreshing = state.isRefreshing,
-                                state = pullToRefreshState,
-                                color = MaterialTheme.colorScheme.primary,
-                                containerColor = MaterialTheme.colorScheme.surface,
-                            )
-                        },
-                    ) {
+                        color = MaterialTheme.colorScheme.primary,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    )
+                },
+            ) {
+                when {
+                    state.isLoading && !state.isRefreshing -> {
+                        CircularWavyProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+
+                    state.conversations.isEmpty() -> {
+                        EmptyStateView(
+                            title = "No messages yet",
+                            description = "Start a conversation with a service provider to chat about tasks.",
+                            icon = Icons.AutoMirrored.Filled.Chat,
+                            modifier = Modifier.align(Alignment.Center),
+                        )
+                    }
+
+                    else -> {
                         LazyColumn(
                             contentPadding = PaddingValues(vertical = 8.dp),
                             modifier = Modifier.fillMaxSize(),
