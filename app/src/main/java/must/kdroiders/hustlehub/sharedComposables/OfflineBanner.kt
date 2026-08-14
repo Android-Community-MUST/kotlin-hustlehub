@@ -6,6 +6,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Icon
@@ -39,6 +42,7 @@ import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 @Composable
 fun OfflineBanner(
     isOnline: Boolean,
+    onRetry: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     var showReconnected by remember { mutableStateOf(false) }
@@ -46,7 +50,7 @@ fun OfflineBanner(
     LaunchedEffect(isOnline) {
         if (isOnline) {
             showReconnected = true
-            delay(3000L)
+            delay(3_000L)
             showReconnected = false
         }
     }
@@ -59,47 +63,44 @@ fun OfflineBanner(
         exit = shrinkVertically() + fadeOut(),
         modifier = modifier.fillMaxWidth(),
     ) {
-        val backgroundColor = if (!isOnline) {
-            HustleWarningAmber
-        } else {
-            HustleActiveGreen
-        }
-
-        val text = if (!isOnline) {
-            "You're offline. Browsing cached data."
-        } else {
-            "Back online"
-        }
-
-        val icon = if (!isOnline) {
-            Icons.Default.WifiOff
-        } else {
-            Icons.Default.Wifi
-        }
+        val isOffline = !isOnline
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(backgroundColor)
+                .background(if (isOffline) HustleWarningAmber else HustleActiveGreen)
                 .padding(horizontal = 16.dp, vertical = 6.dp)
                 .testTag("offline_banner"),
             contentAlignment = Alignment.Center,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Icon(
-                    imageVector = icon,
+                    imageVector = if (isOffline) Icons.Default.WifiOff else Icons.Default.Wifi,
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(16.dp),
                 )
-                Spacer(Modifier.width(8.dp))
                 Text(
-                    text = text,
+                    text = if (isOffline) "You're offline. Browsing cached data." else "Back online",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     fontSize = 12.sp,
                 )
+                if (isOffline && onRetry != null) {
+                    Spacer(Modifier.width(8.dp))
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Retry connection",
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clickable { onRetry() },
+                    )
+                }
             }
         }
     }

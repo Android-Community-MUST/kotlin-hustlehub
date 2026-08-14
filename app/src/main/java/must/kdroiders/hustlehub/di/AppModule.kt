@@ -14,6 +14,10 @@ import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
+import must.kdroiders.hustlehub.ui.features.map.data.local.dao.MapPinDao
+import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao
+import must.kdroiders.hustlehub.ui.features.profile.data.local.dao.UserDao
+import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ReviewDao
 import must.kdroiders.hustlehub.ui.features.analytics.data.remote.AnalyticsApiService
 import must.kdroiders.hustlehub.ui.features.analytics.data.repository.AnalyticsRepository
 import must.kdroiders.hustlehub.ui.features.analytics.data.repository.AnalyticsRepositoryImpl
@@ -103,12 +107,6 @@ object AppModule {
     @Provides
     @Singleton
     fun provideUserPreferences(dataStore: DataStore<Preferences>): UserPreferences = UserPreferences(dataStore)
-
-    @Provides
-    @Singleton
-    fun provideNetworkMonitor(
-        @ApplicationContext context: Context,
-    ): NetworkMonitor = NetworkMonitor(context)
 
     @Provides
     @Singleton

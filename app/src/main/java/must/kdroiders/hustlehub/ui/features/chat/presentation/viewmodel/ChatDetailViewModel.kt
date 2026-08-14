@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import must.kdroiders.hustlehub.core.network.NetworkMonitor
+import must.kdroiders.hustlehub.core.network.ConnectivityObserver
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
@@ -85,6 +85,7 @@ class ChatDetailViewModel
         private val firebaseAuth: FirebaseAuth?,
         private val userRepository: UserRepository,
         private val keyExchangeHandler: KeyExchangeHandler,
+        private val connectivityObserver: ConnectivityObserver,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ChatDetailUiState())
         val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
@@ -119,11 +120,11 @@ class ChatDetailViewModel
         private var webSocketJob: Job? = null
         private var presenceJob: Job? = null
 
-        private val networkMonitor = NetworkMonitor(context)
+        private val networkSyncJob: Job? = null
 
         init {
             viewModelScope.launch {
-                networkMonitor.isOnline.collect { isOnline ->
+                connectivityObserver.isConnected.collect { isOnline ->
                     if (isOnline) {
                         chatRepository.resendUnsyncedMessages()
                     }

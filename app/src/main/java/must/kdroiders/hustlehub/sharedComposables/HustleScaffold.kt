@@ -6,13 +6,12 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import must.kdroiders.hustlehub.core.network.NetworkMonitor
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
 
 @Composable
 fun HustleScaffold(
@@ -26,15 +25,17 @@ fun HustleScaffold(
     contentColor: Color = MaterialTheme.colorScheme.onBackground,
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    val context = LocalContext.current
-    val networkMonitor = remember(context) { NetworkMonitor(context) }
-    val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
+    val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
+    val isConnected by connectivityViewModel.isConnected.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
         topBar = {
             Column {
-                OfflineBanner(isOnline = isOnline)
+                OfflineBanner(
+                    isOnline = isConnected,
+                    onRetry = { connectivityViewModel.retryConnectivityCheck() },
+                )
                 topBar()
             }
         },
