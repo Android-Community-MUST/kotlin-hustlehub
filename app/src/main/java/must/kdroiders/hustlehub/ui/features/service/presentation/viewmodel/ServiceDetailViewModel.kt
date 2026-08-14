@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
+import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
@@ -25,8 +27,14 @@ class ServiceDetailViewModel
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
         private val getServiceReviewsUseCase: GetServiceReviewsUseCase,
         private val authRepository: AuthRepository,
+        private val hustleAnalytics: HustleAnalytics,
+        private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
         private var serviceId: String? = null
+
+        init {
+            hustleCrashlytics.setScreen("ServiceDetailScreen")
+        }
 
         private val _uiState = MutableStateFlow(ServiceDetailUiState())
         val uiState: StateFlow<ServiceDetailUiState> = _uiState.asStateFlow()
@@ -52,6 +60,7 @@ class ServiceDetailViewModel
 
                 serviceResult
                     .onSuccess { service ->
+                        hustleAnalytics.logServiceViewed(service.id, service.category.name)
                         val providerResult = getProviderProfileUseCase(service.providerId)
                         val provider = providerResult.getOrNull()
                         val reviews = reviewsResult.getOrElse { emptyList<Review>().let { it } }

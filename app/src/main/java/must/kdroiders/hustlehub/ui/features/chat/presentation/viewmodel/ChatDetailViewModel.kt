@@ -27,6 +27,8 @@ import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.network.ConnectivityObserver
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
+import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
+import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.TypingIndicator
@@ -86,6 +88,8 @@ class ChatDetailViewModel
         private val userRepository: UserRepository,
         private val keyExchangeHandler: KeyExchangeHandler,
         private val connectivityObserver: ConnectivityObserver,
+        private val hustleAnalytics: HustleAnalytics,
+        private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ChatDetailUiState())
         val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
@@ -113,7 +117,6 @@ class ChatDetailViewModel
         // Raw typing events from the keyboard — debounced before sending over WebSocket
         private val typingEvents = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
 
-        // Cancels the auto-clear job when a new typing event arrives
         private var typingClearJob: Job? = null
 
         private var messagesJob: Job? = null
@@ -450,6 +453,7 @@ class ChatDetailViewModel
                     mediaUrl = null,
                     metadata = metadata,
                 )
+                hustleAnalytics.logMessageSent(id, "TEXT")
                 cancelReplying()
             }
         }
@@ -485,6 +489,7 @@ class ChatDetailViewModel
                         val url = response.data.url
                         val metadata = gson.toJson(mapOf("durationSeconds" to durationSeconds))
                         chatRepository.sendMessage(id, MessageType.VOICE, "Voice note", url, metadata)
+                        hustleAnalytics.logVoiceNoteSent(id, durationSeconds)
                         file.delete()
                     } else {
                         _uiState.update { it.copy(error = response.message) }

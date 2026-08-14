@@ -8,6 +8,8 @@ import coil.ImageLoaderFactory
 import com.google.firebase.FirebaseApp
 import dagger.hilt.android.HiltAndroidApp
 import must.kdroiders.hustlehub.BuildConfig
+import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
+import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Provider
@@ -21,6 +23,12 @@ class HustleHubApp : Application(), ImageLoaderFactory, Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    @Inject
+    lateinit var hustleAnalytics: HustleAnalytics
+
+    @Inject
+    lateinit var hustleCrashlytics: HustleCrashlytics
+
     override fun onCreate() {
         super.onCreate()
 
@@ -30,6 +38,8 @@ class HustleHubApp : Application(), ImageLoaderFactory, Configuration.Provider {
 
         try {
             FirebaseApp.initializeApp(this)
+            hustleAnalytics.setCollectionEnabled(!BuildConfig.DEBUG)
+            hustleCrashlytics.setScreen("HustleHubApp")
         } catch (e: Exception) {
             Timber.e(e, "Firebase initialization failed")
         }

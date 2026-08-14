@@ -118,6 +118,7 @@ firebase-database = { group = "com.google.firebase", name = "firebase-database" 
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-perf = { group = "com.google.firebase", name = "firebase-perf" }
 
 # Google Maps & Location

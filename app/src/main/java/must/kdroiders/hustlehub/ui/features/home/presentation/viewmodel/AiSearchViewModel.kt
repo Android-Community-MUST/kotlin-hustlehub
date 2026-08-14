@@ -11,6 +11,8 @@ import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchMatch
 import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchRequest
 import must.kdroiders.hustlehub.ui.features.home.data.remote.QueryUnderstanding
+import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
+import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.AiSearchUseCase
 import javax.inject.Inject
 
@@ -19,10 +21,6 @@ data class AiSearchUiState(
     val matches: List<AiSearchMatch> = emptyList(),
     val queryUnderstanding: QueryUnderstanding? = null,
     val isLoading: Boolean = false,
-    /**
-     * True when the backend fell back to keyword search (Gemini unavailable).
-     * Derived heuristic: understanding has no category/location and service == raw query.
-     */
     val usedFallback: Boolean = false,
     val error: String? = null,
 )
@@ -32,9 +30,15 @@ class AiSearchViewModel
     @Inject
     constructor(
         private val aiSearchUseCase: AiSearchUseCase,
+        private val hustleAnalytics: HustleAnalytics,
+        private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(AiSearchUiState())
         val uiState: StateFlow<AiSearchUiState> = _uiState.asStateFlow()
+
+        init {
+            hustleCrashlytics.setScreen("AiSearchScreen")
+        }
 
         fun onQueryChanged(query: String) {
             _uiState.update { it.copy(query = query, error = null) }
@@ -43,6 +47,8 @@ class AiSearchViewModel
         fun onSearch(userLocation: AiSearchRequest.UserLocationDto? = null) {
             val query = _uiState.value.query.trim()
             if (query.isBlank()) return
+
+            hustleAnalytics.logAiSearchUsed(query)
 
             _uiState.update { it.copy(isLoading = true, error = null) }
 
