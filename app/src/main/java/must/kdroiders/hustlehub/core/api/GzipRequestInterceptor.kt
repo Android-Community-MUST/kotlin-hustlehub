@@ -9,7 +9,6 @@ import okio.GzipSink
 import okio.buffer
 
 class GzipRequestInterceptor : Interceptor {
-
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
         val originalBody = originalRequest.body
@@ -24,8 +23,7 @@ class GzipRequestInterceptor : Interceptor {
             .method(
                 originalRequest.method,
                 gzip(originalBody),
-            )
-            .build()
+            ).build()
 
         return chain.proceed(compressedRequest)
     }

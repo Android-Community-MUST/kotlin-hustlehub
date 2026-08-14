@@ -163,145 +163,145 @@ fun SearchScreen(
                     .testTag("search_result_list"),
                 contentPadding = PaddingValues(bottom = 100.dp),
             ) {
-            // Top bar: back + search field + filter icon
-            item(key = "topbar") {
-                SearchTopBar(
-                    query = state.query,
-                    onQueryChanged = searchViewModel::onQueryChanged,
-                    onBack = onBack,
-                    onFilterClick = searchViewModel::onFilterSheetToggle,
-                    focusRequester = focusRequester,
-                    hasActiveFilters = !state.filters.isDefault,
-                )
-            }
-
-            // Active filter chips — visible only when filters differ from defaults.
-            if (!state.filters.isDefault) {
-                item(key = "active_filters") {
-                    ActiveFilterChipRow(
-                        filters = state.filters,
-                        onRemoveCategory = { cat ->
-                            searchViewModel.onFiltersApplied()
-                            searchViewModel.onDraftFilterChanged(
-                                state.filters.copy(categories = state.filters.categories - cat),
-                            )
-                            searchViewModel.onFiltersApplied()
-                        },
-                        onRemoveRating = {
-                            searchViewModel.onDraftFilterChanged(state.filters.copy(minRating = 0f))
-                            searchViewModel.onFiltersApplied()
-                        },
-                        onRemovePrice = {
-                            searchViewModel.onDraftFilterChanged(state.filters.copy(maxPrice = 5000))
-                            searchViewModel.onFiltersApplied()
-                        },
-                        onRemoveAvailability = {
-                            searchViewModel.onDraftFilterChanged(state.filters.copy(availability = null))
-                            searchViewModel.onFiltersApplied()
-                        },
-                        onRemoveSort = {
-                            searchViewModel.onDraftFilterChanged(state.filters.copy(sortOrder = SortOrder.NEWEST))
-                            searchViewModel.onFiltersApplied()
-                        },
-                        onClearAll = searchViewModel::onFiltersReset,
+                // Top bar: back + search field + filter icon
+                item(key = "topbar") {
+                    SearchTopBar(
+                        query = state.query,
+                        onQueryChanged = searchViewModel::onQueryChanged,
+                        onBack = onBack,
+                        onFilterClick = searchViewModel::onFilterSheetToggle,
+                        focusRequester = focusRequester,
+                        hasActiveFilters = !state.filters.isDefault,
                     )
                 }
-            }
 
-            // Recent searches — shown when query is empty and history exists.
-            if (state.query.isEmpty() && state.recentSearches.isNotEmpty()) {
-                item(key = "recent_header") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = "Recent",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                // Active filter chips — visible only when filters differ from defaults.
+                if (!state.filters.isDefault) {
+                    item(key = "active_filters") {
+                        ActiveFilterChipRow(
+                            filters = state.filters,
+                            onRemoveCategory = { cat ->
+                                searchViewModel.onFiltersApplied()
+                                searchViewModel.onDraftFilterChanged(
+                                    state.filters.copy(categories = state.filters.categories - cat),
+                                )
+                                searchViewModel.onFiltersApplied()
+                            },
+                            onRemoveRating = {
+                                searchViewModel.onDraftFilterChanged(state.filters.copy(minRating = 0f))
+                                searchViewModel.onFiltersApplied()
+                            },
+                            onRemovePrice = {
+                                searchViewModel.onDraftFilterChanged(state.filters.copy(maxPrice = 5000))
+                                searchViewModel.onFiltersApplied()
+                            },
+                            onRemoveAvailability = {
+                                searchViewModel.onDraftFilterChanged(state.filters.copy(availability = null))
+                                searchViewModel.onFiltersApplied()
+                            },
+                            onRemoveSort = {
+                                searchViewModel.onDraftFilterChanged(state.filters.copy(sortOrder = SortOrder.NEWEST))
+                                searchViewModel.onFiltersApplied()
+                            },
+                            onClearAll = searchViewModel::onFiltersReset,
                         )
-                        TextButton(onClick = { searchViewModel.clearRecentSearches() }) {
-                            Text("Clear", style = MaterialTheme.typography.labelMedium)
-                        }
                     }
                 }
-                item(key = "recent_searches") {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height((state.recentSearches.size * 48).dp.coerceAtMost(240.dp)),
-                    ) {
-                        state.recentSearches.forEach { term ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { searchViewModel.onQueryChanged(term) }
-                                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.History,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(16.dp),
-                                )
-                                Spacer(Modifier.width(12.dp))
-                                Text(
-                                    text = term,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
+
+                // Recent searches — shown when query is empty and history exists.
+                if (state.query.isEmpty() && state.recentSearches.isNotEmpty()) {
+                    item(key = "recent_header") {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "Recent",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            TextButton(onClick = { searchViewModel.clearRecentSearches() }) {
+                                Text("Clear", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                    }
+                    item(key = "recent_searches") {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height((state.recentSearches.size * 48).dp.coerceAtMost(240.dp)),
+                        ) {
+                            state.recentSearches.forEach { term ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { searchViewModel.onQueryChanged(term) }
+                                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.History,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(
+                                        text = term,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // Shimmer placeholders during initial load.
-            if (state.isLoading) {
-                items(count = SEARCH_SHIMMER_COUNT, key = { "shimmer_$it" }) {
-                    ServiceCardShimmer()
+                // Shimmer placeholders during initial load.
+                if (state.isLoading) {
+                    items(count = SEARCH_SHIMMER_COUNT, key = { "shimmer_$it" }) {
+                        ServiceCardShimmer()
+                    }
                 }
-            }
 
-            // Empty state after successful load with no results.
-            if (!state.isLoading && state.services.isEmpty() && state.query.isNotEmpty()) {
-                item(key = "empty") {
-                    EmptyServicesView(
-                        message = "No results for \"${state.query}\"",
-                        modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
-                    )
-                }
-            }
-
-            // Result cards.
-            items(items = state.services, key = { it.id }) { service ->
-                SearchServiceRow(
-                    service = service,
-                    onClick = { onNavigateToServiceDetail(service.id) },
-                    onChatClick = { onNavigateToChat(service.providerId) },
-                    modifier = Modifier.testTag("search_card_${service.id}"),
-                )
-            }
-
-            // Pagination spinner.
-            if (state.isLoadingMore) {
-                item(key = "loading_more") {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularWavyProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = MaterialTheme.colorScheme.primary,
+                // Empty state after successful load with no results.
+                if (!state.isLoading && state.services.isEmpty() && state.query.isNotEmpty()) {
+                    item(key = "empty") {
+                        EmptyServicesView(
+                            message = "No results for \"${state.query}\"",
+                            modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
                         )
                     }
                 }
-            }
+
+                // Result cards.
+                items(items = state.services, key = { it.id }) { service ->
+                    SearchServiceRow(
+                        service = service,
+                        onClick = { onNavigateToServiceDetail(service.id) },
+                        onChatClick = { onNavigateToChat(service.providerId) },
+                        modifier = Modifier.testTag("search_card_${service.id}"),
+                    )
+                }
+
+                // Pagination spinner.
+                if (state.isLoadingMore) {
+                    item(key = "loading_more") {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularWavyProgressIndicator(
+                                modifier = Modifier.align(Alignment.Center),
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
             }
         }
 

@@ -19,7 +19,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object CoilModule {
-
     private const val DISK_CACHE_SIZE_BYTES = 100L * 1024L * 1024L
     private const val MEMORY_FRACTION = 0.25
     private const val CROSSFADE_DURATION_MS = 300
@@ -30,19 +29,20 @@ object CoilModule {
         @ApplicationContext context: Context,
         okHttpClient: OkHttpClient,
     ): ImageLoader {
-        return ImageLoader.Builder(context)
+        return ImageLoader
+            .Builder(context)
             .memoryCache {
-                MemoryCache.Builder(context)
+                MemoryCache
+                    .Builder(context)
                     .maxSizePercent(MEMORY_FRACTION)
                     .build()
-            }
-            .diskCache {
-                DiskCache.Builder()
+            }.diskCache {
+                DiskCache
+                    .Builder()
                     .directory(File(context.cacheDir, "coil"))
                     .maxSizeBytes(DISK_CACHE_SIZE_BYTES)
                     .build()
-            }
-            .crossfade(CROSSFADE_DURATION_MS)
+            }.crossfade(CROSSFADE_DURATION_MS)
             .okHttpClient(okHttpClient)
             .memoryCachePolicy(CachePolicy.ENABLED)
             .diskCachePolicy(CachePolicy.ENABLED)
@@ -51,8 +51,6 @@ object CoilModule {
                 if (BuildConfig.DEBUG) {
                     logger(DebugLogger())
                 }
-            }
-            .build()
+            }.build()
     }
 }
-

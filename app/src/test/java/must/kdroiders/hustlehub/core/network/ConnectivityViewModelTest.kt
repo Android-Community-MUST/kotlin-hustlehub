@@ -15,7 +15,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ConnectivityViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
 
     @Before

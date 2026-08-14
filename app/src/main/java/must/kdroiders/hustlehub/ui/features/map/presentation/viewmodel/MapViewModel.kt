@@ -66,8 +66,10 @@ class MapViewModel
             getMapPinsUseCase = getMapPinsUseCase,
             userPreferences = userPreferences,
             notificationRepository = notificationRepository,
-            hustleAnalytics = must.kdroiders.hustlehub.core.telemetry.HustleAnalytics(null),
-            hustleCrashlytics = must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics(null),
+            hustleAnalytics = must.kdroiders.hustlehub.core.telemetry
+                .HustleAnalytics(null),
+            hustleCrashlytics = must.kdroiders.hustlehub.core.telemetry
+                .HustleCrashlytics(null),
         ) {
             isPollingEnabled = startPollingImmediately
             if (!startPollingImmediately) {

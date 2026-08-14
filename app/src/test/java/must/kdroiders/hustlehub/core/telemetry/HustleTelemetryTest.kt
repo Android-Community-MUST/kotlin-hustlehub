@@ -13,7 +13,6 @@ import org.junit.Before
 import org.junit.Test
 
 class HustleTelemetryTest {
-
     @Before
     fun setup() {
         mockkConstructor(Bundle::class)

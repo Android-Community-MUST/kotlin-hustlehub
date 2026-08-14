@@ -13,7 +13,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object ConnectivityModule {
-
     @Provides
     @Singleton
     fun provideConnectivityObserver(

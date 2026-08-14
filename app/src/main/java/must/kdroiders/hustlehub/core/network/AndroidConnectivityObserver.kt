@@ -23,7 +23,6 @@ import java.net.Socket
 class AndroidConnectivityObserver(
     private val context: Context,
 ) : ConnectivityObserver {
-
     private val connectivityManager =
         requireNotNull(context.getSystemService<ConnectivityManager>()) {
             "ConnectivityManager is not available on this device"
@@ -59,13 +58,17 @@ class AndroidConnectivityObserver(
                     trySend(false)
                 }
 
-                override fun onLosing(network: Network, maxMsToLive: Int) {
+                override fun onLosing(
+                    network: Network,
+                    maxMsToLive: Int,
+                ) {
                     super.onLosing(network, maxMsToLive)
                     trySend(false)
                 }
             }
 
-            val networkRequest = NetworkRequest.Builder()
+            val networkRequest = NetworkRequest
+                .Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
                 .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
@@ -85,8 +88,7 @@ class AndroidConnectivityObserver(
                     Timber.tag("ConnectivityObserver").w("Callback already unregistered: ${e.message}")
                 }
             }
-        }
-            .distinctUntilChanged()
+        }.distinctUntilChanged()
             .debounce { online -> if (online) 0L else 1_000L }
 
     private suspend fun checkActiveInternetConnectivity(): Boolean =

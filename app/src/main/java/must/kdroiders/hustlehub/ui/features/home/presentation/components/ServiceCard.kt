@@ -66,7 +66,8 @@ fun ServiceCard(
             val imageUrl = service.portfolio.firstOrNull() ?: service.iconUrl
             if (imageUrl.isNotBlank()) {
                 AsyncImage(
-                    model = ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                    model = ImageRequest
+                        .Builder(androidx.compose.ui.platform.LocalContext.current)
                         .data(imageUrl)
                         // Request exactly card-thumbnail resolution to avoid downloading full-res
                         .size(Size(360, 200))

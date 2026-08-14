@@ -61,12 +61,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator

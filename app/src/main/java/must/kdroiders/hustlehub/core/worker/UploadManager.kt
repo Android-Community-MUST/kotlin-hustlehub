@@ -17,40 +17,43 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class UploadManager @Inject constructor(
-    @ApplicationContext private val context: Context,
-) {
-    private val workManager = WorkManager.getInstance(context)
+class UploadManager
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+    ) {
+        private val workManager = WorkManager.getInstance(context)
 
-    fun enqueueUpload(filePath: String): UUID {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+        fun enqueueUpload(filePath: String): UUID {
+            val constraints = Constraints
+                .Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
 
-        val inputData = Data.Builder()
-            .putString(MediaUploadWorker.KEY_FILE_PATH, filePath)
-            .build()
+            val inputData = Data
+                .Builder()
+                .putString(MediaUploadWorker.KEY_FILE_PATH, filePath)
+                .build()
 
-        val workRequest = OneTimeWorkRequestBuilder<MediaUploadWorker>()
-            .setConstraints(constraints)
-            .setInputData(inputData)
-            .setBackoffCriteria(
-                BackoffPolicy.EXPONENTIAL,
-                10,
-                TimeUnit.SECONDS,
+            val workRequest = OneTimeWorkRequestBuilder<MediaUploadWorker>()
+                .setConstraints(constraints)
+                .setInputData(inputData)
+                .setBackoffCriteria(
+                    BackoffPolicy.EXPONENTIAL,
+                    10,
+                    TimeUnit.SECONDS,
+                ).build()
+
+            workManager.enqueueUniqueWork(
+                "upload_${filePath.hashCode()}",
+                ExistingWorkPolicy.KEEP,
+                workRequest,
             )
-            .build()
 
-        workManager.enqueueUniqueWork(
-            "upload_${filePath.hashCode()}",
-            ExistingWorkPolicy.KEEP,
-            workRequest,
-        )
+            return workRequest.id
+        }
 
-        return workRequest.id
+        fun getWorkInfoLiveData(workId: UUID): LiveData<WorkInfo?> {
+            return workManager.getWorkInfoByIdLiveData(workId)
+        }
     }
-
-    fun getWorkInfoLiveData(workId: UUID): LiveData<WorkInfo?> {
-        return workManager.getWorkInfoByIdLiveData(workId)
-    }
-}

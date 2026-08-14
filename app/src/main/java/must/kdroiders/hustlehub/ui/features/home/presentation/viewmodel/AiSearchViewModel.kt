@@ -8,11 +8,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
+import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchMatch
 import must.kdroiders.hustlehub.ui.features.home.data.remote.AiSearchRequest
 import must.kdroiders.hustlehub.ui.features.home.data.remote.QueryUnderstanding
-import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
-import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.AiSearchUseCase
 import javax.inject.Inject
 

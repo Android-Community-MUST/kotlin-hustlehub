@@ -50,8 +50,10 @@ class SignUpViewModelTest {
         viewModel = SignUpViewModel(
             signUpUseCase = mockSignUpUseCase,
             userPreferences = mockUserPreferences,
-            hustleAnalytics = must.kdroiders.hustlehub.core.telemetry.HustleAnalytics(null),
-            hustleCrashlytics = must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics(null),
+            hustleAnalytics = must.kdroiders.hustlehub.core.telemetry
+                .HustleAnalytics(null),
+            hustleCrashlytics = must.kdroiders.hustlehub.core.telemetry
+                .HustleCrashlytics(null),
         )
     }
 

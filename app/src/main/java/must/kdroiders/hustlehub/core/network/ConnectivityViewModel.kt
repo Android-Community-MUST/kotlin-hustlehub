@@ -8,18 +8,19 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
-class ConnectivityViewModel @Inject constructor(
-    private val connectivityObserver: ConnectivityObserver,
-) : ViewModel() {
+class ConnectivityViewModel
+    @Inject
+    constructor(
+        private val connectivityObserver: ConnectivityObserver,
+    ) : ViewModel() {
+        val isConnected = connectivityObserver.isConnected.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = true,
+        )
 
-    val isConnected = connectivityObserver.isConnected.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = true,
-    )
-
-    fun retryConnectivityCheck() {
-        if (connectivityObserver is AndroidConnectivityObserver) {
+        fun retryConnectivityCheck() {
+            if (connectivityObserver is AndroidConnectivityObserver) {
+            }
         }
     }
-}

@@ -40,7 +40,6 @@ import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 import must.kdroiders.hustlehub.ui.theme.HustleWhite
 
-
 @Composable
 fun OfflineBanner(
     isOnline: Boolean,
@@ -74,8 +73,7 @@ fun OfflineBanner(
                 .padding(horizontal = 16.dp, vertical = 2.dp)
                 .semantics {
                     liveRegion = LiveRegionMode.Polite
-                }
-                .testTag("offline_banner"),
+                }.testTag("offline_banner"),
             contentAlignment = Alignment.Center,
         ) {
             Row(

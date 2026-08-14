@@ -16,7 +16,6 @@ import javax.inject.Provider
 
 @HiltAndroidApp
 class HustleHubApp : Application(), ImageLoaderFactory, Configuration.Provider {
-
     @Inject
     lateinit var imageLoaderProvider: Provider<ImageLoader>
 
@@ -48,7 +47,8 @@ class HustleHubApp : Application(), ImageLoaderFactory, Configuration.Provider {
     override fun newImageLoader(): ImageLoader = imageLoaderProvider.get()
 
     override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
+        get() = Configuration
+            .Builder()
             .setWorkerFactory(workerFactory)
             .build()
 }
