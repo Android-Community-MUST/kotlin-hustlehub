@@ -135,7 +135,7 @@ object AppModule {
                 AppDatabase::class.java,
                 "hustlehub.db",
             ).addMigrations(AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6)
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
 
     @Provides

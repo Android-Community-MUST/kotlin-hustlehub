@@ -28,68 +28,68 @@ class AndroidConnectivityObserver(
             "ConnectivityManager is not available on this device"
         }
 
-    override val isConnected: Flow<Boolean>
-        get() = callbackFlow {
-            val callback = object : NetworkCallback() {
-                override fun onAvailable(network: Network) {
-                    super.onAvailable(network)
-                    launch {
-                        trySend(checkActiveInternetConnectivity())
-                    }
-                }
-
-                override fun onLost(network: Network) {
-                    super.onLost(network)
-                    trySend(false)
-                }
-
-                override fun onCapabilitiesChanged(
-                    network: Network,
-                    networkCapabilities: NetworkCapabilities,
-                ) {
-                    super.onCapabilitiesChanged(network, networkCapabilities)
-                    launch {
-                        trySend(checkActiveInternetConnectivity())
-                    }
-                }
-
-                override fun onUnavailable() {
-                    super.onUnavailable()
-                    trySend(false)
-                }
-
-                override fun onLosing(
-                    network: Network,
-                    maxMsToLive: Int,
-                ) {
-                    super.onLosing(network, maxMsToLive)
-                    trySend(false)
+    @OptIn(kotlinx.coroutines.FlowPreview::class)
+    override val isConnected: Flow<Boolean> = callbackFlow {
+        val callback = object : NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                launch {
+                    trySend(checkActiveInternetConnectivity())
                 }
             }
 
-            val networkRequest = NetworkRequest
-                .Builder()
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
-                .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
-                .build()
-
-            connectivityManager.registerNetworkCallback(networkRequest, callback)
-
-            launch {
-                trySend(checkActiveInternetConnectivity())
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                trySend(false)
             }
 
-            awaitClose {
-                try {
-                    connectivityManager.unregisterNetworkCallback(callback)
-                } catch (e: IllegalArgumentException) {
-                    Timber.tag("ConnectivityObserver").w("Callback already unregistered: ${e.message}")
+            override fun onCapabilitiesChanged(
+                network: Network,
+                networkCapabilities: NetworkCapabilities,
+            ) {
+                super.onCapabilitiesChanged(network, networkCapabilities)
+                launch {
+                    trySend(checkActiveInternetConnectivity())
                 }
             }
-        }.distinctUntilChanged()
-            .debounce { online -> if (online) 0L else 1_000L }
+
+            override fun onUnavailable() {
+                super.onUnavailable()
+                trySend(false)
+            }
+
+            override fun onLosing(
+                network: Network,
+                maxMsToLive: Int,
+            ) {
+                super.onLosing(network, maxMsToLive)
+                trySend(false)
+            }
+        }
+
+        val networkRequest = NetworkRequest
+            .Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+            .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
+            .build()
+
+        connectivityManager.registerNetworkCallback(networkRequest, callback)
+
+        launch {
+            trySend(checkActiveInternetConnectivity())
+        }
+
+        awaitClose {
+            try {
+                connectivityManager.unregisterNetworkCallback(callback)
+            } catch (e: IllegalArgumentException) {
+                Timber.tag("ConnectivityObserver").w("Callback already unregistered: ${e.message}")
+            }
+        }
+    }.distinctUntilChanged()
+        .debounce { online -> if (online) 0L else 1_000L }
 
     private suspend fun checkActiveInternetConnectivity(): Boolean =
         withContext(Dispatchers.IO) {
