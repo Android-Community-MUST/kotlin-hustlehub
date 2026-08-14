@@ -48,6 +48,18 @@ android {
         resValue("string", "google_web_client_id", keysProperty("GOOGLE_WEB_CLIENT_ID", ""))
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreFile = keysProperty("KEYSTORE_FILE").ifEmpty { System.getenv("KEYSTORE_FILE") ?: "" }
+            if (keystoreFile.isNotEmpty()) {
+                storeFile = file(keystoreFile)
+                storePassword = keysProperty("KEYSTORE_PASSWORD").ifEmpty { System.getenv("KEYSTORE_PASSWORD") ?: "" }
+                keyAlias = keysProperty("KEY_ALIAS").ifEmpty { System.getenv("KEY_ALIAS") ?: "" }
+                keyPassword = keysProperty("KEY_PASSWORD").ifEmpty { System.getenv("KEY_PASSWORD") ?: "" }
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -56,6 +68,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            val keystoreFile = keysProperty("KEYSTORE_FILE").ifEmpty { System.getenv("KEYSTORE_FILE") ?: "" }
+            if (keystoreFile.isNotEmpty()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
