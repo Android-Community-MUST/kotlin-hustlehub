@@ -20,8 +20,6 @@ class ConnectivityViewModel @Inject constructor(
 
     fun retryConnectivityCheck() {
         if (connectivityObserver is AndroidConnectivityObserver) {
-            // Re-registration is handled automatically by the callbackFlow restart;
-            // this method is a hook for manual UI retry triggering if needed.
         }
     }
 }

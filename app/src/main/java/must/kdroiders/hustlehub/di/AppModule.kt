@@ -96,7 +96,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideStorageRepository(mediaApiService: MediaApiService): StorageRepository = StorageRepositoryImpl(mediaApiService)
+    fun provideStorageRepository(
+        mediaApiService: MediaApiService,
+        uploadManager: must.kdroiders.hustlehub.core.worker.UploadManager,
+    ): StorageRepository = StorageRepositoryImpl(mediaApiService, uploadManager)
 
     @Provides
     @Singleton

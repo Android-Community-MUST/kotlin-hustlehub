@@ -6,20 +6,18 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,14 +28,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
+import must.kdroiders.hustlehub.ui.theme.HustleWhite
+
 
 @Composable
 fun OfflineBanner(
@@ -69,7 +71,10 @@ fun OfflineBanner(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(if (isOffline) HustleWarningAmber else HustleActiveGreen)
-                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .padding(horizontal = 16.dp, vertical = 2.dp)
+                .semantics {
+                    liveRegion = LiveRegionMode.Polite
+                }
                 .testTag("offline_banner"),
             contentAlignment = Alignment.Center,
         ) {
@@ -80,26 +85,28 @@ fun OfflineBanner(
                 Icon(
                     imageVector = if (isOffline) Icons.Default.WifiOff else Icons.Default.Wifi,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = HustleWhite,
                     modifier = Modifier.size(16.dp),
                 )
                 Text(
                     text = if (isOffline) "You're offline. Browsing cached data." else "Back online",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = HustleWhite,
                     fontSize = 12.sp,
                 )
                 if (isOffline && onRetry != null) {
-                    Spacer(Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Retry connection",
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clickable { onRetry() },
-                    )
+                    IconButton(
+                        onClick = onRetry,
+                        modifier = Modifier.size(36.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Retry connection",
+                            tint = HustleWhite,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
                 }
             }
         }

@@ -1,6 +1,8 @@
 package must.kdroiders.hustlehub.appHilt
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.google.firebase.FirebaseApp
@@ -11,10 +13,13 @@ import javax.inject.Inject
 import javax.inject.Provider
 
 @HiltAndroidApp
-class HustleHubApp : Application(), ImageLoaderFactory {
+class HustleHubApp : Application(), ImageLoaderFactory, Configuration.Provider {
 
     @Inject
     lateinit var imageLoaderProvider: Provider<ImageLoader>
+
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
 
     override fun onCreate() {
         super.onCreate()
@@ -31,4 +36,9 @@ class HustleHubApp : Application(), ImageLoaderFactory {
     }
 
     override fun newImageLoader(): ImageLoader = imageLoaderProvider.get()
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 }

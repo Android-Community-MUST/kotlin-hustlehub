@@ -12,16 +12,12 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Concrete implementation of [StorageRepository].
- *
- * Sends image data to the HustleHub backend media API (`POST /api/v1/media/upload`).
- */
 @Singleton
 class StorageRepositoryImpl
     @Inject
     constructor(
         private val mediaApiService: MediaApiService,
+        private val uploadManager: must.kdroiders.hustlehub.core.worker.UploadManager,
     ) : StorageRepository {
         private companion object {
             private const val MIME_JPEG = "image/jpeg"
@@ -30,6 +26,10 @@ class StorageRepositoryImpl
             private const val FILENAME_PREFIX = "portfolio_"
             private const val FILENAME_SUFFIX = ".jpg"
             private const val TAG = "StorageRepositoryImpl"
+        }
+
+        override fun enqueueResumableUpload(filePath: String): java.util.UUID {
+            return uploadManager.enqueueUpload(filePath)
         }
 
         override fun uploadPortfolioImage(
@@ -45,7 +45,6 @@ class StorageRepositoryImpl
                     val body = MultipartBody.Part.createFormData("file", fileName, requestFile)
 
                     val typeBody = MultipartBody.Part.createFormData("type", UPLOAD_TYPE_PORTFOLIO)
-                    // entityId is required for service uploads
                     val entityIdBody = MultipartBody.Part.createFormData("entityId", serviceId.ifBlank { "unknown" })
 
                     emit(UploadResult.Progress(0.5f))

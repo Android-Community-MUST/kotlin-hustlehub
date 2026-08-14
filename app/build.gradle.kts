@@ -97,8 +97,13 @@ dependencies {
 
     // Hilt Dependency Injection
     implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.work)
     ksp(libs.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
     ksp(libs.kotlin.metadata.jvm)
+
+    // WorkManager (Persistent Background Tasks)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // Room Database
     implementation(libs.androidx.room.runtime)

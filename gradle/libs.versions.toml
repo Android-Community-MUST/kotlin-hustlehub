@@ -48,6 +48,7 @@ shortcutBadger = "1.1.22"
 leakcanary = "2.14"
 profileinstaller = "1.4.1"
 benchmark-macro = "1.4.1"
+work = "2.10.0"
 
 # expressive
 material3 = "1.5.0-alpha25"
@@ -89,6 +90,11 @@ androidx-adaptive-navigation3 = { group = "androidx.compose.material3.adaptive",
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltnav" }
+androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltnav" }
+androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltnav" }
+
+# WorkManager
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 
 # Room
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
