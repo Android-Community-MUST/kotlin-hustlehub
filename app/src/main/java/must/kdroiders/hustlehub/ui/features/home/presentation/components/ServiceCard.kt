@@ -34,6 +34,9 @@ import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
 
 @Composable
 fun ServiceCard(
@@ -144,6 +147,19 @@ private fun AvailabilityBadge(
 ) {
     if (availability != ServiceAvailability.AVAILABLE) return
 
+    val targetColor = when(availability) {
+        ServiceAvailability.AVAILABLE -> HustleActiveGreen
+        ServiceAvailability.BUSY -> Color.Yellow
+        ServiceAvailability.OFFLINE -> Color.Red
+        else -> Color.Gray
+    }
+
+    val animatedColor by animateColorAsState(
+        targetValue = targetColor,
+        animationSpec = tween(500),
+        label = "availability_color"
+    )
+
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
@@ -155,7 +171,7 @@ private fun AvailabilityBadge(
                 modifier = Modifier
                     .size(6.dp)
                     .clip(CircleShape)
-                    .background(HustleActiveGreen),
+                    .background(animatedColor),
             )
             Spacer(Modifier.width(4.dp))
             Text(

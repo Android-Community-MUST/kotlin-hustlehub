@@ -3,9 +3,22 @@ package must.kdroiders.hustlehub.ui.features.map.presentation.view.components
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,7 +36,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,12 +59,12 @@ fun ProviderMarkerContent(pin: MapPin) {
     val (icon, baseColor) = getCategoryIconAndColor(pin.category)
     val neonColor = remember(pin.category) {
         when (pin.category) {
-            ServiceCategory.SALON -> Color(0xFFB388FF) // Neon light purple
-            ServiceCategory.LAUNDRY -> Color(0xFF80D8FF) // Neon cyan/blue
-            ServiceCategory.TUTORING -> Color(0xFF00E676) // Neon vibrant green
-            ServiceCategory.FOOD -> Color(0xFFFFB300) // Neon amber/gold
-            ServiceCategory.TECH -> Color(0xFF00E5FF) // Neon cyan
-            ServiceCategory.FASHION -> Color(0xFF82B1FF) // Neon blue/indigo
+            ServiceCategory.SALON -> Color(0xFFB388FF)       // Neon light purple
+            ServiceCategory.LAUNDRY -> Color(0xFF80D8FF)     // Neon cyan/blue
+            ServiceCategory.TUTORING -> Color(0xFF00E676)    // Neon vibrant green
+            ServiceCategory.FOOD -> Color(0xFFFFB300)        // Neon amber/gold
+            ServiceCategory.TECH -> Color(0xFF00E5FF)        // Neon cyan
+            ServiceCategory.FASHION -> Color(0xFF82B1FF)     // Neon blue/indigo
             ServiceCategory.PHOTOGRAPHY -> Color(0xFFFF4081) // Neon pink
             else -> Color(0xFFE0E0E0)
         }
@@ -57,102 +74,116 @@ fun ProviderMarkerContent(pin: MapPin) {
     val titleTextColor = MaterialTheme.colorScheme.onSurface
     val subtitleTextColor = MaterialTheme.colorScheme.onSurfaceVariant
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(IntrinsicSize.Max),
-    ) {
-        // Pill Layout with Glowing Neon Outer Halo
-        Row(
-            modifier = Modifier
-                .border(
-                    width = 3.dp,
-                    color = neonColor.copy(alpha = 0.35f),
-                    shape = RoundedCornerShape(26.dp),
-                ).background(
-                    color = pillBgColor,
-                    shape = RoundedCornerShape(24.dp),
-                ).border(
-                    width = 1.5.dp,
-                    color = neonColor,
-                    shape = RoundedCornerShape(24.dp),
-                ).padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            // Icon Badge
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .background(
-                        color = baseColor.copy(alpha = 0.25f),
-                        shape = CircleShape,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = neonColor,
-                    modifier = Modifier.size(14.dp),
-                )
-            }
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
 
-            // Info Column
-            Column(
-                verticalArrangement = Arrangement.Center,
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically(
+            initialOffsetY = { -it * 2 },
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        ) + fadeIn(),
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.width(IntrinsicSize.Max),
+        ) {
+            // Pill Layout with Glowing Neon Outer Halo
+            Row(
+                modifier = Modifier
+                    .border(
+                        width = 3.dp,
+                        color = neonColor.copy(alpha = 0.35f),
+                        shape = RoundedCornerShape(26.dp),
+                    )
+                    .background(
+                        color = pillBgColor,
+                        shape = RoundedCornerShape(24.dp),
+                    )
+                    .border(
+                        width = 1.5.dp,
+                        color = neonColor,
+                        shape = RoundedCornerShape(24.dp),
+                    )
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(
-                    text = pin.providerName,
-                    color = titleTextColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    softWrap = false,
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                // Icon Badge
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(
+                            color = baseColor.copy(alpha = 0.25f),
+                            shape = CircleShape,
+                        ),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        text = pin.category.label,
-                        color = subtitleTextColor,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
-                    Text(
-                        text = "•",
-                        color = subtitleTextColor,
-                        fontSize = 9.sp,
-                    )
                     Icon(
-                        imageVector = Icons.Default.Star,
+                        imageVector = icon,
                         contentDescription = null,
-                        tint = Color(0xFFFFD740),
-                        modifier = Modifier.size(10.dp),
-                    )
-                    Text(
-                        text = String.format(java.util.Locale.US, "%.1f", pin.averageRating),
-                        color = titleTextColor,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
+                        tint = neonColor,
+                        modifier = Modifier.size(14.dp),
                     )
                 }
-            }
-        }
 
-        // Pointer Triangle (glowing base border)
-        Box(
-            modifier = Modifier
-                .offset(y = (-4).dp)
-                .size(10.dp)
-                .graphicsLayer(rotationZ = 45f)
-                .background(pillBgColor)
-                .border(
-                    width = 1.5.dp,
-                    color = neonColor,
-                    shape = RoundedCornerShape(topStart = 0.dp),
-                ),
-        )
+                // Info Column
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = pin.providerName,
+                        color = titleTextColor,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Text(
+                            text = pin.category.label,
+                            color = subtitleTextColor,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        Text(
+                            text = "•",
+                            color = subtitleTextColor,
+                            fontSize = 9.sp,
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            tint = Color(0xFFFFD740),
+                            modifier = Modifier.size(10.dp),
+                        )
+                        Text(
+                            text = String.format(java.util.Locale.US, "%.1f", pin.averageRating),
+                            color = titleTextColor,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+
+            // Pointer Triangle — downward caret below the pill
+            Box(
+                modifier = Modifier
+                    .offset(y = (-2).dp)
+                    .size(10.dp)
+                    .graphicsLayer(rotationZ = 45f)
+                    .background(pillBgColor)
+                    .border(
+                        width = 1.5.dp,
+                        color = neonColor,
+                        shape = RoundedCornerShape(topStart = 0.dp),
+                    ),
+            )
+        }
     }
 }
 

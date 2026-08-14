@@ -1,8 +1,10 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.components
 
 import android.location.Location
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -47,9 +49,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.animation.scaleIn
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -119,12 +124,24 @@ fun MessageBubble(
     var replyThreshold by remember { mutableStateOf(0f) }
     var showMenu by remember { mutableStateOf(false) }
 
-    Box(
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = scaleIn(
+            initialScale = 0.5f,
+            transformOrigin = TransformOrigin(if (isCurrentUser) 1f else 0f, 1f),
+            animationSpec = tween(300)
+        ) + fadeIn(tween(300)),
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        contentAlignment = Alignment.CenterStart,
+            .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.CenterStart,
+        ) {
         // Background layer: Reply Icon (only shown if dragging)
         if (dragAmountX > 0f) {
             val scale = (dragAmountX / replyThreshold).coerceIn(0f, 1.2f)
@@ -496,6 +513,7 @@ fun MessageBubble(
                     }
                 }
             }
+        }
         }
     }
 }

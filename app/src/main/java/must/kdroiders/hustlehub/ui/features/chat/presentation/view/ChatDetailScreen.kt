@@ -10,8 +10,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -72,6 +79,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -81,8 +89,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -720,13 +730,7 @@ fun ChatDetailScreen(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "...",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    TypingIndicatorDots(color = MaterialTheme.colorScheme.primary)
                 }
             }
 
@@ -1023,16 +1027,33 @@ fun ChatDetailScreen(
                         }
                     } else {
                         // Send text button
+                        var isPressed by remember { mutableStateOf(false) }
+                        val sendScale by animateFloatAsState(
+                            targetValue = if (isPressed) 0.8f else 1f,
+                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                            label = "send_scale"
+                        )
+
                         IconButton(
-                            onClick = {
-                                chatDetailViewModel.sendTextMessage(textInput)
-                                textInput = ""
-                            },
+                            onClick = { /* handled by pointer input */ },
                             colors = IconButtonDefaults.iconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary,
                             ),
-                            modifier = Modifier.size(40.dp),
+                            modifier = Modifier
+                                .size(40.dp)
+                                .scale(sendScale)
+                                .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onPress = {
+                                            isPressed = true
+                                            tryAwaitRelease()
+                                            isPressed = false
+                                            chatDetailViewModel.sendTextMessage(textInput)
+                                            textInput = ""
+                                        }
+                                    )
+                                },
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Send,
@@ -1108,5 +1129,38 @@ private fun formatLastSeen(isoString: String): String {
         }
     } catch (e: Exception) {
         "a while ago"
+    }
+}
+
+@Composable
+private fun TypingIndicatorDots(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary
+) {
+    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "typing_dots")
+    val dotCount = 3
+
+    val dotAnimations = (0 until dotCount).map { index ->
+        infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                animation = tween(durationMillis = 600, delayMillis = index * 200),
+                repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+            ),
+            label = "dot_alpha_$index"
+        )
+    }
+
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        dotAnimations.forEach { anim ->
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.3f + (0.7f * anim.value)))
+                    .offset(y = (-4).dp * anim.value)
+            )
+        }
     }
 }
