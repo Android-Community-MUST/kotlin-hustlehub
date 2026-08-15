@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0-rc1] — 2026-08-15
+
+### Added
+- **Release Build & ProGuard/R8 (#99)**:
+  - Configured R8 minification & resource shrinking (`isMinifyEnabled = true`, `isShrinkResources = true`).
+  - Added ProGuard rules in `proguard-rules.pro` for Hilt, Retrofit, Moshi/Gson, Room, Firebase, Coil, and Google Maps.
+  - Implemented release `signingConfigs` in `app/build.gradle.kts` reading from `keys.properties` or environment variables.
+  - Generated verified 18 MB signed release AAB (`app/release/app-release.aab`).
+- **Firebase Telemetry (#94)**:
+  - `HustleCrashlytics.kt` wrapper with custom keys (`userId`, `screen`, `backend_version = "4.0.0-SpringBoot"`), non-fatal exception logging, and test crash trigger.
+  - `HustleAnalytics.kt` wrapper logging 9 key events (`signup_completed`, `service_created`, `service_viewed`, `message_sent`, `voice_note_sent`, `ai_search_used`, `review_submitted`, `map_opened`, `provider_contacted`) and user properties (`role`, `campusLocation`, `is_verified_pro`).
+  - Configured `HustleHubApp.kt` to disable analytics collection in debug builds (`!BuildConfig.DEBUG`).
+- **Offline Experience & Edge Cases (#92)**:
+  - `ConnectivityObserver` & `AndroidConnectivityObserver` with active `8.8.8.8:53` socket ping.
+  - `OfflineBanner.kt` with state-based reconnection notifications.
+  - Room draft message auto-sync in `ChatDetailViewModel.kt`.
+  - WorkManager `MediaUploadWorker` & `UploadManager` for background resumable media uploads.
+  - `AccountSuspendedScreen.kt` for HTTP 403 response handling.
+- **UI States & Accessibility (#90)**:
+  - Comprehensive loading, error, empty, pull-to-refresh (`PullToRefreshBox`), and accessibility (`heading()` semantics) across all screens.
+
+### Fixed
+- Fixed `RemoveWorkManagerInitializer` lint error in `AndroidManifest.xml` for Hilt on-demand WorkManager initialization.
+- Converted `dark_logo.png` image data format to resolve AAPT2 release resource compilation.
+
+---
+
 ## [Unreleased]
 
 ### Added
