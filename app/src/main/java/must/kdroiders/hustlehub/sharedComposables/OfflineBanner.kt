@@ -47,10 +47,15 @@ fun OfflineBanner(
     modifier: Modifier = Modifier,
 ) {
     var showReconnected by remember { mutableStateOf(false) }
+    var hasBeenOffline by remember { mutableStateOf(false) }
 
     LaunchedEffect(isOnline) {
-        if (isOnline) {
+        if (!isOnline) {
+            hasBeenOffline = true
+            showReconnected = false
+        } else if (hasBeenOffline) {
             showReconnected = true
+            hasBeenOffline = false
             delay(3_000L)
             showReconnected = false
         }
