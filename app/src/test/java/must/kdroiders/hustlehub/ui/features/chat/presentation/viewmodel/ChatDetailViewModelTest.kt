@@ -35,7 +35,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatDetailViewModelTest {
-
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var context: Context
@@ -114,19 +113,20 @@ class ChatDetailViewModelTest {
     }
 
     @Test
-    fun `blockUser delegates target user ID to userRepository`() = runTest {
-        coEvery { userRepository.blockUser("conv-1") } returns Result.success(Unit)
+    fun `blockUser delegates target user ID to userRepository`() =
+        runTest {
+            coEvery { userRepository.blockUser("conv-1") } returns Result.success(Unit)
 
-        viewModel.initialize(
-            conversationId = "conv-1",
-        )
+            viewModel.initialize(
+                conversationId = "conv-1",
+            )
 
-        var callbackCalled = false
-        viewModel.blockUser {
-            callbackCalled = true
+            var callbackCalled = false
+            viewModel.blockUser {
+                callbackCalled = true
+            }
+
+            coVerify { userRepository.blockUser("conv-1") }
+            assertTrue(callbackCalled)
         }
-
-        coVerify { userRepository.blockUser("conv-1") }
-        assertTrue(callbackCalled)
-    }
 }

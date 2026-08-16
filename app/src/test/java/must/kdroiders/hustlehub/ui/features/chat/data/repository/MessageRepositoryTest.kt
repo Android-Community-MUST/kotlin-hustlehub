@@ -25,7 +25,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MessageRepositoryTest {
-
     private lateinit var context: Context
     private lateinit var conversationApiService: ConversationApiService
     private lateinit var conversationDao: ConversationDao
@@ -59,69 +58,72 @@ class MessageRepositoryTest {
     }
 
     @Test
-    fun `getConversations maps local entities to domain models`() = runTest {
-        val entities = listOf(
-            ConversationEntity(
-                id = "conv-1",
-                otherUserId = "user-2",
-                otherUserName = "Alice",
-                otherUserAvatar = null,
-                serviceId = null,
-                lastMessage = "Hello",
-                lastMessageType = "TEXT",
-                lastMessageAt = "2026-08-16T10:00:00Z",
-                unreadCount = 2,
-                createdAt = "2026-08-16T10:00:00Z",
-            ),
-        )
-        every { conversationDao.getAll() } returns flowOf(entities)
+    fun `getConversations maps local entities to domain models`() =
+        runTest {
+            val entities = listOf(
+                ConversationEntity(
+                    id = "conv-1",
+                    otherUserId = "user-2",
+                    otherUserName = "Alice",
+                    otherUserAvatar = null,
+                    serviceId = null,
+                    lastMessage = "Hello",
+                    lastMessageType = "TEXT",
+                    lastMessageAt = "2026-08-16T10:00:00Z",
+                    unreadCount = 2,
+                    createdAt = "2026-08-16T10:00:00Z",
+                ),
+            )
+            every { conversationDao.getAll() } returns flowOf(entities)
 
-        val result = repository.getConversations().first()
+            val result = repository.getConversations().first()
 
-        assertEquals(1, result.size)
-        assertEquals("conv-1", result[0].id)
-        assertEquals("Alice", result[0].otherUserName)
-        assertEquals(2, result[0].unreadCount)
-    }
-
-    @Test
-    fun `getMessages returns local flow of messages`() = runTest {
-        val messages = listOf(
-            MessageEntity(
-                id = "msg-1",
-                conversationId = "conv-1",
-                senderId = "user-2",
-                type = "TEXT",
-                content = "Hi there!",
-                mediaUrl = null,
-                thumbnailUrl = null,
-                metadata = null,
-                timestamp = "2026-08-16T10:00:00Z",
-                deliveredAt = null,
-                readAt = null,
-                isSynced = true,
-                isFailed = false,
-            ),
-        )
-        every { messageDao.getByConversation("conv-1") } returns flowOf(messages)
-
-        val result = repository.getMessages("conv-1").first()
-
-        assertEquals(1, result.size)
-        assertEquals("msg-1", result[0].id)
-        assertEquals("Hi there!", result[0].content)
-        assertEquals(MessageType.TEXT, result[0].type)
-    }
+            assertEquals(1, result.size)
+            assertEquals("conv-1", result[0].id)
+            assertEquals("Alice", result[0].otherUserName)
+            assertEquals(2, result[0].unreadCount)
+        }
 
     @Test
-    fun `sendMessage via WebSocket saves message to local database`() = runTest {
-        coEvery {
-            chatWebSocketService.sendMessage(any())
-        } returns Unit
+    fun `getMessages returns local flow of messages`() =
+        runTest {
+            val messages = listOf(
+                MessageEntity(
+                    id = "msg-1",
+                    conversationId = "conv-1",
+                    senderId = "user-2",
+                    type = "TEXT",
+                    content = "Hi there!",
+                    mediaUrl = null,
+                    thumbnailUrl = null,
+                    metadata = null,
+                    timestamp = "2026-08-16T10:00:00Z",
+                    deliveredAt = null,
+                    readAt = null,
+                    isSynced = true,
+                    isFailed = false,
+                ),
+            )
+            every { messageDao.getByConversation("conv-1") } returns flowOf(messages)
 
-        val result = repository.sendMessage("conv-1", MessageType.TEXT, "How much for haircut?")
+            val result = repository.getMessages("conv-1").first()
 
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { messageDao.upsert(any()) }
-    }
+            assertEquals(1, result.size)
+            assertEquals("msg-1", result[0].id)
+            assertEquals("Hi there!", result[0].content)
+            assertEquals(MessageType.TEXT, result[0].type)
+        }
+
+    @Test
+    fun `sendMessage via WebSocket saves message to local database`() =
+        runTest {
+            coEvery {
+                chatWebSocketService.sendMessage(any())
+            } returns Unit
+
+            val result = repository.sendMessage("conv-1", MessageType.TEXT, "How much for haircut?")
+
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { messageDao.upsert(any()) }
+        }
 }

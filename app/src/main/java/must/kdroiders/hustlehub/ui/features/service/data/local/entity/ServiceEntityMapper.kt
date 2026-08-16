@@ -51,11 +51,11 @@ private fun parseAvailability(name: String): ServiceAvailability = runCatching {
 
 private fun parseJsonArray(json: String): List<String> =
     runCatching {
-        json.removeSurrounding("[", "]")
+        json
+            .removeSurrounding("[", "]")
             .split(",")
             .map { it.trim().removeSurrounding("\"") }
             .filter { it.isNotEmpty() }
     }.getOrDefault(emptyList())
 
-private fun toJsonArray(items: List<String>): String =
-    items.joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\"" }
+private fun toJsonArray(items: List<String>): String = items.joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\"" }

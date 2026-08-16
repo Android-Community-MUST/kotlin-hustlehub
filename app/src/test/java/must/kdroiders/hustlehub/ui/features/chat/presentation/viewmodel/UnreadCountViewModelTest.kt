@@ -20,7 +20,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UnreadCountViewModelTest {
-
     private val testDispatcher = UnconfinedTestDispatcher()
     private val context: Context = mockk(relaxed = true)
     private val conversationDao: ConversationDao = mockk(relaxed = true)
@@ -47,28 +46,32 @@ class UnreadCountViewModelTest {
     }
 
     @Test
-    fun `unreadMessageCount reflects conversationDao flow`() = runTest {
-        assertEquals(5, viewModel.unreadMessageCount.value)
-    }
+    fun `unreadMessageCount reflects conversationDao flow`() =
+        runTest {
+            assertEquals(5, viewModel.unreadMessageCount.value)
+        }
 
     @Test
-    fun `unreadNotificationCount reflects notificationRepository getUnreadCount`() = runTest {
-        assertEquals(3, viewModel.unreadNotificationCount.value)
-    }
+    fun `unreadNotificationCount reflects notificationRepository getUnreadCount`() =
+        runTest {
+            assertEquals(3, viewModel.unreadNotificationCount.value)
+        }
 
     @Test
-    fun `totalUnreadCount combines messages and notifications`() = runTest {
-        assertEquals(8, viewModel.totalUnreadCount.value)
-    }
+    fun `totalUnreadCount combines messages and notifications`() =
+        runTest {
+            assertEquals(8, viewModel.totalUnreadCount.value)
+        }
 
     @Test
-    fun `clearNotificationsBadge clears unreadNotificationCount to zero`() = runTest {
-        coEvery { notificationRepository.markAllRead() } returns Result.success(Unit)
+    fun `clearNotificationsBadge clears unreadNotificationCount to zero`() =
+        runTest {
+            coEvery { notificationRepository.markAllRead() } returns Result.success(Unit)
 
-        viewModel.clearNotificationsBadge()
+            viewModel.clearNotificationsBadge()
 
-        assertEquals(0, viewModel.unreadNotificationCount.value)
-        assertEquals(5, viewModel.totalUnreadCount.value)
-        coVerify(exactly = 1) { notificationRepository.markAllRead() }
-    }
+            assertEquals(0, viewModel.unreadNotificationCount.value)
+            assertEquals(5, viewModel.totalUnreadCount.value)
+            coVerify(exactly = 1) { notificationRepository.markAllRead() }
+        }
 }

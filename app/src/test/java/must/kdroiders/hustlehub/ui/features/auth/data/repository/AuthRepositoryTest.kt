@@ -17,7 +17,6 @@ import javax.inject.Provider
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthRepositoryTest {
-
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var userRepository: UserRepository
     private lateinit var repository: AuthRepositoryImpl
@@ -44,21 +43,23 @@ class AuthRepositoryTest {
     }
 
     @Test
-    fun `logout signs out of firebase`() = runTest {
-        repository.logout()
-        verify(exactly = 1) { firebaseAuth.signOut() }
-    }
+    fun `logout signs out of firebase`() =
+        runTest {
+            repository.logout()
+            verify(exactly = 1) { firebaseAuth.signOut() }
+        }
 
     @Test
-    fun `sendPasswordResetEmail calls firebaseAuth sendPasswordResetEmail`() = runTest {
-        val mockTask = mockk<Task<Void>>(relaxed = true) {
-            every { isSuccessful } returns true
-            every { isComplete } returns true
-            every { exception } returns null
-        }
-        every { firebaseAuth.sendPasswordResetEmail("john@students.must.ac.ke") } returns mockTask
+    fun `sendPasswordResetEmail calls firebaseAuth sendPasswordResetEmail`() =
+        runTest {
+            val mockTask = mockk<Task<Void>>(relaxed = true) {
+                every { isSuccessful } returns true
+                every { isComplete } returns true
+                every { exception } returns null
+            }
+            every { firebaseAuth.sendPasswordResetEmail("john@students.must.ac.ke") } returns mockTask
 
-        repository.sendPasswordResetEmail("john@students.must.ac.ke")
-        verify(exactly = 1) { firebaseAuth.sendPasswordResetEmail("john@students.must.ac.ke") }
-    }
+            repository.sendPasswordResetEmail("john@students.must.ac.ke")
+            verify(exactly = 1) { firebaseAuth.sendPasswordResetEmail("john@students.must.ac.ke") }
+        }
 }

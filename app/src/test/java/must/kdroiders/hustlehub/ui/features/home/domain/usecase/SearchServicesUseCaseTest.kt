@@ -18,7 +18,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SearchServicesUseCaseTest {
-
     private lateinit var repository: ServiceRepository
     private lateinit var useCase: SearchServicesUseCase
 
@@ -29,69 +28,71 @@ class SearchServicesUseCaseTest {
     }
 
     @Test
-    fun `non-blank query routes to repository searchServices`() = runTest {
-        val emptyPage = PageResponse<Service>(
-            content = emptyList(),
-            page = 0,
-            size = 20,
-            totalElements = 0,
-            totalPages = 0,
-        )
-        coEvery { repository.searchServices("plumbing", page = 0, size = 20) } returns Result.success(emptyPage)
+    fun `non-blank query routes to repository searchServices`() =
+        runTest {
+            val emptyPage = PageResponse<Service>(
+                content = emptyList(),
+                page = 0,
+                size = 20,
+                totalElements = 0,
+                totalPages = 0,
+            )
+            coEvery { repository.searchServices("plumbing", page = 0, size = 20) } returns Result.success(emptyPage)
 
-        val filters = SearchFilters()
-        val result = useCase("  plumbing  ", filters, page = 0, size = 20)
+            val filters = SearchFilters()
+            val result = useCase("  plumbing  ", filters, page = 0, size = 20)
 
-        assertTrue(result.isSuccess)
-        assertEquals(emptyPage, result.getOrNull())
-        coVerify(exactly = 1) { repository.searchServices("plumbing", page = 0, size = 20) }
-        coVerify(exactly = 0) { repository.browseServices(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) }
-    }
+            assertTrue(result.isSuccess)
+            assertEquals(emptyPage, result.getOrNull())
+            coVerify(exactly = 1) { repository.searchServices("plumbing", page = 0, size = 20) }
+            coVerify(exactly = 0) { repository.browseServices(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) }
+        }
 
     @Test
-    fun `blank query with category filter routes to repository browseServices`() = runTest {
-        val emptyPage = PageResponse<Service>(
-            content = emptyList(),
-            page = 0,
-            size = 20,
-            totalElements = 0,
-            totalPages = 0,
-        )
-        coEvery {
-            repository.browseServices(
+    fun `blank query with category filter routes to repository browseServices`() =
+        runTest {
+            val emptyPage = PageResponse<Service>(
+                content = emptyList(),
                 page = 0,
                 size = 20,
-                category = ServiceCategory.SALON,
-                query = null,
-                availability = null,
-                minRating = null,
-                maxPrice = null,
-                lat = null,
-                lng = null,
-                sortBy = "RATING",
+                totalElements = 0,
+                totalPages = 0,
             )
-        } returns Result.success(emptyPage)
+            coEvery {
+                repository.browseServices(
+                    page = 0,
+                    size = 20,
+                    category = ServiceCategory.SALON,
+                    query = null,
+                    availability = null,
+                    minRating = null,
+                    maxPrice = null,
+                    lat = null,
+                    lng = null,
+                    sortBy = "RATING",
+                )
+            } returns Result.success(emptyPage)
 
-        val filters = SearchFilters(
-            categories = setOf("SALON"),
-            sortOrder = SortOrder.RATING,
-        )
-        val result = useCase("   ", filters, page = 0, size = 20)
-
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) {
-            repository.browseServices(
-                page = 0,
-                size = 20,
-                category = ServiceCategory.SALON,
-                query = null,
-                availability = null,
-                minRating = null,
-                maxPrice = null,
-                lat = null,
-                lng = null,
-                sortBy = "RATING",
+            val filters = SearchFilters(
+                categories = setOf("SALON"),
+                sortOrder = SortOrder.RATING,
             )
+            val result = useCase("   ", filters, page = 0, size = 20)
+
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) {
+                repository.browseServices(
+                    page = 0,
+                    size = 20,
+                    category = ServiceCategory.SALON,
+                    query = null,
+                    availability = null,
+                    minRating = null,
+                    maxPrice = null,
+                    lat = null,
+                    lng = null,
+                    sortBy = "RATING",
+                )
+            }
         }
-    }
 }

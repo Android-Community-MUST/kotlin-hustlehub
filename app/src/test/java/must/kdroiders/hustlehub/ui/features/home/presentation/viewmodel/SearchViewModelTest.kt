@@ -24,7 +24,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SearchViewModelTest {
-
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var searchServicesUseCase: SearchServicesUseCase
     private lateinit var userPreferences: UserPreferences
@@ -35,7 +34,7 @@ class SearchViewModelTest {
         Dispatchers.setMain(testDispatcher)
         searchServicesUseCase = mockk(relaxed = true)
         coEvery { searchServicesUseCase(any(), any(), any(), any()) } returns Result.success(
-            PageResponse(emptyList(), 0, 20, 0, 0)
+            PageResponse(emptyList(), 0, 20, 0, 0),
         )
         userPreferences = mockk(relaxed = true) {
             every { recentSearches } returns flowOf(listOf("Tutor", "Haircut"))
@@ -73,24 +72,26 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `onFiltersApplied updates applied filters, closes sheet, and triggers search`() = runTest {
-        val newFilters = SearchFilters(maxPrice = 1500)
-        viewModel.onDraftFilterChanged(newFilters)
-        viewModel.onFiltersApplied()
+    fun `onFiltersApplied updates applied filters, closes sheet, and triggers search`() =
+        runTest {
+            val newFilters = SearchFilters(maxPrice = 1500)
+            viewModel.onDraftFilterChanged(newFilters)
+            viewModel.onFiltersApplied()
 
-        val state = viewModel.uiState.value
-        assertEquals(newFilters, state.filters)
-        assertFalse(state.isFilterSheetOpen)
-        coVerify { searchServicesUseCase(any(), newFilters, any(), any()) }
-    }
+            val state = viewModel.uiState.value
+            assertEquals(newFilters, state.filters)
+            assertFalse(state.isFilterSheetOpen)
+            coVerify { searchServicesUseCase(any(), newFilters, any(), any()) }
+        }
 
     @Test
-    fun `onFiltersReset clears all draft and applied filters`() = runTest {
-        viewModel.onFiltersReset()
+    fun `onFiltersReset clears all draft and applied filters`() =
+        runTest {
+            viewModel.onFiltersReset()
 
-        val state = viewModel.uiState.value
-        assertEquals(SearchFilters(), state.filters)
-        assertEquals(SearchFilters(), state.draftFilters)
-        assertFalse(state.isFilterSheetOpen)
-    }
+            val state = viewModel.uiState.value
+            assertEquals(SearchFilters(), state.filters)
+            assertEquals(SearchFilters(), state.draftFilters)
+            assertFalse(state.isFilterSheetOpen)
+        }
 }
