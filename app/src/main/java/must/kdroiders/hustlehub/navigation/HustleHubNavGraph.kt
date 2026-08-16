@@ -41,6 +41,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatDetailScreen
+import must.kdroiders.hustlehub.ui.features.help.presentation.view.HelpScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.AiSearchScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.SearchScreen
 import must.kdroiders.hustlehub.ui.features.monetization.presentation.PaymentStatusScreen
@@ -56,7 +57,6 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.CreateServ
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServicesScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.ServiceDetailScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.WriteReviewScreen
-import must.kdroiders.hustlehub.ui.features.help.presentation.view.HelpScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.BlockedUsersScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
 

@@ -65,7 +65,6 @@ import org.junit.Test
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class Sprint5ScenariosTest {
-
     private val testDispatcher = StandardTestDispatcher()
 
     // Shared mocks
@@ -103,14 +102,15 @@ class Sprint5ScenariosTest {
 
     // Helpers
 
-    private fun buildSettingsViewModel() = SettingsViewModel(
-        authRepository = authRepository,
-        signOutUseCase = signOutUseCase,
-        userPreferences = userPreferences,
-        appDatabase = appDatabase,
-        chatRepository = chatRepository,
-        hustleCrashlytics = HustleCrashlytics(null),
-    )
+    private fun buildSettingsViewModel() =
+        SettingsViewModel(
+            authRepository = authRepository,
+            signOutUseCase = signOutUseCase,
+            userPreferences = userPreferences,
+            appDatabase = appDatabase,
+            chatRepository = chatRepository,
+            hustleCrashlytics = HustleCrashlytics(null),
+        )
 
     // Scenario 1 — FCM token saved on login
 
@@ -285,7 +285,10 @@ class Sprint5ScenariosTest {
             testDispatcher.scheduler.advanceUntilIdle()
 
             coVerify(exactly = 1) { userRepository.unblockUser("provider-uuid-123") }
-            assertTrue(viewModel.uiState.value.blockedUsers.isEmpty())
+            assertTrue(
+                viewModel.uiState.value.blockedUsers
+                    .isEmpty(),
+            )
         }
 
     // Scenario 10 — Change password
