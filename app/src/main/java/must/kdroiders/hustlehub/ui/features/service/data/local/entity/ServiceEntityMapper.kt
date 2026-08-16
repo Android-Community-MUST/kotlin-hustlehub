@@ -3,7 +3,6 @@ package must.kdroiders.hustlehub.ui.features.service.data.local.entity
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
-import org.json.JSONArray
 
 /** Converts a cached [ServiceEntity] back to the domain [Service] model. */
 fun ServiceEntity.toDomain(): Service =
@@ -52,8 +51,11 @@ private fun parseAvailability(name: String): ServiceAvailability = runCatching {
 
 private fun parseJsonArray(json: String): List<String> =
     runCatching {
-        val arr = JSONArray(json)
-        List(arr.length()) { arr.getString(it) }
+        json.removeSurrounding("[", "]")
+            .split(",")
+            .map { it.trim().removeSurrounding("\"") }
+            .filter { it.isNotEmpty() }
     }.getOrDefault(emptyList())
 
-private fun toJsonArray(items: List<String>): String = JSONArray(items).toString()
+private fun toJsonArray(items: List<String>): String =
+    items.joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\"" }

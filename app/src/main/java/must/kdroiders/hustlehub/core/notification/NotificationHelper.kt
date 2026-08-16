@@ -152,10 +152,18 @@ object NotificationHelper {
         context: Context,
         conversationId: String,
     ) {
-        NotificationManagerCompat.from(context).cancel(conversationId.hashCode())
+        try {
+            NotificationManagerCompat.from(context).cancel(conversationId.hashCode())
+        } catch (e: Throwable) {
+            Timber.w(e, "Failed to cancel notification for conversation %s", conversationId)
+        }
     }
 
     fun cancelAllNotifications(context: Context) {
-        NotificationManagerCompat.from(context).cancelAll()
+        try {
+            NotificationManagerCompat.from(context).cancelAll()
+        } catch (e: Throwable) {
+            Timber.w(e, "Failed to cancel all notifications")
+        }
     }
 }

@@ -13,28 +13,15 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestWatcher
-import org.junit.runner.Description
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class MainDispatcherRule : TestWatcher() {
-    private val testDispatcher = UnconfinedTestDispatcher()
-    override fun starting(description: Description) {
-        Dispatchers.setMain(testDispatcher)
-    }
-    override fun finished(description: Description) {
-        Dispatchers.resetMain()
-    }
-}
-
 class UnreadCountViewModelTest {
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
 
+    private val testDispatcher = UnconfinedTestDispatcher()
     private val context: Context = mockk(relaxed = true)
     private val conversationDao: ConversationDao = mockk(relaxed = true)
     private val notificationRepository: NotificationRepository = mockk(relaxed = true)
@@ -43,6 +30,7 @@ class UnreadCountViewModelTest {
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         coEvery { conversationDao.getTotalUnreadCount() } returns flowOf(5)
         coEvery { notificationRepository.getUnreadCount() } returns Result.success(3)
 
@@ -53,33 +41,34 @@ class UnreadCountViewModelTest {
         )
     }
 
-    @Test
-    fun `unreadMessageCount reflects conversationDao flow`() =
-        runTest {
-            assertEquals(5, viewModel.unreadMessageCount.value)
-        }
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
 
     @Test
-    fun `unreadNotificationCount reflects notificationRepository getUnreadCount`() =
-        runTest {
-            assertEquals(3, viewModel.unreadNotificationCount.value)
-        }
+    fun `unreadMessageCount reflects conversationDao flow`() = runTest {
+        assertEquals(5, viewModel.unreadMessageCount.value)
+    }
 
     @Test
-    fun `totalUnreadCount combines messages and notifications`() =
-        runTest {
-            assertEquals(8, viewModel.totalUnreadCount.value)
-        }
+    fun `unreadNotificationCount reflects notificationRepository getUnreadCount`() = runTest {
+        assertEquals(3, viewModel.unreadNotificationCount.value)
+    }
 
     @Test
-    fun `clearNotificationsBadge clears unreadNotificationCount to zero`() =
-        runTest {
-            coEvery { notificationRepository.markAllRead() } returns Result.success(Unit)
+    fun `totalUnreadCount combines messages and notifications`() = runTest {
+        assertEquals(8, viewModel.totalUnreadCount.value)
+    }
 
-            viewModel.clearNotificationsBadge()
+    @Test
+    fun `clearNotificationsBadge clears unreadNotificationCount to zero`() = runTest {
+        coEvery { notificationRepository.markAllRead() } returns Result.success(Unit)
 
-            assertEquals(0, viewModel.unreadNotificationCount.value)
-            assertEquals(5, viewModel.totalUnreadCount.value)
-            coVerify(exactly = 1) { notificationRepository.markAllRead() }
-        }
+        viewModel.clearNotificationsBadge()
+
+        assertEquals(0, viewModel.unreadNotificationCount.value)
+        assertEquals(5, viewModel.totalUnreadCount.value)
+        coVerify(exactly = 1) { notificationRepository.markAllRead() }
+    }
 }

@@ -94,7 +94,7 @@ class ChatDetailViewModel
         val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
 
         fun blockUser(onSuccess: () -> Unit) {
-            val targetId = _uiState.value.otherUserId
+            val targetId = _uiState.value.otherUserId.ifEmpty { conversationId ?: "" }
             if (targetId.isBlank()) return
             viewModelScope.launch {
                 userRepository
