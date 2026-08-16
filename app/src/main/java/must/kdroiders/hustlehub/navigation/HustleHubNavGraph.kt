@@ -56,6 +56,7 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.CreateServ
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.MyServicesScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.ServiceDetailScreen
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.WriteReviewScreen
+import must.kdroiders.hustlehub.ui.features.help.presentation.view.HelpScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.BlockedUsersScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
 
@@ -306,6 +307,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         onNavigateToPrivacy = { backstack.add(PrivacySettings) },
                         onNavigateToBlockedUsers = { backstack.add(BlockedUsers) },
                         onNavigateToSubscription = { backstack.add(Subscription) },
+                        onNavigateToHelp = { backstack.add(HelpFaq) },
                     )
                 }
 
@@ -317,6 +319,12 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
 
                 entry<BlockedUsers> {
                     BlockedUsersScreen(
+                        onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    )
+                }
+
+                entry<HelpFaq> {
+                    HelpScreen(
                         onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                     )
                 }

@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.core.notification
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
@@ -52,5 +53,17 @@ class InAppBannerManagerTest {
         InAppBannerManager.dismissCurrentBanner()
 
         assertNull(InAppBannerManager.activeBanner.value)
+    }
+
+    // Sprint 5 — Scenario 3: notification banner shows in foreground for a different conversation
+    @Test
+    fun `postBanner shows banner in foreground when user is NOT on that conversation`() {
+        ActiveConversationTracker.activeConversationId = "conv-other"
+
+        val banner = InAppBannerData(title = "Carol", body = "New message!", conversationId = "conv-new")
+        InAppBannerManager.postBanner(banner)
+
+        assertNotNull(InAppBannerManager.activeBanner.value)
+        assertEquals("conv-new", InAppBannerManager.activeBanner.value?.conversationId)
     }
 }
