@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
+import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.map.domain.usecase.GetMapPinsUseCase
@@ -45,9 +47,10 @@ class MapViewModel
         private val getMapPinsUseCase: GetMapPinsUseCase,
         private val userPreferences: UserPreferences,
         private val notificationRepository: NotificationRepository,
+        private val hustleAnalytics: HustleAnalytics,
+        private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
         companion object {
-            /** How often the map polls the backend for provider availability updates. */
             const val POLL_INTERVAL_MS = 120_000L
         }
 
@@ -59,7 +62,15 @@ class MapViewModel
             userPreferences: UserPreferences,
             notificationRepository: NotificationRepository,
             startPollingImmediately: Boolean,
-        ) : this(getMapPinsUseCase, userPreferences, notificationRepository) {
+        ) : this(
+            getMapPinsUseCase = getMapPinsUseCase,
+            userPreferences = userPreferences,
+            notificationRepository = notificationRepository,
+            hustleAnalytics = must.kdroiders.hustlehub.core.telemetry
+                .HustleAnalytics(null),
+            hustleCrashlytics = must.kdroiders.hustlehub.core.telemetry
+                .HustleCrashlytics(null),
+        ) {
             isPollingEnabled = startPollingImmediately
             if (!startPollingImmediately) {
                 pollingJob?.cancel()
@@ -74,6 +85,9 @@ class MapViewModel
         private var pollingJob: Job? = null
 
         init {
+            hustleCrashlytics.setScreen("MapScreen")
+            hustleAnalytics.logMapOpened()
+
             viewModelScope.launch {
                 val categoryName = runCatching {
                     userPreferences.lastSelectedCategory.first()

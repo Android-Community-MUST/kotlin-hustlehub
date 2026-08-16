@@ -67,8 +67,7 @@ class LoginViewModel
         }
 
         /** Returns true if the backend has a registered profile for [firebaseUser]. */
-        private suspend fun hasProfile(firebaseUser: com.google.firebase.auth.FirebaseUser): Boolean =
-            checkUserProfileUseCase(firebaseUser.uid).getOrDefault(false)
+        private suspend fun hasProfile(firebaseUser: com.google.firebase.auth.FirebaseUser): Boolean = checkUserProfileUseCase(firebaseUser.uid).getOrDefault(false)
 
         /**
          * Persists lightweight user identity to DataStore after a successful login.

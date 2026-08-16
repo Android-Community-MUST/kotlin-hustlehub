@@ -48,6 +48,18 @@ android {
         resValue("string", "google_web_client_id", keysProperty("GOOGLE_WEB_CLIENT_ID", ""))
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreFile = keysProperty("KEYSTORE_FILE").ifEmpty { System.getenv("KEYSTORE_FILE") ?: "" }
+            if (keystoreFile.isNotEmpty()) {
+                storeFile = file(keystoreFile)
+                storePassword = keysProperty("KEYSTORE_PASSWORD").ifEmpty { System.getenv("KEYSTORE_PASSWORD") ?: "" }
+                keyAlias = keysProperty("KEY_ALIAS").ifEmpty { System.getenv("KEY_ALIAS") ?: "" }
+                keyPassword = keysProperty("KEY_PASSWORD").ifEmpty { System.getenv("KEY_PASSWORD") ?: "" }
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -56,6 +68,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            val keystoreFile = keysProperty("KEYSTORE_FILE").ifEmpty { System.getenv("KEYSTORE_FILE") ?: "" }
+            if (keystoreFile.isNotEmpty()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
@@ -97,8 +113,13 @@ dependencies {
 
     // Hilt Dependency Injection
     implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.work)
     ksp(libs.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
     ksp(libs.kotlin.metadata.jvm)
+
+    // WorkManager (Persistent Background Tasks)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // Room Database
     implementation(libs.androidx.room.runtime)
@@ -138,6 +159,7 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
     implementation(libs.firebase.perf)
 
     // Google Maps & Location
@@ -161,8 +183,12 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    // Baseline Profile generator — run on rooted emulator to regenerate baseline-prof.txt
+    androidTestImplementation(libs.androidx.benchmark.macro.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    // LeakCanary — debug-only memory leak detection, never ships in release
+    debugImplementation(libs.leakcanary.android)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation("io.mockk:mockk:1.13.10")
     testImplementation("org.robolectric:robolectric:4.11.1")
@@ -184,4 +210,7 @@ dependencies {
 
     // Detekt formatting rules
     detektPlugins(libs.detekt.formatting)
+
+    // Baseline Profile — compiles ART profile on first app launch
+    implementation(libs.androidx.profileinstaller)
 }

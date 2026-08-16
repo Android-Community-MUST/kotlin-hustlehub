@@ -1,12 +1,15 @@
 package must.kdroiders.hustlehub.di
 
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.core.api.AuthInterceptor
+import must.kdroiders.hustlehub.core.api.GzipRequestInterceptor
 import must.kdroiders.hustlehub.core.api.TokenAuthenticator
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.ui.features.analytics.data.remote.AnalyticsApiService
@@ -21,10 +24,12 @@ import must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiServic
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService
 import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
+import okhttp3.Cache
 import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -49,12 +54,17 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(
+        @ApplicationContext context: Context,
         authInterceptor: AuthInterceptor,
         tokenAuthenticator: TokenAuthenticator,
     ): OkHttpClient {
+        val cache = Cache(File(context.cacheDir, "okhttp"), 10L * 1024L * 1024L)
+
         val builder = OkHttpClient
             .Builder()
+            .cache(cache)
             .addInterceptor(authInterceptor)
+            .addInterceptor(GzipRequestInterceptor())
             .authenticator(tokenAuthenticator)
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)

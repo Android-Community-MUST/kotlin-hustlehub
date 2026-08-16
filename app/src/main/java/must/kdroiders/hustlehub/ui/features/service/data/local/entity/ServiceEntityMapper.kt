@@ -48,8 +48,7 @@ fun Service.toEntity(now: Long = System.currentTimeMillis()): ServiceEntity =
 
 private fun parseCategory(name: String): ServiceCategory = runCatching { ServiceCategory.valueOf(name) }.getOrDefault(ServiceCategory.OTHER)
 
-private fun parseAvailability(name: String): ServiceAvailability =
-    runCatching { ServiceAvailability.valueOf(name) }.getOrDefault(ServiceAvailability.AVAILABLE)
+private fun parseAvailability(name: String): ServiceAvailability = runCatching { ServiceAvailability.valueOf(name) }.getOrDefault(ServiceAvailability.AVAILABLE)
 
 private fun parseJsonArray(json: String): List<String> =
     runCatching {

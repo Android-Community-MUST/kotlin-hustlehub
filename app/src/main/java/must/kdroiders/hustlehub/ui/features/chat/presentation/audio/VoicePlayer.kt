@@ -59,7 +59,7 @@ class VoicePlayer(private val context: Context) {
                     .setUsage(C.USAGE_MEDIA)
                     .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
                     .build()
-                setAudioAttributes(audioAttributes, /* handleAudioFocus = */ true)
+                setAudioAttributes(audioAttributes, true)
 
                 addListener(object : Player.Listener {
                     override fun onIsPlayingChanged(isPlaying: Boolean) {

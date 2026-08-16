@@ -27,8 +27,7 @@ class AiSearchRepositoryImpl(
 ) : AiSearchRepository {
     // LinkedHashMap in access-order mode = LRU eviction.
     private val cache = object : LinkedHashMap<String, Pair<Long, AiSearchResponse>>(16, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Pair<Long, AiSearchResponse>>): Boolean =
-            size > CACHE_MAX_ENTRIES
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Pair<Long, AiSearchResponse>>): Boolean = size > CACHE_MAX_ENTRIES
     }
 
     override suspend fun aiSearch(

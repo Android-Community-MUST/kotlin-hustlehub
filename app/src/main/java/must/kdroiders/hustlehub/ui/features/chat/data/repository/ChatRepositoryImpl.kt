@@ -475,6 +475,34 @@ class ChatRepositoryImpl
                 metadata = gson.toJson(metaObj),
             )
         }
+
+        override suspend fun resendUnsyncedMessages(): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val unsynced = messageDao.getUnsyncedMessages()
+                    if (unsynced.isEmpty()) return@runCatching
+
+                    chatWebSocketService.connect()
+                    unsynced.forEach { entity ->
+                        val request = SendMessageRequest(
+                            conversationId = entity.conversationId,
+                            type = entity.type,
+                            content = entity.content ?: "",
+                            mediaUrl = entity.mediaUrl,
+                            metadata = entity.metadata,
+                        )
+                        runCatching {
+                            chatWebSocketService.sendMessage(request)
+                            messageDao.upsert(entity.copy(isSynced = true, isFailed = false))
+                        }.onFailure { e ->
+                            Timber.e(e, "Failed to sync pending message ${entity.id}")
+                        }
+                    }
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to resend unsynced messages")
+                }
+            }
     }
 
 private fun ConversationResponse.toDomainModel(): Conversation =

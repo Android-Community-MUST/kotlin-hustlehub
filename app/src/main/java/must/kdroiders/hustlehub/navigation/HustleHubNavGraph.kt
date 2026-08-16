@@ -34,6 +34,7 @@ import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
 import must.kdroiders.hustlehub.ui.features.analytics.presentation.view.AnalyticsScreen
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthState
+import must.kdroiders.hustlehub.ui.features.auth.presentation.view.AccountSuspendedScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.ChangePasswordScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.EmailVerificationScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
@@ -244,6 +245,17 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             backstack.add(EmailVerification(email = email))
                         },
                         onGoogleSignInClick = onGoogleSignInClick,
+                    )
+                }
+
+                // Account Suspended
+                entry<AccountSuspendedKey> { key ->
+                    AccountSuspendedScreen(
+                        reason = key.reason.ifBlank { "Violation of terms of service." },
+                        onLogout = {
+                            backstack.clear()
+                            backstack.add(Login())
+                        },
                     )
                 }
 

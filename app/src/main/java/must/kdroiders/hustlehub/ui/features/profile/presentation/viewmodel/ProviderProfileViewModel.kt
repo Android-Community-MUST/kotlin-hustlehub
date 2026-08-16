@@ -98,5 +98,7 @@ class ProviderProfileViewModel
             }
         }
 
+        fun refresh() = load()
+
         fun retry() = load()
     }

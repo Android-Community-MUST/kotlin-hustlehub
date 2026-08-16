@@ -14,6 +14,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
@@ -57,6 +58,7 @@ class SettingsViewModelTest {
             userPreferences = userPreferences,
             appDatabase = appDatabase,
             chatRepository = chatRepository,
+            hustleCrashlytics = HustleCrashlytics(null),
         )
     }
 

@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
+import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignUpUseCase
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
@@ -41,9 +43,15 @@ class SignUpViewModel
     constructor(
         private val signUpUseCase: SignUpUseCase,
         private val userPreferences: UserPreferences,
+        private val hustleAnalytics: HustleAnalytics,
+        private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SignUpState())
         val uiState = _uiState.asStateFlow()
+
+        init {
+            hustleCrashlytics.setScreen("SignUpScreen")
+        }
 
         fun onNameChanged(name: String) {
             _uiState.update { it.copy(name = name, nameError = null) }
@@ -178,6 +186,8 @@ class SignUpViewModel
                                     email = _uiState.value.email,
                                 )
                                 userPreferences.writeUser(user)
+                                hustleAnalytics.logSignupCompleted("email")
+                                hustleCrashlytics.setCrashlyticsUserContext(user.id, "SignUpScreen")
                             } catch (e: Exception) {
                                 Timber.e(e, "Failed to persist user to DataStore after sign-up")
                             }

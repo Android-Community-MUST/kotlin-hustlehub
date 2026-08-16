@@ -1,6 +1,6 @@
-# API Keys Configuration
-# Copy this file to keys.properties and add your actual API keys
-# NEVER commit keys.properties to version control!
+# API Keys & Release Signing Configuration
+# Copy this file to keys.properties and add your actual API keys & keystore details
+# NEVER commit keys.properties or keystore files to version control!
 
 # Google Maps API Key
 # Get from: https://console.cloud.google.com
@@ -12,8 +12,14 @@ MAPS_API_KEY=your_google_maps_api_key_here
 GEMINI_API_KEY=your_gemini_api_key_here
 
 # Firebase Configuration
-# These are typically in google-services.json, but you can add custom Firebase configs here if needed
-# FIREBASE_PROJECT_ID=your_project_id
-# FIREBASE_APP_ID=your_app_id
 GOOGLE_WEB_CLIENT_ID=your_google_web_client_id_here
 
+# Backend REST & WebSocket URLs
+BASE_URL=http://10.0.2.2:8080/api/v1/
+WS_BASE_URL=ws://10.0.2.2:8080/ws
+
+# Release Signing Keystore Parameters (Issue #99)
+# KEYSTORE_FILE=release.keystore
+# KEYSTORE_PASSWORD=your_keystore_password
+# KEY_ALIAS=your_key_alias
+# KEY_PASSWORD=your_key_password
