@@ -24,6 +24,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -126,23 +129,42 @@ fun ProfileScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             when {
-                state.isLoading -> LoadingState()
+                state.isLoading && !state.isRefreshing -> LoadingState()
                 state.error != null -> ErrorState(
                     message = state.error ?: "Unknown error",
                     onRetry = profileViewModel::retry,
                 )
-                else -> ProfileContent(
-                    state = state,
-                    onEditClick = onEditClick,
-                    onToggleService = profileViewModel::toggleServiceActive,
-                    onToggleOverallAvailability = profileViewModel::toggleOverallAvailability,
-                    onAddNewServiceClick = onAddNewServiceClick,
-                    onServiceClick = onServiceClick,
-                    onNavigateToMyServices = onNavigateToMyServices,
-                    onSettingsClick = onSettingsClick,
-                    onNavigateToSubscription = onNavigateToSubscription,
-                    onNavigateToAnalytics = onNavigateToAnalytics,
-                )
+                else -> {
+                    val pullToRefreshState = rememberPullToRefreshState()
+                    PullToRefreshBox(
+                        isRefreshing = state.isRefreshing,
+                        onRefresh = profileViewModel::loadProfile,
+                        modifier = Modifier.fillMaxSize(),
+                        state = pullToRefreshState,
+                        indicator = {
+                            PullToRefreshDefaults.Indicator(
+                                modifier = Modifier.align(Alignment.TopCenter),
+                                isRefreshing = state.isRefreshing,
+                                state = pullToRefreshState,
+                                color = MaterialTheme.colorScheme.primary,
+                                containerColor = MaterialTheme.colorScheme.surface,
+                            )
+                        },
+                    ) {
+                        ProfileContent(
+                            state = state,
+                            onEditClick = onEditClick,
+                            onToggleService = profileViewModel::toggleServiceActive,
+                            onToggleOverallAvailability = profileViewModel::toggleOverallAvailability,
+                            onAddNewServiceClick = onAddNewServiceClick,
+                            onServiceClick = onServiceClick,
+                            onNavigateToMyServices = onNavigateToMyServices,
+                            onSettingsClick = onSettingsClick,
+                            onNavigateToSubscription = onNavigateToSubscription,
+                            onNavigateToAnalytics = onNavigateToAnalytics,
+                        )
+                    }
+                }
             }
         }
     }

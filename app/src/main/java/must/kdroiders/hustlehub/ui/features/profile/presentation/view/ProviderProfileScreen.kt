@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.WorkOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -34,6 +35,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -234,103 +238,131 @@ fun ProviderProfileScreen(
             )
             else -> {
                 val provider = state.provider ?: return@HustleScaffold
+                val pullToRefreshState = rememberPullToRefreshState()
 
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                    contentPadding = PaddingValues(
-                        top = innerPadding.calculateTopPadding(),
-                        bottom = innerPadding.calculateBottomPadding() + 16.dp,
-                    ),
+                PullToRefreshBox(
+                    isRefreshing = state.isRefreshing,
+                    onRefresh = providerProfileViewModel::refresh,
+                    modifier = Modifier.fillMaxSize(),
+                    state = pullToRefreshState,
+                    indicator = {
+                        PullToRefreshDefaults.Indicator(
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            isRefreshing = state.isRefreshing,
+                            state = pullToRefreshState,
+                            color = MaterialTheme.colorScheme.primary,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                        )
+                    },
                 ) {
-                    item(key = "header_banner") {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp)
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                            MaterialTheme.colorScheme.background,
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background),
+                        contentPadding = PaddingValues(
+                            top = innerPadding.calculateTopPadding(),
+                            bottom = innerPadding.calculateBottomPadding() + 16.dp,
+                        ),
+                    ) {
+                        item(key = "header_banner") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(120.dp)
+                                    .background(
+                                        brush = Brush.verticalGradient(
+                                            colors = listOf(
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                                MaterialTheme.colorScheme.background,
+                                            ),
                                         ),
                                     ),
-                                ),
-                        )
-                    }
-
-                    item(key = "avatar") {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset(y = (-45).dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            ProfileAvatar(
-                                photoUrl = provider.profilePhotoUrl,
-                                isVerified = provider.isVerified,
-                            )
-                            Spacer(Modifier.height(10.dp))
-                            ProfileInfo(
-                                name = provider.name,
-                                phone = provider.phone,
-                                campusLocation = provider.campusLocation,
-                                bio = provider.bio,
-                                isOnline = provider.isOnline,
-                                allowCalls = provider.allowCalls,
-                                isOwnProfile = state.isOwnProfile,
-                                isVerifiedPro = provider.isVerifiedPro,
                             )
                         }
-                    }
 
-                    item(key = "stats") {
-                        ProfileStatsRow(
-                            hustleScore = state.hustleScore,
-                            serviceCount = state.services.size,
-                            reviewCount = state.reviewCount,
-                            modifier = Modifier
-                                .offset(y = (-30).dp)
-                                .padding(horizontal = 16.dp),
-                        )
-                    }
-
-                    if (state.badges.isNotEmpty()) {
-                        item(key = "badges") {
-                            ProfileBadges(
-                                badges = state.badges,
+                        item(key = "profile_info") {
+                            Column(
                                 modifier = Modifier
-                                    .offset(y = (-20).dp)
+                                    .fillMaxWidth()
+                                    .offset(y = (-40).dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                ProfileAvatar(
+                                    photoUrl = provider.profilePhotoUrl,
+                                    isVerified = provider.isVerified,
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                ProfileInfo(
+                                    name = provider.name,
+                                    phone = provider.phone,
+                                    campusLocation = provider.campusLocation,
+                                    bio = provider.bio,
+                                    isOnline = provider.isOnline,
+                                    allowCalls = provider.allowCalls,
+                                    isOwnProfile = state.isOwnProfile,
+                                    isVerifiedPro = provider.isVerifiedPro,
+                                )
+                            }
+                        }
+
+                        item(key = "stats_row") {
+                            ProfileStatsRow(
+                                hustleScore = state.hustleScore,
+                                serviceCount = state.services.size,
+                                reviewCount = state.reviewCount,
+                                modifier = Modifier
+                                    .offset(y = (-30).dp)
                                     .padding(horizontal = 16.dp),
                             )
                         }
-                    }
 
-                    item(key = "services_header") {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset(y = (-10).dp)
-                                .padding(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            SectionHeader(title = "Services (${state.services.size})")
+                        if (state.badges.isNotEmpty()) {
+                            item(key = "badges") {
+                                ProfileBadges(
+                                    badges = state.badges,
+                                    modifier = Modifier
+                                        .offset(y = (-20).dp)
+                                        .padding(horizontal = 16.dp),
+                                )
+                            }
                         }
-                        Spacer(Modifier.height(4.dp))
-                    }
 
-                    items(items = state.services, key = { it.id }) { service ->
-                        ServiceCard(
-                            service = service,
-                            onClick = { onNavigateToServiceDetail(service.id) },
-                            onToggle = {},
-                            modifier = Modifier
-                                .offset(y = (-10).dp)
-                                .padding(horizontal = 16.dp, vertical = 6.dp),
-                        )
+                        item(key = "services_header") {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .offset(y = (-10).dp)
+                                    .padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                SectionHeader(title = "Services (${state.services.size})")
+                            }
+                            Spacer(Modifier.height(4.dp))
+                        }
+
+                        if (state.services.isEmpty()) {
+                            item(key = "empty_services") {
+                                must.kdroiders.hustlehub.sharedComposables.EmptyStateView(
+                                    title = "No services listed yet",
+                                    description = "This provider has not added any active services.",
+                                    icon = Icons.Default.WorkOff,
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                                )
+                            }
+                        } else {
+                            items(items = state.services, key = { it.id }) { service ->
+                                ServiceCard(
+                                    service = service,
+                                    onClick = { onNavigateToServiceDetail(service.id) },
+                                    onToggle = {},
+                                    modifier = Modifier
+                                        .offset(y = (-10).dp)
+                                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                                )
+                            }
+                        }
                     }
                 }
             }

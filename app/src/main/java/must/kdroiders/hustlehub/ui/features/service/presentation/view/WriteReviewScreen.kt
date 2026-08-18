@@ -57,6 +57,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -64,6 +66,7 @@ import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
+import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.sharedComposables.StarRatingBar
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.WriteReviewViewModel
 
@@ -107,6 +110,7 @@ fun WriteReviewScreen(
                         text = "Write a Review",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() },
                     )
                 },
                 navigationIcon = {
@@ -362,10 +366,8 @@ fun WriteReviewScreen(
                     ),
                 ) {
                     if (state.isSubmitting) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.onPrimary,
+                        LoadingIndicator(
                             modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp,
                         )
                     } else {
                         Row(

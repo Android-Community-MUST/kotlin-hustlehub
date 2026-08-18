@@ -13,5 +13,6 @@ data class ProviderProfileUiState(
     /** True when the viewer is viewing their own profile. */
     val isOwnProfile: Boolean = false,
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val error: String? = null,
 )

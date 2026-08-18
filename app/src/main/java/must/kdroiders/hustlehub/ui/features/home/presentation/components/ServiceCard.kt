@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +32,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.size.Scale
+import coil.size.Size
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
@@ -44,6 +48,9 @@ fun ServiceCard(
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val displayPrice = remember(service.priceRange) {
+        "KES ${service.priceRange.split("-").first().trim()}"
+    }
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -62,7 +69,14 @@ fun ServiceCard(
             val imageUrl = service.portfolio.firstOrNull() ?: service.iconUrl
             if (imageUrl.isNotBlank()) {
                 AsyncImage(
-                    model = imageUrl,
+                    model = ImageRequest
+                        .Builder(androidx.compose.ui.platform.LocalContext.current)
+                        .data(imageUrl)
+                        // Request exactly card-thumbnail resolution to avoid downloading full-res
+                        .size(Size(360, 200))
+                        .scale(Scale.FILL)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = service.title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
@@ -106,7 +120,7 @@ fun ServiceCard(
                     modifier = Modifier.weight(1f).padding(end = 8.dp),
                 )
                 Text(
-                    text = "KES ${service.priceRange.split("-").first().trim()}",
+                    text = displayPrice,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,

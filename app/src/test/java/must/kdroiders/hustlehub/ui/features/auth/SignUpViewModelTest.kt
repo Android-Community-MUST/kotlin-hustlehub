@@ -47,7 +47,14 @@ class SignUpViewModelTest {
     fun setup() {
         mockSignUpUseCase = mockk()
         mockUserPreferences = mockk(relaxed = true)
-        viewModel = SignUpViewModel(mockSignUpUseCase, mockUserPreferences)
+        viewModel = SignUpViewModel(
+            signUpUseCase = mockSignUpUseCase,
+            userPreferences = mockUserPreferences,
+            hustleAnalytics = must.kdroiders.hustlehub.core.telemetry
+                .HustleAnalytics(null),
+            hustleCrashlytics = must.kdroiders.hustlehub.core.telemetry
+                .HustleCrashlytics(null),
+        )
     }
 
     @Test

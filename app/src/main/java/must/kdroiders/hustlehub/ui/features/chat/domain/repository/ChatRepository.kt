@@ -46,4 +46,6 @@ interface ChatRepository {
     suspend fun deleteMessageForMe(messageId: String): Result<Unit>
 
     suspend fun deleteMessageForEveryone(messageId: String): Result<Unit>
+
+    suspend fun resendUnsyncedMessages(): Result<Unit>
 }

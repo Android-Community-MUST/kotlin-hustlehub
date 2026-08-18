@@ -30,6 +30,7 @@ import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepositor
 import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
 import must.kdroiders.hustlehub.ui.features.home.data.repository.AiSearchRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.home.domain.repository.AiSearchRepository
+import must.kdroiders.hustlehub.ui.features.map.data.local.dao.MapPinDao
 import must.kdroiders.hustlehub.ui.features.map.data.repository.MapRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.map.domain.repository.MapRepository
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
@@ -38,18 +39,21 @@ import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepos
 import must.kdroiders.hustlehub.ui.features.monetization.data.remote.PaymentApiService
 import must.kdroiders.hustlehub.ui.features.monetization.data.repository.PaymentRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.monetization.domain.repository.PaymentRepository
+import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
 import must.kdroiders.hustlehub.ui.features.notification.data.repository.NotificationRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiService
 import must.kdroiders.hustlehub.ui.features.privacy.data.repository.PrivacyRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.privacy.domain.repository.PrivacyRepository
+import must.kdroiders.hustlehub.ui.features.profile.data.local.dao.UserDao
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.profile.data.repository.UserRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.report.data.remote.ReportApiService
 import must.kdroiders.hustlehub.ui.features.report.data.repository.ReportRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.report.domain.repository.ReportRepository
+import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ReviewDao
 import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
 import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
 import must.kdroiders.hustlehub.ui.features.service.data.repository.ReviewRepositoryImpl
@@ -92,7 +96,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideStorageRepository(mediaApiService: MediaApiService): StorageRepository = StorageRepositoryImpl(mediaApiService)
+    fun provideStorageRepository(
+        mediaApiService: MediaApiService,
+        uploadManager: must.kdroiders.hustlehub.core.worker.UploadManager,
+    ): StorageRepository = StorageRepositoryImpl(mediaApiService, uploadManager)
 
     @Provides
     @Singleton
@@ -112,8 +119,9 @@ object AppModule {
         userApiService: UserApiService,
         mediaApiService: MediaApiService,
         serviceApiService: ServiceApiService,
+        userDao: UserDao,
     ): UserRepository {
-        return UserRepositoryImpl(context, authApiService, userApiService, mediaApiService, serviceApiService)
+        return UserRepositoryImpl(context, authApiService, userApiService, mediaApiService, serviceApiService, userDao)
     }
 
     @Provides
@@ -126,8 +134,8 @@ object AppModule {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "hustlehub.db",
-            ).addMigrations(AppDatabase.MIGRATION_4_5)
-            .fallbackToDestructiveMigration()
+            ).addMigrations(AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6)
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
 
     @Provides
@@ -144,6 +152,22 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideUserDao(db: AppDatabase): UserDao = db.userDao()
+
+    @Provides
+    @Singleton
+    fun provideNotificationDao(db: AppDatabase): NotificationDao = db.notificationDao()
+
+    @Provides
+    @Singleton
+    fun provideReviewDao(db: AppDatabase): ReviewDao = db.reviewDao()
+
+    @Provides
+    @Singleton
+    fun provideMapPinDao(db: AppDatabase): MapPinDao = db.mapPinDao()
+
+    @Provides
+    @Singleton
     fun provideServiceRepository(
         serviceApiService: ServiceApiService,
         serviceDao: ServiceDao,
@@ -157,8 +181,9 @@ object AppModule {
     fun provideReviewRepository(
         serviceApiService: ServiceApiService,
         userPreferences: UserPreferences,
+        reviewDao: ReviewDao,
     ): ReviewRepository {
-        return ReviewRepositoryImpl(serviceApiService, userPreferences)
+        return ReviewRepositoryImpl(serviceApiService, userPreferences, reviewDao)
     }
 
     @Provides
@@ -183,18 +208,23 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAiSearchRepository(discoveryApiService: DiscoveryApiService): AiSearchRepository =
-        AiSearchRepositoryImpl(discoveryApiService)
+    fun provideAiSearchRepository(discoveryApiService: DiscoveryApiService): AiSearchRepository = AiSearchRepositoryImpl(discoveryApiService)
 
     @Provides
     @Singleton
-    fun provideNotificationRepository(notificationApiService: NotificationApiService): NotificationRepository {
-        return NotificationRepositoryImpl(notificationApiService)
+    fun provideNotificationRepository(
+        notificationApiService: NotificationApiService,
+        notificationDao: NotificationDao,
+    ): NotificationRepository {
+        return NotificationRepositoryImpl(notificationApiService, notificationDao)
     }
 
     @Provides
     @Singleton
-    fun provideMapRepository(discoveryApiService: DiscoveryApiService): MapRepository = MapRepositoryImpl(discoveryApiService)
+    fun provideMapRepository(
+        discoveryApiService: DiscoveryApiService,
+        mapPinDao: MapPinDao,
+    ): MapRepository = MapRepositoryImpl(discoveryApiService, mapPinDao)
 
     @Provides
     @Singleton
@@ -214,8 +244,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAnalyticsRepository(analyticsApiService: AnalyticsApiService): AnalyticsRepository =
-        AnalyticsRepositoryImpl(analyticsApiService)
+    fun provideAnalyticsRepository(analyticsApiService: AnalyticsApiService): AnalyticsRepository = AnalyticsRepositoryImpl(analyticsApiService)
 }
 
 private class NoopAuthRepository : AuthRepository {

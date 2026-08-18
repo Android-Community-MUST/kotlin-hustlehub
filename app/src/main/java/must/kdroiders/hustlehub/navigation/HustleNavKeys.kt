@@ -21,6 +21,10 @@ data class Login(val email: String = "") : NavKey
 @Serializable
 data object SignUp : NavKey
 
+/** Account suspended error screen. */
+@Serializable
+data class AccountSuspendedKey(val reason: String = "") : NavKey
+
 /**
  * Email OTP verification screen.
  * Carries the [email] so the screen can display it

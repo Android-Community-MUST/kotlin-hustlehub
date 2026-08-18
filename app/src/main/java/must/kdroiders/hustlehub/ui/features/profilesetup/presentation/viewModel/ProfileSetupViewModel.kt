@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
+import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SyncUserProfileUseCase
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
@@ -51,6 +53,8 @@ class ProfileSetupViewModel
         private val firebaseAuth: FirebaseAuth?,
         private val userRepository: UserRepository,
         private val syncUserProfileUseCase: SyncUserProfileUseCase,
+        private val hustleAnalytics: HustleAnalytics,
+        private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
         private val _state = MutableStateFlow(ProfileSetupState())
         val state: StateFlow<ProfileSetupState> = _state.asStateFlow()
@@ -59,6 +63,7 @@ class ProfileSetupViewModel
         val events: SharedFlow<ProfileSetupEvent> = _events.asSharedFlow()
 
         init {
+            hustleCrashlytics.setScreen("ProfileSetupScreen")
             // Pre-fill name from Firebase Auth if available
             val currentUser = firebaseAuth?.currentUser
             _state.update {
@@ -186,6 +191,8 @@ class ProfileSetupViewModel
             viewModelScope.launch {
                 syncUserProfileUseCase(user)
                     .onSuccess {
+                        hustleAnalytics.setUserProperties(role = "CUSTOMER", campus = currentState.campusLocation, isVerifiedPro = false)
+                        hustleCrashlytics.setCrashlyticsUserContext(userId, "ProfileSetupScreen")
                         _state.update { it.copy(isSaving = false) }
                         _events.emit(ProfileSetupEvent.ProfileSaved)
                     }.onFailure { e ->

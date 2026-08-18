@@ -45,6 +45,10 @@ krossbow = "7.0.0"
 media3 = "1.11.0"
 desugarJdkLibs = "2.1.5"
 shortcutBadger = "1.1.22"
+leakcanary = "2.14"
+profileinstaller = "1.4.1"
+benchmark-macro = "1.4.1"
+work = "2.10.0"
 
 # expressive
 material3 = "1.5.0-alpha25"
@@ -52,6 +56,9 @@ material3 = "1.5.0-alpha25"
 [libraries]
 shortcut-badger = { module = "me.leolin:ShortcutBadger", version.ref = "shortcutBadger" }
 desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugarJdkLibs" }
+leakcanary-android = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
+androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "profileinstaller" }
+androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmark-macro" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -83,6 +90,11 @@ androidx-adaptive-navigation3 = { group = "androidx.compose.material3.adaptive",
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltnav" }
+androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltnav" }
+androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltnav" }
+
+# WorkManager
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 
 # Room
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
@@ -106,6 +118,7 @@ firebase-database = { group = "com.google.firebase", name = "firebase-database" 
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-perf = { group = "com.google.firebase", name = "firebase-perf" }
 
 # Google Maps & Location

@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
+import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicateReviewUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
@@ -23,8 +25,14 @@ class WriteReviewViewModel
         private val getServiceByIdUseCase: GetServiceByIdUseCase,
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
         private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase,
+        private val hustleAnalytics: HustleAnalytics,
+        private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
         private var serviceId: String? = null
+
+        init {
+            hustleCrashlytics.setScreen("WriteReviewScreen")
+        }
 
         private val _uiState = MutableStateFlow(WriteReviewUiState())
         val uiState: StateFlow<WriteReviewUiState> = _uiState.asStateFlow()
@@ -104,6 +112,7 @@ class WriteReviewViewModel
                     comment = state.comment.trim().takeIf { it.isNotBlank() },
                     isAnonymous = state.isAnonymous,
                 ).onSuccess {
+                    hustleAnalytics.logReviewSubmitted(sid, state.rating.toFloat())
                     _uiState.update { it.copy(isSubmitting = false, submitSuccess = true) }
                 }.onFailure { e ->
                     Timber.e(e, "WriteReviewViewModel: submit failed for serviceId=$sid")

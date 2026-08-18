@@ -22,7 +22,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,12 +41,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
+import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.ui.features.home.data.remote.QueryUnderstanding
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.AiMatchCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.AiSearchViewModel
@@ -84,7 +87,7 @@ fun AiSearchScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(
                 windowInsets = WindowInsets(0, 0, 0, 0),
-                title = { Text("AI Search", fontWeight = FontWeight.SemiBold) },
+                title = { Text("AI Search", fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { heading() }) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -142,12 +145,9 @@ fun AiSearchScreen(
                 // Loading indicator
                 if (state.isLoading) {
                     item(key = "loading") {
-                        Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.testTag("ai_search_loading"),
-                            )
-                        }
+                        LoadingIndicator(
+                            modifier = Modifier.fillMaxWidth().padding(24.dp).testTag("ai_search_loading"),
+                        )
                     }
                 }
 
@@ -205,16 +205,12 @@ fun AiSearchScreen(
                 // Empty state — shown after a search that returned nothing
                 if (!state.isLoading && state.matches.isEmpty() && state.query.isNotEmpty() && state.error == null) {
                     item(key = "empty") {
-                        Box(
+                        EmptyStateView(
+                            title = "No AI matches found",
+                            description = "Try rephrasing your search query.",
+                            icon = Icons.Default.Search,
                             modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = "No matches found.\nTry a different query.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                        )
                     }
                 }
 

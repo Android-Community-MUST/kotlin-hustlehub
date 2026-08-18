@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.BuildConfig
+import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.AppTheme
 import must.kdroiders.hustlehub.datastore.UserPreferences
@@ -81,9 +82,14 @@ class SettingsViewModel
         private val userPreferences: UserPreferences,
         private val appDatabase: AppDatabase,
         private val chatRepository: ChatRepository,
+        private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SettingsUiState())
         val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+        fun triggerTestCrash() {
+            hustleCrashlytics.triggerTestCrash()
+        }
 
         private val _events = Channel<SettingsEvent>(Channel.BUFFERED)
         val events = _events.receiveAsFlow()

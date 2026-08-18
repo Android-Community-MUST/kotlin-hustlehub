@@ -97,6 +97,8 @@ fun HomeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
+    val stableOnNavigateToServiceDetail = remember { onNavigateToServiceDetail }
+
     // Detect when the user scrolls to 3 items before the end to trigger next page.
     val shouldLoadMore by remember {
         derivedStateOf {
@@ -324,7 +326,7 @@ fun HomeScreen(
                     ) {
                         ServiceCard(
                             service = service,
-                            onClick = { onNavigateToServiceDetail(service.id) },
+                            onClick = { stableOnNavigateToServiceDetail(service.id) },
                             modifier = Modifier.testTag("service_card_${service.id}"),
                         )
                     }

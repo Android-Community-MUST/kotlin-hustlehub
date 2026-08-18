@@ -16,12 +16,14 @@ import org.junit.Test
 
 class StorageRepositoryTest {
     private lateinit var mockMediaApiService: MediaApiService
+    private lateinit var mockUploadManager: must.kdroiders.hustlehub.core.worker.UploadManager
     private lateinit var repository: StorageRepository
 
     @Before
     fun setup() {
         mockMediaApiService = mockk()
-        repository = StorageRepositoryImpl(mockMediaApiService)
+        mockUploadManager = mockk()
+        repository = StorageRepositoryImpl(mockMediaApiService, mockUploadManager)
     }
 
     @Test

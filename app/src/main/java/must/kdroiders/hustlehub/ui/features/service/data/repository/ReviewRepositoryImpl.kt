@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.api.PageResponse
 import must.kdroiders.hustlehub.datastore.UserPreferences
+import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ReviewDao
+import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toDomain
+import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toEntity
 import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateReviewRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewResponse
@@ -23,6 +26,7 @@ class ReviewRepositoryImpl
     constructor(
         private val apiService: ServiceApiService,
         private val userPreferences: UserPreferences,
+        private val reviewDao: ReviewDao,
     ) : ReviewRepository {
         override suspend fun submitReview(
             serviceId: String,
@@ -61,8 +65,10 @@ class ReviewRepositoryImpl
                     val response = apiService.getServiceReviews(serviceId, page, size)
                     check(response.success && response.data != null) { response.message ?: "Failed to fetch reviews" }
                     val pageData = response.data
+                    val reviews = pageData.content.map { it.toDomain() }
+                    reviewDao.upsertAll(reviews.map { it.toEntity() })
                     PageResponse(
-                        content = pageData.content.map { it.toDomain() },
+                        content = reviews,
                         page = pageData.page,
                         size = pageData.size,
                         totalElements = pageData.totalElements,
@@ -70,7 +76,7 @@ class ReviewRepositoryImpl
                     )
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
-                    Timber.w(e, "ReviewRepositoryImpl.getReviewsForService failed for serviceId='$serviceId'")
+                    Timber.w(e, "ReviewRepositoryImpl.getReviewsForService network miss for serviceId='$serviceId'")
                 }
             }
 
