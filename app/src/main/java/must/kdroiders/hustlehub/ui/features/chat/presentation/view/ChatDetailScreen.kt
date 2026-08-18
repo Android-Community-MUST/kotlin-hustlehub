@@ -17,7 +17,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -92,7 +93,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -1027,33 +1027,27 @@ fun ChatDetailScreen(
                         }
                     } else {
                         // Send text button
-                        var isPressed by remember { mutableStateOf(false) }
+                        val sendInteractionSource = remember { MutableInteractionSource() }
+                        val isSendPressed by sendInteractionSource.collectIsPressedAsState()
                         val sendScale by animateFloatAsState(
-                            targetValue = if (isPressed) 0.8f else 1f,
+                            targetValue = if (isSendPressed) 0.8f else 1f,
                             animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
                             label = "send_scale"
                         )
 
                         IconButton(
-                            onClick = { /* handled by pointer input */ },
+                            onClick = {
+                                chatDetailViewModel.sendTextMessage(textInput)
+                                textInput = ""
+                            },
+                            interactionSource = sendInteractionSource,
                             colors = IconButtonDefaults.iconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary,
                             ),
                             modifier = Modifier
                                 .size(40.dp)
-                                .scale(sendScale)
-                                .pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onPress = {
-                                            isPressed = true
-                                            tryAwaitRelease()
-                                            isPressed = false
-                                            chatDetailViewModel.sendTextMessage(textInput)
-                                            textInput = ""
-                                        }
-                                    )
-                                },
+                                .scale(sendScale),
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Send,

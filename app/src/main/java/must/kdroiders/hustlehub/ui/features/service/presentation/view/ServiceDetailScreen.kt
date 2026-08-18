@@ -6,7 +6,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,7 +64,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -228,7 +228,8 @@ fun ServiceDetailScreen(
                             Icon(Icons.Default.Share, contentDescription = "Share", tint = Color.White)
                         }
                         var isBookmarked by remember { mutableStateOf(false) }
-                        var isBookmarkPressed by remember { mutableStateOf(false) }
+                        val bookmarkInteractionSource = remember { MutableInteractionSource() }
+                        val isBookmarkPressed by bookmarkInteractionSource.collectIsPressedAsState()
                         val bookmarkScale by animateFloatAsState(
                             targetValue = if (isBookmarkPressed) 0.8f else if (isBookmarked) 1.2f else 1f,
                             animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
@@ -236,26 +237,19 @@ fun ServiceDetailScreen(
                         )
 
                         IconButton(
-                            onClick = { /* Handled by pointer input */ },
+                            onClick = {
+                                isBookmarked = !isBookmarked
+                                scope.launch {
+                                    val msg = if (isBookmarked) "Saved!" else "Removed from saved"
+                                    snackbarHostState.showSnackbar(msg)
+                                }
+                            },
+                            interactionSource = bookmarkInteractionSource,
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
                                 .background(Color.Black.copy(alpha = 0.3f))
-                                .scale(bookmarkScale)
-                                .pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onPress = {
-                                            isBookmarkPressed = true
-                                            tryAwaitRelease()
-                                            isBookmarkPressed = false
-                                            isBookmarked = !isBookmarked
-                                            scope.launch {
-                                                val msg = if (isBookmarked) "Saved!" else "Removed from saved"
-                                                snackbarHostState.showSnackbar(msg)
-                                            }
-                                        }
-                                    )
-                                },
+                                .scale(bookmarkScale),
                         ) {
                             Icon(
                                 if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
