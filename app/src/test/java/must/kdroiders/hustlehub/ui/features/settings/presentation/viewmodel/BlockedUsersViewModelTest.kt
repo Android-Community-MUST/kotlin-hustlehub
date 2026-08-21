@@ -70,4 +70,17 @@ class BlockedUsersViewModelTest {
                     .isEmpty(),
             )
         }
+
+    // Sprint 5 — Scenario 8: block hides user — repository called with correct UUID
+    @Test
+    fun `blockUser calls repository with the correct target UUID`() =
+        runTest {
+            val targetUuid = "provider-uuid-456"
+            coEvery { userRepository.blockUser(targetUuid) } returns Result.success(Unit)
+
+            userRepository.blockUser(targetUuid)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            coVerify(exactly = 1) { userRepository.blockUser(targetUuid) }
+        }
 }

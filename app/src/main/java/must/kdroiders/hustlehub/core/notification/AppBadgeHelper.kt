@@ -19,7 +19,7 @@ object AppBadgeHelper {
             } else {
                 ShortcutBadger.removeCount(context)
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Timber.w(e, "Failed to update launcher app icon badge count: $count")
         }
     }
