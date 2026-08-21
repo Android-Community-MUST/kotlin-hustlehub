@@ -3,7 +3,6 @@ package must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel
 import android.content.Context
 import androidx.lifecycle.viewModelScope
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +33,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CreateServiceViewModelTest {
-
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private val serviceRepository: ServiceRepository = mockk(relaxed = true)
@@ -107,27 +105,28 @@ class CreateServiceViewModelTest {
     }
 
     @Test
-    fun `loadForEdit pre-fills form fields with existing service data`() = runTest {
-        val existingService = Service(
-            id = "srv-100",
-            title = "Existing Service",
-            category = ServiceCategory.SALON,
-            description = "Quality haircuts",
-            priceRange = "150 - 300",
-            tags = listOf("salon", "haircut"),
-            availability = ServiceAvailability.AVAILABLE,
-        )
+    fun `loadForEdit pre-fills form fields with existing service data`() =
+        runTest {
+            val existingService = Service(
+                id = "srv-100",
+                title = "Existing Service",
+                category = ServiceCategory.SALON,
+                description = "Quality haircuts",
+                priceRange = "150 - 300",
+                tags = listOf("salon", "haircut"),
+                availability = ServiceAvailability.AVAILABLE,
+            )
 
-        coEvery { getServiceById("srv-100") } returns Result.success(existingService)
+            coEvery { getServiceById("srv-100") } returns Result.success(existingService)
 
-        viewModel.loadForEdit("srv-100")
+            viewModel.loadForEdit("srv-100")
 
-        val state = viewModel.uiState.value
-        assertTrue(state.isEditMode)
-        assertEquals("Existing Service", state.title)
-        assertEquals(ServiceCategory.SALON, state.category)
-        assertEquals("150", state.minPrice)
-        assertEquals("300", state.maxPrice)
-        assertEquals(listOf("salon", "haircut"), state.tags)
-    }
+            val state = viewModel.uiState.value
+            assertTrue(state.isEditMode)
+            assertEquals("Existing Service", state.title)
+            assertEquals(ServiceCategory.SALON, state.category)
+            assertEquals("150", state.minPrice)
+            assertEquals("300", state.maxPrice)
+            assertEquals(listOf("salon", "haircut"), state.tags)
+        }
 }

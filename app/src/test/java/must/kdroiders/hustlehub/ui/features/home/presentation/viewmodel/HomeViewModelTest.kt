@@ -30,7 +30,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
-
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private val browseServices: BrowseServicesUseCase = mockk(relaxed = true)
@@ -80,28 +79,30 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `initialization loads services for category ALL`() = runTest {
-        val state = viewModel.uiState.value
-        assertFalse(state.isLoadingServices)
-        assertEquals(2, state.services.size)
-        assertEquals(ServiceCategory.ALL, state.selectedCategory)
-    }
+    fun `initialization loads services for category ALL`() =
+        runTest {
+            val state = viewModel.uiState.value
+            assertFalse(state.isLoadingServices)
+            assertEquals(2, state.services.size)
+            assertEquals(ServiceCategory.ALL, state.selectedCategory)
+        }
 
     @Test
-    fun `onCategorySelected updates selectedCategory and re-fetches services`() = runTest {
-        val techPage = PageResponse(
-            content = listOf(Service(id = "s-1", title = "Laptop Repair", category = ServiceCategory.TECH)),
-            page = 0,
-            size = 10,
-            totalElements = 1,
-            totalPages = 1,
-        )
-        coEvery { browseServices(page = 0, size = 10, category = ServiceCategory.TECH, query = null) } returns Result.success(techPage)
+    fun `onCategorySelected updates selectedCategory and re-fetches services`() =
+        runTest {
+            val techPage = PageResponse(
+                content = listOf(Service(id = "s-1", title = "Laptop Repair", category = ServiceCategory.TECH)),
+                page = 0,
+                size = 10,
+                totalElements = 1,
+                totalPages = 1,
+            )
+            coEvery { browseServices(page = 0, size = 10, category = ServiceCategory.TECH, query = null) } returns Result.success(techPage)
 
-        viewModel.onCategorySelected(ServiceCategory.TECH)
+            viewModel.onCategorySelected(ServiceCategory.TECH)
 
-        assertEquals(ServiceCategory.TECH, viewModel.uiState.value.selectedCategory)
-        assertEquals(1, viewModel.uiState.value.services.size)
-        coVerify { browseServices(page = 0, size = 10, category = ServiceCategory.TECH, query = null) }
-    }
+            assertEquals(ServiceCategory.TECH, viewModel.uiState.value.selectedCategory)
+            assertEquals(1, viewModel.uiState.value.services.size)
+            coVerify { browseServices(page = 0, size = 10, category = ServiceCategory.TECH, query = null) }
+        }
 }

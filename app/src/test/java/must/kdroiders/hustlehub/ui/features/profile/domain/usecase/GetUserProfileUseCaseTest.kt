@@ -14,7 +14,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GetUserProfileUseCaseTest {
-
     private val userRepository: UserRepository = mockk(relaxed = true)
     private lateinit var useCase: GetProviderProfileUseCase
 
@@ -24,14 +23,15 @@ class GetUserProfileUseCaseTest {
     }
 
     @Test
-    fun `invoke delegates userId to userRepository getProviderProfile`() = runTest {
-        val user = User(id = "user-1", name = "Jane Doe", email = "jane@must.ac.ke")
-        coEvery { userRepository.getProviderProfile("user-1") } returns Result.success(user)
+    fun `invoke delegates userId to userRepository getProviderProfile`() =
+        runTest {
+            val user = User(id = "user-1", name = "Jane Doe", email = "jane@must.ac.ke")
+            coEvery { userRepository.getProviderProfile("user-1") } returns Result.success(user)
 
-        val result = useCase("user-1")
+            val result = useCase("user-1")
 
-        assertTrue(result.isSuccess)
-        assertEquals("Jane Doe", result.getOrNull()?.name)
-        coVerify(exactly = 1) { userRepository.getProviderProfile("user-1") }
-    }
+            assertTrue(result.isSuccess)
+            assertEquals("Jane Doe", result.getOrNull()?.name)
+            coVerify(exactly = 1) { userRepository.getProviderProfile("user-1") }
+        }
 }

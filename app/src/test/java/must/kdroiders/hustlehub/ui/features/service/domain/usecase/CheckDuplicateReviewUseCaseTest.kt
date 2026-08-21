@@ -12,7 +12,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CheckDuplicateReviewUseCaseTest {
-
     private val reviewRepository: ReviewRepository = mockk(relaxed = true)
     private lateinit var useCase: CheckDuplicateReviewUseCase
 
@@ -22,13 +21,14 @@ class CheckDuplicateReviewUseCaseTest {
     }
 
     @Test
-    fun `invoke delegates serviceId to reviewRepository checkDuplicateReview`() = runTest {
-        coEvery { reviewRepository.checkDuplicateReview("srv-1") } returns Result.success(true)
+    fun `invoke delegates serviceId to reviewRepository checkDuplicateReview`() =
+        runTest {
+            coEvery { reviewRepository.checkDuplicateReview("srv-1") } returns Result.success(true)
 
-        val result = useCase("srv-1")
+            val result = useCase("srv-1")
 
-        assertTrue(result.isSuccess)
-        assertTrue(result.getOrNull() == true)
-        coVerify(exactly = 1) { reviewRepository.checkDuplicateReview("srv-1") }
-    }
+            assertTrue(result.isSuccess)
+            assertTrue(result.getOrNull() == true)
+            coVerify(exactly = 1) { reviewRepository.checkDuplicateReview("srv-1") }
+        }
 }

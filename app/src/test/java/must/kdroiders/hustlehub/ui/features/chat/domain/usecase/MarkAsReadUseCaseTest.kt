@@ -12,7 +12,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MarkAsReadUseCaseTest {
-
     private val chatRepository: ChatRepository = mockk(relaxed = true)
     private lateinit var useCase: MarkAsReadUseCase
 
@@ -22,12 +21,13 @@ class MarkAsReadUseCaseTest {
     }
 
     @Test
-    fun `invoke delegates conversation ID to chatRepository markAsRead`() = runTest {
-        coEvery { chatRepository.markAsRead("conv-1") } returns Result.success(Unit)
+    fun `invoke delegates conversation ID to chatRepository markAsRead`() =
+        runTest {
+            coEvery { chatRepository.markAsRead("conv-1") } returns Result.success(Unit)
 
-        val result = useCase("conv-1")
+            val result = useCase("conv-1")
 
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { chatRepository.markAsRead("conv-1") }
-    }
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { chatRepository.markAsRead("conv-1") }
+        }
 }

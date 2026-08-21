@@ -23,7 +23,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ConversationListViewModelTest {
-
     private val testDispatcher = UnconfinedTestDispatcher()
     private val chatRepository: ChatRepository = mockk(relaxed = true)
 
@@ -74,27 +73,30 @@ class ConversationListViewModelTest {
     }
 
     @Test
-    fun `observes conversations sorted by lastMessageTimestamp`() = runTest {
-        val state = viewModel.uiState.value
-        assertFalse(state.isLoading)
-        assertEquals(2, state.conversations.size)
-        assertEquals("conv-1", state.conversations[0].id)
-        assertEquals(2, state.conversations[0].unreadCount)
-    }
+    fun `observes conversations sorted by lastMessageTimestamp`() =
+        runTest {
+            val state = viewModel.uiState.value
+            assertFalse(state.isLoading)
+            assertEquals(2, state.conversations.size)
+            assertEquals("conv-1", state.conversations[0].id)
+            assertEquals(2, state.conversations[0].unreadCount)
+        }
 
     @Test
-    fun `refreshConversations invokes chatRepository refresh`() = runTest {
-        viewModel.refreshConversations()
-        coVerify(exactly = 2) { chatRepository.refreshConversations() }
-        assertFalse(viewModel.uiState.value.isRefreshing)
-    }
+    fun `refreshConversations invokes chatRepository refresh`() =
+        runTest {
+            viewModel.refreshConversations()
+            coVerify(exactly = 2) { chatRepository.refreshConversations() }
+            assertFalse(viewModel.uiState.value.isRefreshing)
+        }
 
     @Test
-    fun `deleteConversation delegates deletion to chatRepository`() = runTest {
-        coEvery { chatRepository.deleteConversation("conv-1") } returns Result.success(Unit)
+    fun `deleteConversation delegates deletion to chatRepository`() =
+        runTest {
+            coEvery { chatRepository.deleteConversation("conv-1") } returns Result.success(Unit)
 
-        viewModel.deleteConversation("conv-1")
+            viewModel.deleteConversation("conv-1")
 
-        coVerify(exactly = 1) { chatRepository.deleteConversation("conv-1") }
-    }
+            coVerify(exactly = 1) { chatRepository.deleteConversation("conv-1") }
+        }
 }

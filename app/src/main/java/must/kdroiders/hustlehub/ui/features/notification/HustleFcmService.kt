@@ -12,7 +12,6 @@ import timber.log.Timber
 
 @AndroidEntryPoint
 class HustleFcmService : FirebaseMessagingService() {
-
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Timber.d("FCM Registration Token: $token")
@@ -28,7 +27,11 @@ class HustleFcmService : FirebaseMessagingService() {
         showNotification(title, body, channelId)
     }
 
-    private fun showNotification(title: String, body: String, channelId: String) {
+    private fun showNotification(
+        title: String,
+        body: String,
+        channelId: String,
+    ) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -40,7 +43,8 @@ class HustleFcmService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val notification = NotificationCompat.Builder(this, channelId)
+        val notification = NotificationCompat
+            .Builder(this, channelId)
             .setSmallIcon(android.R.drawable.stat_notify_chat)
             .setContentTitle(title)
             .setContentText(body)

@@ -27,7 +27,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ServiceDetailViewModelTest {
-
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private val getServiceByIdUseCase: GetServiceByIdUseCase = mockk(relaxed = true)
@@ -59,51 +58,52 @@ class ServiceDetailViewModelTest {
     }
 
     @Test
-    fun `initialize fetches service details provider profile and reviews`() = runTest {
-        val mockService = Service(
-            id = "srv-10",
-            providerId = "prov-10",
-            title = "Math Tutoring",
-        )
-        val mockProvider = User(
-            id = "prov-10",
-            name = "Prof. John",
-            hustleScore = 90f,
-        )
-        val mockReviewsPage = PageResponse(
-            content = listOf(
-                Review(
-                    id = "rev-1",
-                    serviceId = "srv-10",
-                    providerId = "prov-10",
-                    customerId = "cust-1",
-                    customerName = "Student Alice",
-                    customerAvatarUrl = "",
-                    rating = 5,
-                    comment = "Great tutor!",
-                    isAnonymous = false,
-                    createdAt = 1000L,
+    fun `initialize fetches service details provider profile and reviews`() =
+        runTest {
+            val mockService = Service(
+                id = "srv-10",
+                providerId = "prov-10",
+                title = "Math Tutoring",
+            )
+            val mockProvider = User(
+                id = "prov-10",
+                name = "Prof. John",
+                hustleScore = 90f,
+            )
+            val mockReviewsPage = PageResponse(
+                content = listOf(
+                    Review(
+                        id = "rev-1",
+                        serviceId = "srv-10",
+                        providerId = "prov-10",
+                        customerId = "cust-1",
+                        customerName = "Student Alice",
+                        customerAvatarUrl = "",
+                        rating = 5,
+                        comment = "Great tutor!",
+                        isAnonymous = false,
+                        createdAt = 1000L,
+                    ),
                 ),
-            ),
-            page = 0,
-            size = 5,
-            totalElements = 1,
-            totalPages = 1,
-        )
+                page = 0,
+                size = 5,
+                totalElements = 1,
+                totalPages = 1,
+            )
 
-        coEvery { getServiceByIdUseCase("srv-10") } returns Result.success(mockService)
-        coEvery { getProviderProfileUseCase("prov-10") } returns Result.success(mockProvider)
-        coEvery { getServiceReviewsUseCase("srv-10", 0, 5) } returns Result.success(mockReviewsPage)
+            coEvery { getServiceByIdUseCase("srv-10") } returns Result.success(mockService)
+            coEvery { getProviderProfileUseCase("prov-10") } returns Result.success(mockProvider)
+            coEvery { getServiceReviewsUseCase("srv-10", 0, 5) } returns Result.success(mockReviewsPage)
 
-        viewModel.initialize("srv-10")
+            viewModel.initialize("srv-10")
 
-        val state = viewModel.uiState.value
-        assertFalse(state.isLoading)
-        assertNotNull(state.service)
-        assertEquals("Math Tutoring", state.service?.title)
-        assertNotNull(state.provider)
-        assertEquals("Prof. John", state.provider?.name)
-        assertEquals(1, state.reviews.size)
-        assertEquals("Great tutor!", state.reviews[0].comment)
-    }
+            val state = viewModel.uiState.value
+            assertFalse(state.isLoading)
+            assertNotNull(state.service)
+            assertEquals("Math Tutoring", state.service?.title)
+            assertNotNull(state.provider)
+            assertEquals("Prof. John", state.provider?.name)
+            assertEquals(1, state.reviews.size)
+            assertEquals("Great tutor!", state.reviews[0].comment)
+        }
 }

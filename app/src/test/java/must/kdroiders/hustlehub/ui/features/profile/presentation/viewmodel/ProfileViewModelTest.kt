@@ -29,7 +29,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModelTest {
-
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private val authRepository: AuthRepository = mockk(relaxed = true)
@@ -77,22 +76,28 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `loadProfile calculates stats badges and lists services`() = runTest {
-        val state = viewModel.uiState.value
-        assertFalse(state.isLoading)
-        assertNotNull(state.user)
-        assertEquals("John Hustler", state.user?.name)
-        assertEquals(1, state.services.size)
-        assertEquals(5, state.reviewCount)
-    }
+    fun `loadProfile calculates stats badges and lists services`() =
+        runTest {
+            val state = viewModel.uiState.value
+            assertFalse(state.isLoading)
+            assertNotNull(state.user)
+            assertEquals("John Hustler", state.user?.name)
+            assertEquals(1, state.services.size)
+            assertEquals(5, state.reviewCount)
+        }
 
     @Test
-    fun `toggleServiceActive updates service availability status`() = runTest {
-        coEvery { updateAvailabilityUseCase("srv-1", ServiceAvailability.OFFLINE) } returns Result.success(Service(id = "srv-1", availability = ServiceAvailability.OFFLINE))
+    fun `toggleServiceActive updates service availability status`() =
+        runTest {
+            coEvery { updateAvailabilityUseCase("srv-1", ServiceAvailability.OFFLINE) } returns Result.success(Service(id = "srv-1", availability = ServiceAvailability.OFFLINE))
 
-        viewModel.toggleServiceActive("srv-1")
+            viewModel.toggleServiceActive("srv-1")
 
-        coVerify(exactly = 1) { updateAvailabilityUseCase("srv-1", ServiceAvailability.OFFLINE) }
-        assertEquals(ServiceAvailability.OFFLINE, viewModel.uiState.value.services[0].availability)
-    }
+            coVerify(exactly = 1) { updateAvailabilityUseCase("srv-1", ServiceAvailability.OFFLINE) }
+            assertEquals(
+                ServiceAvailability.OFFLINE,
+                viewModel.uiState.value.services[0]
+                    .availability,
+            )
+        }
 }

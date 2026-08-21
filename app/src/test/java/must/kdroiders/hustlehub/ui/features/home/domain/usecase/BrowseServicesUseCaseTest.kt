@@ -16,7 +16,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BrowseServicesUseCaseTest {
-
     private val serviceRepository: ServiceRepository = mockk(relaxed = true)
     private lateinit var useCase: BrowseServicesUseCase
 
@@ -26,42 +25,43 @@ class BrowseServicesUseCaseTest {
     }
 
     @Test
-    fun `invoke passes category and query parameters to serviceRepository`() = runTest {
-        val pageResponse = PageResponse(
-            content = listOf(
-                Service(id = "srv-1", category = ServiceCategory.TECH, averageRating = 4.9f),
-            ),
-            page = 0,
-            size = 20,
-            totalElements = 1,
-            totalPages = 1,
-        )
+    fun `invoke passes category and query parameters to serviceRepository`() =
+        runTest {
+            val pageResponse = PageResponse(
+                content = listOf(
+                    Service(id = "srv-1", category = ServiceCategory.TECH, averageRating = 4.9f),
+                ),
+                page = 0,
+                size = 20,
+                totalElements = 1,
+                totalPages = 1,
+            )
 
-        coEvery {
-            serviceRepository.browseServices(
+            coEvery {
+                serviceRepository.browseServices(
+                    page = 0,
+                    size = 20,
+                    category = ServiceCategory.TECH,
+                    query = "repair",
+                )
+            } returns Result.success(pageResponse)
+
+            val result = useCase(
                 page = 0,
                 size = 20,
                 category = ServiceCategory.TECH,
                 query = "repair",
             )
-        } returns Result.success(pageResponse)
 
-        val result = useCase(
-            page = 0,
-            size = 20,
-            category = ServiceCategory.TECH,
-            query = "repair",
-        )
-
-        assertTrue(result.isSuccess)
-        assertEquals(1, result.getOrNull()?.content?.size)
-        coVerify(exactly = 1) {
-            serviceRepository.browseServices(
-                page = 0,
-                size = 20,
-                category = ServiceCategory.TECH,
-                query = "repair",
-            )
+            assertTrue(result.isSuccess)
+            assertEquals(1, result.getOrNull()?.content?.size)
+            coVerify(exactly = 1) {
+                serviceRepository.browseServices(
+                    page = 0,
+                    size = 20,
+                    category = ServiceCategory.TECH,
+                    query = "repair",
+                )
+            }
         }
-    }
 }

@@ -27,7 +27,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MyServicesViewModelTest {
-
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private val getMyServices: GetMyServicesUseCase = mockk(relaxed = true)
@@ -67,35 +66,39 @@ class MyServicesViewModelTest {
     }
 
     @Test
-    fun `loadServices updates uiState with provider services`() = runTest {
-        val state = viewModel.uiState.value
-        assertFalse(state.isLoading)
-        assertEquals(2, state.services.size)
-        assertEquals("Laptop Repair", state.services[0].title)
-    }
+    fun `loadServices updates uiState with provider services`() =
+        runTest {
+            val state = viewModel.uiState.value
+            assertFalse(state.isLoading)
+            assertEquals(2, state.services.size)
+            assertEquals("Laptop Repair", state.services[0].title)
+        }
 
     @Test
-    fun `onAvailabilityChange updates service availability optimistically`() = runTest {
-        val updatedService = Service(id = "srv-1", title = "Laptop Repair", availability = ServiceAvailability.BUSY)
-        coEvery { updateAvailability("srv-1", ServiceAvailability.BUSY) } returns Result.success(updatedService)
+    fun `onAvailabilityChange updates service availability optimistically`() =
+        runTest {
+            val updatedService = Service(id = "srv-1", title = "Laptop Repair", availability = ServiceAvailability.BUSY)
+            coEvery { updateAvailability("srv-1", ServiceAvailability.BUSY) } returns Result.success(updatedService)
 
-        viewModel.onAvailabilityChange("srv-1", ServiceAvailability.BUSY)
+            viewModel.onAvailabilityChange("srv-1", ServiceAvailability.BUSY)
 
-        coVerify(exactly = 1) { updateAvailability("srv-1", ServiceAvailability.BUSY) }
-        val serviceInState = viewModel.uiState.value.services.find { it.id == "srv-1" }
-        assertEquals(ServiceAvailability.BUSY, serviceInState?.availability)
-    }
+            coVerify(exactly = 1) { updateAvailability("srv-1", ServiceAvailability.BUSY) }
+            val serviceInState = viewModel.uiState.value.services
+                .find { it.id == "srv-1" }
+            assertEquals(ServiceAvailability.BUSY, serviceInState?.availability)
+        }
 
     @Test
-    fun `confirmDelete removes service from list on success`() = runTest {
-        coEvery { deleteServiceUseCase.invoke("srv-1") } returns Result.success(Unit)
+    fun `confirmDelete removes service from list on success`() =
+        runTest {
+            coEvery { deleteServiceUseCase.invoke("srv-1") } returns Result.success(Unit)
 
-        viewModel.requestDelete("srv-1")
-        viewModel.confirmDelete()
+            viewModel.requestDelete("srv-1")
+            viewModel.confirmDelete()
 
-        coVerify(exactly = 1) { deleteServiceUseCase.invoke("srv-1") }
-        val remaining = viewModel.uiState.value.services
-        assertEquals(1, remaining.size)
-        assertEquals("srv-2", remaining[0].id)
-    }
+            coVerify(exactly = 1) { deleteServiceUseCase.invoke("srv-1") }
+            val remaining = viewModel.uiState.value.services
+            assertEquals(1, remaining.size)
+            assertEquals("srv-2", remaining[0].id)
+        }
 }

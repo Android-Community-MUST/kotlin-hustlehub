@@ -12,7 +12,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DeleteServiceUseCaseTest {
-
     private val repository: ServiceRepository = mockk(relaxed = true)
     private lateinit var useCase: DeleteServiceUseCase
 
@@ -22,12 +21,13 @@ class DeleteServiceUseCaseTest {
     }
 
     @Test
-    fun `invoke delegates serviceId deletion to repository`() = runTest {
-        coEvery { repository.deleteService("srv-1") } returns Result.success(Unit)
+    fun `invoke delegates serviceId deletion to repository`() =
+        runTest {
+            coEvery { repository.deleteService("srv-1") } returns Result.success(Unit)
 
-        val result = useCase("srv-1")
+            val result = useCase("srv-1")
 
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { repository.deleteService("srv-1") }
-    }
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { repository.deleteService("srv-1") }
+        }
 }

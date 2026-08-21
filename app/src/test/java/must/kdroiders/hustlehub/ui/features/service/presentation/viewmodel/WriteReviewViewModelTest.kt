@@ -26,7 +26,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WriteReviewViewModelTest {
-
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private val submitReviewUseCase: SubmitReviewUseCase = mockk(relaxed = true)
@@ -58,49 +57,51 @@ class WriteReviewViewModelTest {
     }
 
     @Test
-    fun `initialize checks duplicate review state`() = runTest {
-        val mockService = Service(id = "srv-1", providerId = "prov-1", title = "Haircut")
-        val mockProvider = User(id = "prov-1", name = "Barber Sam")
+    fun `initialize checks duplicate review state`() =
+        runTest {
+            val mockService = Service(id = "srv-1", providerId = "prov-1", title = "Haircut")
+            val mockProvider = User(id = "prov-1", name = "Barber Sam")
 
-        coEvery { getServiceByIdUseCase("srv-1") } returns Result.success(mockService)
-        coEvery { getProviderProfileUseCase("prov-1") } returns Result.success(mockProvider)
-        coEvery { checkDuplicateReviewUseCase("srv-1") } returns Result.success(true)
+            coEvery { getServiceByIdUseCase("srv-1") } returns Result.success(mockService)
+            coEvery { getProviderProfileUseCase("prov-1") } returns Result.success(mockProvider)
+            coEvery { checkDuplicateReviewUseCase("srv-1") } returns Result.success(true)
 
-        viewModel.initialize("srv-1")
+            viewModel.initialize("srv-1")
 
-        val state = viewModel.uiState.value
-        assertFalse(state.isLoadingInfo)
-        assertTrue(state.hasAlreadyReviewed)
-    }
+            val state = viewModel.uiState.value
+            assertFalse(state.isLoadingInfo)
+            assertTrue(state.hasAlreadyReviewed)
+        }
 
     @Test
-    fun `submit delegates rating comment and isAnonymous to useCase`() = runTest {
-        val mockService = Service(id = "srv-1", providerId = "prov-1", title = "Haircut")
-        val mockProvider = User(id = "prov-1", name = "Barber Sam")
-        val createdReview = Review(
-            id = "rev-1",
-            serviceId = "srv-1",
-            providerId = "prov-1",
-            customerId = "cust-1",
-            customerName = "Customer",
-            customerAvatarUrl = "",
-            rating = 5,
-            comment = "Awesome cut!",
-            isAnonymous = false,
-            createdAt = 1000L,
-        )
+    fun `submit delegates rating comment and isAnonymous to useCase`() =
+        runTest {
+            val mockService = Service(id = "srv-1", providerId = "prov-1", title = "Haircut")
+            val mockProvider = User(id = "prov-1", name = "Barber Sam")
+            val createdReview = Review(
+                id = "rev-1",
+                serviceId = "srv-1",
+                providerId = "prov-1",
+                customerId = "cust-1",
+                customerName = "Customer",
+                customerAvatarUrl = "",
+                rating = 5,
+                comment = "Awesome cut!",
+                isAnonymous = false,
+                createdAt = 1000L,
+            )
 
-        coEvery { getServiceByIdUseCase("srv-1") } returns Result.success(mockService)
-        coEvery { getProviderProfileUseCase("prov-1") } returns Result.success(mockProvider)
-        coEvery { checkDuplicateReviewUseCase("srv-1") } returns Result.success(false)
-        coEvery { submitReviewUseCase("srv-1", 5, "Awesome cut!", false) } returns Result.success(createdReview)
+            coEvery { getServiceByIdUseCase("srv-1") } returns Result.success(mockService)
+            coEvery { getProviderProfileUseCase("prov-1") } returns Result.success(mockProvider)
+            coEvery { checkDuplicateReviewUseCase("srv-1") } returns Result.success(false)
+            coEvery { submitReviewUseCase("srv-1", 5, "Awesome cut!", false) } returns Result.success(createdReview)
 
-        viewModel.initialize("srv-1")
-        viewModel.onRatingChanged(5)
-        viewModel.onCommentChanged("Awesome cut!")
-        viewModel.submit()
+            viewModel.initialize("srv-1")
+            viewModel.onRatingChanged(5)
+            viewModel.onCommentChanged("Awesome cut!")
+            viewModel.submit()
 
-        coVerify(exactly = 1) { submitReviewUseCase("srv-1", 5, "Awesome cut!", false) }
-        assertTrue(viewModel.uiState.value.submitSuccess)
-    }
+            coVerify(exactly = 1) { submitReviewUseCase("srv-1", 5, "Awesome cut!", false) }
+            assertTrue(viewModel.uiState.value.submitSuccess)
+        }
 }

@@ -14,7 +14,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GetServiceByIdUseCaseTest {
-
     private val repository: ServiceRepository = mockk(relaxed = true)
     private lateinit var useCase: GetServiceByIdUseCase
 
@@ -24,14 +23,15 @@ class GetServiceByIdUseCaseTest {
     }
 
     @Test
-    fun `invoke delegates serviceId to repository`() = runTest {
-        val expected = Service(id = "srv-1", title = "Laptop Repair")
-        coEvery { repository.getServiceById("srv-1") } returns Result.success(expected)
+    fun `invoke delegates serviceId to repository`() =
+        runTest {
+            val expected = Service(id = "srv-1", title = "Laptop Repair")
+            coEvery { repository.getServiceById("srv-1") } returns Result.success(expected)
 
-        val result = useCase("srv-1")
+            val result = useCase("srv-1")
 
-        assertTrue(result.isSuccess)
-        assertEquals(expected, result.getOrNull())
-        coVerify(exactly = 1) { repository.getServiceById("srv-1") }
-    }
+            assertTrue(result.isSuccess)
+            assertEquals(expected, result.getOrNull())
+            coVerify(exactly = 1) { repository.getServiceById("srv-1") }
+        }
 }

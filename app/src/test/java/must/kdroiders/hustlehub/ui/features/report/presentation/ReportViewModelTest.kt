@@ -21,7 +21,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ReportViewModelTest {
-
     private val testDispatcher = UnconfinedTestDispatcher()
     private val reportRepository: ReportRepository = mockk(relaxed = true)
 
@@ -41,28 +40,29 @@ class ReportViewModelTest {
     }
 
     @Test
-    fun `submitReport delegates report parameters to reportRepository`() = runTest {
-        val mockReport = Report(
-            id = "rep-1",
-            reporterId = "u-1",
-            targetId = "user-99",
-            targetType = "USER",
-            reason = "SPAM",
-            description = "Spamming in messages",
-            status = "PENDING",
-            createdAt = 1000L,
-        )
-        coEvery {
-            reportRepository.submitReport("user-99", "USER", "SPAM", "Spamming in messages")
-        } returns Result.success(mockReport)
+    fun `submitReport delegates report parameters to reportRepository`() =
+        runTest {
+            val mockReport = Report(
+                id = "rep-1",
+                reporterId = "u-1",
+                targetId = "user-99",
+                targetType = "USER",
+                reason = "SPAM",
+                description = "Spamming in messages",
+                status = "PENDING",
+                createdAt = 1000L,
+            )
+            coEvery {
+                reportRepository.submitReport("user-99", "USER", "SPAM", "Spamming in messages")
+            } returns Result.success(mockReport)
 
-        viewModel.submitReport("user-99", "USER", "SPAM", "Spamming in messages")
+            viewModel.submitReport("user-99", "USER", "SPAM", "Spamming in messages")
 
-        coVerify(exactly = 1) {
-            reportRepository.submitReport("user-99", "USER", "SPAM", "Spamming in messages")
+            coVerify(exactly = 1) {
+                reportRepository.submitReport("user-99", "USER", "SPAM", "Spamming in messages")
+            }
+            val state = viewModel.uiState.value
+            assertFalse(state.isSubmitting)
+            assertTrue(state.isSuccess)
         }
-        val state = viewModel.uiState.value
-        assertFalse(state.isSubmitting)
-        assertTrue(state.isSuccess)
-    }
 }
