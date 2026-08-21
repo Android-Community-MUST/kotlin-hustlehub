@@ -89,6 +89,12 @@ class CreateServiceViewModel
         private var editServiceId: String? = null
         private var originalAvailability: ServiceAvailability = ServiceAvailability.AVAILABLE
 
+        private val _uiState = MutableStateFlow(CreateServiceUiState())
+        val uiState: StateFlow<CreateServiceUiState> = _uiState.asStateFlow()
+
+        private val _events = MutableSharedFlow<CreateServiceEvent>()
+        val events: SharedFlow<CreateServiceEvent> = _events.asSharedFlow()
+
         init {
             hustleCrashlytics.setScreen("CreateServiceScreen")
             observeUserProStatus()
@@ -106,12 +112,6 @@ class CreateServiceViewModel
             private const val MAX_PORTFOLIO_IMAGES_CREATE = 3
             private const val MAX_PORTFOLIO_IMAGES_EDIT = 6
         }
-
-        private val _uiState = MutableStateFlow(CreateServiceUiState())
-        val uiState: StateFlow<CreateServiceUiState> = _uiState.asStateFlow()
-
-        private val _events = MutableSharedFlow<CreateServiceEvent>()
-        val events: SharedFlow<CreateServiceEvent> = _events.asSharedFlow()
 
         /**
          * Called by the screen when opened in edit mode.
