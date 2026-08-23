@@ -177,11 +177,7 @@ class ChatDetailViewModel
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
 
-                // Initiate E2EE key exchange
-                val secretKey = keyExchangeHandler.ensureKeysExchanged(conversationId)
-                _uiState.update { it.copy(isEncryptionReady = secretKey != null) }
-
-                // 1. Resolve conversation ID (the input could be a conversation ID or a provider/user ID)
+                // 1. Resolve conversation ID FIRST (the input could be a conversation ID or a provider/user ID)
                 val cached = withContext(Dispatchers.IO) { conversationDao.getById(conversationId) }
                 val resolvedId = if (cached != null) {
                     conversationId
@@ -196,13 +192,18 @@ class ChatDetailViewModel
                             conversation.id
                         },
                         onFailure = { e ->
-                            Timber.e(e, "Failed to resolve conversation, using original ID")
-                            conversationId
+                            Timber.e(e, "Failed to resolve conversation")
+                            _uiState.update { it.copy(isLoading = false, error = e.message ?: "Could not open conversation") }
+                            return@launch
                         },
                     )
                 }
 
                 chatRepository.setActiveConversation(resolvedId)
+
+                // 2. Initiate E2EE key exchange AFTER resolving real conversation ID
+                val secretKey = keyExchangeHandler.ensureKeysExchanged(resolvedId)
+                _uiState.update { it.copy(isEncryptionReady = secretKey != null) }
 
                 // 2. Load cached conversation details to show other user's info in header instantly
                 val finalCached = withContext(Dispatchers.IO) { conversationDao.getById(resolvedId) }
