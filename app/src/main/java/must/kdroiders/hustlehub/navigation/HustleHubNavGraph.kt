@@ -206,17 +206,25 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
 
                             // Observe Google sign-in navigation events from the shared ViewModel
                             LaunchedEffect(loginViewModel) {
-                                loginViewModel.navigateToHome.collect { _ ->
+                                loginViewModel.navigateToHome.collect { hasProfile ->
                                     backstack.clear()
-                                    backstack.add(MainShell)
+                                    if (hasProfile) {
+                                        backstack.add(MainShell)
+                                    } else {
+                                        backstack.add(ProfileSetup)
+                                    }
                                 }
                             }
 
                             LoginScreen(
                                 prefilledEmail = key.email,
-                                onLoginSuccess = { _ ->
+                                onLoginSuccess = { hasProfile ->
                                     backstack.clear()
-                                    backstack.add(MainShell)
+                                    if (hasProfile) {
+                                        backstack.add(MainShell)
+                                    } else {
+                                        backstack.add(ProfileSetup)
+                                    }
                                 },
                                 onNavigateToSignUp = {
                                     backstack.add(SignUp)

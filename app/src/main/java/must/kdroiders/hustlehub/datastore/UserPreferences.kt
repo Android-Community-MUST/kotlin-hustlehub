@@ -56,6 +56,8 @@ class UserPreferences
             val PROVIDER_BANNER_DISMISSED = booleanPreferencesKey("provider_banner_dismissed")
             val IS_PRO_USER = booleanPreferencesKey("is_pro_user")
             val PRO_EXPIRES_AT = stringPreferencesKey("pro_expires_at")
+            /** Set before any network deletion call so a crash mid-flow is recoverable on next launch. */
+            val PENDING_DELETION = booleanPreferencesKey("pending_deletion")
 
             const val MAX_RECENT_SEARCHES = 10
         }
@@ -186,6 +188,38 @@ class UserPreferences
                 Timber.d("User cleared from DataStore")
             } catch (e: IOException) {
                 Timber.e(e, "Error clearing user from DataStore")
+            }
+        }
+
+        /**
+         * Emits true if a deletion was started but not completed (e.g. app killed mid-flight).
+         * Checked on app startup to complete local cleanup even without network.
+         */
+        val hasPendingDeletion: Flow<Boolean> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading pending deletion flag")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs -> prefs[PENDING_DELETION] ?: false }
+
+        /** Written before any network deletion call to enable crash recovery on next launch. */
+        suspend fun markPendingDeletion() {
+            try {
+                dataStore.edit { prefs -> prefs[PENDING_DELETION] = true }
+            } catch (e: IOException) {
+                Timber.e(e, "Error marking pending deletion")
+            }
+        }
+
+        /** Cleared after local Room + DataStore wipe succeeds. */
+        suspend fun clearPendingDeletion() {
+            try {
+                dataStore.edit { prefs -> prefs.remove(PENDING_DELETION) }
+            } catch (e: IOException) {
+                Timber.e(e, "Error clearing pending deletion flag")
             }
         }
 

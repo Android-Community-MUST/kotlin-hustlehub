@@ -121,7 +121,9 @@ class LoginViewModel
                         if (result.isEmailVerified) {
                             val hasProfile = hasProfile(result.user)
                             persistUser(result.user)
-                            uploadFcmToken()
+                            if (hasProfile) {
+                                uploadFcmToken()
+                            }
                             _uiState.update { it.copy(isLoading = false) }
                             onSuccess(hasProfile)
                         } else {
@@ -167,7 +169,9 @@ class LoginViewModel
 
                         val hasProfile = hasProfile(result.user)
                         persistUser(result.user)
-                        uploadFcmToken()
+                        if (hasProfile) {
+                            uploadFcmToken()
+                        }
                         _uiState.update { it.copy(isLoading = false) }
                         _navigateToHome.tryEmit(hasProfile)
                         onSuccess(hasProfile)

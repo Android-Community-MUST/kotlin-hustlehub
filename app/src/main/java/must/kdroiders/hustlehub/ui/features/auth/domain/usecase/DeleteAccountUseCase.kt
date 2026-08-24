@@ -10,11 +10,16 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Orchestrates the complete account deletion flow:
- * 1. Re-authenticates the user with [password] and deletes their identity from Firebase Auth & PostgreSQL backend via [AuthRepository.deleteAccount].
- * 2. Disconnects active WebSockets via [ChatRepository].
- * 3. Clears cached user credentials from DataStore via [UserPreferences].
- * 4. Clears all cached tables from Room database via [AppDatabase].
+ * Orchestrates the complete account deletion flow with crash/network-drop resilience:
+ *
+ * 1. Writes a [UserPreferences.PENDING_DELETION] flag **before** any network call — ensures
+ *    the next app launch can complete local cleanup even if the process is killed mid-flight.
+ * 2. Re-authenticates (password users) and deletes identity from Firebase Auth & PostgreSQL via [AuthRepository.deleteAccount].
+ * 3. Disconnects active WebSockets via [ChatRepository].
+ * 4. Wipes local Room database via [AppDatabase.clearAllTables] — done **before** emitting
+ *    the navigation event so HomeScreen never shows stale data.
+ * 5. Clears cached credentials from DataStore via [UserPreferences.clearUser].
+ * 6. Clears the pending deletion flag.
  */
 class DeleteAccountUseCase
     @Inject
@@ -26,22 +31,21 @@ class DeleteAccountUseCase
     ) {
         suspend operator fun invoke(password: String? = null): Result<Unit> =
             runCatching {
-                // 1. Delete account from Auth & Backend (re-authenticating with password if provided)
+                userPreferences.markPendingDeletion()
+
                 val result = authRepository.deleteAccount(password.takeIf { !it.isNullOrBlank() })
                 if (result.isFailure) {
                     throw result.exceptionOrNull() ?: Exception("Failed to delete account")
                 }
 
-                // 2. Disconnect chat WebSockets
                 runCatching { chatRepository.disconnectWebSocket() }
 
-                // 3. Clear local identity
-                userPreferences.clearUser()
-
-                // 4. Wipe local Room database
                 withContext(Dispatchers.IO) {
                     appDatabase.clearAllTables()
                 }
+
+                userPreferences.clearUser()
+                userPreferences.clearPendingDeletion()
 
                 Timber.d("DeleteAccountUseCase: account permanently deleted successfully")
             }

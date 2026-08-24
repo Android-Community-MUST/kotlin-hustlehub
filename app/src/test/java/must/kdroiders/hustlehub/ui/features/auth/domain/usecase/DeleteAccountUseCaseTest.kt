@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.ui.features.auth.domain.usecase
 
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -44,6 +45,45 @@ class DeleteAccountUseCaseTest {
         }
 
     @Test
+    fun `invoke marks pending deletion before any network call`() =
+        runTest {
+            coEvery { authRepository.deleteAccount("password123") } returns Result.success(Unit)
+
+            useCase("password123")
+
+            coVerifyOrder {
+                userPreferences.markPendingDeletion()
+                authRepository.deleteAccount("password123")
+            }
+        }
+
+    @Test
+    fun `invoke wipes Room DB before clearing DataStore user`() =
+        runTest {
+            coEvery { authRepository.deleteAccount("password123") } returns Result.success(Unit)
+
+            useCase("password123")
+
+            coVerifyOrder {
+                appDatabase.clearAllTables()
+                userPreferences.clearUser()
+            }
+        }
+
+    @Test
+    fun `invoke clears pending deletion flag after successful local wipe`() =
+        runTest {
+            coEvery { authRepository.deleteAccount("password123") } returns Result.success(Unit)
+
+            useCase("password123")
+
+            coVerifyOrder {
+                userPreferences.clearUser()
+                userPreferences.clearPendingDeletion()
+            }
+        }
+
+    @Test
     fun `invoke with correct password executes delete pipeline successfully`() =
         runTest {
             coEvery { authRepository.deleteAccount("password123") } returns Result.success(Unit)
@@ -53,19 +93,22 @@ class DeleteAccountUseCaseTest {
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) { authRepository.deleteAccount("password123") }
             coVerify(exactly = 1) { chatRepository.disconnectWebSocket() }
-            coVerify(exactly = 1) { userPreferences.clearUser() }
             coVerify(exactly = 1) { appDatabase.clearAllTables() }
+            coVerify(exactly = 1) { userPreferences.clearUser() }
+            coVerify(exactly = 1) { userPreferences.clearPendingDeletion() }
         }
 
     @Test
-    fun `invoke fails when authRepository deleteAccount fails`() =
+    fun `invoke fails when authRepository deleteAccount fails — does NOT clear local data`() =
         runTest {
             coEvery { authRepository.deleteAccount("wrongpass") } returns Result.failure(Exception("Incorrect password"))
 
             val result = useCase("wrongpass")
 
             assertTrue(result.isFailure)
+            coVerify(exactly = 1) { userPreferences.markPendingDeletion() }
             coVerify(exactly = 0) { userPreferences.clearUser() }
             coVerify(exactly = 0) { appDatabase.clearAllTables() }
+            coVerify(exactly = 0) { userPreferences.clearPendingDeletion() }
         }
 }

@@ -3,7 +3,9 @@ package must.kdroiders.hustlehub.splash
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -13,6 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import timber.log.Timber
@@ -36,6 +40,7 @@ class SplashViewModel
         private val firebaseAuth: FirebaseAuth?,
         private val userPreferences: UserPreferences,
         private val userRepository: UserRepository,
+        private val appDatabase: AppDatabase,
     ) : ViewModel() {
         private val _destination =
             MutableStateFlow<SplashDestination?>(null)
@@ -49,7 +54,8 @@ class SplashViewModel
         private fun uploadFcmToken() {
             viewModelScope.launch {
                 try {
-                    val token = com.google.firebase.messaging.FirebaseMessaging
+                    @Suppress("DEPRECATION")
+                    val token = FirebaseMessaging
                         .getInstance()
                         .token
                         .await()
@@ -64,10 +70,17 @@ class SplashViewModel
 
         private fun determineDestination() {
             viewModelScope.launch {
-                // run minimum delay and auth check in parallel
-                val minDelayJob = async {
-                    delay(MIN_SPLASH_DURATION_MS)
+                if (userPreferences.hasPendingDeletion.first()) {
+                    Timber.w("Pending deletion detected on startup — completing local cleanup")
+                    withContext(Dispatchers.IO) { appDatabase.clearAllTables() }
+                    userPreferences.clearUser()
+                    userPreferences.clearPendingDeletion()
+                    firebaseAuth?.signOut()
+                    _destination.value = SplashDestination.Onboarding
+                    return@launch
                 }
+
+                val minDelayJob = async { delay(MIN_SPLASH_DURATION_MS) }
 
                 val destinationResult = async {
                     try {
@@ -112,7 +125,7 @@ class SplashViewModel
                                         }.onFailure { e ->
                                             if (e is retrofit2.HttpException) {
                                                 if (e.code() == 401 || e.code() == 403) {
-                                                    firebaseAuth?.signOut()
+                                                    firebaseAuth.signOut()
                                                     targetDestination = SplashDestination.Login
                                                 } else if (e.code() == 404) {
                                                     targetDestination = SplashDestination.ProfileSetup

@@ -293,7 +293,6 @@ class AuthRepositoryImpl
                 val user = firebaseAuth.currentUser
                     ?: throw Exception("User not logged in")
 
-                // 1. Re-authenticate password if provided (for email/password users)
                 if (!password.isNullOrBlank()) {
                     val email = user.email
                         ?: throw Exception("Email not found for current user")
@@ -301,15 +300,19 @@ class AuthRepositoryImpl
                     user.reauthenticate(credential).await()
                 }
 
-                // 2. Delete PostgreSQL user record from backend
+                user.delete().await()
+
                 val backendDeleteResult = userRepositoryProvider.get().deleteAccount()
                 if (backendDeleteResult.isFailure) {
                     val error = backendDeleteResult.exceptionOrNull()
-                    Timber.e(error, "Backend user deletion failed during deleteAccount")
+                    if (error is retrofit2.HttpException && error.code() == 404) {
+                        Timber.d("Backend user already deleted (HTTP 404) — treating as success")
+                    } else {
+                        Timber.e(error, "Backend user deletion failed during deleteAccount")
+                    }
                 }
 
-                // 3. Delete Firebase Auth user identity
-                user.delete().await()
+                firebaseAuth.signOut()
                 Unit
             }.recoverCatching { e ->
                 if (e is CancellationException) throw e

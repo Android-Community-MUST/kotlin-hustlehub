@@ -9,7 +9,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.core.api.AuthInterceptor
-import must.kdroiders.hustlehub.core.api.GzipRequestInterceptor
 import must.kdroiders.hustlehub.core.api.TokenAuthenticator
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.ui.features.analytics.data.remote.AnalyticsApiService
@@ -64,7 +63,6 @@ object NetworkModule {
             .Builder()
             .cache(cache)
             .addInterceptor(authInterceptor)
-            .addInterceptor(GzipRequestInterceptor())
             .authenticator(tokenAuthenticator)
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
@@ -77,8 +75,9 @@ object NetworkModule {
                 .Builder()
                 .add(
                     "api.hustlehub.app",
-                    // TODO: replace with real SHA-256 pin before production
-                    "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+                    // Primary certificate SHA-256 pin (Base64 encoded)
+                    "sha256/2v/XUIeC1rCu7cz/j0ifEY0+rqtmtb0SJNQJ1i7wmLI=",
+                    // TODO: Add a backup SHA-256 pin here before publishing to production to prevent app lockout on certificate rotation
                 ).build()
             builder.certificatePinner(certificatePinner)
         }
