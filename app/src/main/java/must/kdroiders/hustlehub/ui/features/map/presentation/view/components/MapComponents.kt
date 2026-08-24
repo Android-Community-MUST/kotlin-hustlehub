@@ -52,22 +52,28 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonAmber
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonBlue
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonBrightCyan
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonCyan
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonDefault
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonGreen
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonPink
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonPurple
 import kotlin.math.*
 
 @Composable
 fun ProviderMarkerContent(pin: MapPin) {
     val (icon, baseColor) = getCategoryIconAndColor(pin.category)
-    val neonColor = remember(pin.category) {
-        when (pin.category) {
-            ServiceCategory.SALON -> Color(0xFFB388FF)       // Neon light purple
-            ServiceCategory.LAUNDRY -> Color(0xFF80D8FF)     // Neon cyan/blue
-            ServiceCategory.TUTORING -> Color(0xFF00E676)    // Neon vibrant green
-            ServiceCategory.FOOD -> Color(0xFFFFB300)        // Neon amber/gold
-            ServiceCategory.TECH -> Color(0xFF00E5FF)        // Neon cyan
-            ServiceCategory.FASHION -> Color(0xFF82B1FF)     // Neon blue/indigo
-            ServiceCategory.PHOTOGRAPHY -> Color(0xFFFF4081) // Neon pink
-            else -> Color(0xFFE0E0E0)
-        }
+    val neonColor = when (pin.category) {
+        ServiceCategory.SALON       -> CategoryNeonPurple
+        ServiceCategory.LAUNDRY     -> CategoryNeonCyan
+        ServiceCategory.TUTORING    -> CategoryNeonGreen
+        ServiceCategory.FOOD        -> CategoryNeonAmber
+        ServiceCategory.TECH        -> CategoryNeonBrightCyan
+        ServiceCategory.FASHION     -> CategoryNeonBlue
+        ServiceCategory.PHOTOGRAPHY -> CategoryNeonPink
+        else                        -> CategoryNeonDefault
     }
 
     val pillBgColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
@@ -157,7 +163,7 @@ fun ProviderMarkerContent(pin: MapPin) {
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = null,
-                            tint = Color(0xFFFFD740),
+                            tint = MaterialTheme.colorScheme.tertiary,
                             modifier = Modifier.size(10.dp),
                         )
                         Text(
@@ -187,16 +193,17 @@ fun ProviderMarkerContent(pin: MapPin) {
     }
 }
 
+@Composable
 fun getCategoryIconAndColor(category: ServiceCategory): Pair<androidx.compose.ui.graphics.vector.ImageVector, Color> {
     return when (category) {
-        ServiceCategory.SALON -> Icons.Default.ContentCut to Color(0xFF9C27B0)
-        ServiceCategory.LAUNDRY -> Icons.Default.LocalMall to Color(0xFF2196F3)
-        ServiceCategory.TUTORING -> Icons.Default.School to Color(0xFF4CAF50)
-        ServiceCategory.FOOD -> Icons.Default.Restaurant to Color(0xFFFF9800)
-        ServiceCategory.TECH -> Icons.Default.Computer to Color(0xFF009688)
-        ServiceCategory.FASHION -> Icons.Default.Checkroom to Color(0xFF3F51B5)
-        ServiceCategory.PHOTOGRAPHY -> Icons.Default.PhotoCamera to Color(0xFFE91E63)
-        else -> Icons.Default.Place to Color(0xFF757575)
+        ServiceCategory.SALON       -> Icons.Default.ContentCut to CategoryNeonPurple
+        ServiceCategory.LAUNDRY     -> Icons.Default.LocalMall to CategoryNeonCyan
+        ServiceCategory.TUTORING    -> Icons.Default.School to CategoryNeonGreen
+        ServiceCategory.FOOD        -> Icons.Default.Restaurant to CategoryNeonAmber
+        ServiceCategory.TECH        -> Icons.Default.Computer to CategoryNeonBrightCyan
+        ServiceCategory.FASHION     -> Icons.Default.Checkroom to CategoryNeonBlue
+        ServiceCategory.PHOTOGRAPHY -> Icons.Default.PhotoCamera to CategoryNeonPink
+        else                        -> Icons.Default.Place to CategoryNeonDefault
     }
 }
 

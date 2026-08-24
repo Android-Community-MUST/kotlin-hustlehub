@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -163,6 +164,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         SharedTransitionLayout {
+            CompositionLocalProvider(LocalSharedTransitionScope provides this) {
             NavDisplay(
                 backStack = backstack,
                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
@@ -546,6 +548,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     }
                 },
             )
+            } // CompositionLocalProvider
         }
 
         InAppNotificationBanner(

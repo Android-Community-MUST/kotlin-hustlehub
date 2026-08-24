@@ -69,3 +69,13 @@ val HustleBadgeBlue = Color(0xFF101A2E)
 val HustleActiveGreen = Color(0xFF4CAF50)
 val HustleOfflineGray = Color(0xFF6E6E8A)
 val HustleWarningAmber = Color(0xFFFFB300)
+
+// Category neon brand colors
+val CategoryNeonPurple = Color(0xFFB388FF) // SALON
+val CategoryNeonCyan = Color(0xFF80D8FF) // LAUNDRY
+val CategoryNeonGreen = Color(0xFF00E676) // TUTORING
+val CategoryNeonAmber = Color(0xFFFFB300) // FOOD
+val CategoryNeonBrightCyan = Color(0xFF00E5FF) // TECH
+val CategoryNeonBlue = Color(0xFF82B1FF) // FASHION
+val CategoryNeonPink = Color(0xFFFF4081) // PHOTOGRAPHY
+val CategoryNeonDefault = Color(0xFFE0E0E0)

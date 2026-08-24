@@ -38,10 +38,14 @@ import coil.size.Size
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.getValue
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
+import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun ServiceCard(
     service: Service,
@@ -79,7 +83,16 @@ fun ServiceCard(
                         .build(),
                     contentDescription = service.title,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(
+                            LocalSharedTransitionScope.current?.run {
+                                Modifier.sharedElement(
+                                    rememberSharedContentState(key = "service_image_${service.id}"),
+                                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
+                                )
+                            } ?: Modifier
+                        ),
                 )
             }
 
@@ -154,24 +167,32 @@ fun ServiceCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AvailabilityBadge(
     availability: ServiceAvailability,
     modifier: Modifier = Modifier,
 ) {
-    if (availability != ServiceAvailability.AVAILABLE) return
-
-    val targetColor = when(availability) {
+    // Derive target color for every availability state — keep composable mounted
+    // so animateColorAsState transitions smoothly instead of unmounting/remounting.
+    val targetColor = when (availability) {
         ServiceAvailability.AVAILABLE -> HustleActiveGreen
-        ServiceAvailability.BUSY -> Color.Yellow
-        ServiceAvailability.OFFLINE -> Color.Red
-        else -> Color.Gray
+        ServiceAvailability.BUSY      -> MaterialTheme.colorScheme.tertiary
+        ServiceAvailability.OFFLINE   -> MaterialTheme.colorScheme.error
+        else                          -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    val label = when (availability) {
+        ServiceAvailability.AVAILABLE -> "LIVE"
+        ServiceAvailability.BUSY      -> "BUSY"
+        ServiceAvailability.OFFLINE   -> "AWAY"
+        else                          -> "AWAY"
     }
 
     val animatedColor by animateColorAsState(
         targetValue = targetColor,
-        animationSpec = tween(500),
-        label = "availability_color"
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "availability_color",
     )
 
     Box(
@@ -189,7 +210,7 @@ private fun AvailabilityBadge(
             )
             Spacer(Modifier.width(4.dp))
             Text(
-                text = "LIVE",
+                text = label,
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,

@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -49,7 +50,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.animation.scaleIn
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -99,7 +99,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MessageBubble(
     message: Message,
@@ -129,11 +129,14 @@ fun MessageBubble(
 
     AnimatedVisibility(
         visible = visible,
-        enter = scaleIn(
-            initialScale = 0.5f,
-            transformOrigin = TransformOrigin(if (isCurrentUser) 1f else 0f, 1f),
-            animationSpec = tween(300)
-        ) + fadeIn(tween(300)),
+        enter = run {
+            val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+            scaleIn(
+                initialScale = 0.5f,
+                transformOrigin = TransformOrigin(if (isCurrentUser) 1f else 0f, 1f),
+                animationSpec = effectsSpec
+            ) + fadeIn(effectsSpec)
+        },
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
@@ -649,7 +652,7 @@ private fun WaveformProgress(
 ) {
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
-        animationSpec = tween(durationMillis = 150),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "waveformProgress",
     )
 

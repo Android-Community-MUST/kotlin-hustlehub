@@ -27,7 +27,9 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -81,7 +83,7 @@ private const val SHIMMER_COUNT = 6
  *  - 2-column [LazyVerticalGrid] of service cards with shimmer loading
  *  - Pagination trigger on scroll near the end
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -316,8 +318,8 @@ fun HomeScreen(
                     span = { _, _ -> GridItemSpan(1) },
                 ) { index, service ->
                     var visible by remember { mutableStateOf(false) }
-                    LaunchedEffect(service.id) {
-                        delay(index * 50L) // Stagger by 50ms
+                    LaunchedEffect(Unit) {
+                        delay(index * 50L) // Stagger by 50ms — runs once per slot
                         visible = true
                     }
                     AnimatedVisibility(
@@ -342,10 +344,8 @@ fun HomeScreen(
                                 .padding(16.dp),
                             contentAlignment = Alignment.Center,
                         ) {
-                            CircularProgressIndicator(
+                            CircularWavyProgressIndicator(
                                 modifier = Modifier.padding(8.dp),
-                                color = MaterialTheme.colorScheme.primary,
-                                strokeWidth = 2.dp,
                             )
                         }
                     }

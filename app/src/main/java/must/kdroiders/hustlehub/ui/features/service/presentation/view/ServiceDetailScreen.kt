@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Button
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -73,6 +74,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
+import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
@@ -344,12 +347,23 @@ private fun ServiceDetailContent(
                         state = pagerState,
                         modifier = Modifier.fillMaxSize(),
                     ) { page ->
+                        val sharedModifier = if (page == 0) {
+                            LocalSharedTransitionScope.current?.run {
+                                @OptIn(ExperimentalSharedTransitionApi::class)
+                                Modifier.sharedElement(
+                                    rememberSharedContentState(key = "service_image_${service.id}"),
+                                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
+                                )
+                            } ?: Modifier
+                        } else Modifier
+
                         AsyncImage(
                             model = service.portfolio[page],
                             contentDescription = "Service Hero Image ${page + 1}",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxSize()
+                                .then(sharedModifier)
                                 .clickable { onImageClick(page) },
                         )
                     }
@@ -516,7 +530,7 @@ private fun ServiceDetailContent(
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = "Rating",
-                            tint = Color(0xFFFFC107),
+                            tint = MaterialTheme.colorScheme.tertiary,
                             modifier = Modifier.size(14.dp),
                         )
                     }

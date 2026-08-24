@@ -15,6 +15,12 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -716,8 +722,12 @@ fun ChatDetailScreen(
                 }
             }
 
-            // Typing Indicator Overlay (Subtle line below messages)
-            AnimatedVisibility(visible = state.isTyping) {
+            val chatMotionScheme = MaterialTheme.motionScheme
+            AnimatedVisibility(
+                visible = state.isTyping,
+                enter = expandVertically(chatMotionScheme.fastSpatialSpec()) + fadeIn(chatMotionScheme.fastEffectsSpec()),
+                exit = shrinkVertically(chatMotionScheme.fastSpatialSpec()) + fadeOut(chatMotionScheme.fastEffectsSpec()),
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -734,8 +744,11 @@ fun ChatDetailScreen(
                 }
             }
 
-            // Attachment Expanded Menu
-            AnimatedVisibility(visible = showAttachmentMenu) {
+            AnimatedVisibility(
+                visible = showAttachmentMenu,
+                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -787,8 +800,11 @@ fun ChatDetailScreen(
                 }
             }
 
-            // Quick Reply Templates — visible only to the provider of this conversation
-            AnimatedVisibility(visible = state.isCurrentUserProvider) {
+            AnimatedVisibility(
+                visible = state.isCurrentUserProvider,
+                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+            ) {
                 val quickReplies = listOf(
                     "Hi! I'm available",
                     "Can we schedule a time?",
@@ -826,8 +842,11 @@ fun ChatDetailScreen(
                 }
             }
 
-            // Reply Preview Banner
-            AnimatedVisibility(visible = state.replyingToMessage != null) {
+            AnimatedVisibility(
+                visible = state.replyingToMessage != null,
+                enter = slideInVertically(MaterialTheme.motionScheme.fastSpatialSpec()) { -it } + fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                exit = slideOutVertically(MaterialTheme.motionScheme.fastSpatialSpec()) { -it } + fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+            ) {
                 val replyingTo = state.replyingToMessage
                 if (replyingTo != null) {
                     val replyText = when (replyingTo.type) {
@@ -1104,7 +1123,7 @@ private fun AttachmentOption(
 private fun formatSeconds(totalSeconds: Int): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
-    return String.format("%02d:%02d", minutes, seconds)
+    return String.format(java.util.Locale.US, "%02d:%02d", minutes, seconds)
 }
 
 /**
@@ -1126,6 +1145,10 @@ private fun formatLastSeen(isoString: String): String {
     }
 }
 
+private const val TYPING_DOT_CYCLE_MS = 600
+private const val TYPING_DOT_STAGGER_MS = 200
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun TypingIndicatorDots(
     modifier: Modifier = Modifier,
@@ -1139,7 +1162,7 @@ private fun TypingIndicatorDots(
             initialValue = 0f,
             targetValue = 1f,
             animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-                animation = tween(durationMillis = 600, delayMillis = index * 200),
+                animation = tween(durationMillis = TYPING_DOT_CYCLE_MS, delayMillis = index * TYPING_DOT_STAGGER_MS),
                 repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
             ),
             label = "dot_alpha_$index"
