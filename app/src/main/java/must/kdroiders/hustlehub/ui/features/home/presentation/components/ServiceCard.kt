@@ -1,7 +1,9 @@
 package must.kdroiders.hustlehub.ui.features.home.presentation.components
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,28 +19,35 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
 import coil.size.Size
+import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
+import must.kdroiders.hustlehub.sharedComposables.FeaturedBadge
+import must.kdroiders.hustlehub.sharedComposables.bouncyClickable
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun ServiceCard(
     service: Service,
@@ -53,10 +62,9 @@ fun ServiceCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .clickable(onClick = onClick)
+            .bouncyClickable(onClick = onClick)
             .padding(bottom = 12.dp),
     ) {
-        // Thumbnail image
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -67,7 +75,7 @@ fun ServiceCard(
             if (imageUrl.isNotBlank()) {
                 AsyncImage(
                     model = ImageRequest
-                        .Builder(androidx.compose.ui.platform.LocalContext.current)
+                        .Builder(LocalContext.current)
                         .data(imageUrl)
                         // Request exactly card-thumbnail resolution to avoid downloading full-res
                         .size(Size(360, 200))
@@ -76,24 +84,31 @@ fun ServiceCard(
                         .build(),
                     contentDescription = service.title,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(
+                            LocalSharedTransitionScope.current?.run {
+                                Modifier.sharedElement(
+                                    rememberSharedContentState(key = "service_image_${service.id}"),
+                                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
+                                )
+                            } ?: Modifier,
+                        ),
                 )
             }
 
-            // Availability or Featured badge overlay
             Row(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(8.dp),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement
+                horizontalArrangement = Arrangement
                     .spacedBy(6.dp),
             ) {
                 AvailabilityBadge(
                     availability = service.availability,
                 )
                 if (service.isFeatured) {
-                    must.kdroiders.hustlehub.sharedComposables
-                        .FeaturedBadge()
+                    FeaturedBadge()
                 }
             }
         }
@@ -101,10 +116,9 @@ fun ServiceCard(
         Spacer(Modifier.height(10.dp))
 
         Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-            // Title and Price
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top,
             ) {
                 Text(
@@ -127,7 +141,6 @@ fun ServiceCard(
 
             Spacer(Modifier.height(4.dp))
 
-            // Location
             service.location?.label?.let { label ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -151,17 +164,38 @@ fun ServiceCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AvailabilityBadge(
     availability: ServiceAvailability,
     modifier: Modifier = Modifier,
 ) {
-    if (availability != ServiceAvailability.AVAILABLE) return
+    // Derive target color for every availability state — keep composable mounted
+    // so animateColorAsState transitions smoothly instead of unmounting/remounting.
+    val targetColor = when (availability) {
+        ServiceAvailability.AVAILABLE -> HustleActiveGreen
+        ServiceAvailability.BUSY -> MaterialTheme.colorScheme.tertiary
+        ServiceAvailability.OFFLINE -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    val label = when (availability) {
+        ServiceAvailability.AVAILABLE -> "LIVE"
+        ServiceAvailability.BUSY -> "BUSY"
+        ServiceAvailability.OFFLINE -> "AWAY"
+        else -> "AWAY"
+    }
+
+    val animatedColor by animateColorAsState(
+        targetValue = targetColor,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "availability_color",
+    )
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(Color.Black.copy(alpha = 0.6f))
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.65f))
             .padding(horizontal = 6.dp, vertical = 4.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -169,14 +203,14 @@ private fun AvailabilityBadge(
                 modifier = Modifier
                     .size(6.dp)
                     .clip(CircleShape)
-                    .background(HustleActiveGreen),
+                    .background(animatedColor),
             )
             Spacer(Modifier.width(4.dp))
             Text(
-                text = "LIVE",
+                text = label,
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
             )
         }
     }
