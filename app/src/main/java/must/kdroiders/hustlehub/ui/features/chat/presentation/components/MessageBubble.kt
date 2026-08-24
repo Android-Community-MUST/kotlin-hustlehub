@@ -2,7 +2,9 @@ package must.kdroiders.hustlehub.ui.features.chat.presentation.components
 
 import android.location.Location
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
@@ -130,12 +132,16 @@ fun MessageBubble(
     AnimatedVisibility(
         visible = visible,
         enter = run {
-            val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+            val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+            val scaleSpec = spring<Float>(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMediumLow,
+            )
             scaleIn(
                 initialScale = 0.5f,
                 transformOrigin = TransformOrigin(if (isCurrentUser) 1f else 0f, 1f),
-                animationSpec = effectsSpec
-            ) + fadeIn(effectsSpec)
+                animationSpec = scaleSpec,
+            ) + fadeIn(fadeInSpec)
         },
         modifier = modifier
             .fillMaxWidth()

@@ -149,8 +149,8 @@ fun HomeScreen(
                     modifier = Modifier.align(Alignment.TopCenter),
                     isRefreshing = state.isRefreshing,
                     state = pullToRefreshState,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                     color = MaterialTheme.colorScheme.primary,
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
             },
         ) {

@@ -1,6 +1,8 @@
 package must.kdroiders.hustlehub.sharedComposables
 
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -84,14 +86,14 @@ fun StarRatingBar(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val motionScheme = MaterialTheme.motionScheme
-        val scaleSpec = motionScheme.defaultEffectsSpec<Float>()
-
         (1..5).forEach { star ->
             val isSelected = star <= rating
             val scale by animateFloatAsState(
-                targetValue = if (isSelected) 1.15f else 1f,
-                animationSpec = scaleSpec,
+                targetValue = if (isSelected) 1.2f else 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow,
+                ),
                 label = "starScale_$star",
             )
 

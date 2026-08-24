@@ -239,7 +239,10 @@ fun ServiceDetailScreen(
                         val isBookmarkPressed by bookmarkInteractionSource.collectIsPressedAsState()
                         val bookmarkScale by animateFloatAsState(
                             targetValue = if (isBookmarkPressed) 0.8f else if (isBookmarked) 1.2f else 1f,
-                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioHighBouncy,
+                                stiffness = Spring.StiffnessLow,
+                            ),
                             label = "bookmark_scale"
                         )
 

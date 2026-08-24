@@ -3,8 +3,12 @@ package must.kdroiders.hustlehub.navigation
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +46,7 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScr
  *  NavDisplay (inner)  →  renders the active tab composable
  * ```
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MainShellScreen(
     onNavigateToProfileSetup: () -> Unit = {},
@@ -88,12 +93,13 @@ fun MainShellScreen(
         }
     }
 
-    // The currently active tab key is always the last element.
     val currentKey = innerBackstack.lastOrNull() ?: BottomHome
-
-    // Observe unread chat message count reactively for bottom bar badge
     val unreadCountViewModel: UnreadCountViewModel = hiltViewModel()
     val unreadMessageCount by unreadCountViewModel.unreadMessageCount.collectAsState(initial = 0)
+
+    val motionScheme = MaterialTheme.motionScheme
+    val fastEffectsSpec = motionScheme.fastEffectsSpec<Float>()
+    val fastSpatialSpec = motionScheme.fastSpatialSpec<Float>()
 
     Scaffold(
         modifier = modifier,
@@ -113,9 +119,24 @@ fun MainShellScreen(
             backStack = innerBackstack,
             modifier = Modifier.padding(innerPadding),
             onBack = { /* tabs don't back-navigate; system back is handled by root */ },
-            // Subtle crossfade between tabs — feels native and doesn't "slide" sideways
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            popTransitionSpec = { fadeIn() togetherWith fadeOut() },
+            transitionSpec = {
+                (fadeIn(fastEffectsSpec) + scaleIn(
+                    initialScale = 0.96f,
+                    animationSpec = fastSpatialSpec,
+                )) togetherWith (fadeOut(fastEffectsSpec) + scaleOut(
+                    targetScale = 0.96f,
+                    animationSpec = fastSpatialSpec,
+                ))
+            },
+            popTransitionSpec = {
+                (fadeIn(fastEffectsSpec) + scaleIn(
+                    initialScale = 0.96f,
+                    animationSpec = fastSpatialSpec,
+                )) togetherWith (fadeOut(fastEffectsSpec) + scaleOut(
+                    targetScale = 0.96f,
+                    animationSpec = fastSpatialSpec,
+                ))
+            },
             entryProvider = entryProvider {
                 entry<BottomHome> {
                     HomeScreen(

@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.ui.features.home.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -44,6 +46,8 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.getValue
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
+import must.kdroiders.hustlehub.sharedComposables.FeaturedBadge
+import must.kdroiders.hustlehub.sharedComposables.bouncyClickable
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
@@ -60,10 +64,9 @@ fun ServiceCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .clickable(onClick = onClick)
+            .bouncyClickable(onClick = onClick)
             .padding(bottom = 12.dp),
     ) {
-        // Thumbnail image
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -74,7 +77,7 @@ fun ServiceCard(
             if (imageUrl.isNotBlank()) {
                 AsyncImage(
                     model = ImageRequest
-                        .Builder(androidx.compose.ui.platform.LocalContext.current)
+                        .Builder(LocalContext.current)
                         .data(imageUrl)
                         // Request exactly card-thumbnail resolution to avoid downloading full-res
                         .size(Size(360, 200))
@@ -96,20 +99,18 @@ fun ServiceCard(
                 )
             }
 
-            // Availability or Featured badge overlay
             Row(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(8.dp),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement
+                horizontalArrangement = Arrangement
                     .spacedBy(6.dp),
             ) {
                 AvailabilityBadge(
                     availability = service.availability,
                 )
                 if (service.isFeatured) {
-                    must.kdroiders.hustlehub.sharedComposables
-                        .FeaturedBadge()
+                   FeaturedBadge()
                 }
             }
         }
@@ -117,10 +118,9 @@ fun ServiceCard(
         Spacer(Modifier.height(10.dp))
 
         Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-            // Title and Price
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top,
             ) {
                 Text(
@@ -143,7 +143,6 @@ fun ServiceCard(
 
             Spacer(Modifier.height(4.dp))
 
-            // Location
             service.location?.label?.let { label ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -198,7 +197,7 @@ private fun AvailabilityBadge(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(Color.Black.copy(alpha = 0.6f))
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.65f))
             .padding(horizontal = 6.dp, vertical = 4.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -213,7 +212,7 @@ private fun AvailabilityBadge(
                 text = label,
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
             )
         }
     }

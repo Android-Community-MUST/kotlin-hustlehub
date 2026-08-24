@@ -571,7 +571,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     }
                 },
             )
-            } // CompositionLocalProvider
+            }
         }
 
         InAppNotificationBanner(
