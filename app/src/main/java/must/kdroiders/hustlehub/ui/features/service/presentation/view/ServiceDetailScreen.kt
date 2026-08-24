@@ -1,8 +1,14 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.view
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +33,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.RateReview
@@ -57,6 +64,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.heading
@@ -64,8 +72,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
@@ -224,14 +234,44 @@ fun ServiceDetailScreen(
                         ) {
                             Icon(Icons.Default.Share, contentDescription = "Share", tint = Color.White)
                         }
+                        var isBookmarked by remember { mutableStateOf(false) }
+                        val bookmarkInteractionSource = remember { MutableInteractionSource() }
+                        val isBookmarkPressed by bookmarkInteractionSource.collectIsPressedAsState()
+                        val bookmarkScale by animateFloatAsState(
+                            targetValue = if (isBookmarkPressed) {
+                                0.8f
+                            } else if (isBookmarked) {
+                                1.2f
+                            } else {
+                                1f
+                            },
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioHighBouncy,
+                                stiffness = Spring.StiffnessLow,
+                            ),
+                            label = "bookmark_scale",
+                        )
+
                         IconButton(
-                            onClick = { scope.launch { snackbarHostState.showSnackbar("Bookmark feature coming soon!") } },
+                            onClick = {
+                                isBookmarked = !isBookmarked
+                                scope.launch {
+                                    val msg = if (isBookmarked) "Saved!" else "Removed from saved"
+                                    snackbarHostState.showSnackbar(msg)
+                                }
+                            },
+                            interactionSource = bookmarkInteractionSource,
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.3f)),
+                                .background(Color.Black.copy(alpha = 0.3f))
+                                .scale(bookmarkScale),
                         ) {
-                            Icon(Icons.Default.BookmarkBorder, contentDescription = "Save", tint = Color.White)
+                            Icon(
+                                if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                contentDescription = "Save",
+                                tint = if (isBookmarked) MaterialTheme.colorScheme.primary else Color.White,
+                            )
                         }
 
                         var showMenu by remember { mutableStateOf(false) }
@@ -316,12 +356,25 @@ private fun ServiceDetailContent(
                         state = pagerState,
                         modifier = Modifier.fillMaxSize(),
                     ) { page ->
+                        val sharedModifier = if (page == 0) {
+                            LocalSharedTransitionScope.current?.run {
+                                @OptIn(ExperimentalSharedTransitionApi::class)
+                                Modifier.sharedElement(
+                                    rememberSharedContentState(key = "service_image_${service.id}"),
+                                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
+                                )
+                            } ?: Modifier
+                        } else {
+                            Modifier
+                        }
+
                         AsyncImage(
                             model = service.portfolio[page],
                             contentDescription = "Service Hero Image ${page + 1}",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxSize()
+                                .then(sharedModifier)
                                 .clickable { onImageClick(page) },
                         )
                     }
@@ -488,7 +541,7 @@ private fun ServiceDetailContent(
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = "Rating",
-                            tint = Color(0xFFFFC107),
+                            tint = MaterialTheme.colorScheme.tertiary,
                             modifier = Modifier.size(14.dp),
                         )
                     }

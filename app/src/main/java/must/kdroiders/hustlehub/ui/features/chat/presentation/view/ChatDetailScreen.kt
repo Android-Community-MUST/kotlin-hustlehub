@@ -10,9 +10,22 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +36,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -81,6 +95,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -706,8 +721,12 @@ fun ChatDetailScreen(
                 }
             }
 
-            // Typing Indicator Overlay (Subtle line below messages)
-            AnimatedVisibility(visible = state.isTyping) {
+            val chatMotionScheme = MaterialTheme.motionScheme
+            AnimatedVisibility(
+                visible = state.isTyping,
+                enter = expandVertically(chatMotionScheme.fastSpatialSpec()) + fadeIn(chatMotionScheme.fastEffectsSpec()),
+                exit = shrinkVertically(chatMotionScheme.fastSpatialSpec()) + fadeOut(chatMotionScheme.fastEffectsSpec()),
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -720,18 +739,15 @@ fun ChatDetailScreen(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "...",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    TypingIndicatorDots(color = MaterialTheme.colorScheme.primary)
                 }
             }
 
-            // Attachment Expanded Menu
-            AnimatedVisibility(visible = showAttachmentMenu) {
+            AnimatedVisibility(
+                visible = showAttachmentMenu,
+                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -783,8 +799,11 @@ fun ChatDetailScreen(
                 }
             }
 
-            // Quick Reply Templates — visible only to the provider of this conversation
-            AnimatedVisibility(visible = state.isCurrentUserProvider) {
+            AnimatedVisibility(
+                visible = state.isCurrentUserProvider,
+                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+            ) {
                 val quickReplies = listOf(
                     "Hi! I'm available",
                     "Can we schedule a time?",
@@ -822,8 +841,11 @@ fun ChatDetailScreen(
                 }
             }
 
-            // Reply Preview Banner
-            AnimatedVisibility(visible = state.replyingToMessage != null) {
+            AnimatedVisibility(
+                visible = state.replyingToMessage != null,
+                enter = slideInVertically(MaterialTheme.motionScheme.fastSpatialSpec()) { -it } + fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                exit = slideOutVertically(MaterialTheme.motionScheme.fastSpatialSpec()) { -it } + fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+            ) {
                 val replyingTo = state.replyingToMessage
                 if (replyingTo != null) {
                     val replyText = when (replyingTo.type) {
@@ -1023,16 +1045,27 @@ fun ChatDetailScreen(
                         }
                     } else {
                         // Send text button
+                        val sendInteractionSource = remember { MutableInteractionSource() }
+                        val isSendPressed by sendInteractionSource.collectIsPressedAsState()
+                        val sendScale by animateFloatAsState(
+                            targetValue = if (isSendPressed) 0.8f else 1f,
+                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                            label = "send_scale",
+                        )
+
                         IconButton(
                             onClick = {
                                 chatDetailViewModel.sendTextMessage(textInput)
                                 textInput = ""
                             },
+                            interactionSource = sendInteractionSource,
                             colors = IconButtonDefaults.iconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary,
                             ),
-                            modifier = Modifier.size(40.dp),
+                            modifier = Modifier
+                                .size(40.dp)
+                                .scale(sendScale),
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Send,
@@ -1089,7 +1122,7 @@ private fun AttachmentOption(
 private fun formatSeconds(totalSeconds: Int): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
-    return String.format("%02d:%02d", minutes, seconds)
+    return String.format(java.util.Locale.US, "%02d:%02d", minutes, seconds)
 }
 
 /**
@@ -1108,5 +1141,43 @@ private fun formatLastSeen(isoString: String): String {
         }
     } catch (e: Exception) {
         "a while ago"
+    }
+}
+
+private const val TYPING_DOT_CYCLE_MS = 600
+private const val TYPING_DOT_STAGGER_MS = 200
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun TypingIndicatorDots(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary,
+) {
+    val infiniteTransition = androidx.compose.animation.core
+        .rememberInfiniteTransition(label = "typing_dots")
+    val dotCount = 3
+
+    val dotAnimations = (0 until dotCount).map { index ->
+        infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                animation = tween(durationMillis = TYPING_DOT_CYCLE_MS, delayMillis = index * TYPING_DOT_STAGGER_MS),
+                repeatMode = androidx.compose.animation.core.RepeatMode.Reverse,
+            ),
+            label = "dot_alpha_$index",
+        )
+    }
+
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        dotAnimations.forEach { anim ->
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.3f + (0.7f * anim.value)))
+                    .offset(y = (-4).dp * anim.value),
+            )
+        }
     }
 }

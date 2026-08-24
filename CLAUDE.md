@@ -155,6 +155,7 @@ Uses **Navigation 3** (`androidx.navigation3`) exclusively — no legacy `NavCon
 - Use `Timber` for all logging — never `Log.*` directly. Log at `DEBUG` only for network calls; never log in release.
 - All user-facing strings must be in `strings.xml`.
 - Named constants only — no magic strings or numbers. Use `companion object` or top-level `object`.
+- **Clean Code & Commenting** — prefer self-documenting code (Kotlin types, naming, annotations). Avoid redundant comments that restate what the code does. Use short 1-line KDoc (`/** … */`) only to document the *why* behind non-obvious business rules (e.g. `participant1 < participant2`) or complex JSON metadata schemas.
 
 ---
 
