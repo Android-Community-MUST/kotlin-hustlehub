@@ -13,28 +13,14 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestWatcher
-import org.junit.runner.Description
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class MainDispatcherRule : TestWatcher() {
-    private val testDispatcher = UnconfinedTestDispatcher()
-    override fun starting(description: Description) {
-        Dispatchers.setMain(testDispatcher)
-    }
-    override fun finished(description: Description) {
-        Dispatchers.resetMain()
-    }
-}
-
 class UnreadCountViewModelTest {
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
-
+    private val testDispatcher = UnconfinedTestDispatcher()
     private val context: Context = mockk(relaxed = true)
     private val conversationDao: ConversationDao = mockk(relaxed = true)
     private val notificationRepository: NotificationRepository = mockk(relaxed = true)
@@ -43,6 +29,7 @@ class UnreadCountViewModelTest {
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         coEvery { conversationDao.getTotalUnreadCount() } returns flowOf(5)
         coEvery { notificationRepository.getUnreadCount() } returns Result.success(3)
 
@@ -51,6 +38,11 @@ class UnreadCountViewModelTest {
             conversationDao = conversationDao,
             notificationRepository = notificationRepository,
         )
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test

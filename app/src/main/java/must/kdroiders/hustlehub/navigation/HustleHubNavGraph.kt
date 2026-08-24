@@ -42,6 +42,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatDetailScreen
+import must.kdroiders.hustlehub.ui.features.help.presentation.view.HelpScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.AiSearchScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.SearchScreen
 import must.kdroiders.hustlehub.ui.features.monetization.presentation.PaymentStatusScreen
@@ -327,6 +328,17 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             onNavigateToSubscription = { backstack.add(Subscription) },
                         )
                     }
+                entry<Settings> {
+                    SettingsScreen(
+                        onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                        onNavigateToChangePassword = { backstack.add(ChangePassword) },
+                        onNavigateToNotificationPreferences = { backstack.add(NotificationPreferences) },
+                        onNavigateToPrivacy = { backstack.add(PrivacySettings) },
+                        onNavigateToBlockedUsers = { backstack.add(BlockedUsers) },
+                        onNavigateToSubscription = { backstack.add(Subscription) },
+                        onNavigateToHelp = { backstack.add(HelpFaq) },
+                    )
+                }
 
                     entry<PrivacySettings> {
                         PrivacySettingsScreen(
@@ -339,6 +351,17 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                         )
                     }
+                entry<BlockedUsers> {
+                    BlockedUsersScreen(
+                        onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    )
+                }
+
+                entry<HelpFaq> {
+                    HelpScreen(
+                        onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                    )
+                }
 
                     entry<ChangePassword> {
                         ChangePasswordScreen(

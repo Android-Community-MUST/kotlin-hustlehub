@@ -72,7 +72,7 @@ class ServiceDetailViewModel
                                 provider = provider,
                                 reviews = reviewPage?.content ?: emptyList(),
                                 totalReviewCount = reviewPage?.totalElements?.toInt() ?: service.reviewCount,
-                                isOwnService = currentUid != null && provider != null && currentUid == provider.id,
+                                isOwnService = currentUid != null && provider != null && (currentUid == provider.id || currentUid == provider.uuid),
                                 isLoading = false,
                                 error = null,
                             )

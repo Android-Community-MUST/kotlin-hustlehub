@@ -153,6 +153,10 @@ data class WriteReview(val serviceId: String, val providerId: String) : NavKey
 @Serializable
 data object Notifications : NavKey
 
+/** Help & FAQ screen — pushed from Settings. */
+@Serializable
+data object HelpFaq : NavKey
+
 /** All reviews screen for a specific service. */
 @Serializable
 data class AllReviews(val serviceId: String) : NavKey

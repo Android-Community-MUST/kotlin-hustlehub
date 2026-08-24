@@ -37,4 +37,103 @@
     <string name="profile_provider_cta_title">Start Your Campus Business</string>
     <string name="profile_provider_cta_body">List your skills and earn from fellow students at MUST.</string>
     <string name="profile_provider_cta_action">Create Your First Service</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_account">ACCOUNT</string>
+    <string name="settings_section_notifications">NOTIFICATIONS</string>
+    <string name="settings_section_privacy">PRIVACY</string>
+    <string name="settings_section_appearance">APPEARANCE</string>
+    <string name="settings_section_support_legal">SUPPORT &amp; LEGAL</string>
+    <string name="settings_section_about">ABOUT</string>
+
+    <string name="settings_edit_profile">Edit Profile</string>
+    <string name="settings_change_password">Change Password</string>
+    <string name="settings_verify_student_id">Verify Student ID</string>
+    <string name="settings_verified_student">Verified Student</string>
+    <string name="settings_not_verified">Not Verified</string>
+    <string name="settings_subscription_billing">Subscription &amp; Billing</string>
+    <string name="settings_subscription_subtitle">Manage HustleHub Pro</string>
+    <string name="settings_notification_preferences">Notification Preferences</string>
+    <string name="settings_privacy_settings">Privacy Settings</string>
+    <string name="settings_blocked_users">Blocked Users</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_help_faq">Help &amp; FAQ</string>
+    <string name="settings_help_faq_subtitle">FAQs, Contact Support, Bug Reports &amp; Legal</string>
+    <string name="settings_app_version">App Version</string>
+    <string name="settings_open_source_licenses">Open Source Licenses</string>
+
+    <string name="settings_choose_theme">Choose Theme</string>
+    <string name="settings_theme_system">System Default</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+
+    <string name="settings_delete_account_title">Delete Account</string>
+    <string name="settings_delete_account_message">Are you sure you want to delete your account? This action is permanent and cannot be undone.</string>
+    <string name="settings_delete_account_confirm">Delete</string>
+
+    <string name="settings_about_dialog_title">About HustleHub</string>
+    <string name="settings_about_dialog_subtitle">HustleHub for MUST Students</string>
+    <string name="settings_about_version_format">Version: v%1$s</string>
+    <string name="settings_about_build_format">Build Number: %1$s</string>
+    <string name="settings_about_status">Status: Up to date</string>
+    <string name="settings_about_copyright">© 2026 KDroiders · Meru University of Science &amp; Technology</string>
+
+    <string name="settings_licenses_dialog_title">Open Source Licenses</string>
+    <string name="settings_licenses_dialog_subtitle">HustleHub is built using the following open source software:</string>
+
+    <string name="settings_logout">Log Out</string>
+    <string name="settings_logging_out">Logging out…</string>
+
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_ok">OK</string>
+
+    <!-- Help & FAQ Screen -->
+    <string name="help_title">Help &amp; FAQ</string>
+    <string name="help_section_faq">FREQUENTLY ASKED QUESTIONS</string>
+    <string name="help_section_support">SUPPORT</string>
+    <string name="help_section_legal">LEGAL</string>
+    <string name="help_contact_support">Contact Support</string>
+    <string name="help_report_bug">Report a Bug</string>
+    <string name="help_terms_of_service">Terms of Service</string>
+    <string name="help_privacy_policy">Privacy Policy</string>
+
+    <!-- FAQ Categories -->
+    <string name="faq_cat_getting_started">Getting Started</string>
+    <string name="faq_cat_services">Services</string>
+    <string name="faq_cat_messaging">Messaging</string>
+    <string name="faq_cat_payments">Payments</string>
+    <string name="faq_cat_safety">Safety</string>
+
+    <!-- Getting Started FAQs -->
+    <string name="faq_qs_create_service">How do I create a service?</string>
+    <string name="faq_ans_create_service">Go to Profile → + Add Service. Fill in the service title, category, description, and price range, then tap Publish.</string>
+    <string name="faq_qs_student_verify">How do I get verified as a student?</string>
+    <string name="faq_ans_student_verify">Go to Settings → Verify Student ID. Only @students.must.ac.ke emails are accepted.</string>
+
+    <!-- Services FAQs -->
+    <string name="faq_qs_manage_service">How do I edit or delete a service?</string>
+    <string name="faq_ans_manage_service">Go to Profile → My Services, tap the service you want to manage, then choose Edit or Delete from the options.</string>
+    <string name="faq_qs_service_removed">Why was my service removed?</string>
+    <string name="faq_ans_service_removed">Services that violate our community guidelines are removed by moderators. Check your registered email for details and contact support if you believe this was in error.</string>
+
+    <!-- Messaging FAQs -->
+    <string name="faq_qs_share_phone">Can I share my phone number in chat?</string>
+    <string name="faq_ans_share_phone">We recommend keeping contact info private until you are confident about a booking. Sharing personal details prematurely increases the risk of fraud.</string>
+    <string name="faq_qs_cannot_message">"Why can't I message a provider?"</string>
+    <string name="faq_ans_cannot_message">The provider may have restricted messaging to verified users only. Make sure your student email is verified in Settings.</string>
+
+    <!-- Payments FAQs -->
+    <string name="faq_qs_mpesa_pay">How do I pay via M-Pesa?</string>
+    <string name="faq_ans_mpesa_pay">Tap "Upgrade to Pro" or "Boost Service", enter your Safaricom number in the format 07XX..., then confirm the STK push prompt on your phone.</string>
+    <string name="faq_qs_payment_unconfirmed">"What if my payment isn't confirmed?"</string>
+    <string name="faq_ans_payment_unconfirmed">Wait a few minutes and check your M-Pesa messages for a confirmation or failure alert. If the issue persists, tap "Contact Support" below.</string>
+
+    <!-- Safety FAQs -->
+    <string name="faq_qs_report_user">How do I report a user?</string>
+    <string name="faq_ans_report_user">Tap the three-dot menu on their profile, in chat, or on a service listing, then select Report. Our team reviews all reports within 24 hours.</string>
+    <string name="faq_qs_block_user">What happens after I block someone?</string>
+    <string name="faq_ans_block_user">They will not appear in your feed, map, or chat. You can manage and unblock users any time in Settings → Blocked Users.</string>
 </resources>

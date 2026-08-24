@@ -16,19 +16,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ContactSupport
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VerifiedUser
@@ -46,15 +42,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.datastore.AppTheme
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
@@ -79,10 +81,13 @@ fun SettingsScreen(
     onNavigateToPrivacy: () -> Unit = {},
     onNavigateToBlockedUsers: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
+    onNavigateToHelp: () -> Unit = {},
     settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by settingsViewModel.uiState.collectAsState()
     val context = LocalContext.current
+    var showLicensesDialog by remember { mutableStateOf(false) }
+    var showVersionDialog by remember { mutableStateOf(false) }
 
     // Consume navigation events
     LaunchedEffect(Unit) {
@@ -94,6 +99,13 @@ fun SettingsScreen(
                 is SettingsEvent.NavigateToEditProfile -> onNavigateToEditProfile()
                 is SettingsEvent.NavigateToPrivacy -> onNavigateToPrivacy()
                 is SettingsEvent.NavigateToBlockedUsers -> onNavigateToBlockedUsers()
+                is SettingsEvent.NavigateToHelp,
+                is SettingsEvent.NavigateToTerms,
+                is SettingsEvent.NavigateToPrivacyPolicy,
+                is SettingsEvent.NavigateToContactUs,
+                is SettingsEvent.NavigateToReport,
+                -> onNavigateToHelp()
+                is SettingsEvent.NavigateToLicenses -> showLicensesDialog = true
                 else -> {
                     Toast.makeText(context, "Feature coming soon", Toast.LENGTH_SHORT).show()
                 }
@@ -105,14 +117,14 @@ fun SettingsScreen(
     if (state.showThemeDialog) {
         AlertDialog(
             onDismissRequest = settingsViewModel::onThemeDismissed,
-            title = { Text("Choose Theme") },
+            title = { Text(stringResource(R.string.settings_choose_theme)) },
             text = {
                 Column {
                     AppTheme.entries.forEach { theme ->
                         val label = when (theme) {
-                            AppTheme.SYSTEM -> "System Default"
-                            AppTheme.LIGHT -> "Light"
-                            AppTheme.DARK -> "Dark"
+                            AppTheme.SYSTEM -> stringResource(R.string.settings_theme_system)
+                            AppTheme.LIGHT -> stringResource(R.string.settings_theme_light)
+                            AppTheme.DARK -> stringResource(R.string.settings_theme_dark)
                         }
                         Row(
                             modifier = Modifier
@@ -135,7 +147,7 @@ fun SettingsScreen(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = settingsViewModel::onThemeDismissed) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )
@@ -145,16 +157,117 @@ fun SettingsScreen(
     if (state.showDeleteAccountDialog) {
         AlertDialog(
             onDismissRequest = settingsViewModel::onDeleteAccountDismissed,
-            title = { Text("Delete Account") },
-            text = { Text("Are you sure you want to delete your account? This action is permanent and cannot be undone.") },
+            title = { Text(stringResource(R.string.settings_delete_account_title)) },
+            text = { Text(stringResource(R.string.settings_delete_account_message)) },
             confirmButton = {
                 TextButton(onClick = settingsViewModel::onDeleteAccountConfirmed) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(
+                        stringResource(R.string.settings_delete_account_confirm),
+                        color = MaterialTheme.colorScheme.error,
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = settingsViewModel::onDeleteAccountDismissed) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
+                }
+            },
+        )
+    }
+
+    // Open Source Licenses dialog
+    if (showLicensesDialog) {
+        AlertDialog(
+            onDismissRequest = { showLicensesDialog = false },
+            title = { Text(stringResource(R.string.settings_licenses_dialog_title)) },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .padding(vertical = 4.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_licenses_dialog_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    val libraries = listOf(
+                        "AndroidX & Jetpack Compose" to "Apache License 2.0",
+                        "Kotlin & Coroutines" to "Apache License 2.0",
+                        "Hilt / Dagger" to "Apache License 2.0",
+                        "Firebase Android SDK" to "Apache License 2.0",
+                        "Room Database" to "Apache License 2.0",
+                        "Retrofit & OkHttp" to "Apache License 2.0",
+                        "Coil" to "Apache License 2.0",
+                        "Timber" to "Apache License 2.0",
+                    )
+                    libraries.forEach { (lib, license) ->
+                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                            Text(
+                                text = lib,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                text = license,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline,
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLicensesDialog = false }) {
+                    Text(stringResource(R.string.action_close))
+                }
+            },
+        )
+    }
+
+    // App Version Info dialog
+    if (showVersionDialog) {
+        AlertDialog(
+            onDismissRequest = { showVersionDialog = false },
+            title = { Text(stringResource(R.string.settings_about_dialog_title)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(R.string.settings_about_dialog_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.settings_about_version_format, state.appVersion),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_about_build_format, state.buildNumber),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.settings_about_status),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = HustleActiveGreen,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    Text(
+                        text = stringResource(R.string.settings_about_copyright),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showVersionDialog = false }) {
+                    Text(stringResource(R.string.action_ok))
                 }
             },
         )
@@ -165,7 +278,7 @@ fun SettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Settings",
+                        text = stringResource(R.string.settings_title),
                         modifier = Modifier.semantics { heading() },
                     )
                 },
@@ -173,7 +286,7 @@ fun SettingsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.cd_navigate_back),
                         )
                     }
                 },
@@ -204,33 +317,33 @@ fun SettingsScreen(
             Spacer(Modifier.height(28.dp))
 
             // ACCOUNT section
-            SettingsSectionLabel("ACCOUNT")
+            SettingsSectionLabel(stringResource(R.string.settings_section_account))
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
                 SettingsRowNavigate(
                     icon = Icons.Default.Person,
-                    label = "Edit Profile",
+                    label = stringResource(R.string.settings_edit_profile),
                     onClick = settingsViewModel::onEditProfileClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.Lock,
-                    label = "Change Password",
+                    label = stringResource(R.string.settings_change_password),
                     onClick = settingsViewModel::onChangePasswordClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.VerifiedUser,
-                    label = "Verify Student ID",
-                    subtitle = if (state.isVerified) "Verified Student" else "Not Verified",
+                    label = stringResource(R.string.settings_verify_student_id),
+                    subtitle = if (state.isVerified) stringResource(R.string.settings_verified_student) else stringResource(R.string.settings_not_verified),
                     subtitleColor = if (state.isVerified) HustleActiveGreen else MaterialTheme.colorScheme.error,
                     onClick = settingsViewModel::onVerificationClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.Star,
-                    label = "Subscription & Billing",
-                    subtitle = "Manage HustleHub Pro",
+                    label = stringResource(R.string.settings_subscription_billing),
+                    subtitle = stringResource(R.string.settings_subscription_subtitle),
                     onClick = onNavigateToSubscription,
                 )
             }
@@ -238,12 +351,12 @@ fun SettingsScreen(
             Spacer(Modifier.height(24.dp))
 
             // NOTIFICATIONS section
-            SettingsSectionLabel("NOTIFICATIONS")
+            SettingsSectionLabel(stringResource(R.string.settings_section_notifications))
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
                 SettingsRowNavigate(
                     icon = Icons.Default.Notifications,
-                    label = "Notification Preferences",
+                    label = stringResource(R.string.settings_notification_preferences),
                     onClick = settingsViewModel::onNotificationsClicked,
                 )
             }
@@ -251,18 +364,18 @@ fun SettingsScreen(
             Spacer(Modifier.height(24.dp))
 
             // PRIVACY section
-            SettingsSectionLabel("PRIVACY")
+            SettingsSectionLabel(stringResource(R.string.settings_section_privacy))
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
                 SettingsRowNavigate(
                     icon = Icons.Default.PrivacyTip,
-                    label = "Privacy Settings",
+                    label = stringResource(R.string.settings_privacy_settings),
                     onClick = settingsViewModel::onPrivacyClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.Block,
-                    label = "Blocked Users",
+                    label = stringResource(R.string.settings_blocked_users),
                     onClick = settingsViewModel::onBlockedUsersClicked,
                 )
             }
@@ -270,23 +383,23 @@ fun SettingsScreen(
             Spacer(Modifier.height(24.dp))
 
             // APPEARANCE section
-            SettingsSectionLabel("APPEARANCE")
+            SettingsSectionLabel(stringResource(R.string.settings_section_appearance))
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
                 SettingsRowNavigate(
                     icon = Icons.Default.DarkMode,
-                    label = "Theme",
+                    label = stringResource(R.string.settings_theme),
                     trailing = when (state.selectedTheme) {
-                        AppTheme.SYSTEM -> "System Default"
-                        AppTheme.LIGHT -> "Light"
-                        AppTheme.DARK -> "Dark"
+                        AppTheme.SYSTEM -> stringResource(R.string.settings_theme_system)
+                        AppTheme.LIGHT -> stringResource(R.string.settings_theme_light)
+                        AppTheme.DARK -> stringResource(R.string.settings_theme_dark)
                     },
                     onClick = settingsViewModel::onThemeClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.Language,
-                    label = "Language",
+                    label = stringResource(R.string.settings_language),
                     trailing = state.selectedLanguage,
                     onClick = settingsViewModel::onLanguageClicked,
                 )
@@ -294,64 +407,34 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // SUPPORT section
-            SettingsSectionLabel("SUPPORT")
+            // SUPPORT & LEGAL section
+            SettingsSectionLabel(stringResource(R.string.settings_section_support_legal))
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
                 SettingsRowNavigate(
                     icon = Icons.AutoMirrored.Filled.Help,
-                    label = "Help & FAQ",
+                    label = stringResource(R.string.settings_help_faq),
+                    subtitle = stringResource(R.string.settings_help_faq_subtitle),
                     onClick = settingsViewModel::onHelpCenterClicked,
-                )
-                SettingsDivider()
-                SettingsRowNavigate(
-                    icon = Icons.AutoMirrored.Filled.ContactSupport,
-                    label = "Contact Us",
-                    onClick = settingsViewModel::onContactUsClicked,
-                )
-                SettingsDivider()
-                SettingsRowNavigate(
-                    icon = Icons.Default.BugReport,
-                    label = "Report a Bug",
-                    onClick = settingsViewModel::onReportProblemClicked,
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            // LEGAL section
-            SettingsSectionLabel("LEGAL")
-            Spacer(Modifier.height(8.dp))
-            SettingsGroup {
-                SettingsRowNavigate(
-                    icon = Icons.Default.Gavel,
-                    label = "Terms of Service",
-                    onClick = settingsViewModel::onTermsOfServiceClicked,
-                )
-                SettingsDivider()
-                SettingsRowNavigate(
-                    icon = Icons.Default.Policy,
-                    label = "Privacy Policy",
-                    onClick = settingsViewModel::onPrivacyPolicyClicked,
                 )
             }
 
             Spacer(Modifier.height(24.dp))
 
             // ABOUT section
-            SettingsSectionLabel("ABOUT")
+            SettingsSectionLabel(stringResource(R.string.settings_section_about))
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
                 SettingsRowNavigate(
                     icon = Icons.Default.Info,
-                    label = "App Version",
+                    label = stringResource(R.string.settings_app_version),
                     trailing = "v${state.appVersion}",
-                    onClick = {},
+                    onClick = { showVersionDialog = true },
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.Code,
-                    label = "Open Source Licenses",
+                    label = stringResource(R.string.settings_open_source_licenses),
                     onClick = settingsViewModel::onLicensesClicked,
                 )
             }
@@ -368,7 +451,7 @@ fun SettingsScreen(
 
             // Delete Account button (destructive outlined HustleButton)
             HustleButton(
-                text = "Delete Account",
+                text = stringResource(R.string.settings_delete_account_title),
                 onClick = settingsViewModel::onDeleteAccountClicked,
                 modifier = Modifier.fillMaxWidth(),
                 variant = HustleButtonVariant.Outlined,

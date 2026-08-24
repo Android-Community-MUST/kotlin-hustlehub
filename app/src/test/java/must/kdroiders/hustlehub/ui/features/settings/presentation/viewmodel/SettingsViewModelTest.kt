@@ -122,4 +122,46 @@ class SettingsViewModelTest {
             coVerify(exactly = 1) { signOutUseCase() }
             coVerify(exactly = 1) { userPreferences.clearUser() }
         }
+
+    // Sprint 5 — Scenario 11: delete account removes all data
+    @Test
+    fun `onDeleteAccountConfirmed clears DataStore and Room tables and emits AccountDeleted`() =
+        runTest {
+            coEvery { signOutUseCase() } returns Unit
+
+            val eventDeferred = async { viewModel.events.first() }
+
+            viewModel.onDeleteAccountClicked()
+            advanceUntilIdle()
+            viewModel.onDeleteAccountConfirmed()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { signOutUseCase() }
+            coVerify(exactly = 1) { userPreferences.clearUser() }
+            coVerify(exactly = 1) { appDatabase.clearAllTables() }
+            assertEquals(SettingsEvent.AccountDeleted, eventDeferred.await())
+        }
+
+    // Sprint 5 — Scenario 7: dark mode toggles and persists
+    @Test
+    fun `onDarkModeToggled true saves DARK theme to DataStore`() =
+        runTest {
+            val themeFlow = kotlinx.coroutines.flow.MutableStateFlow(must.kdroiders.hustlehub.datastore.AppTheme.SYSTEM)
+            every { userPreferences.appTheme } returns themeFlow
+            coEvery { userPreferences.saveTheme(any()) } answers {
+                themeFlow.value = firstArg()
+            }
+
+            viewModel.onDarkModeToggled(true)
+            advanceUntilIdle()
+
+            assertTrue(viewModel.uiState.value.isDarkMode)
+            assertEquals(
+                must.kdroiders.hustlehub.datastore.AppTheme.DARK,
+                viewModel.uiState.value.selectedTheme,
+            )
+            coVerify(exactly = 1) {
+                userPreferences.saveTheme(must.kdroiders.hustlehub.datastore.AppTheme.DARK)
+            }
+        }
 }
