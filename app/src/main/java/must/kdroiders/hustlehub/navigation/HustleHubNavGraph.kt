@@ -318,27 +318,13 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         SettingsScreen(
                             onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                             onNavigateToChangePassword = { backstack.add(ChangePassword) },
-                            onNavigateToNotificationPreferences = {
-                                backstack.add(
-                                    NotificationPreferences
-                                )
-                            },
+                            onNavigateToNotificationPreferences = { backstack.add(NotificationPreferences) },
                             onNavigateToPrivacy = { backstack.add(PrivacySettings) },
                             onNavigateToBlockedUsers = { backstack.add(BlockedUsers) },
                             onNavigateToSubscription = { backstack.add(Subscription) },
+                            onNavigateToHelp = { backstack.add(HelpFaq) },
                         )
                     }
-                entry<Settings> {
-                    SettingsScreen(
-                        onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
-                        onNavigateToChangePassword = { backstack.add(ChangePassword) },
-                        onNavigateToNotificationPreferences = { backstack.add(NotificationPreferences) },
-                        onNavigateToPrivacy = { backstack.add(PrivacySettings) },
-                        onNavigateToBlockedUsers = { backstack.add(BlockedUsers) },
-                        onNavigateToSubscription = { backstack.add(Subscription) },
-                        onNavigateToHelp = { backstack.add(HelpFaq) },
-                    )
-                }
 
                     entry<PrivacySettings> {
                         PrivacySettingsScreen(
@@ -351,11 +337,6 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                         )
                     }
-                entry<BlockedUsers> {
-                    BlockedUsersScreen(
-                        onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
-                    )
-                }
 
                 entry<HelpFaq> {
                     HelpScreen(
