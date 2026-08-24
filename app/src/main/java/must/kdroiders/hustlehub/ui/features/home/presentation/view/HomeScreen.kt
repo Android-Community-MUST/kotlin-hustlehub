@@ -6,7 +6,12 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,6 +30,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -143,13 +149,45 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize(),
             state = pullToRefreshState,
             indicator = {
-                PullToRefreshDefaults.Indicator(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    isRefreshing = state.isRefreshing,
-                    state = pullToRefreshState,
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    color = MaterialTheme.colorScheme.primary,
+                val progress = pullToRefreshState.distanceFraction.coerceIn(0f, 1f)
+                val scale by animateFloatAsState(
+                    targetValue = if (state.isRefreshing) 1f else progress,
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                    label = "logo_pull_scale",
                 )
+                val rotation by animateFloatAsState(
+                    targetValue = if (state.isRefreshing) 360f else progress * 180f,
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                    label = "logo_pull_rotation",
+                )
+
+                if (progress > 0f || state.isRefreshing) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 16.dp)
+                            .size(38.dp)
+                            .scale(scale)
+                            .graphicsLayer(rotationZ = rotation)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(
+                                androidx.compose.ui.graphics.Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.tertiary,
+                                    ),
+                                ),
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "H",
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontSize = 18.sp,
+                        )
+                    }
+                }
             },
         ) {
             LazyVerticalGrid(
