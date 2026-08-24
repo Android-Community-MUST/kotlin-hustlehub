@@ -120,22 +120,30 @@ fun MainShellScreen(
             modifier = Modifier.padding(innerPadding),
             onBack = { /* tabs don't back-navigate; system back is handled by root */ },
             transitionSpec = {
-                (fadeIn(fastEffectsSpec) + scaleIn(
-                    initialScale = 0.96f,
-                    animationSpec = fastSpatialSpec,
-                )) togetherWith (fadeOut(fastEffectsSpec) + scaleOut(
-                    targetScale = 0.96f,
-                    animationSpec = fastSpatialSpec,
-                ))
+                (
+                    fadeIn(fastEffectsSpec) + scaleIn(
+                        initialScale = 0.96f,
+                        animationSpec = fastSpatialSpec,
+                    )
+                ) togetherWith (
+                    fadeOut(fastEffectsSpec) + scaleOut(
+                        targetScale = 0.96f,
+                        animationSpec = fastSpatialSpec,
+                    )
+                )
             },
             popTransitionSpec = {
-                (fadeIn(fastEffectsSpec) + scaleIn(
-                    initialScale = 0.96f,
-                    animationSpec = fastSpatialSpec,
-                )) togetherWith (fadeOut(fastEffectsSpec) + scaleOut(
-                    targetScale = 0.96f,
-                    animationSpec = fastSpatialSpec,
-                ))
+                (
+                    fadeIn(fastEffectsSpec) + scaleIn(
+                        initialScale = 0.96f,
+                        animationSpec = fastSpatialSpec,
+                    )
+                ) togetherWith (
+                    fadeOut(fastEffectsSpec) + scaleOut(
+                        targetScale = 0.96f,
+                        animationSpec = fastSpatialSpec,
+                    )
+                )
             },
             entryProvider = entryProvider {
                 entry<BottomHome> {

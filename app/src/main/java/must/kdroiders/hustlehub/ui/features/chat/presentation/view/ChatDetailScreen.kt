@@ -23,9 +23,9 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -86,7 +86,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -1051,7 +1050,7 @@ fun ChatDetailScreen(
                         val sendScale by animateFloatAsState(
                             targetValue = if (isSendPressed) 0.8f else 1f,
                             animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                            label = "send_scale"
+                            label = "send_scale",
                         )
 
                         IconButton(
@@ -1152,9 +1151,10 @@ private const val TYPING_DOT_STAGGER_MS = 200
 @Composable
 private fun TypingIndicatorDots(
     modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.primary
+    color: Color = MaterialTheme.colorScheme.primary,
 ) {
-    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "typing_dots")
+    val infiniteTransition = androidx.compose.animation.core
+        .rememberInfiniteTransition(label = "typing_dots")
     val dotCount = 3
 
     val dotAnimations = (0 until dotCount).map { index ->
@@ -1163,9 +1163,9 @@ private fun TypingIndicatorDots(
             targetValue = 1f,
             animationSpec = androidx.compose.animation.core.infiniteRepeatable(
                 animation = tween(durationMillis = TYPING_DOT_CYCLE_MS, delayMillis = index * TYPING_DOT_STAGGER_MS),
-                repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+                repeatMode = androidx.compose.animation.core.RepeatMode.Reverse,
             ),
-            label = "dot_alpha_$index"
+            label = "dot_alpha_$index",
         )
     }
 
@@ -1176,7 +1176,7 @@ private fun TypingIndicatorDots(
                     .size(6.dp)
                     .clip(CircleShape)
                     .background(color.copy(alpha = 0.3f + (0.7f * anim.value)))
-                    .offset(y = (-4).dp * anim.value)
+                    .offset(y = (-4).dp * anim.value),
             )
         }
     }

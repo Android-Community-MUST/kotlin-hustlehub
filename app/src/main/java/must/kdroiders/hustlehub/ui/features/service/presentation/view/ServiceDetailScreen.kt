@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.view
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -40,7 +41,6 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Button
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -72,9 +72,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
-import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.ErrorView
@@ -238,12 +238,18 @@ fun ServiceDetailScreen(
                         val bookmarkInteractionSource = remember { MutableInteractionSource() }
                         val isBookmarkPressed by bookmarkInteractionSource.collectIsPressedAsState()
                         val bookmarkScale by animateFloatAsState(
-                            targetValue = if (isBookmarkPressed) 0.8f else if (isBookmarked) 1.2f else 1f,
+                            targetValue = if (isBookmarkPressed) {
+                                0.8f
+                            } else if (isBookmarked) {
+                                1.2f
+                            } else {
+                                1f
+                            },
                             animationSpec = spring(
                                 dampingRatio = Spring.DampingRatioHighBouncy,
                                 stiffness = Spring.StiffnessLow,
                             ),
-                            label = "bookmark_scale"
+                            label = "bookmark_scale",
                         )
 
                         IconButton(
@@ -264,7 +270,7 @@ fun ServiceDetailScreen(
                             Icon(
                                 if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                                 contentDescription = "Save",
-                                tint = if (isBookmarked) MaterialTheme.colorScheme.primary else Color.White
+                                tint = if (isBookmarked) MaterialTheme.colorScheme.primary else Color.White,
                             )
                         }
 
@@ -358,7 +364,9 @@ private fun ServiceDetailContent(
                                     animatedVisibilityScope = LocalNavAnimatedContentScope.current,
                                 )
                             } ?: Modifier
-                        } else Modifier
+                        } else {
+                            Modifier
+                        }
 
                         AsyncImage(
                             model = service.portfolio[page],

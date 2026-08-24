@@ -23,29 +23,29 @@ fun Modifier.bouncyClickable(
     role: Role? = null,
     pressScale: Float = 0.96f,
     onClick: () -> Unit,
-): Modifier = composed {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) pressScale else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow,
-        ),
-        label = "bouncy_click_scale",
-    )
-
-    this
-        .graphicsLayer {
-            scaleX = scale
-            scaleY = scale
-        }
-        .clickable(
-            interactionSource = interactionSource,
-            indication = ripple(),
-            enabled = enabled,
-            onClickLabel = onClickLabel,
-            role = role,
-            onClick = onClick,
+): Modifier =
+    composed {
+        val interactionSource = remember { MutableInteractionSource() }
+        val isPressed by interactionSource.collectIsPressedAsState()
+        val scale by animateFloatAsState(
+            targetValue = if (isPressed && enabled) pressScale else 1f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow,
+            ),
+            label = "bouncy_click_scale",
         )
-}
+
+        this
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }.clickable(
+                interactionSource = interactionSource,
+                indication = ripple(),
+                enabled = enabled,
+                onClickLabel = onClickLabel,
+                role = role,
+                onClick = onClick,
+            )
+    }

@@ -1,7 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.home.presentation.view
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -26,7 +25,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -324,7 +322,7 @@ fun HomeScreen(
                     }
                     AnimatedVisibility(
                         visible = visible,
-                        enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 })
+                        enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
                     ) {
                         ServiceCard(
                             service = service,

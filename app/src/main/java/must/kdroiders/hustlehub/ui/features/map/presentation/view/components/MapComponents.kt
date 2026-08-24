@@ -66,14 +66,14 @@ import kotlin.math.*
 fun ProviderMarkerContent(pin: MapPin) {
     val (icon, baseColor) = getCategoryIconAndColor(pin.category)
     val neonColor = when (pin.category) {
-        ServiceCategory.SALON       -> CategoryNeonPurple
-        ServiceCategory.LAUNDRY     -> CategoryNeonCyan
-        ServiceCategory.TUTORING    -> CategoryNeonGreen
-        ServiceCategory.FOOD        -> CategoryNeonAmber
-        ServiceCategory.TECH        -> CategoryNeonBrightCyan
-        ServiceCategory.FASHION     -> CategoryNeonBlue
+        ServiceCategory.SALON -> CategoryNeonPurple
+        ServiceCategory.LAUNDRY -> CategoryNeonCyan
+        ServiceCategory.TUTORING -> CategoryNeonGreen
+        ServiceCategory.FOOD -> CategoryNeonAmber
+        ServiceCategory.TECH -> CategoryNeonBrightCyan
+        ServiceCategory.FASHION -> CategoryNeonBlue
         ServiceCategory.PHOTOGRAPHY -> CategoryNeonPink
-        else                        -> CategoryNeonDefault
+        else -> CategoryNeonDefault
     }
 
     val pillBgColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
@@ -101,17 +101,14 @@ fun ProviderMarkerContent(pin: MapPin) {
                         width = 3.dp,
                         color = neonColor.copy(alpha = 0.35f),
                         shape = RoundedCornerShape(26.dp),
-                    )
-                    .background(
+                    ).background(
                         color = pillBgColor,
                         shape = RoundedCornerShape(24.dp),
-                    )
-                    .border(
+                    ).border(
                         width = 1.5.dp,
                         color = neonColor,
                         shape = RoundedCornerShape(24.dp),
-                    )
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                    ).padding(horizontal = 10.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
@@ -196,14 +193,14 @@ fun ProviderMarkerContent(pin: MapPin) {
 @Composable
 fun getCategoryIconAndColor(category: ServiceCategory): Pair<androidx.compose.ui.graphics.vector.ImageVector, Color> {
     return when (category) {
-        ServiceCategory.SALON       -> Icons.Default.ContentCut to CategoryNeonPurple
-        ServiceCategory.LAUNDRY     -> Icons.Default.LocalMall to CategoryNeonCyan
-        ServiceCategory.TUTORING    -> Icons.Default.School to CategoryNeonGreen
-        ServiceCategory.FOOD        -> Icons.Default.Restaurant to CategoryNeonAmber
-        ServiceCategory.TECH        -> Icons.Default.Computer to CategoryNeonBrightCyan
-        ServiceCategory.FASHION     -> Icons.Default.Checkroom to CategoryNeonBlue
+        ServiceCategory.SALON -> Icons.Default.ContentCut to CategoryNeonPurple
+        ServiceCategory.LAUNDRY -> Icons.Default.LocalMall to CategoryNeonCyan
+        ServiceCategory.TUTORING -> Icons.Default.School to CategoryNeonGreen
+        ServiceCategory.FOOD -> Icons.Default.Restaurant to CategoryNeonAmber
+        ServiceCategory.TECH -> Icons.Default.Computer to CategoryNeonBrightCyan
+        ServiceCategory.FASHION -> Icons.Default.Checkroom to CategoryNeonBlue
         ServiceCategory.PHOTOGRAPHY -> Icons.Default.PhotoCamera to CategoryNeonPink
-        else                        -> Icons.Default.Place to CategoryNeonDefault
+        else -> Icons.Default.Place to CategoryNeonDefault
     }
 }
 
