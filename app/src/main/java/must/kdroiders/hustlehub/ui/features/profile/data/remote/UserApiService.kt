@@ -42,6 +42,9 @@ interface UserApiService {
         @Body request: UpdateProfileRequest,
     ): ApiResponse<UserResponseDto>
 
+    @DELETE("users/me")
+    suspend fun deleteMe(): Response<Unit>
+
     @GET("users/{id}")
     suspend fun getById(
         @Path("id") id: String,

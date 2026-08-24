@@ -323,6 +323,10 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onNavigateToBlockedUsers = { backstack.add(BlockedUsers) },
                                 onNavigateToSubscription = { backstack.add(Subscription) },
                                 onNavigateToHelp = { backstack.add(HelpFaq) },
+                                onAccountDeleted = {
+                                    backstack.clear()
+                                    backstack.add(Onboarding)
+                                },
                             )
                         }
 

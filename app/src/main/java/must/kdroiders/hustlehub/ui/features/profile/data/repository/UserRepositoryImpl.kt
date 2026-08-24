@@ -265,6 +265,16 @@ class UserRepositoryImpl
             }.onFailure { e ->
                 Timber.e(e, "UserRepositoryImpl: failed to fetch blocked users")
             }
+
+        override suspend fun deleteAccount(): Result<Unit> =
+            runCatching {
+                val response = userApiService.deleteMe()
+                if (!response.isSuccessful) {
+                    throw Exception("Failed to delete account on backend: code ${response.code()}")
+                }
+            }.onFailure { e ->
+                Timber.e(e, "UserRepositoryImpl: failed to delete user account on backend")
+            }
     }
 
 // DTO → Domain mapper (private to this file)

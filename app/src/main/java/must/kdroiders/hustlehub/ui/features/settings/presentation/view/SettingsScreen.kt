@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -28,6 +29,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -82,6 +85,7 @@ fun SettingsScreen(
     onNavigateToBlockedUsers: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
     onNavigateToHelp: () -> Unit = {},
+    onAccountDeleted: () -> Unit = onBack,
     settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by settingsViewModel.uiState.collectAsState()
@@ -93,7 +97,8 @@ fun SettingsScreen(
     LaunchedEffect(Unit) {
         settingsViewModel.events.collect { event ->
             when (event) {
-                is SettingsEvent.LoggedOut, is SettingsEvent.AccountDeleted -> onBack()
+                is SettingsEvent.LoggedOut -> onBack()
+                is SettingsEvent.AccountDeleted -> onAccountDeleted()
                 is SettingsEvent.NavigateToChangePassword -> onNavigateToChangePassword()
                 is SettingsEvent.NavigateToNotifications -> onNavigateToNotificationPreferences()
                 is SettingsEvent.NavigateToEditProfile -> onNavigateToEditProfile()
@@ -153,26 +158,132 @@ fun SettingsScreen(
         )
     }
 
-    // Delete Account confirmation dialog
-    if (state.showDeleteAccountDialog) {
-        AlertDialog(
-            onDismissRequest = settingsViewModel::onDeleteAccountDismissed,
-            title = { Text(stringResource(R.string.settings_delete_account_title)) },
-            text = { Text(stringResource(R.string.settings_delete_account_message)) },
-            confirmButton = {
-                TextButton(onClick = settingsViewModel::onDeleteAccountConfirmed) {
+    // Delete Account 2-Step Confirmation Dialog
+    when (state.deleteAccountStep) {
+        must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.WARNING -> {
+            AlertDialog(
+                onDismissRequest = settingsViewModel::onDeleteAccountDismissed,
+                title = { Text(stringResource(R.string.settings_delete_account_title)) },
+                text = {
                     Text(
-                        stringResource(R.string.settings_delete_account_confirm),
+                        "This action cannot be undone. Your profile and listed services will be permanently deleted. Reviews you wrote will be anonymized.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = settingsViewModel::onDeleteWarningConfirmed) {
+                        Text(
+                            "Continue",
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = settingsViewModel::onDeleteAccountDismissed) {
+                        Text(stringResource(R.string.action_cancel))
+                    }
+                },
+            )
+        }
+
+        must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.PASSWORD_INPUT -> {
+            var passwordVisible by remember { mutableStateOf(false) }
+
+            AlertDialog(
+                onDismissRequest = settingsViewModel::onDeleteAccountDismissed,
+                title = { Text("Enter your password to confirm") },
+                text = {
+                    Column {
+                        Text(
+                            "Please re-enter your account password to authorize permanent deletion.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        androidx.compose.material3.OutlinedTextField(
+                            value = state.deletePasswordInput,
+                            onValueChange = settingsViewModel::onDeletePasswordChanged,
+                            label = { Text("Password") },
+                            singleLine = true,
+                            isError = state.deletePasswordError != null,
+                            visualTransformation = if (passwordVisible) {
+                                androidx.compose.ui.text.input.VisualTransformation.None
+                            } else {
+                                androidx.compose.ui.text.input
+                                    .PasswordVisualTransformation()
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(
+                                        imageVector = if (passwordVisible) {
+                                            Icons.Default.Visibility
+                                        } else {
+                                            Icons.Default.VisibilityOff
+                                        },
+                                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        if (state.deletePasswordError != null) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = state.deletePasswordError ?: "",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    androidx.compose.material3.Button(
+                        onClick = settingsViewModel::onDeleteAccountConfirmed,
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                        ),
+                    ) {
+                        Text("Delete My Account")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = settingsViewModel::onDeleteAccountDismissed) {
+                        Text(stringResource(R.string.action_cancel))
+                    }
+                },
+            )
+        }
+
+        must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.NONE -> {}
+    }
+
+    // Loading overlay during deletion
+    if (state.isDeletingAccount) {
+        androidx.compose.ui.window.Dialog(onDismissRequest = {}) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = androidx.compose.foundation.shape
+                            .RoundedCornerShape(16.dp),
+                    ).padding(24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    androidx.compose.material3.CircularWavyProgressIndicator(
+                        modifier = Modifier.size(44.dp),
                         color = MaterialTheme.colorScheme.error,
                     )
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = "Deleting your account...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                    )
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = settingsViewModel::onDeleteAccountDismissed) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            },
-        )
+            }
+        }
     }
 
     // Open Source Licenses dialog

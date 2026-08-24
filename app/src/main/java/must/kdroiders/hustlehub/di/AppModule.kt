@@ -280,4 +280,6 @@ private class NoopAuthRepository : AuthRepository {
     override fun getCurrentUser() = null
 
     override suspend fun logout() {}
+
+    override suspend fun deleteAccount(password: String?): Result<Unit> = Result.success(Unit)
 }

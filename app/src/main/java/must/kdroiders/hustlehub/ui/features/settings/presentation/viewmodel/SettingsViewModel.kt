@@ -23,7 +23,11 @@ import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepositor
 import timber.log.Timber
 import javax.inject.Inject
 
-// UI State
+enum class DeleteAccountStep {
+    NONE,
+    WARNING,
+    PASSWORD_INPUT,
+}
 
 data class SettingsUiState(
     // User identity shown in the profile card
@@ -44,11 +48,15 @@ data class SettingsUiState(
 
     // Dialog & async states
     val showThemeDialog: Boolean = false,
-    val showDeleteAccountDialog: Boolean = false,
+    val deleteAccountStep: DeleteAccountStep = DeleteAccountStep.NONE,
+    val deletePasswordInput: String = "",
+    val deletePasswordError: String? = null,
     val isLoggingOut: Boolean = false,
     val isDeletingAccount: Boolean = false,
     val error: String? = null,
-)
+) {
+    val showDeleteAccountDialog: Boolean get() = deleteAccountStep != DeleteAccountStep.NONE
+}
 
 // One-shot navigation events
 
@@ -79,6 +87,7 @@ class SettingsViewModel
     constructor(
         private val authRepository: AuthRepository,
         private val signOutUseCase: SignOutUseCase,
+        private val deleteAccountUseCase: must.kdroiders.hustlehub.ui.features.auth.domain.usecase.DeleteAccountUseCase,
         private val userPreferences: UserPreferences,
         private val appDatabase: AppDatabase,
         private val chatRepository: ChatRepository,
@@ -203,30 +212,86 @@ class SettingsViewModel
         }
 
         fun onDeleteAccountClicked() {
-            _uiState.update { it.copy(showDeleteAccountDialog = true) }
+            _uiState.update {
+                it.copy(
+                    deleteAccountStep = DeleteAccountStep.WARNING,
+                    deletePasswordInput = "",
+                    deletePasswordError = null,
+                )
+            }
+        }
+
+        fun onDeleteWarningConfirmed() {
+            val currentUser = authRepository.getCurrentUser()
+            val isPasswordUser = currentUser?.providerData?.any { it.providerId == "password" } ?: true
+
+            if (isPasswordUser) {
+                _uiState.update {
+                    it.copy(
+                        deleteAccountStep = DeleteAccountStep.PASSWORD_INPUT,
+                        deletePasswordError = null,
+                    )
+                }
+            } else {
+                onDeleteAccountConfirmed()
+            }
+        }
+
+        fun onDeletePasswordChanged(password: String) {
+            _uiState.update {
+                it.copy(
+                    deletePasswordInput = password,
+                    deletePasswordError = null,
+                )
+            }
         }
 
         fun onDeleteAccountDismissed() {
-            _uiState.update { it.copy(showDeleteAccountDialog = false) }
+            _uiState.update {
+                it.copy(
+                    deleteAccountStep = DeleteAccountStep.NONE,
+                    deletePasswordInput = "",
+                    deletePasswordError = null,
+                )
+            }
         }
 
         fun onDeleteAccountConfirmed() {
+            val currentUser = authRepository.getCurrentUser()
+            val isPasswordUser = currentUser?.providerData?.any { it.providerId == "password" } ?: true
+            val password = _uiState.value.deletePasswordInput.trim()
+
+            if (isPasswordUser && password.isBlank()) {
+                _uiState.update { it.copy(deletePasswordError = "Password is required to confirm deletion.") }
+                return
+            }
+
             viewModelScope.launch {
-                _uiState.update { it.copy(showDeleteAccountDialog = false, isDeletingAccount = true, error = null) }
-                try {
-                    runCatching { chatRepository.disconnectWebSocket() }
-                    signOutUseCase()
-                    userPreferences.clearUser()
-                    withContext(Dispatchers.IO) {
-                        appDatabase.clearAllTables()
-                    }
-                    _events.send(SettingsEvent.AccountDeleted)
-                } catch (e: Exception) {
-                    Timber.e(e, "Account deletion failed")
-                    _uiState.update {
-                        it.copy(isDeletingAccount = false, error = "Account deletion failed. Try again.")
-                    }
+                _uiState.update {
+                    it.copy(
+                        deleteAccountStep = DeleteAccountStep.NONE,
+                        isDeletingAccount = true,
+                        error = null,
+                    )
                 }
+                val result = deleteAccountUseCase(if (isPasswordUser) password else null)
+                result.fold(
+                    onSuccess = {
+                        Timber.d("Account deletion successful")
+                        _uiState.update { state -> state.copy(isDeletingAccount = false) }
+                        _events.send(SettingsEvent.AccountDeleted)
+                    },
+                    onFailure = { throwable ->
+                        Timber.e(throwable, "Account deletion failed")
+                        _uiState.update { state ->
+                            state.copy(
+                                isDeletingAccount = false,
+                                deleteAccountStep = if (isPasswordUser) DeleteAccountStep.PASSWORD_INPUT else DeleteAccountStep.NONE,
+                                deletePasswordError = throwable.message ?: "Failed to delete account.",
+                            )
+                        }
+                    },
+                )
             }
         }
 

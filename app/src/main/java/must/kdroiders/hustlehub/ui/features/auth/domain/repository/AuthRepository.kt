@@ -31,4 +31,5 @@ interface AuthRepository {
     ): Result<Unit>
     fun getCurrentUser(): FirebaseUser?
     suspend fun logout()
+    suspend fun deleteAccount(password: String? = null): Result<Unit>
 }
