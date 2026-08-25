@@ -80,20 +80,10 @@ fun ProviderMarkerContent(pin: MapPin) {
     val titleTextColor = MaterialTheme.colorScheme.onSurface
     val subtitleTextColor = MaterialTheme.colorScheme.onSurfaceVariant
 
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { visible = true }
-
-    AnimatedVisibility(
-        visible = visible,
-        enter = slideInVertically(
-            initialOffsetY = { -it * 2 },
-            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        ) + fadeIn(),
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(IntrinsicSize.Max),
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(IntrinsicSize.Max),
-        ) {
             // Pill Layout with Glowing Neon Outer Halo
             Row(
                 modifier = Modifier
@@ -183,11 +173,9 @@ fun ProviderMarkerContent(pin: MapPin) {
                     .border(
                         width = 1.5.dp,
                         color = neonColor,
-                        shape = RoundedCornerShape(topStart = 0.dp),
                     ),
             )
         }
-    }
 }
 
 @Composable

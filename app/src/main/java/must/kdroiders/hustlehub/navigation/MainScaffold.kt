@@ -152,6 +152,7 @@ fun MainShellScreen(
                         onNavigateToSearch = onNavigateToSearch,
                         onNavigateToAiSearch = onNavigateToAiSearch,
                         onNavigateToNotifications = onNavigateToNotifications,
+                        onNavigateToCreateService = onNavigateToCreateService,
                     )
                 }
                 entry<BottomMap> {
