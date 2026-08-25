@@ -174,6 +174,10 @@ class ServiceRepositoryImpl
                     val response = apiService.getMyServices()
                     check(response.success && response.data != null) { response.message ?: "Failed to fetch my services" }
                     val services = response.data.map { it.toDomainModel() }
+                    val currentUser = authManager.currentUser()?.uid
+                    if (!currentUser.isNullOrBlank()) {
+                        serviceDao.deleteByProvider(currentUser)
+                    }
                     serviceDao.upsertAll(services.map { it.toEntity(now) })
                     services
                 }.recoverCatching { e ->

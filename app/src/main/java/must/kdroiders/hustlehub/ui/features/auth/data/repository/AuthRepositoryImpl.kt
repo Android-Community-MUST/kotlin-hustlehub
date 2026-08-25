@@ -283,4 +283,58 @@ class AuthRepositoryImpl
                     else -> throw e
                 }
             }
+
+        /**
+         * Re-authenticates the current user with their password, deletes their backend record via [userRepositoryProvider],
+         * removes their FCM token, and permanently deletes their Firebase Auth account identity.
+         */
+        override suspend fun deleteAccount(password: String?): Result<Unit> =
+            runCatching {
+                val user = firebaseAuth.currentUser
+                    ?: throw Exception("User not logged in")
+
+                if (!password.isNullOrBlank()) {
+                    val email = user.email
+                        ?: throw Exception("Email not found for current user")
+                    val credential = EmailAuthProvider.getCredential(email, password)
+                    user.reauthenticate(credential).await()
+                }
+
+                // 1. Delete user identity & records from PostgreSQL backend first while Firebase token is valid
+                val backendDeleteResult = userRepositoryProvider.get().deleteAccount()
+                if (backendDeleteResult.isFailure) {
+                    val error = backendDeleteResult.exceptionOrNull()
+                    if (error is retrofit2.HttpException && error.code() == 404) {
+                        Timber.d("Backend user already deleted (HTTP 404) — treating as success")
+                    } else {
+                        Timber.e(error, "Backend user deletion failed during deleteAccount")
+                    }
+                }
+
+                // 2. Delete FCM token from backend & Firebase Instance
+                runCatching {
+                    val token = FirebaseMessaging.getInstance().token.await()
+                    if (!token.isNullOrBlank()) {
+                        userRepositoryProvider.get().removeFcmToken(token)
+                    }
+                }
+                runCatching {
+                    FirebaseMessaging.getInstance().deleteToken().await()
+                }
+
+                // 3. Delete user identity from Firebase Auth
+                user.delete().await()
+
+                firebaseAuth.signOut()
+                Unit
+            }.recoverCatching { e ->
+                if (e is CancellationException) throw e
+                when (e) {
+                    is com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException ->
+                        throw Exception("For security reasons, please log out and log back in before deleting your account.")
+                    is FirebaseAuthInvalidUserException -> throw Exception("User account is disabled or deleted.")
+                    is FirebaseAuthInvalidCredentialsException -> throw Exception("Incorrect password. Please try again.")
+                    else -> throw Exception(e.message ?: "Account deletion failed. Try again.", e)
+                }
+            }
     }

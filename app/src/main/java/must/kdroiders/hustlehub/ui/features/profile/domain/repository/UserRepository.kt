@@ -111,4 +111,10 @@ interface UserRepository {
 
     /** Fetches list of all users currently blocked by the authenticated user. */
     suspend fun getBlockedUsers(): Result<List<User>>
+
+    /**
+     * Permanently deletes the authenticated user's account and associated PostgreSQL record via backend.
+     * Wraps DELETE /api/v1/users/me.
+     */
+    suspend fun deleteAccount(): Result<Unit>
 }

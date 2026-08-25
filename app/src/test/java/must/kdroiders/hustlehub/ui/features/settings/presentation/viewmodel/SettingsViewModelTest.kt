@@ -33,6 +33,7 @@ class SettingsViewModelTest {
 
     private val authRepository: AuthRepository = mockk(relaxed = true)
     private val signOutUseCase: SignOutUseCase = mockk(relaxed = true)
+    private val deleteAccountUseCase: must.kdroiders.hustlehub.ui.features.auth.domain.usecase.DeleteAccountUseCase = mockk(relaxed = true)
     private val userPreferences: UserPreferences = mockk(relaxed = true)
     private val appDatabase: AppDatabase = mockk(relaxed = true)
     private val chatRepository: ChatRepository = mockk(relaxed = true)
@@ -43,11 +44,15 @@ class SettingsViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
 
+        val mockUserInfo: com.google.firebase.auth.UserInfo = mockk {
+            every { providerId } returns "password"
+        }
         val mockUser: FirebaseUser = mockk {
             every { displayName } returns "John Doe"
             every { email } returns "john@must.ac.ke"
             every { photoUrl } returns null
             every { isEmailVerified } returns true
+            every { providerData } returns listOf(mockUserInfo)
         }
         every { authRepository.getCurrentUser() } returns mockUser
         every { userPreferences.appTheme } returns kotlinx.coroutines.flow.flowOf(must.kdroiders.hustlehub.datastore.AppTheme.SYSTEM)
@@ -55,6 +60,7 @@ class SettingsViewModelTest {
         viewModel = SettingsViewModel(
             authRepository = authRepository,
             signOutUseCase = signOutUseCase,
+            deleteAccountUseCase = deleteAccountUseCase,
             userPreferences = userPreferences,
             appDatabase = appDatabase,
             chatRepository = chatRepository,
@@ -95,19 +101,39 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `onDeleteAccountClicked shows confirmation dialog`() =
+    fun `onDeleteAccountClicked sets deleteAccountStep to WARNING`() =
         runTest {
             viewModel.onDeleteAccountClicked()
 
+            assertEquals(
+                must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.WARNING,
+                viewModel.uiState.value.deleteAccountStep,
+            )
             assertTrue(viewModel.uiState.value.showDeleteAccountDialog)
         }
 
     @Test
-    fun `onDeleteAccountDismissed hides confirmation dialog`() =
+    fun `onDeleteWarningConfirmed advances deleteAccountStep to PASSWORD_INPUT`() =
+        runTest {
+            viewModel.onDeleteAccountClicked()
+            viewModel.onDeleteWarningConfirmed()
+
+            assertEquals(
+                must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.PASSWORD_INPUT,
+                viewModel.uiState.value.deleteAccountStep,
+            )
+        }
+
+    @Test
+    fun `onDeleteAccountDismissed resets deleteAccountStep to NONE`() =
         runTest {
             viewModel.onDeleteAccountClicked()
             viewModel.onDeleteAccountDismissed()
 
+            assertEquals(
+                must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.NONE,
+                viewModel.uiState.value.deleteAccountStep,
+            )
             assertFalse(viewModel.uiState.value.showDeleteAccountDialog)
         }
 
@@ -125,20 +151,45 @@ class SettingsViewModelTest {
 
     // Sprint 5 — Scenario 11: delete account removes all data
     @Test
-    fun `onDeleteAccountConfirmed clears DataStore and Room tables and emits AccountDeleted`() =
+    fun `onDeleteAccountConfirmed executes DeleteAccountUseCase and emits AccountDeleted`() =
         runTest {
-            coEvery { signOutUseCase() } returns Unit
+            coEvery { deleteAccountUseCase("secret123") } returns Result.success(Unit)
 
             val eventDeferred = async { viewModel.events.first() }
 
             viewModel.onDeleteAccountClicked()
-            advanceUntilIdle()
+            viewModel.onDeleteWarningConfirmed()
+            viewModel.onDeletePasswordChanged("secret123")
             viewModel.onDeleteAccountConfirmed()
             advanceUntilIdle()
 
-            coVerify(exactly = 1) { signOutUseCase() }
-            coVerify(exactly = 1) { userPreferences.clearUser() }
-            coVerify(exactly = 1) { appDatabase.clearAllTables() }
+            coVerify(exactly = 1) { deleteAccountUseCase("secret123") }
+            assertEquals(SettingsEvent.AccountDeleted, eventDeferred.await())
+        }
+
+    @Test
+    fun `onDeleteWarningConfirmed for Google Auth user executes DeleteAccountUseCase directly without password`() =
+        runTest {
+            val googleUserInfo: com.google.firebase.auth.UserInfo = mockk {
+                every { providerId } returns "google.com"
+            }
+            val googleUser: FirebaseUser = mockk {
+                every { displayName } returns "Google User"
+                every { email } returns "google@must.ac.ke"
+                every { photoUrl } returns null
+                every { isEmailVerified } returns true
+                every { providerData } returns listOf(googleUserInfo)
+            }
+            every { authRepository.getCurrentUser() } returns googleUser
+            coEvery { deleteAccountUseCase(null) } returns Result.success(Unit)
+
+            val eventDeferred = async { viewModel.events.first() }
+
+            viewModel.onDeleteAccountClicked()
+            viewModel.onDeleteWarningConfirmed()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { deleteAccountUseCase(null) }
             assertEquals(SettingsEvent.AccountDeleted, eventDeferred.await())
         }
 
