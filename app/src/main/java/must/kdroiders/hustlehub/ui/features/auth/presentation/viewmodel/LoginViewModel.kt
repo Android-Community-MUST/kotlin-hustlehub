@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -13,6 +14,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.CheckUserProfileUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.GoogleSignInUseCase
@@ -41,6 +44,7 @@ class LoginViewModel
         private val sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase,
         private val userRepository: UserRepository,
         private val userPreferences: UserPreferences,
+        private val appDatabase: AppDatabase,
         private val firebaseAuth: FirebaseAuth?,
     ) : ViewModel() {
         companion object {
@@ -77,6 +81,9 @@ class LoginViewModel
          */
         private suspend fun persistUser(firebaseUser: com.google.firebase.auth.FirebaseUser) {
             try {
+                withContext(Dispatchers.IO) {
+                    runCatching { appDatabase.clearAllTables() }
+                }
                 val backendUser = userRepository.getUserProfile(firebaseUser.uid).getOrNull()
                 val userToSave = backendUser ?: User(
                     id = firebaseUser.uid,

@@ -41,6 +41,10 @@ interface ServiceDao {
     @Query("DELETE FROM cached_services WHERE id = :id")
     suspend fun deleteById(id: String)
 
+    /** Delete all cached services belonging to a provider (used to sync local cache with server). */
+    @Query("DELETE FROM cached_services WHERE providerId = :providerId")
+    suspend fun deleteByProvider(providerId: String)
+
     /** Delete all entries older than the given timestamp (cache eviction). */
     @Query("DELETE FROM cached_services WHERE lastUpdated < :cutoffMs")
     suspend fun deleteStaleEntries(cutoffMs: Long)

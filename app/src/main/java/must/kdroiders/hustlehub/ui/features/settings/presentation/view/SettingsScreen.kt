@@ -99,6 +99,9 @@ fun SettingsScreen(
             when (event) {
                 is SettingsEvent.LoggedOut -> onBack()
                 is SettingsEvent.AccountDeleted -> onAccountDeleted()
+                is SettingsEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
                 is SettingsEvent.NavigateToChangePassword -> onNavigateToChangePassword()
                 is SettingsEvent.NavigateToNotifications -> onNavigateToNotificationPreferences()
                 is SettingsEvent.NavigateToEditProfile -> onNavigateToEditProfile()

@@ -63,6 +63,7 @@ data class SettingsUiState(
 sealed interface SettingsEvent {
     data object LoggedOut : SettingsEvent
     data object AccountDeleted : SettingsEvent
+    data class ShowError(val message: String) : SettingsEvent
     data object NavigateToNotifications : SettingsEvent
     data object NavigateToPrivacy : SettingsEvent
     data object NavigateToBlockedUsers : SettingsEvent
@@ -277,19 +278,28 @@ class SettingsViewModel
                 val result = deleteAccountUseCase(if (isPasswordUser) password else null)
                 result.fold(
                     onSuccess = {
-                        Timber.d("Account deletion successful")
+                        Timber.d("Account deletion successful, cleaning up local state")
+                        runCatching { chatRepository.disconnectWebSocket() }
+                        runCatching { signOutUseCase() }
+                        runCatching { userPreferences.clearUser() }
+                        withContext(Dispatchers.IO) {
+                            runCatching { appDatabase.clearAllTables() }
+                        }
                         _uiState.update { state -> state.copy(isDeletingAccount = false) }
                         _events.send(SettingsEvent.AccountDeleted)
                     },
                     onFailure = { throwable ->
                         Timber.e(throwable, "Account deletion failed")
+                        val errorMessage = throwable.message ?: "Failed to delete account."
                         _uiState.update { state ->
                             state.copy(
                                 isDeletingAccount = false,
                                 deleteAccountStep = if (isPasswordUser) DeleteAccountStep.PASSWORD_INPUT else DeleteAccountStep.NONE,
-                                deletePasswordError = throwable.message ?: "Failed to delete account.",
+                                deletePasswordError = errorMessage,
+                                error = errorMessage,
                             )
                         }
+                        _events.send(SettingsEvent.ShowError(errorMessage))
                     },
                 )
             }

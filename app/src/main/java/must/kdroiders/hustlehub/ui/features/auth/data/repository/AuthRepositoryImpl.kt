@@ -300,8 +300,7 @@ class AuthRepositoryImpl
                     user.reauthenticate(credential).await()
                 }
 
-                user.delete().await()
-
+                // 1. Delete user identity & records from PostgreSQL backend first while Firebase token is valid
                 val backendDeleteResult = userRepositoryProvider.get().deleteAccount()
                 if (backendDeleteResult.isFailure) {
                     val error = backendDeleteResult.exceptionOrNull()
@@ -311,6 +310,9 @@ class AuthRepositoryImpl
                         Timber.e(error, "Backend user deletion failed during deleteAccount")
                     }
                 }
+
+                // 2. Delete user identity from Firebase Auth second
+                user.delete().await()
 
                 firebaseAuth.signOut()
                 Unit
