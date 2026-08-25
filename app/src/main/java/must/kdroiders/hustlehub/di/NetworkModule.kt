@@ -71,15 +71,23 @@ object NetworkModule {
         // Certificate pinning — release builds only.
         // In debug, we allow user-installed CAs (Charles/mitmproxy).
         if (!BuildConfig.DEBUG) {
-            val certificatePinner = CertificatePinner
-                .Builder()
-                .add(
-                    "api.hustlehub.app",
-                    // Primary certificate SHA-256 pin (Base64 encoded)
-                    "sha256/2v/XUIeC1rCu7cz/j0ifEY0+rqtmtb0SJNQJ1i7wmLI=",
-                    // TODO: Add a backup SHA-256 pin here before publishing to production to prevent app lockout on certificate rotation
-                ).build()
-            builder.certificatePinner(certificatePinner)
+            val baseHost = runCatching { java.net.URI(BuildConfig.BASE_URL).host }.getOrNull()
+            val pinnerBuilder = CertificatePinner.Builder()
+
+            // Valid SSL Public Key Pins for api.hustlehub.app & Cloud Run (GTS CA chain)
+            val gtsPins = arrayOf(
+                "sha256/8jVhONRfoLxp9xEO7Gc/HdRfHqtEqkqd44YdfeZq5Wo=", // GTS Leaf
+                "sha256/YPtHaftLw6/0vnc2BnNKGF54xiCA28WFcccjkA4ypCM=", // GTS WR2 Intermediate
+                "sha256/hxqRlPTu1bMS/0DITB1SSu0vd4u/8l8TjPgfaAp63Gc=", // GTS Root R1
+            )
+
+            pinnerBuilder.add("api.hustlehub.app", *gtsPins)
+
+            if (!baseHost.isNullOrEmpty() && baseHost != "api.hustlehub.app") {
+                pinnerBuilder.add(baseHost, *gtsPins)
+            }
+
+            builder.certificatePinner(pinnerBuilder.build())
         }
 
         return builder.build()
