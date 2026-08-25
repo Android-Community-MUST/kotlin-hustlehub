@@ -37,6 +37,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -90,6 +93,7 @@ fun SettingsScreen(
 ) {
     val state by settingsViewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
     var showLicensesDialog by remember { mutableStateOf(false) }
     var showVersionDialog by remember { mutableStateOf(false) }
 
@@ -100,7 +104,10 @@ fun SettingsScreen(
                 is SettingsEvent.LoggedOut -> onBack()
                 is SettingsEvent.AccountDeleted -> onAccountDeleted()
                 is SettingsEvent.ShowError -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                    snackbarHostState.showSnackbar(
+                        message = event.message,
+                        duration = SnackbarDuration.Long,
+                    )
                 }
                 is SettingsEvent.NavigateToChangePassword -> onNavigateToChangePassword()
                 is SettingsEvent.NavigateToNotifications -> onNavigateToNotificationPreferences()
@@ -388,6 +395,7 @@ fun SettingsScreen(
     }
 
     HustleScaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {

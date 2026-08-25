@@ -311,7 +311,18 @@ class AuthRepositoryImpl
                     }
                 }
 
-                // 2. Delete user identity from Firebase Auth second
+                // 2. Delete FCM token from backend & Firebase Instance
+                runCatching {
+                    val token = FirebaseMessaging.getInstance().token.await()
+                    if (!token.isNullOrBlank()) {
+                        userRepositoryProvider.get().removeFcmToken(token)
+                    }
+                }
+                runCatching {
+                    FirebaseMessaging.getInstance().deleteToken().await()
+                }
+
+                // 3. Delete user identity from Firebase Auth
                 user.delete().await()
 
                 firebaseAuth.signOut()
