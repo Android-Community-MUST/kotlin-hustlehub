@@ -56,6 +56,7 @@ class UserPreferences
             val PROVIDER_BANNER_DISMISSED = booleanPreferencesKey("provider_banner_dismissed")
             val IS_PRO_USER = booleanPreferencesKey("is_pro_user")
             val PRO_EXPIRES_AT = stringPreferencesKey("pro_expires_at")
+
             /** Set before any network deletion call so a crash mid-flow is recoverable on next launch. */
             val PENDING_DELETION = booleanPreferencesKey("pending_deletion")
 
