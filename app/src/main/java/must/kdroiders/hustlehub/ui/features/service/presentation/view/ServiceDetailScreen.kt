@@ -114,6 +114,7 @@ fun ServiceDetailScreen(
     onNavigateToProviderProfile: (providerId: String) -> Unit = {},
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit = { _, _ -> },
     onNavigateToAllReviews: (serviceId: String) -> Unit = {},
+    onNavigateToEditService: (serviceId: String) -> Unit = {},
 ) {
     val state by serviceDetailViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -131,7 +132,7 @@ fun ServiceDetailScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
-            if (!state.isLoading && state.error == null && !state.isOwnService) {
+            if (!state.isLoading && state.error == null) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
                     shadowElevation = 16.dp,
@@ -159,24 +160,31 @@ fun ServiceDetailScreen(
                             )
                         }
 
-                        HustleButton(
-                            text = if (state.isOwnService) "Your Service" else "DM Provider",
-                            enabled = !state.isOwnService,
-                            onClick = {
-                                val svc = state.service
-                                if (svc != null) {
-                                    onNavigateToChat(
-                                        svc.providerId,
-                                        svc.id,
-                                        svc.title,
-                                        svc.category.name,
-                                        svc.priceRange,
-                                        state.provider?.name ?: "",
-                                    )
-                                }
-                            },
-                            modifier = Modifier.width(200.dp),
-                        )
+                        if (state.isOwnService) {
+                            HustleButton(
+                                text = "Edit Service",
+                                onClick = { onNavigateToEditService(serviceId) },
+                                modifier = Modifier.width(200.dp),
+                            )
+                        } else {
+                            HustleButton(
+                                text = "DM Provider",
+                                onClick = {
+                                    val svc = state.service
+                                    if (svc != null) {
+                                        onNavigateToChat(
+                                            svc.providerId,
+                                            svc.id,
+                                            svc.title,
+                                            svc.category.name,
+                                            svc.priceRange,
+                                            state.provider?.name ?: "",
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.width(200.dp),
+                            )
+                        }
                     }
                 }
             }

@@ -74,6 +74,7 @@ fun ProviderProfileScreen(
     onBack: () -> Unit = {},
     onNavigateToChat: (providerId: String) -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToMyServices: () -> Unit = {},
     onNavigateToServiceDetail: (serviceId: String) -> Unit = {},
 ) {
     val state by providerProfileViewModel.uiState.collectAsState()
@@ -180,11 +181,23 @@ fun ProviderProfileScreen(
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                     ) {
                         if (state.isOwnProfile) {
-                            HustleButton(
-                                text = "Edit Profile",
-                                onClick = onNavigateToEditProfile,
+                            Row(
                                 modifier = Modifier.fillMaxWidth(),
-                            )
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                HustleButton(
+                                    text = "Edit Profile",
+                                    variant = HustleButtonVariant.Secondary,
+                                    onClick = onNavigateToEditProfile,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                HustleButton(
+                                    text = "Manage Services",
+                                    variant = HustleButtonVariant.Primary,
+                                    onClick = onNavigateToMyServices,
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
                         } else {
                             val provider = state.provider
                             val canCall = provider?.allowCalls == true && !provider.phone.isBlank()
