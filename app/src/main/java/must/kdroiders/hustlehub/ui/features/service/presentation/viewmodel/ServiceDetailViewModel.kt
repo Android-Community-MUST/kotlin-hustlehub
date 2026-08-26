@@ -17,6 +17,8 @@ import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceReviewsUseCase
 import timber.log.Timber
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,10 +29,26 @@ class ServiceDetailViewModel
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
         private val getServiceReviewsUseCase: GetServiceReviewsUseCase,
         private val authRepository: AuthRepository,
+        private val userRepository: UserRepository,
         private val hustleAnalytics: HustleAnalytics,
         private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
         private var serviceId: String? = null
+
+        fun updateContactInfo(phone: String, campusLocation: String, onComplete: () -> Unit) {
+            val currentUser = authRepository.getCurrentUser() ?: return
+            viewModelScope.launch {
+                val user = User(
+                    id = currentUser.uid,
+                    email = currentUser.email ?: "",
+                    name = currentUser.displayName ?: "Hustler",
+                    phone = phone,
+                    campusLocation = campusLocation,
+                )
+                userRepository.saveUserProfile(user)
+                onComplete()
+            }
+        }
 
         init {
             hustleCrashlytics.setScreen("ServiceDetailScreen")

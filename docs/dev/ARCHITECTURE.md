@@ -211,6 +211,23 @@ must.kdroiders.hustlehub/
 
 ---
 
+## 🚀 Customer Onboarding & Just-In-Time (JIT) Contact Collection Architecture
+
+HustleHub uses a **Zero-Friction Customer Onboarding** paradigm:
+
+1. **Instant Onboarding:**
+   - When a new customer signs up or verifies their email with Firebase Auth, they are **automatically registered in PostgreSQL as `ROLE_CUSTOMER` in the background**.
+   - Customers bypass mandatory setup screens and land directly on `HomeScreen` to browse services immediately.
+
+2. **Just-In-Time (JIT) Contact Collection:**
+   - Phone number and campus residence location (e.g. *"Hostel B, Room 204"*) are collected **only when a customer takes a transaction action** (e.g. tapping `"DM Provider"` or `"Book Service"`).
+   - A lightweight `QuickContactModal` collects contact info on the spot, saves it to PostgreSQL via `userRepository.saveUserProfile()`, and seamlessly completes the DM/Booking flow.
+
+3. **Provider Onboarding:**
+   - Full profile setup (bio, avatar, campus location, published services) is required only when a user decides to **Become a Provider** or publish a service.
+
+---
+
 ## Key Design Patterns
 
 ### UiState (every screen)
