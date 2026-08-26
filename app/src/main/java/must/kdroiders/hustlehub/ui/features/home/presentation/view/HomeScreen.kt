@@ -12,8 +12,10 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,12 +56,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -72,6 +76,8 @@ import must.kdroiders.hustlehub.ui.features.home.presentation.components.Provide
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCardShimmer
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.HomeViewModel
+import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
+import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
@@ -102,6 +108,9 @@ fun HomeScreen(
     val gridState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+
+    val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
+    val isConnected by connectivityViewModel.isConnected.collectAsStateWithLifecycle()
 
     val stableOnNavigateToServiceDetail = remember { onNavigateToServiceDetail }
 
@@ -143,11 +152,23 @@ fun HomeScreen(
     ) {
         val pullToRefreshState = rememberPullToRefreshState()
 
-        PullToRefreshBox(
-            isRefreshing = state.isRefreshing,
-            onRefresh = homeViewModel::onRefresh,
-            modifier = Modifier.fillMaxSize(),
-            state = pullToRefreshState,
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding(),
+        ) {
+            OfflineBanner(
+                isOnline = isConnected,
+                onRetry = { connectivityViewModel.retryConnectivityCheck() },
+            )
+
+            PullToRefreshBox(
+                isRefreshing = state.isRefreshing,
+                onRefresh = homeViewModel::onRefresh,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                state = pullToRefreshState,
             indicator = {
                 val progress = pullToRefreshState.distanceFraction.coerceIn(0f, 1f)
                 val scale by animateFloatAsState(
@@ -171,7 +192,7 @@ fun HomeScreen(
                             .graphicsLayer(rotationZ = rotation)
                             .clip(RoundedCornerShape(10.dp))
                             .background(
-                                androidx.compose.ui.graphics.Brush.linearGradient(
+                                Brush.linearGradient(
                                     colors = listOf(
                                         MaterialTheme.colorScheme.primary,
                                         MaterialTheme.colorScheme.tertiary,
@@ -217,7 +238,7 @@ fun HomeScreen(
                 }
 
                 item(key = "provider_banner", span = { GridItemSpan(maxLineSpan) }) {
-                    AnimatedVisibility(
+                    androidx.compose.animation.AnimatedVisibility(
                         visible = state.showProviderBanner,
                         enter = expandVertically() + fadeIn(),
                         exit = shrinkVertically() + fadeOut(),
@@ -358,7 +379,7 @@ fun HomeScreen(
                         delay(index * 50L) // Stagger by 50ms — runs once per slot
                         visible = true
                     }
-                    AnimatedVisibility(
+                    androidx.compose.animation.AnimatedVisibility(
                         visible = visible,
                         enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
                     ) {
@@ -388,6 +409,7 @@ fun HomeScreen(
                 }
             }
         }
+    }
 
         SnackbarHost(
             hostState = snackbarHostState,

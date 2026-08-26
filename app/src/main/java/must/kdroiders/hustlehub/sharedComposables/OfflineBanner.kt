@@ -77,7 +77,6 @@ fun OfflineBanner(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(if (isOffline) HustleWarningAmber else HustleActiveGreen)
-                .statusBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 4.dp)
                 .semantics {
                     liveRegion = LiveRegionMode.Polite

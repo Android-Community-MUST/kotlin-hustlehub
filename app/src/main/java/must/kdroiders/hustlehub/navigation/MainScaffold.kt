@@ -17,15 +17,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
 import must.kdroiders.hustlehub.navigation.AiSearchScreen
 import must.kdroiders.hustlehub.navigation.SearchScreen
 import must.kdroiders.hustlehub.navigation.ServiceDetail
-import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatScreen
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.UnreadCountViewModel
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.HomeScreen
@@ -100,21 +97,12 @@ fun MainShellScreen(
     val unreadCountViewModel: UnreadCountViewModel = hiltViewModel()
     val unreadMessageCount by unreadCountViewModel.unreadMessageCount.collectAsState(initial = 0)
 
-    val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
-    val isConnected by connectivityViewModel.isConnected.collectAsStateWithLifecycle()
-
     val motionScheme = MaterialTheme.motionScheme
     val fastEffectsSpec = motionScheme.fastEffectsSpec<Float>()
     val fastSpatialSpec = motionScheme.fastSpatialSpec<Float>()
 
     Scaffold(
         modifier = modifier,
-        topBar = {
-            OfflineBanner(
-                isOnline = isConnected,
-                onRetry = { connectivityViewModel.retryConnectivityCheck() },
-            )
-        },
         bottomBar = {
             HustleBottomBar(
                 currentKey = currentKey,

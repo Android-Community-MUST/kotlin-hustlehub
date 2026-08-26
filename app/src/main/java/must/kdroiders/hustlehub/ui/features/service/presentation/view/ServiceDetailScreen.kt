@@ -47,9 +47,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -120,7 +120,7 @@ fun ServiceDetailScreen(
 
     var fullScreenImageIndex by remember { mutableStateOf<Int?>(null) }
 
-    Scaffold(
+    HustleScaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (!state.isLoading && state.error == null && !state.isOwnService) {

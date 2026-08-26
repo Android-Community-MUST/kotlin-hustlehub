@@ -13,6 +13,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
 
+import androidx.compose.foundation.layout.statusBarsPadding
+
 @Composable
 fun HustleScaffold(
     modifier: Modifier = Modifier,
@@ -31,7 +33,7 @@ fun HustleScaffold(
     Scaffold(
         modifier = modifier,
         topBar = {
-            Column {
+            Column(modifier = Modifier.statusBarsPadding()) {
                 OfflineBanner(
                     isOnline = isConnected,
                     onRetry = { connectivityViewModel.retryConnectivityCheck() },
