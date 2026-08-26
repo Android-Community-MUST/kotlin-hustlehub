@@ -40,6 +40,8 @@ import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 import must.kdroiders.hustlehub.ui.theme.HustleWhite
 
+import androidx.compose.foundation.layout.statusBarsPadding
+
 @Composable
 fun OfflineBanner(
     isOnline: Boolean,
@@ -75,7 +77,8 @@ fun OfflineBanner(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(if (isOffline) HustleWarningAmber else HustleActiveGreen)
-                .padding(horizontal = 16.dp, vertical = 2.dp)
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 4.dp)
                 .semantics {
                     liveRegion = LiveRegionMode.Polite
                 }.testTag("offline_banner"),
