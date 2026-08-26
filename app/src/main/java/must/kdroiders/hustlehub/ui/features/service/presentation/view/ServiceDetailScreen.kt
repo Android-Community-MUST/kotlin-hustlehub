@@ -329,8 +329,8 @@ fun ServiceDetailScreen(
                 }
             }
         }
-        }
     }
+}
 
     fullScreenImageIndex?.let { index ->
         state.service?.portfolio?.let { portfolio ->

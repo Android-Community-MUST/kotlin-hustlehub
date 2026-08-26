@@ -40,8 +40,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -150,8 +149,6 @@ fun HomeScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
-        val pullToRefreshState = rememberPullToRefreshState()
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -162,55 +159,13 @@ fun HomeScreen(
                 onRetry = { connectivityViewModel.retryConnectivityCheck() },
             )
 
-            PullToRefreshBox(
+            HustlePullToRefreshBox(
                 isRefreshing = state.isRefreshing,
                 onRefresh = homeViewModel::onRefresh,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                state = pullToRefreshState,
-            indicator = {
-                val progress = pullToRefreshState.distanceFraction.coerceIn(0f, 1f)
-                val scale by animateFloatAsState(
-                    targetValue = if (state.isRefreshing) 1f else progress,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                    label = "logo_pull_scale",
-                )
-                val rotation by animateFloatAsState(
-                    targetValue = if (state.isRefreshing) 360f else progress * 180f,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-                    label = "logo_pull_rotation",
-                )
-
-                if (progress > 0f || state.isRefreshing) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 16.dp)
-                            .size(38.dp)
-                            .scale(scale)
-                            .graphicsLayer(rotationZ = rotation)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(
-                                Brush.linearGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary,
-                                        MaterialTheme.colorScheme.tertiary,
-                                    ),
-                                ),
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "H",
-                            fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontSize = 18.sp,
-                        )
-                    }
-                }
-            },
-        ) {
+            ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(dimensions.gridColumns),
                 state = gridState,

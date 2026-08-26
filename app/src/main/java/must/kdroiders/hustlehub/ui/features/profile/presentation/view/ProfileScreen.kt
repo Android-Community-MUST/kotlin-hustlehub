@@ -24,9 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -135,21 +133,10 @@ fun ProfileScreen(
                     onRetry = profileViewModel::retry,
                 )
                 else -> {
-                    val pullToRefreshState = rememberPullToRefreshState()
-                    PullToRefreshBox(
+                    HustlePullToRefreshBox(
                         isRefreshing = state.isRefreshing,
                         onRefresh = profileViewModel::loadProfile,
                         modifier = Modifier.fillMaxSize(),
-                        state = pullToRefreshState,
-                        indicator = {
-                            PullToRefreshDefaults.Indicator(
-                                modifier = Modifier.align(Alignment.TopCenter),
-                                isRefreshing = state.isRefreshing,
-                                state = pullToRefreshState,
-                                color = MaterialTheme.colorScheme.primary,
-                                containerColor = MaterialTheme.colorScheme.surface,
-                            )
-                        },
                     ) {
                         ProfileContent(
                             state = state,
