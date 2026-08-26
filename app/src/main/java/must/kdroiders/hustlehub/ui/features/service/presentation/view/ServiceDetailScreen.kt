@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -47,12 +48,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
+import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -120,7 +125,10 @@ fun ServiceDetailScreen(
 
     var fullScreenImageIndex by remember { mutableStateOf<Int?>(null) }
 
-    HustleScaffold(
+    val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
+    val isConnected by connectivityViewModel.isConnected.collectAsStateWithLifecycle()
+
+    Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (!state.isLoading && state.error == null && !state.isOwnService) {
@@ -198,13 +206,22 @@ fun ServiceDetailScreen(
 
             // Top Action Buttons overlaid on image
             if (!state.isLoading && state.error == null) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(WindowInsets.statusBars.asPaddingValues())
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                        .statusBarsPadding(),
                 ) {
+                    OfflineBanner(
+                        isOnline = isConnected,
+                        onRetry = { serviceDetailViewModel.retry() },
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
                     // Back Button
                     IconButton(
                         onClick = onBack,
@@ -311,6 +328,7 @@ fun ServiceDetailScreen(
                     }
                 }
             }
+        }
         }
     }
 
