@@ -24,7 +24,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
+import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewItem

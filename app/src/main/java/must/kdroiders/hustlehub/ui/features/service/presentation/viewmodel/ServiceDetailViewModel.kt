@@ -12,13 +12,13 @@ import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceReviewsUseCase
 import timber.log.Timber
-import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
-import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,7 +35,11 @@ class ServiceDetailViewModel
     ) : ViewModel() {
         private var serviceId: String? = null
 
-        fun updateContactInfo(phone: String, campusLocation: String, onComplete: () -> Unit) {
+        fun updateContactInfo(
+            phone: String,
+            campusLocation: String,
+            onComplete: () -> Unit,
+        ) {
             val currentUser = authRepository.getCurrentUser() ?: return
             viewModelScope.launch {
                 val user = User(

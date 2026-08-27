@@ -15,15 +15,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -54,10 +51,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
-import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -77,14 +70,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
 import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
+import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
 import must.kdroiders.hustlehub.sharedComposables.SectionHeader
 import must.kdroiders.hustlehub.sharedComposables.ServiceProviderBadge
 import must.kdroiders.hustlehub.ui.features.report.presentation.ReportDialog
@@ -243,115 +239,115 @@ fun ServiceDetailScreen(
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                    // Back Button
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color.Black.copy(alpha = 0.3f)),
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White,
-                        )
-                    }
-
-                    // Share, Bookmark and More
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
+                        // Back Button
                         IconButton(
-                            onClick = { scope.launch { snackbarHostState.showSnackbar("Share feature coming soon!") } },
+                            onClick = onBack,
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
                                 .background(Color.Black.copy(alpha = 0.3f)),
                         ) {
-                            Icon(Icons.Default.Share, contentDescription = "Share", tint = Color.White)
-                        }
-                        var isBookmarked by remember { mutableStateOf(false) }
-                        val bookmarkInteractionSource = remember { MutableInteractionSource() }
-                        val isBookmarkPressed by bookmarkInteractionSource.collectIsPressedAsState()
-                        val bookmarkScale by animateFloatAsState(
-                            targetValue = if (isBookmarkPressed) {
-                                0.8f
-                            } else if (isBookmarked) {
-                                1.2f
-                            } else {
-                                1f
-                            },
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioHighBouncy,
-                                stiffness = Spring.StiffnessLow,
-                            ),
-                            label = "bookmark_scale",
-                        )
-
-                        IconButton(
-                            onClick = {
-                                isBookmarked = !isBookmarked
-                                scope.launch {
-                                    val msg = if (isBookmarked) "Saved!" else "Removed from saved"
-                                    snackbarHostState.showSnackbar(msg)
-                                }
-                            },
-                            interactionSource = bookmarkInteractionSource,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.3f))
-                                .scale(bookmarkScale),
-                        ) {
                             Icon(
-                                if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                contentDescription = "Save",
-                                tint = if (isBookmarked) MaterialTheme.colorScheme.primary else Color.White,
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White,
                             )
                         }
 
-                        var showMenu by remember { mutableStateOf(false) }
-                        var showReportDialog by remember { mutableStateOf(false) }
-
-                        Box {
+                        // Share, Bookmark and More
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             IconButton(
-                                onClick = { showMenu = true },
+                                onClick = { scope.launch { snackbarHostState.showSnackbar("Share feature coming soon!") } },
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
                                     .background(Color.Black.copy(alpha = 0.3f)),
                             ) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "More options", tint = Color.White)
+                                Icon(Icons.Default.Share, contentDescription = "Share", tint = Color.White)
                             }
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false },
+                            var isBookmarked by remember { mutableStateOf(false) }
+                            val bookmarkInteractionSource = remember { MutableInteractionSource() }
+                            val isBookmarkPressed by bookmarkInteractionSource.collectIsPressedAsState()
+                            val bookmarkScale by animateFloatAsState(
+                                targetValue = if (isBookmarkPressed) {
+                                    0.8f
+                                } else if (isBookmarked) {
+                                    1.2f
+                                } else {
+                                    1f
+                                },
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioHighBouncy,
+                                    stiffness = Spring.StiffnessLow,
+                                ),
+                                label = "bookmark_scale",
+                            )
+
+                            IconButton(
+                                onClick = {
+                                    isBookmarked = !isBookmarked
+                                    scope.launch {
+                                        val msg = if (isBookmarked) "Saved!" else "Removed from saved"
+                                        snackbarHostState.showSnackbar(msg)
+                                    }
+                                },
+                                interactionSource = bookmarkInteractionSource,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.Black.copy(alpha = 0.3f))
+                                    .scale(bookmarkScale),
                             ) {
-                                DropdownMenuItem(
-                                    text = { Text("Report Service") },
-                                    onClick = {
-                                        showMenu = false
-                                        showReportDialog = true
-                                    },
+                                Icon(
+                                    if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                    contentDescription = "Save",
+                                    tint = if (isBookmarked) MaterialTheme.colorScheme.primary else Color.White,
                                 )
                             }
-                        }
 
-                        if (showReportDialog) {
-                            ReportDialog(
-                                targetId = serviceId,
-                                targetType = "service",
-                                onDismiss = { showReportDialog = false },
-                            )
+                            var showMenu by remember { mutableStateOf(false) }
+                            var showReportDialog by remember { mutableStateOf(false) }
+
+                            Box {
+                                IconButton(
+                                    onClick = { showMenu = true },
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.Black.copy(alpha = 0.3f)),
+                                ) {
+                                    Icon(Icons.Default.MoreVert, contentDescription = "More options", tint = Color.White)
+                                }
+                                DropdownMenu(
+                                    expanded = showMenu,
+                                    onDismissRequest = { showMenu = false },
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Report Service") },
+                                        onClick = {
+                                            showMenu = false
+                                            showReportDialog = true
+                                        },
+                                    )
+                                }
+                            }
+
+                            if (showReportDialog) {
+                                ReportDialog(
+                                    targetId = serviceId,
+                                    targetType = "service",
+                                    onDismiss = { showReportDialog = false },
+                                )
+                            }
                         }
                     }
                 }
             }
         }
     }
-}
 
     fullScreenImageIndex?.let { index ->
         state.service?.portfolio?.let { portfolio ->

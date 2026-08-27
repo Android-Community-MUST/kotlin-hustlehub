@@ -36,7 +36,6 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -58,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
+import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ConversationListViewModel

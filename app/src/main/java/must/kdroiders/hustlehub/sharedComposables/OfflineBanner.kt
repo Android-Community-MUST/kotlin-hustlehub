@@ -40,8 +40,6 @@ import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 import must.kdroiders.hustlehub.ui.theme.HustleWhite
 
-import androidx.compose.foundation.layout.statusBarsPadding
-
 @Composable
 fun OfflineBanner(
     isOnline: Boolean,

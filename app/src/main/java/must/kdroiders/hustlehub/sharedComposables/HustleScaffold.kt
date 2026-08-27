@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.sharedComposables
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -12,8 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
-
-import androidx.compose.foundation.layout.statusBarsPadding
 
 @Composable
 fun HustleScaffold(

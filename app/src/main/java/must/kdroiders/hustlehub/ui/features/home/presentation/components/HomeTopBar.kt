@@ -39,8 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-import androidx.compose.foundation.layout.statusBarsPadding
-
 @Composable
 fun HomeTopBar(
     initials: String,
