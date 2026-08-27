@@ -18,6 +18,7 @@ import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceReviewsUseCase
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -33,6 +34,7 @@ class ServiceDetailViewModelTest {
     private val getProviderProfileUseCase: GetProviderProfileUseCase = mockk(relaxed = true)
     private val getServiceReviewsUseCase: GetServiceReviewsUseCase = mockk(relaxed = true)
     private val authRepository: AuthRepository = mockk(relaxed = true)
+    private val userRepository: UserRepository = mockk(relaxed = true)
     private val hustleAnalytics: HustleAnalytics = mockk(relaxed = true)
     private val hustleCrashlytics: HustleCrashlytics = mockk(relaxed = true)
 
@@ -47,6 +49,7 @@ class ServiceDetailViewModelTest {
             getProviderProfileUseCase = getProviderProfileUseCase,
             getServiceReviewsUseCase = getServiceReviewsUseCase,
             authRepository = authRepository,
+            userRepository = userRepository,
             hustleAnalytics = hustleAnalytics,
             hustleCrashlytics = hustleCrashlytics,
         )
