@@ -59,39 +59,52 @@ class CryptoManager
         fun getOrCreateKeyPair(conversationId: String): KeyPair {
             val alias = "$KEY_ALIAS_PREFIX$conversationId"
             val ks = keyStore
-            return if (ks != null && ks.containsAlias(alias)) {
-                val privateKey = ks.getKey(alias, null) as PrivateKey
-                val publicKey = ks.getCertificate(alias).publicKey
-                KeyPair(publicKey, privateKey)
-            } else {
+            return try {
+                if (ks != null && ks.containsAlias(alias)) {
+                    val privateKey = ks.getKey(alias, null) as? PrivateKey
+                    val publicKey = ks.getCertificate(alias)?.publicKey
+                    if (privateKey != null && publicKey != null) {
+                        KeyPair(publicKey, privateKey)
+                    } else {
+                        generateKeyPair(alias)
+                    }
+                } else {
+                    generateKeyPair(alias)
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "Error retrieving key pair from KeyStore for alias: %s", alias)
                 generateKeyPair(alias)
             }
         }
 
         private fun generateKeyPair(alias: String): KeyPair {
-            return if (keyStore != null) {
-                val parameterSpec = KeyGenParameterSpec
-                    .Builder(
-                        alias,
-                        KeyProperties.PURPOSE_AGREE_KEY,
-                    ).setAlgorithmParameterSpec(ECGenParameterSpec(EC_CURVE))
-                    .build()
+            if (keyStore != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                try {
+                    val parameterSpec = KeyGenParameterSpec
+                        .Builder(
+                            alias,
+                            KeyProperties.PURPOSE_AGREE_KEY,
+                        ).setAlgorithmParameterSpec(ECGenParameterSpec(EC_CURVE))
+                        .build()
 
-                val keyPairGenerator = KeyPairGenerator.getInstance(
-                    KeyProperties.KEY_ALGORITHM_EC,
-                    ANDROID_KEYSTORE,
-                )
-                keyPairGenerator.initialize(parameterSpec)
-                keyPairGenerator.generateKeyPair().also {
-                    Timber.d("Generated AndroidKeyStore ECDH key pair for alias: %s", alias)
+                    val keyPairGenerator = KeyPairGenerator.getInstance(
+                        KeyProperties.KEY_ALGORITHM_EC,
+                        ANDROID_KEYSTORE,
+                    )
+                    keyPairGenerator.initialize(parameterSpec)
+                    return keyPairGenerator.generateKeyPair().also {
+                        Timber.d("Generated AndroidKeyStore ECDH key pair for alias: %s", alias)
+                    }
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to generate AndroidKeyStore key pair for alias %s, falling back to standard EC generator", alias)
                 }
-            } else {
-                // Fallback for JVM unit test environment
-                val keyPairGenerator = KeyPairGenerator.getInstance("EC")
-                keyPairGenerator.initialize(ECGenParameterSpec(EC_CURVE))
-                keyPairGenerator.generateKeyPair().also {
-                    Timber.d("Generated in-memory ECDH key pair for alias: %s", alias)
-                }
+            }
+
+            // Fallback for API < 31 (Android 11 and below), JVM unit tests, or KeyStore failure
+            val keyPairGenerator = KeyPairGenerator.getInstance("EC")
+            keyPairGenerator.initialize(ECGenParameterSpec(EC_CURVE))
+            return keyPairGenerator.generateKeyPair().also {
+                Timber.d("Generated standard ECDH key pair for alias: %s", alias)
             }
         }
 
