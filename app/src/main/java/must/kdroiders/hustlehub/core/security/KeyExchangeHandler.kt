@@ -47,9 +47,13 @@ class KeyExchangeHandler
                     Timber.d("Peer key not available yet for: %s", conversationId)
                     return null
                 }
+                val rawPeerKey = peerKeyData.publicKey ?: run {
+                    Timber.d("Peer public key string is null for: %s", conversationId)
+                    return null
+                }
 
                 // Derive + cache shared secret
-                val peerPublicKey = cryptoManager.decodePublicKey(peerKeyData.publicKey)
+                val peerPublicKey = cryptoManager.decodePublicKey(rawPeerKey)
                 val sharedSecret = cryptoManager.deriveSharedSecret(
                     privateKey = ourKeyPair.private,
                     peerPublicKey = peerPublicKey,

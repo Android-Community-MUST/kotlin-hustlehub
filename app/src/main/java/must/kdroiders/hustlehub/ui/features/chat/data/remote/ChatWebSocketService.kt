@@ -125,24 +125,19 @@ class ChatWebSocketService
 
             val secretKey = keyExchangeHandler.getCachedSecret(request.conversationId)
 
-            val payloadJson = if (secretKey != null && request.content != null) {
+            val finalRequest = if (secretKey != null && request.content != null && request.type == "TEXT") {
                 val encrypted = cryptoManager.encrypt(request.content, secretKey)
-                val encryptedRequest = request.copy(
-                    content = gson.toJson(
-                        EncryptedMessagePayload(
-                            encryptedContent = encrypted.ciphertext,
-                            iv = encrypted.iv,
-                            authTag = encrypted.authTag,
-                            type = request.type,
-                        ),
-                    ),
+                request.copy(
+                    encryptedContent = encrypted.ciphertext,
+                    iv = encrypted.iv,
+                    authTag = encrypted.authTag,
+                    content = request.content,
                 )
-                gson.toJson(encryptedRequest)
             } else {
-                gson.toJson(request)
+                request
             }
 
-            session.sendText("/app/chat.send", payloadJson)
+            session.sendText("/app/chat.send", gson.toJson(finalRequest))
         }
 
         suspend fun sendTypingIndicator(indicator: TypingIndicator) {

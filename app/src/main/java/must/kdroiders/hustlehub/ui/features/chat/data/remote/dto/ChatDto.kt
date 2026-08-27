@@ -35,10 +35,13 @@ data class MessageResponse(
 data class SendMessageRequest(
     val conversationId: String,
     val type: String,
-    val content: String?,
+    val content: String? = null,
     val mediaUrl: String? = null,
     val thumbnailUrl: String? = null,
     val metadata: String? = null,
+    val encryptedContent: String? = null,
+    val iv: String? = null,
+    val authTag: String? = null,
 )
 
 data class TypingIndicator(
