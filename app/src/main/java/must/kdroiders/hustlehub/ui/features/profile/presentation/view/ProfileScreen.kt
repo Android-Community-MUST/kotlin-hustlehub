@@ -24,9 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,6 +34,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
+import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ErrorState
@@ -98,7 +98,6 @@ fun ProfileScreen(
     HustleScaffold(
         topBar = {
             ProfileHeader(
-                onEditClick = onEditClick,
                 onSettingsClick = onSettingsClick,
                 onShareClick = {
                     val userId = state.user?.id ?: ""
@@ -135,21 +134,10 @@ fun ProfileScreen(
                     onRetry = profileViewModel::retry,
                 )
                 else -> {
-                    val pullToRefreshState = rememberPullToRefreshState()
-                    PullToRefreshBox(
+                    HustlePullToRefreshBox(
                         isRefreshing = state.isRefreshing,
                         onRefresh = profileViewModel::loadProfile,
                         modifier = Modifier.fillMaxSize(),
-                        state = pullToRefreshState,
-                        indicator = {
-                            PullToRefreshDefaults.Indicator(
-                                modifier = Modifier.align(Alignment.TopCenter),
-                                isRefreshing = state.isRefreshing,
-                                state = pullToRefreshState,
-                                color = MaterialTheme.colorScheme.primary,
-                                containerColor = MaterialTheme.colorScheme.surface,
-                            )
-                        },
                     ) {
                         ProfileContent(
                             state = state,
@@ -219,6 +207,15 @@ private fun ProfileContent(
                     isProvider = isProvider,
                     isVerifiedPro = user.isVerifiedPro,
                     onAvailabilityToggle = onToggleOverallAvailability,
+                )
+                Spacer(Modifier.height(16.dp))
+                HustleButton(
+                    text = "Edit Profile",
+                    variant = HustleButtonVariant.Secondary,
+                    onClick = onEditClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = horizontalPadding),
                 )
             }
         }

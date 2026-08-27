@@ -18,6 +18,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import timber.log.Timber
 import javax.inject.Inject
@@ -120,7 +121,15 @@ class SplashViewModel
                                     hasProfileResult
                                         .onSuccess { hasProfile ->
                                             if (!hasProfile) {
-                                                targetDestination = SplashDestination.ProfileSetup
+                                                // Auto-register customer profile in backend background
+                                                val basicUser = User(
+                                                    id = currentUser.uid,
+                                                    email = currentUser.email ?: "",
+                                                    name = currentUser.displayName ?: "Hustler",
+                                                )
+                                                viewModelScope.launch {
+                                                    userRepository.saveUserProfile(basicUser)
+                                                }
                                             }
                                         }.onFailure { e ->
                                             if (e is retrofit2.HttpException) {
@@ -128,7 +137,15 @@ class SplashViewModel
                                                     firebaseAuth.signOut()
                                                     targetDestination = SplashDestination.Login
                                                 } else if (e.code() == 404) {
-                                                    targetDestination = SplashDestination.ProfileSetup
+                                                    // Auto-register customer profile in backend background
+                                                    val basicUser = User(
+                                                        id = currentUser.uid,
+                                                        email = currentUser.email ?: "",
+                                                        name = currentUser.displayName ?: "Hustler",
+                                                    )
+                                                    viewModelScope.launch {
+                                                        userRepository.saveUserProfile(basicUser)
+                                                    }
                                                 }
                                             }
                                         }

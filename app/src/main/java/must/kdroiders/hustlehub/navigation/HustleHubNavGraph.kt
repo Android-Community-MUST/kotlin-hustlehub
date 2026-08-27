@@ -325,6 +325,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         entry<Settings> {
                             SettingsScreen(
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                                onNavigateToEditProfile = { backstack.add(EditProfile) },
                                 onNavigateToChangePassword = { backstack.add(ChangePassword) },
                                 onNavigateToNotificationPreferences = { backstack.add(NotificationPreferences) },
                                 onNavigateToPrivacy = { backstack.add(PrivacySettings) },
@@ -447,6 +448,9 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onNavigateToAllReviews = { serviceId ->
                                     backstack.add(AllReviews(serviceId = serviceId))
                                 },
+                                onNavigateToEditService = { serviceId ->
+                                    backstack.add(CreateService(serviceId = serviceId))
+                                },
                             )
                         }
 
@@ -465,6 +469,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                                 onNavigateToChat = { providerId -> backstack.add(ChatDetail(chatId = providerId)) },
                                 onNavigateToEditProfile = { backstack.add(EditProfile) },
+                                onNavigateToMyServices = { backstack.add(MyServices) },
                                 onNavigateToServiceDetail = { serviceId ->
                                     backstack.add(
                                         ServiceDetail(

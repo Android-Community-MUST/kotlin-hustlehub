@@ -433,7 +433,6 @@ fun SettingsScreen(
                 displayName = state.displayName,
                 username = state.username,
                 avatarUrl = state.avatarUrl,
-                onEditClick = settingsViewModel::onEditProfileClicked,
             )
 
             Spacer(Modifier.height(28.dp))

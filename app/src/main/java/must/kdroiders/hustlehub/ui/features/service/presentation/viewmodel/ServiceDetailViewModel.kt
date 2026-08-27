@@ -12,6 +12,8 @@ import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
@@ -27,10 +29,30 @@ class ServiceDetailViewModel
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
         private val getServiceReviewsUseCase: GetServiceReviewsUseCase,
         private val authRepository: AuthRepository,
+        private val userRepository: UserRepository,
         private val hustleAnalytics: HustleAnalytics,
         private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
         private var serviceId: String? = null
+
+        fun updateContactInfo(
+            phone: String,
+            campusLocation: String,
+            onComplete: () -> Unit,
+        ) {
+            val currentUser = authRepository.getCurrentUser() ?: return
+            viewModelScope.launch {
+                val user = User(
+                    id = currentUser.uid,
+                    email = currentUser.email ?: "",
+                    name = currentUser.displayName ?: "Hustler",
+                    phone = phone,
+                    campusLocation = campusLocation,
+                )
+                userRepository.saveUserProfile(user)
+                onComplete()
+            }
+        }
 
         init {
             hustleCrashlytics.setScreen("ServiceDetailScreen")

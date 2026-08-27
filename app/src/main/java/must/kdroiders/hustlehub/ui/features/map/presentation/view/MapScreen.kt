@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -75,6 +76,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -88,8 +90,10 @@ import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.clustering.Clustering
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
+import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
 import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.map.presentation.view.components.*
 import must.kdroiders.hustlehub.ui.features.map.presentation.viewmodel.MapViewModel
@@ -117,6 +121,9 @@ fun MapScreen(
     val scope = rememberCoroutineScope()
     val uiState by mapViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
+    val isConnected by connectivityViewModel.isConnected.collectAsStateWithLifecycle()
 
     // Map Settings State
     var mapType by remember { mutableStateOf(MapType.NORMAL) }
@@ -283,9 +290,15 @@ fun MapScreen(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            OfflineBanner(
+                isOnline = isConnected,
+                onRetry = { connectivityViewModel.retryConnectivityCheck() },
+            )
+
             // Row 1: Search Bar & Notification Bell
             Row(
                 modifier = Modifier.fillMaxWidth(),

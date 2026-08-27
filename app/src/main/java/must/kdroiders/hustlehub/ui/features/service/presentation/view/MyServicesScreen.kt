@@ -34,9 +34,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -53,6 +50,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.DeleteConfirmDialog
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.PortfolioSlots
@@ -216,21 +214,10 @@ fun MyServicesScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            val pullToRefreshState = rememberPullToRefreshState()
-            PullToRefreshBox(
+            HustlePullToRefreshBox(
                 isRefreshing = state.isLoading,
                 onRefresh = viewModel::loadServices,
                 modifier = Modifier.fillMaxSize(),
-                state = pullToRefreshState,
-                indicator = {
-                    PullToRefreshDefaults.Indicator(
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        isRefreshing = state.isLoading,
-                        state = pullToRefreshState,
-                        color = MaterialTheme.colorScheme.primary,
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    )
-                },
             ) {
                 when {
                     state.isLoading && state.services.isEmpty() -> {

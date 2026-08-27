@@ -36,9 +36,6 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -60,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
+import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ConversationListViewModel
@@ -103,21 +101,10 @@ fun ChatScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            val pullToRefreshState = rememberPullToRefreshState()
-            PullToRefreshBox(
+            HustlePullToRefreshBox(
                 isRefreshing = state.isRefreshing,
                 onRefresh = conversationListViewModel::refreshConversations,
                 modifier = Modifier.fillMaxSize(),
-                state = pullToRefreshState,
-                indicator = {
-                    PullToRefreshDefaults.Indicator(
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        isRefreshing = state.isRefreshing,
-                        state = pullToRefreshState,
-                        color = MaterialTheme.colorScheme.primary,
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    )
-                },
             ) {
                 when {
                     state.isLoading && !state.isRefreshing -> {

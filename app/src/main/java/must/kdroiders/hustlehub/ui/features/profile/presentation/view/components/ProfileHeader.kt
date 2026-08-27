@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
@@ -37,7 +36,6 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun ProfileHeader(
-    onEditClick: () -> Unit,
     onSettingsClick: () -> Unit = {},
     onShareClick: () -> Unit = {},
 ) {
@@ -76,32 +74,13 @@ fun ProfileHeader(
                 )
             }
             IconButton(
-                onClick = onEditClick,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .semantics {
-                        role = Role.Button
-                        contentDescription = "Edit profile"
-                    },
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-            IconButton(
                 onClick = onSettingsClick,
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .semantics {
-                        role =
-                            Role.Button
+                        role = Role.Button
                         contentDescription = "Settings"
                     },
             ) {
