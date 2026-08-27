@@ -31,6 +31,9 @@ import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
 import timber.log.Timber
 import java.util.UUID
+import must.kdroiders.hustlehub.core.security.CryptoManager
+import must.kdroiders.hustlehub.core.security.EncryptedPayload
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -44,6 +47,8 @@ class ChatRepositoryImpl
         private val messageDao: MessageDao,
         private val chatWebSocketService: ChatWebSocketService,
         private val firebaseAuth: FirebaseAuth?,
+        private val keyExchangeHandler: KeyExchangeHandler,
+        private val cryptoManager: CryptoManager,
     ) : ChatRepository {
         @Volatile
         private var activeConversationId: String? = null
@@ -122,7 +127,7 @@ class ChatRepositoryImpl
                         localIdsToDelete.forEach { messageDao.deleteById(it) }
                     }
                     val entities = response.data.content.mapNotNull { msgDto ->
-                        val msgDomain = msgDto.toDomainModel()
+                        val msgDomain = msgDto.toDomainModel(keyExchangeHandler, cryptoManager)
                         val processed = applyDeletionStatusToMessage(msgDomain)
                         processed?.toEntity()
                     }
@@ -145,43 +150,43 @@ class ChatRepositoryImpl
             metadata: String?,
         ): Result<Unit> =
             withContext(Dispatchers.IO) {
-                val tempId = "temp_${UUID.randomUUID()}"
-                val currentUserId = firebaseAuth?.currentUser?.uid ?: ""
-                val currentTimestamp = java.time.Instant
-                    .now()
-                    .toString()
+                runCatching {
+                    val tempId = "temp_${UUID.randomUUID()}"
+                    val currentUserId = firebaseAuth?.currentUser?.uid ?: ""
+                    val currentTimestamp = runCatching {
+                        java.time.Instant.now().toString()
+                    }.getOrDefault(System.currentTimeMillis().toString())
 
-                val gson = Gson()
-                val metadataJson = if (metadata != null) {
-                    runCatching {
-                        gson.fromJson(metadata, JsonObject::class.java).apply {
-                            addProperty("localId", tempId)
+                    val gson = Gson()
+                    val metadataJson = if (metadata != null) {
+                        runCatching {
+                            gson.fromJson(metadata, JsonObject::class.java).apply {
+                                addProperty("localId", tempId)
+                            }
+                        }.getOrElse {
+                            JsonObject().apply { addProperty("localId", tempId) }
                         }
-                    }.getOrElse {
+                    } else {
                         JsonObject().apply { addProperty("localId", tempId) }
                     }
-                } else {
-                    JsonObject().apply { addProperty("localId", tempId) }
-                }
-                val newMetadataString = gson.toJson(metadataJson)
+                    val newMetadataString = gson.toJson(metadataJson)
 
-                val tempMessage = Message(
-                    id = tempId,
-                    conversationId = conversationId,
-                    senderId = currentUserId,
-                    type = type,
-                    content = content,
-                    mediaUrl = mediaUrl,
-                    thumbnailUrl = null,
-                    metadata = newMetadataString,
-                    timestamp = currentTimestamp,
-                    deliveredAt = null,
-                    readAt = null,
-                    isSynced = false,
-                    isFailed = false,
-                )
+                    val tempMessage = Message(
+                        id = tempId,
+                        conversationId = conversationId,
+                        senderId = currentUserId,
+                        type = type,
+                        content = content,
+                        mediaUrl = mediaUrl,
+                        thumbnailUrl = null,
+                        metadata = newMetadataString,
+                        timestamp = currentTimestamp,
+                        deliveredAt = null,
+                        readAt = null,
+                        isSynced = false,
+                        isFailed = false,
+                    )
 
-                runCatching {
                     messageDao.upsert(tempMessage.toEntity())
 
                     val request = SendMessageRequest(
@@ -193,11 +198,11 @@ class ChatRepositoryImpl
                     )
                     chatWebSocketService.connect()
                     chatWebSocketService.sendMessage(request)
-                }.onFailure { e ->
+                    Unit
+                }.recover { e ->
                     if (e is CancellationException) throw e
-                    Timber.e(e, "Failed to send message over WebSocket, marking as failed")
-                    val failedMessage = tempMessage.copy(isFailed = true)
-                    messageDao.upsert(failedMessage.toEntity())
+                    Timber.d(e, "Message queued in local database for auto-sync")
+                    Unit
                 }
             }
 
@@ -224,6 +229,7 @@ class ChatRepositoryImpl
             flow {
                 try {
                     chatWebSocketService.connect()
+                    resendUnsyncedMessages()
 
                     chatWebSocketService
                         .subscribeToConversation(conversationId)
@@ -533,13 +539,38 @@ private fun ConversationResponse.toEntity(): ConversationEntity =
         createdAt = createdAt,
     )
 
-private fun MessageResponse.toDomainModel(): Message =
-    Message(
+private fun MessageResponse.toDomainModel(
+    keyExchangeHandler: KeyExchangeHandler? = null,
+    cryptoManager: CryptoManager? = null,
+): Message {
+    val encContent = encryptedContent
+    val ivStr = iv
+    val resolvedContent = if (!encContent.isNullOrBlank() && !ivStr.isNullOrBlank() && keyExchangeHandler != null && cryptoManager != null) {
+        val secretKey = keyExchangeHandler.getCachedSecret(conversationId)
+        if (secretKey != null) {
+            runCatching {
+                cryptoManager.decrypt(
+                    EncryptedPayload(
+                        ciphertext = encContent,
+                        iv = ivStr,
+                        authTag = authTag ?: "",
+                    ),
+                    secretKey,
+                )
+            }.getOrDefault(content ?: "\uD83D\uDD12 Encrypted message")
+        } else {
+            content ?: "\uD83D\uDD12 Encrypted message"
+        }
+    } else {
+        content ?: ""
+    }
+
+    return Message(
         id = id,
         conversationId = conversationId,
         senderId = senderId,
         type = runCatching { MessageType.valueOf(type) }.getOrDefault(MessageType.TEXT),
-        content = content ?: "",
+        content = resolvedContent,
         mediaUrl = mediaUrl,
         thumbnailUrl = thumbnailUrl,
         metadata = metadata,
@@ -547,6 +578,7 @@ private fun MessageResponse.toDomainModel(): Message =
         deliveredAt = deliveredAt,
         readAt = readAt,
     )
+}
 
 private fun MessageResponse.toEntity(): MessageEntity =
     MessageEntity(

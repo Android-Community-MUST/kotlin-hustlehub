@@ -11,6 +11,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import must.kdroiders.hustlehub.core.auth.AuthManager
+import must.kdroiders.hustlehub.core.security.CryptoManager
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
@@ -195,6 +197,8 @@ object AppModule {
         conversationDao: ConversationDao,
         messageDao: MessageDao,
         firebaseAuth: FirebaseAuth?,
+        keyExchangeHandler: KeyExchangeHandler,
+        cryptoManager: CryptoManager,
     ): ChatRepository {
         return ChatRepositoryImpl(
             context,
@@ -203,6 +207,8 @@ object AppModule {
             messageDao,
             chatWebSocketService,
             firebaseAuth,
+            keyExchangeHandler,
+            cryptoManager,
         )
     }
 

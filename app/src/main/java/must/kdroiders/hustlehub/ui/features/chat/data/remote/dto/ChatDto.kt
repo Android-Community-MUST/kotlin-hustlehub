@@ -30,6 +30,9 @@ data class MessageResponse(
     val timestamp: String,
     val deliveredAt: String?,
     val readAt: String?,
+    val encryptedContent: String? = null,
+    val iv: String? = null,
+    val authTag: String? = null,
 )
 
 data class SendMessageRequest(

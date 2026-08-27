@@ -74,27 +74,27 @@ class ChatWebSocketService
 
                 // Try to decrypt if it's an encrypted payload
                 try {
-                    val encrypted = gson.fromJson(rawJson, EncryptedMessagePayload::class.java)
-                    if (encrypted.encryptedContent != null && encrypted.iv != null) {
+                    val response = gson.fromJson(rawJson, MessageResponse::class.java)
+                    val encContent = response.encryptedContent
+                    val iv = response.iv
+                    if (!encContent.isNullOrBlank() && !iv.isNullOrBlank()) {
                         val secretKey = keyExchangeHandler.getCachedSecret(conversationId)
                         if (secretKey != null) {
                             val payload = EncryptedPayload(
-                                ciphertext = encrypted.encryptedContent,
-                                iv = encrypted.iv,
-                                authTag = encrypted.authTag,
+                                ciphertext = encContent,
+                                iv = iv,
+                                authTag = response.authTag ?: "",
                             )
                             val plaintext = cryptoManager.decrypt(payload, secretKey)
-                            val baseResponse = gson.fromJson(rawJson, MessageResponse::class.java)
-                            baseResponse.copy(content = plaintext)
+                            response.copy(content = plaintext)
                         } else {
-                            val baseResponse = gson.fromJson(rawJson, MessageResponse::class.java)
-                            baseResponse.copy(content = "\uD83D\uDD12 Encrypted message")
+                            response.copy(content = "\uD83D\uDD12 Encrypted message")
                         }
                     } else {
-                        gson.fromJson(rawJson, MessageResponse::class.java)
+                        response
                     }
                 } catch (e: Exception) {
-                    Timber.w(e, "Decrypt failed, falling back to plaintext")
+                    Timber.w(e, "Decrypt failed, returning raw response")
                     gson.fromJson(rawJson, MessageResponse::class.java)
                 }
             }
@@ -131,7 +131,7 @@ class ChatWebSocketService
                     encryptedContent = encrypted.ciphertext,
                     iv = encrypted.iv,
                     authTag = encrypted.authTag,
-                    content = request.content,
+                    content = null,
                 )
             } else {
                 request

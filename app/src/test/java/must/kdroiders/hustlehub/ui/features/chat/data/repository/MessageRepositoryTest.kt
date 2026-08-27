@@ -23,6 +23,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
+import must.kdroiders.hustlehub.core.security.CryptoManager
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class MessageRepositoryTest {
     private lateinit var context: Context
@@ -32,6 +35,8 @@ class MessageRepositoryTest {
     private lateinit var chatWebSocketService: ChatWebSocketService
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firebaseUser: FirebaseUser
+    private lateinit var keyExchangeHandler: KeyExchangeHandler
+    private lateinit var cryptoManager: CryptoManager
     private lateinit var repository: ChatRepositoryImpl
 
     @Before
@@ -42,6 +47,8 @@ class MessageRepositoryTest {
         messageDao = mockk(relaxed = true)
         chatWebSocketService = mockk(relaxed = true)
         firebaseAuth = mockk(relaxed = true)
+        keyExchangeHandler = mockk(relaxed = true)
+        cryptoManager = mockk(relaxed = true)
         firebaseUser = mockk(relaxed = true) {
             every { uid } returns "current-user-uid"
         }
@@ -54,6 +61,8 @@ class MessageRepositoryTest {
             messageDao = messageDao,
             chatWebSocketService = chatWebSocketService,
             firebaseAuth = firebaseAuth,
+            keyExchangeHandler = keyExchangeHandler,
+            cryptoManager = cryptoManager,
         )
     }
 
@@ -125,5 +134,50 @@ class MessageRepositoryTest {
 
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) { messageDao.upsert(any()) }
+        }
+
+    @Test
+    fun `sendMessage when offline keeps message in local database as pending unsynced`() =
+        runTest {
+            coEvery { chatWebSocketService.connect() } throws IllegalStateException("STOMP session not initialized")
+
+            val result = repository.sendMessage("conv-1", MessageType.TEXT, "Offline message test")
+
+            assertTrue(result.isSuccess)
+            val slot = io.mockk.slot<MessageEntity>()
+            coVerify(atLeast = 1) { messageDao.upsert(capture(slot)) }
+            org.junit.Assert.assertFalse(slot.captured.isSynced)
+            org.junit.Assert.assertFalse(slot.captured.isFailed)
+            assertEquals("Offline message test", slot.captured.content)
+        }
+
+    @Test
+    fun `resendUnsyncedMessages flushes pending messages over WebSocket`() =
+        runTest {
+            val pendingEntity = MessageEntity(
+                id = "temp_123",
+                conversationId = "conv-1",
+                senderId = "current-user-uid",
+                type = "TEXT",
+                content = "Pending text",
+                mediaUrl = null,
+                thumbnailUrl = null,
+                metadata = null,
+                timestamp = "2026-08-27T10:00:00Z",
+                deliveredAt = null,
+                readAt = null,
+                isSynced = false,
+                isFailed = false,
+            )
+            coEvery { messageDao.getUnsyncedMessages() } returns listOf(pendingEntity)
+            coEvery { chatWebSocketService.sendMessage(any()) } returns Unit
+
+            val result = repository.resendUnsyncedMessages()
+
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { chatWebSocketService.sendMessage(any()) }
+            coVerify(exactly = 1) {
+                messageDao.upsert(match { it.id == "temp_123" && it.isSynced && !it.isFailed })
+            }
         }
 }

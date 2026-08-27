@@ -280,13 +280,24 @@ class ChatDetailViewModel
                             coroutineScope {
                                 chatRepository
                                     .connectWebSocket(resolvedId)
+                                    .onEach { msg ->
+                                        if (msg.senderId == _uiState.value.otherUserId) {
+                                            _uiState.update { it.copy(isOtherUserOnline = true, otherUserLastSeenAt = null) }
+                                        }
+                                    }
                                     .catch { e -> Timber.e(e, "Error in WebSocket messages flow") }
                                     .launchIn(this)
 
                                 chatWebSocketService
                                     .subscribeToTyping(resolvedId)
                                     .onEach { typingIndicator ->
-                                        _uiState.update { it.copy(isTyping = typingIndicator.isTyping) }
+                                        _uiState.update {
+                                            it.copy(
+                                                isTyping = typingIndicator.isTyping,
+                                                isOtherUserOnline = if (typingIndicator.isTyping) true else it.isOtherUserOnline,
+                                                otherUserLastSeenAt = if (typingIndicator.isTyping) null else it.otherUserLastSeenAt,
+                                            )
+                                        }
                                     }.catch { e -> Timber.e(e, "Error in WebSocket typing flow") }
                                     .launchIn(this)
 
@@ -421,6 +432,13 @@ class ChatDetailViewModel
                 // Clear the typing indicator immediately when the message is sent
                 sendTypingIndicator(false)
                 typingClearJob?.cancel()
+
+                if (!_uiState.value.isEncryptionReady) {
+                    val secretKey = keyExchangeHandler.ensureKeysExchanged(id)
+                    if (secretKey != null) {
+                        _uiState.update { it.copy(isEncryptionReady = true) }
+                    }
+                }
 
                 val metadata = if (currentReply != null) {
                     val replyText = when (currentReply.type) {
