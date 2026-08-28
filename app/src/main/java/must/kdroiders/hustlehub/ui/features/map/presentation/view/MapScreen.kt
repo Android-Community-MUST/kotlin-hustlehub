@@ -612,7 +612,8 @@ fun MapScreen(
                     scope.launch {
                         cameraPositionState.animate(
                             CameraUpdateFactory.newCameraPosition(
-                                CameraPosition.Builder(cameraPositionState.position)
+                                CameraPosition
+                                    .Builder(cameraPositionState.position)
                                     .bearing(0f)
                                     .build(),
                             ),

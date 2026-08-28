@@ -115,10 +115,11 @@ fun Message.toEncryptedEntity(
     val secretKey = keyExchangeHandler.getOrGenerateLocalSecret(conversationId)
     val encryptedPayload = cryptoManager.encrypt(this.content, secretKey)
 
-    return this.toEntity(
-        cachedAt = cachedAt,
-        isEncrypted = true,
-        iv = encryptedPayload.iv,
-        authTag = encryptedPayload.authTag,
-    ).copy(content = encryptedPayload.ciphertext)
+    return this
+        .toEntity(
+            cachedAt = cachedAt,
+            isEncrypted = true,
+            iv = encryptedPayload.iv,
+            authTag = encryptedPayload.authTag,
+        ).copy(content = encryptedPayload.ciphertext)
 }

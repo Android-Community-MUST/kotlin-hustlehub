@@ -156,7 +156,9 @@ class ChatRepositoryImpl
                     val tempId = "temp_${UUID.randomUUID()}"
                     val currentUserId = firebaseAuth?.currentUser?.uid ?: ""
                     val currentTimestamp = runCatching {
-                        java.time.Instant.now().toString()
+                        java.time.Instant
+                            .now()
+                            .toString()
                     }.getOrDefault(System.currentTimeMillis().toString())
 
                     val gson = Gson()

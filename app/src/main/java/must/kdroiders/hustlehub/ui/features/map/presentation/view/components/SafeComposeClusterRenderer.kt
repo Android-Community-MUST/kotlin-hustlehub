@@ -32,8 +32,10 @@ class SafeComposeClusterRenderer<T : ClusterItem>(
     private val clusterContent: (@Composable (Cluster<T>) -> Unit)?,
     private val clusterItemContent: (@Composable (T) -> Unit)?,
 ) : DefaultClusterRenderer<T>(context, map, clusterManager) {
-
-    override fun onBeforeClusterRendered(cluster: Cluster<T>, options: MarkerOptions) {
+    override fun onBeforeClusterRendered(
+        cluster: Cluster<T>,
+        options: MarkerOptions,
+    ) {
         if (clusterContent != null) {
             val descriptor = renderComposableToBitmapDescriptor { clusterContent.invoke(cluster) }
             if (descriptor != null) {
@@ -44,7 +46,10 @@ class SafeComposeClusterRenderer<T : ClusterItem>(
         super.onBeforeClusterRendered(cluster, options)
     }
 
-    override fun onBeforeClusterItemRendered(item: T, options: MarkerOptions) {
+    override fun onBeforeClusterItemRendered(
+        item: T,
+        options: MarkerOptions,
+    ) {
         if (clusterItemContent != null) {
             val descriptor = renderComposableToBitmapDescriptor { clusterItemContent.invoke(item) }
             if (descriptor != null) {

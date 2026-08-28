@@ -711,8 +711,13 @@ fun ChatDetailScreen(
                             try {
                                 val currentInstant = Instant.parse(message.timestamp)
                                 val nextInstant = Instant.parse(nextMessage.timestamp)
-                                java.time.Duration.between(currentInstant, nextInstant).abs().toMinutes() < 2
-                            } catch (_: Exception) { false }
+                                java.time.Duration
+                                    .between(currentInstant, nextInstant)
+                                    .abs()
+                                    .toMinutes() < 2
+                            } catch (_: Exception) {
+                                false
+                            }
 
                         MessageBubble(
                             message = message,
@@ -775,8 +780,7 @@ fun ChatDetailScreen(
                                     bottomStart = 4.dp,
                                     bottomEnd = 20.dp,
                                 ),
-                            )
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            ).background(MaterialTheme.colorScheme.surfaceVariant)
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                     ) {
                         TypingIndicatorDots(color = MaterialTheme.colorScheme.onSurfaceVariant)

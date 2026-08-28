@@ -32,7 +32,9 @@ internal object Base64Util {
         return try {
             android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
         } catch (e: Throwable) {
-            java.util.Base64.getEncoder().encodeToString(bytes)
+            java.util.Base64
+                .getEncoder()
+                .encodeToString(bytes)
         }
     }
 
@@ -40,7 +42,9 @@ internal object Base64Util {
         return try {
             android.util.Base64.decode(str, android.util.Base64.NO_WRAP)
         } catch (e: Throwable) {
-            java.util.Base64.getDecoder().decode(str)
+            java.util.Base64
+                .getDecoder()
+                .decode(str)
         }
     }
 }

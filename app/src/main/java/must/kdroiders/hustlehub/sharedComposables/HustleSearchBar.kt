@@ -27,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 
@@ -57,15 +56,13 @@ fun HustleSearchBar(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(24.dp),
-            )
-            .then(
+            ).then(
                 if (readOnly && onSearchClick != null) {
                     Modifier.clickable(role = Role.Button, onClick = onSearchClick)
                 } else {
                     Modifier
                 },
-            )
-            .padding(horizontal = 16.dp),
+            ).padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         Row(

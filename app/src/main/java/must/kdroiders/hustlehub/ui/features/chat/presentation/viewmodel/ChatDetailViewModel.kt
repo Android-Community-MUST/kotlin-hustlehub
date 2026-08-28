@@ -33,7 +33,6 @@ import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketServic
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.TypingIndicator
-import must.kdroiders.hustlehub.ui.features.chat.domain.model.UserPresence
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.PlayerState
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoicePlayer
@@ -285,8 +284,7 @@ class ChatDetailViewModel
                                         if (msg.senderId == _uiState.value.otherUserId) {
                                             _uiState.update { it.copy(isOtherUserOnline = true, otherUserLastSeenAt = null) }
                                         }
-                                    }
-                                    .catch { e -> Timber.e(e, "Error in WebSocket messages flow") }
+                                    }.catch { e -> Timber.e(e, "Error in WebSocket messages flow") }
                                     .launchIn(this)
 
                                 chatWebSocketService
