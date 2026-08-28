@@ -1,10 +1,10 @@
 package must.kdroiders.hustlehub.ui.features.chat.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.UserPresence
 
 interface ChatRepository {
     fun getConversations(): Flow<List<Conversation>>

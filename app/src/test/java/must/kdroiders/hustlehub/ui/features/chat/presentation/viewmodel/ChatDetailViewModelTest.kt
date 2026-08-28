@@ -113,6 +113,15 @@ class ChatDetailViewModelTest {
     }
 
     @Test
+    fun `sendTypingIndicator sends websocket event`() =
+        runTest {
+            viewModel.initialize(conversationId = "conv-1")
+            viewModel.sendTypingIndicator(true)
+
+            coVerify { chatWebSocketService.sendTypingIndicator(any()) }
+        }
+
+    @Test
     fun `blockUser delegates target user ID to userRepository`() =
         runTest {
             coEvery { userRepository.blockUser("conv-1") } returns Result.success(Unit)

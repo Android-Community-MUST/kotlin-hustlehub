@@ -32,6 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -39,6 +40,7 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -76,6 +78,7 @@ import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
+import must.kdroiders.hustlehub.sharedComposables.HustleSearchBar
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ConversationFilter
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ConversationListViewModel
@@ -126,70 +129,13 @@ fun ChatScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            // 1. Search Bar Header
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
-                    .height(48.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(24.dp),
-                    )
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp),
-                    )
-
-                    BasicTextField(
-                        value = state.searchQuery,
-                        onValueChange = conversationListViewModel::onSearchQueryChanged,
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurface,
-                        ),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        decorationBox = { innerTextField ->
-                            Box(contentAlignment = Alignment.CenterStart) {
-                                if (state.searchQuery.isEmpty()) {
-                                    Text(
-                                        text = "Search messages or services...",
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                        ),
-                                    )
-                                }
-                                innerTextField()
-                            }
-                        },
-                    )
-
-                    if (state.searchQuery.isNotEmpty()) {
-                        IconButton(
-                            onClick = { conversationListViewModel.onSearchQueryChanged("") },
-                            modifier = Modifier.size(20.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Clear Search",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
-            }
+            // 1. Search Bar Header (Using shared HustleSearchBar composable)
+            HustleSearchBar(
+                query = state.searchQuery,
+                onQueryChanged = conversationListViewModel::onSearchQueryChanged,
+                placeholder = "Search messages or services...",
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+            )
 
             // 2. Category Filter Chips Row (All Chats, Unread, Services, Archived)
             Row(
@@ -319,23 +265,37 @@ fun ChatScreen(
                                 ) { conversation ->
                                     val dismissState = rememberSwipeToDismissBoxState(
                                         confirmValueChange = { dismissValue ->
-                                            if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
-                                                conversationListViewModel.deleteConversation(conversation.id)
-                                                true
-                                            } else {
-                                                false
+                                            when (dismissValue) {
+                                                SwipeToDismissBoxValue.EndToStart -> {
+                                                    conversationListViewModel.deleteConversation(conversation.id)
+                                                    true
+                                                }
+                                                SwipeToDismissBoxValue.StartToEnd -> {
+                                                    conversationListViewModel.toggleArchiveConversation(conversation.id)
+                                                    true
+                                                }
+                                                else -> false
                                             }
                                         },
                                     )
 
                                     SwipeToDismissBox(
                                         state = dismissState,
-                                        enableDismissFromStartToEnd = false,
+                                        enableDismissFromStartToEnd = true,
                                         enableDismissFromEndToStart = true,
                                         backgroundContent = {
-                                            val color = when (dismissState.dismissDirection) {
-                                                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
-                                                else -> Color.Transparent
+                                            val (color, icon, align) = when (dismissState.dismissDirection) {
+                                                SwipeToDismissBoxValue.EndToStart -> Triple(
+                                                    MaterialTheme.colorScheme.errorContainer,
+                                                    Icons.Default.Delete,
+                                                    Alignment.CenterEnd,
+                                                )
+                                                SwipeToDismissBoxValue.StartToEnd -> Triple(
+                                                    MaterialTheme.colorScheme.primaryContainer,
+                                                    if (conversation.isArchived) Icons.Default.Unarchive else Icons.Default.Archive,
+                                                    Alignment.CenterStart,
+                                                )
+                                                else -> Triple(Color.Transparent, Icons.Default.Delete, Alignment.CenterEnd)
                                             }
                                             Box(
                                                 modifier = Modifier
@@ -343,12 +303,16 @@ fun ChatScreen(
                                                     .clip(RoundedCornerShape(16.dp))
                                                     .background(color)
                                                     .padding(horizontal = 24.dp),
-                                                contentAlignment = Alignment.CenterEnd,
+                                                contentAlignment = align,
                                             ) {
                                                 Icon(
-                                                    imageVector = Icons.Default.Delete,
-                                                    contentDescription = "Delete Conversation",
-                                                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                                                    imageVector = icon,
+                                                    contentDescription = "Swipe Action",
+                                                    tint = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+                                                        MaterialTheme.colorScheme.onErrorContainer
+                                                    } else {
+                                                        MaterialTheme.colorScheme.onPrimaryContainer
+                                                    },
                                                 )
                                             }
                                         },

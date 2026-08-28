@@ -31,10 +31,10 @@ data class ConversationListUiState(
         get() = conversations.filter { conversation ->
             // Filter by selected tab category
             val matchesFilter = when (selectedFilter) {
-                ConversationFilter.ALL -> true
-                ConversationFilter.UNREAD -> conversation.unreadCount > 0
-                ConversationFilter.SERVICES -> !conversation.serviceId.isNullOrBlank()
-                ConversationFilter.ARCHIVED -> false // Placeholder for archived conversations
+                ConversationFilter.ALL -> !conversation.isArchived
+                ConversationFilter.UNREAD -> conversation.unreadCount > 0 && !conversation.isArchived
+                ConversationFilter.SERVICES -> !conversation.serviceId.isNullOrBlank() && !conversation.isArchived
+                ConversationFilter.ARCHIVED -> conversation.isArchived
             }
 
             // Filter by search query
@@ -79,6 +79,19 @@ class ConversationListViewModel
 
         fun onFilterSelected(filter: ConversationFilter) {
             _uiState.update { it.copy(selectedFilter = filter) }
+        }
+
+        fun toggleArchiveConversation(conversationId: String) {
+            _uiState.update { currentState ->
+                val updatedList = currentState.conversations.map { conv ->
+                    if (conv.id == conversationId) {
+                        conv.copy(isArchived = !conv.isArchived)
+                    } else {
+                        conv
+                    }
+                }
+                currentState.copy(conversations = updatedList)
+            }
         }
 
         fun refreshConversations() {

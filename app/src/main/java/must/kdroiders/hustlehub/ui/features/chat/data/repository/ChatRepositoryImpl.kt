@@ -24,10 +24,10 @@ import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.ConversationRes
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.CreateConversationRequest
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.SendMessageRequest
-import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.UserPresence
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
 import timber.log.Timber
 import java.util.UUID
@@ -523,6 +523,7 @@ private fun ConversationResponse.toDomainModel(): Conversation =
         lastMessageAt = lastMessageAt,
         unreadCount = unreadCount,
         createdAt = createdAt,
+        isArchived = isArchived ?: false,
     )
 
 private fun ConversationResponse.toEntity(): ConversationEntity =
@@ -537,6 +538,7 @@ private fun ConversationResponse.toEntity(): ConversationEntity =
         lastMessageAt = lastMessageAt,
         unreadCount = unreadCount,
         createdAt = createdAt,
+        isArchived = isArchived ?: false,
     )
 
 private fun MessageResponse.toDomainModel(

@@ -14,8 +14,8 @@ import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.EncryptedMessagePayload
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.SendMessageRequest
-import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.TypingIndicator
-import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.TypingIndicator
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.UserPresence
 import okhttp3.OkHttpClient
 import org.hildan.krossbow.stomp.StompClient
 import org.hildan.krossbow.stomp.StompSession

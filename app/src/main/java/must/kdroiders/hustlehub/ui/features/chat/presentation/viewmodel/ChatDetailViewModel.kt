@@ -30,9 +30,10 @@ import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
-import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.TypingIndicator
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.TypingIndicator
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.UserPresence
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.PlayerState
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoicePlayer

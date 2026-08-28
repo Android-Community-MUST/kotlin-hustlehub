@@ -29,7 +29,7 @@ import must.kdroiders.hustlehub.ui.features.service.data.local.entity.ServiceEnt
         ReviewEntity::class,
         MapPinEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -138,6 +138,14 @@ abstract class AppDatabase : RoomDatabase() {
                         )
                         """.trimIndent(),
                     )
+                }
+            }
+
+        /** Migration 6 → 7: Add isArchived column to conversations table for local archiving. */
+        val MIGRATION_6_7 =
+            object : Migration(6, 7) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE conversations ADD COLUMN isArchived INTEGER NOT NULL DEFAULT 0")
                 }
             }
     }
