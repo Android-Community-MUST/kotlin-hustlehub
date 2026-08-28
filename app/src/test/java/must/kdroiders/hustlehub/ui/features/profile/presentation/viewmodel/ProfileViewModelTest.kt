@@ -70,8 +70,6 @@ class ProfileViewModelTest {
 
     @After
     fun tearDown() {
-        viewModel.viewModelScope.coroutineContext.cancelChildren()
-        testDispatcher.scheduler.advanceUntilIdle()
         Dispatchers.resetMain()
     }
 
