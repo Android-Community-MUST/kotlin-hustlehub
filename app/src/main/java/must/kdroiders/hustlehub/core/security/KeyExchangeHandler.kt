@@ -1,7 +1,6 @@
 package must.kdroiders.hustlehub.core.security
 
 import android.content.SharedPreferences
-import android.util.Base64
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.KeyExchangeApiService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.PublicKeyRequest
 import timber.log.Timber
@@ -74,7 +73,7 @@ class KeyExchangeHandler
                 "$SECRET_KEY_PREFIX$conversationId",
                 null,
             ) ?: return null
-            return SecretKeySpec(Base64.decode(encoded, Base64.NO_WRAP), "AES")
+            return SecretKeySpec(Base64Util.decode(encoded), "AES")
         }
 
         /** Returns cached shared secret OR master device secret for local disk encryption fallback. */
@@ -84,13 +83,13 @@ class KeyExchangeHandler
             val masterAlias = "$MASTER_DEVICE_KEY_PREFIX$conversationId"
             val encoded = encryptedPrefs.getString(masterAlias, null)
             if (encoded != null) {
-                return SecretKeySpec(Base64.decode(encoded, Base64.NO_WRAP), "AES")
+                return SecretKeySpec(Base64Util.decode(encoded), "AES")
             }
 
             val keyGen = KeyGenerator.getInstance("AES")
             keyGen.init(256)
             val secretKey = keyGen.generateKey()
-            val newEncoded = Base64.encodeToString(secretKey.encoded, Base64.NO_WRAP)
+            val newEncoded = Base64Util.encodeToString(secretKey.encoded)
             encryptedPrefs.edit().putString(masterAlias, newEncoded).apply()
             return secretKey
         }
@@ -99,7 +98,7 @@ class KeyExchangeHandler
             conversationId: String,
             secretKey: SecretKey,
         ) {
-            val encoded = Base64.encodeToString(secretKey.encoded, Base64.NO_WRAP)
+            val encoded = Base64Util.encodeToString(secretKey.encoded)
             encryptedPrefs
                 .edit()
                 .putString("$SECRET_KEY_PREFIX$conversationId", encoded)
