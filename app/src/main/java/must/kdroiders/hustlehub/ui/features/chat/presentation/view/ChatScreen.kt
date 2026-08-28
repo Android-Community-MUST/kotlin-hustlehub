@@ -1,6 +1,10 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.view
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,15 +16,19 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Place
@@ -28,7 +36,6 @@ import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
@@ -61,9 +68,11 @@ import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.ConversationListViewModel
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -125,7 +134,8 @@ fun ChatScreen(
 
                     else -> {
                         LazyColumn(
-                            contentPadding = PaddingValues(vertical = 8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
                             modifier = Modifier.fillMaxSize(),
                         ) {
                             items(
@@ -155,6 +165,7 @@ fun ChatScreen(
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxSize()
+                                                .clip(RoundedCornerShape(16.dp))
                                                 .background(color)
                                                 .padding(horizontal = 24.dp),
                                             contentAlignment = Alignment.CenterEnd,
@@ -167,17 +178,11 @@ fun ChatScreen(
                                         }
                                     },
                                     content = {
-                                        Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
-                                            ConversationItem(
-                                                conversation = conversation,
-                                                onClick = { onNavigateToChatDetail(conversation.id) },
-                                            )
-                                        }
+                                        ConversationItem(
+                                            conversation = conversation,
+                                            onClick = { onNavigateToChatDetail(conversation.id) },
+                                        )
                                     },
-                                )
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                                 )
                             }
                         }
@@ -193,32 +198,46 @@ private fun ConversationItem(
     conversation: Conversation,
     onClick: () -> Unit,
 ) {
+    val hasUnread = conversation.unreadCount > 0
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
             }.clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Avatar
+        // Avatar with optional unread border ring
         val avatarUrl = conversation.otherUserAvatar
+        val avatarModifier = Modifier
+            .size(56.dp)
+            .then(
+                if (hasUnread) {
+                    Modifier.border(
+                        width = 2.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = CircleShape,
+                    ).padding(2.dp)
+                } else {
+                    Modifier
+                },
+            )
+            .clip(CircleShape)
+
         if (!avatarUrl.isNullOrBlank()) {
             AsyncImage(
                 model = avatarUrl,
                 contentDescription = null,
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape),
+                modifier = avatarModifier,
                 contentScale = ContentScale.Crop,
             )
         } else {
-            // Letter avatar with a modern gradient-like fallback background
             Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
+                modifier = avatarModifier
                     .background(MaterialTheme.colorScheme.primaryContainer)
                     .clearAndSetSemantics { },
                 contentAlignment = Alignment.Center,
@@ -233,7 +252,7 @@ private fun ConversationItem(
             }
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(14.dp))
 
         // Name and Message
         Column(
@@ -243,12 +262,12 @@ private fun ConversationItem(
             Text(
                 text = conversation.otherUserName,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = if (hasUnread) FontWeight.Bold else FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(3.dp))
             val messageText = when (conversation.lastMessageType) {
                 "VOICE" -> "Voice note"
                 "IMAGE" -> "Photo"
@@ -272,7 +291,7 @@ private fun ConversationItem(
                         imageVector = icon,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = if (conversation.unreadCount > 0) {
+                        tint = if (hasUnread) {
                             MaterialTheme.colorScheme.primary
                         } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
@@ -283,12 +302,12 @@ private fun ConversationItem(
                 Text(
                     text = messageText,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (conversation.unreadCount > 0) {
+                    color = if (hasUnread) {
                         MaterialTheme.colorScheme.onBackground
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
-                    fontWeight = if (conversation.unreadCount > 0) FontWeight.Bold else FontWeight.Normal,
+                    fontWeight = if (hasUnread) FontWeight.Bold else FontWeight.Normal,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -302,30 +321,37 @@ private fun ConversationItem(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.Center,
         ) {
-            val formattedTime = formatTimestamp(conversation.lastMessageAt)
+            val formattedTime = formatSmartTimestamp(conversation.lastMessageAt)
             Text(
                 text = formattedTime,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (conversation.unreadCount > 0) {
+                color = if (hasUnread) {
                     MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 },
-                fontWeight = if (conversation.unreadCount > 0) FontWeight.Bold else FontWeight.Normal,
+                fontWeight = if (hasUnread) FontWeight.Bold else FontWeight.Normal,
             )
-            if (conversation.unreadCount > 0) {
+            if (hasUnread) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Box(
                     modifier = Modifier
+                        .heightIn(min = 20.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary)
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                        .animateContentSize(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMedium,
+                            ),
+                        )
+                        .padding(horizontal = 7.dp, vertical = 2.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = conversation.unreadCount.toString(),
+                        text = if (conversation.unreadCount > 99) "99+" else conversation.unreadCount.toString(),
                         color = MaterialTheme.colorScheme.onPrimary,
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                     )
                 }
@@ -334,13 +360,27 @@ private fun ConversationItem(
     }
 }
 
-private fun formatTimestamp(isoString: String?): String {
+/**
+ * Smart timestamp formatting for conversation list:
+ * - Same day: "14:30"
+ * - Yesterday: "Yesterday"
+ * - Same week: "Mon", "Tue", etc.
+ * - Older: "Jun 15" or "12/25/25"
+ */
+private fun formatSmartTimestamp(isoString: String?): String {
     if (isoString.isNullOrBlank()) return ""
     return try {
         val instant = Instant.parse(isoString)
         val zonedDateTime = instant.atZone(ZoneId.systemDefault())
-        val formatter = DateTimeFormatter.ofPattern("HH:mm")
-        zonedDateTime.format(formatter)
+        val now = Instant.now().atZone(ZoneId.systemDefault())
+        val daysBetween = ChronoUnit.DAYS.between(zonedDateTime.toLocalDate(), now.toLocalDate())
+
+        when {
+            daysBetween == 0L -> zonedDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+            daysBetween == 1L -> "Yesterday"
+            daysBetween < 7L -> zonedDateTime.format(DateTimeFormatter.ofPattern("EEE"))
+            else -> zonedDateTime.format(DateTimeFormatter.ofPattern("MMM dd"))
+        }
     } catch (e: Exception) {
         try {
             val parts = isoString.split("T")
