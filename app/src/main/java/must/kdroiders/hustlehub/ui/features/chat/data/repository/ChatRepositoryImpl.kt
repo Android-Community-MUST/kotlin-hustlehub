@@ -257,6 +257,8 @@ class ChatRepositoryImpl
                                             Timber.e(e, "Error processing localId from metadata")
                                         }
                                     }
+                                    val unsynced = messageDao.getUnsyncedMessages().filter { it.conversationId == conversationId }
+                                    unsynced.forEach { messageDao.deleteById(it.id) }
                                 }
 
                                 val proc = applyDeletionStatusToMessage(message)
@@ -531,17 +533,32 @@ private fun MessageResponse.toDomainModel(
     keyExchangeHandler: KeyExchangeHandler? = null,
     cryptoManager: CryptoManager? = null,
 ): Message {
-    val encContent = encryptedContent
-    val ivStr = iv
-    val resolvedContent = if (!encContent.isNullOrBlank() && !ivStr.isNullOrBlank() && keyExchangeHandler != null && cryptoManager != null) {
+    val gson = Gson()
+    var parsedIv: String? = iv
+    var parsedAuthTag: String? = authTag
+    var isEncrypted = false
+
+    if (!metadata.isNullOrBlank()) {
+        runCatching {
+            val metaObj = gson.fromJson(metadata, JsonObject::class.java)
+            if (metaObj.has("iv")) parsedIv = metaObj.get("iv").asString
+            if (metaObj.has("authTag")) parsedAuthTag = metaObj.get("authTag").asString
+            if (metaObj.has("encrypted")) isEncrypted = metaObj.get("encrypted").asBoolean
+        }
+    }
+
+    val ciphertext = encryptedContent ?: if (isEncrypted || !parsedIv.isNullOrBlank()) content else null
+
+    val resolvedContent = if (!ciphertext.isNullOrBlank() && !parsedIv.isNullOrBlank() && keyExchangeHandler != null && cryptoManager != null) {
         val secretKey = keyExchangeHandler.getCachedSecret(conversationId)
+            ?: keyExchangeHandler.getOrGenerateLocalSecret(conversationId)
         if (secretKey != null) {
             runCatching {
                 cryptoManager.decrypt(
                     EncryptedPayload(
-                        ciphertext = encContent,
-                        iv = ivStr,
-                        authTag = authTag ?: "",
+                        ciphertext = ciphertext,
+                        iv = parsedIv!!,
+                        authTag = parsedAuthTag ?: "",
                     ),
                     secretKey,
                 )
