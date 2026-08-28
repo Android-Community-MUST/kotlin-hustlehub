@@ -5,6 +5,7 @@ import android.util.Base64
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.KeyExchangeApiService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.PublicKeyRequest
 import timber.log.Timber
+import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
@@ -25,6 +26,7 @@ class KeyExchangeHandler
     ) {
         companion object {
             private const val SECRET_KEY_PREFIX = "shared_secret_"
+            private const val MASTER_DEVICE_KEY_PREFIX = "master_device_secret_"
         }
 
         /** Returns cached or freshly-derived [SecretKey], or null if peer key missing. */
@@ -75,6 +77,24 @@ class KeyExchangeHandler
             return SecretKeySpec(Base64.decode(encoded, Base64.NO_WRAP), "AES")
         }
 
+        /** Returns cached shared secret OR master device secret for local disk encryption fallback. */
+        fun getOrGenerateLocalSecret(conversationId: String): SecretKey {
+            getCachedSecret(conversationId)?.let { return it }
+
+            val masterAlias = "$MASTER_DEVICE_KEY_PREFIX$conversationId"
+            val encoded = encryptedPrefs.getString(masterAlias, null)
+            if (encoded != null) {
+                return SecretKeySpec(Base64.decode(encoded, Base64.NO_WRAP), "AES")
+            }
+
+            val keyGen = KeyGenerator.getInstance("AES")
+            keyGen.init(256)
+            val secretKey = keyGen.generateKey()
+            val newEncoded = Base64.encodeToString(secretKey.encoded, Base64.NO_WRAP)
+            encryptedPrefs.edit().putString(masterAlias, newEncoded).apply()
+            return secretKey
+        }
+
         private fun cacheSecret(
             conversationId: String,
             secretKey: SecretKey,
@@ -90,6 +110,7 @@ class KeyExchangeHandler
             encryptedPrefs
                 .edit()
                 .remove("$SECRET_KEY_PREFIX$conversationId")
+                .remove("$MASTER_DEVICE_KEY_PREFIX$conversationId")
                 .apply()
         }
     }

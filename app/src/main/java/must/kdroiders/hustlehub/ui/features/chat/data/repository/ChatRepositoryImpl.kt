@@ -12,11 +12,16 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
+import must.kdroiders.hustlehub.core.security.CryptoManager
+import must.kdroiders.hustlehub.core.security.EncryptedPayload
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.MessageDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationEntity
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.MessageEntity
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toDecryptedDomain
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toDomain
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toEncryptedEntity
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toEntity
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
@@ -31,9 +36,6 @@ import must.kdroiders.hustlehub.ui.features.chat.domain.model.UserPresence
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
 import timber.log.Timber
 import java.util.UUID
-import must.kdroiders.hustlehub.core.security.CryptoManager
-import must.kdroiders.hustlehub.core.security.EncryptedPayload
-import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -96,7 +98,7 @@ class ChatRepositoryImpl
 
         override fun getMessages(conversationId: String): Flow<List<Message>> {
             return messageDao.getByConversation(conversationId).map { entities ->
-                entities.map { it.toDomain() }
+                entities.map { it.toDecryptedDomain(keyExchangeHandler, cryptoManager) }
             }
         }
 
@@ -129,7 +131,7 @@ class ChatRepositoryImpl
                     val entities = response.data.content.mapNotNull { msgDto ->
                         val msgDomain = msgDto.toDomainModel(keyExchangeHandler, cryptoManager)
                         val processed = applyDeletionStatusToMessage(msgDomain)
-                        processed?.toEntity()
+                        processed?.toEncryptedEntity(conversationId, keyExchangeHandler, cryptoManager)
                     }
                     messageDao.upsertAll(entities)
                 }.onFailure { e ->
@@ -187,7 +189,7 @@ class ChatRepositoryImpl
                         isFailed = false,
                     )
 
-                    messageDao.upsert(tempMessage.toEntity())
+                    messageDao.upsert(tempMessage.toEncryptedEntity(conversationId, keyExchangeHandler, cryptoManager))
 
                     val request = SendMessageRequest(
                         conversationId = conversationId,
@@ -233,7 +235,7 @@ class ChatRepositoryImpl
 
                     chatWebSocketService
                         .subscribeToConversation(conversationId)
-                        .map { it.toDomainModel() }
+                        .map { it.toDomainModel(keyExchangeHandler, cryptoManager) }
                         .collect { message ->
                             val processed = withContext(Dispatchers.IO) {
                                 val gson = Gson()
@@ -259,7 +261,7 @@ class ChatRepositoryImpl
 
                                 val proc = applyDeletionStatusToMessage(message)
                                 if (proc != null) {
-                                    messageDao.upsert(proc.toEntity())
+                                    messageDao.upsert(proc.toEncryptedEntity(conversationId, keyExchangeHandler, cryptoManager))
                                     if (cachedConv != null) {
                                         val isActive = conversationId == activeConversationId
 
@@ -299,19 +301,12 @@ class ChatRepositoryImpl
                                     if (cachedConv != null && cachedConv.lastMessageAt == message.timestamp) {
                                         val latest = messageDao.getLatestMessage(conversationId)
                                         if (latest != null) {
+                                            val decryptedLatest = latest.toDecryptedDomain(keyExchangeHandler, cryptoManager)
                                             conversationDao.upsert(
                                                 cachedConv.copy(
-                                                    lastMessage = latest.content ?: "",
-                                                    lastMessageType = latest.type,
-                                                    lastMessageAt = latest.timestamp,
-                                                ),
-                                            )
-                                        } else {
-                                            conversationDao.upsert(
-                                                cachedConv.copy(
-                                                    lastMessage = "",
-                                                    lastMessageType = "TEXT",
-                                                    lastMessageAt = "",
+                                                    lastMessage = decryptedLatest.content,
+                                                    lastMessageType = decryptedLatest.type.name,
+                                                    lastMessageAt = decryptedLatest.timestamp,
                                                 ),
                                             )
                                         }
@@ -325,8 +320,7 @@ class ChatRepositoryImpl
                         }
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
-                    chatWebSocketService.disconnect()
-                    throw e
+                    Timber.e(e, "Error in connectWebSocket flow")
                 }
             }
 
@@ -341,14 +335,13 @@ class ChatRepositoryImpl
         override suspend fun deleteConversation(conversationId: String): Result<Unit> =
             withContext(Dispatchers.IO) {
                 runCatching {
+                    val response = conversationApiService.deleteConversation(conversationId)
+                    check(response.success) { response.message ?: "Failed to delete conversation" }
                     conversationDao.deleteById(conversationId)
                     messageDao.deleteByConversation(conversationId)
-
-                    val response = conversationApiService.deleteConversation(conversationId)
-                    check(response.success) { response.message ?: "Failed to delete conversation on server" }
-                    Unit
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to delete conversation")
                 }
             }
 
@@ -357,38 +350,30 @@ class ChatRepositoryImpl
                 runCatching {
                     markMessageDeletedForMe(messageId)
 
-                    val cached = messageDao.getById(messageId)
-                    if (cached != null) {
-                        messageDao.deleteById(messageId)
-
-                        val conv = conversationDao.getById(cached.conversationId)
-                        if (conv != null && conv.lastMessageAt == cached.timestamp) {
-                            val latest = messageDao.getLatestMessage(cached.conversationId)
-                            if (latest != null) {
-                                conversationDao.upsert(
-                                    conv.copy(
-                                        lastMessage = latest.content ?: "",
-                                        lastMessageType = latest.type,
-                                        lastMessageAt = latest.timestamp,
-                                    ),
-                                )
-                            } else {
-                                conversationDao.upsert(
-                                    conv.copy(
-                                        lastMessage = "",
-                                        lastMessageType = "TEXT",
-                                        lastMessageAt = "",
-                                    ),
-                                )
-                            }
-                        }
-                    }
-
                     runCatching {
                         conversationApiService.deleteMessageForMe(messageId)
                     }.onFailure { e ->
                         if (e is CancellationException) throw e
                         Timber.w(e, "Remote deleteMessageForMe failed, treating as local-only success")
+                    }
+
+                    val cached = messageDao.getById(messageId)
+                    messageDao.deleteById(messageId)
+                    if (cached != null) {
+                        val conv = conversationDao.getById(cached.conversationId)
+                        if (conv != null && conv.lastMessageAt == cached.timestamp) {
+                            val latest = messageDao.getLatestMessage(cached.conversationId)
+                            if (latest != null) {
+                                val decryptedLatest = latest.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                                conversationDao.upsert(
+                                    conv.copy(
+                                        lastMessage = decryptedLatest.content,
+                                        lastMessageType = decryptedLatest.type.name,
+                                        lastMessageAt = decryptedLatest.timestamp,
+                                    ),
+                                )
+                            }
+                        }
                     }
                     Unit
                 }.onFailure { e ->
@@ -420,13 +405,13 @@ class ChatRepositoryImpl
                         }.getOrElse { JsonObject() }
 
                         metaObj.addProperty("isDeleted", true)
-                        val updated = cached.copy(
+                        val updatedDomain = cached.toDecryptedDomain(keyExchangeHandler, cryptoManager).copy(
                             content = "This message was deleted",
                             mediaUrl = null,
                             thumbnailUrl = null,
                             metadata = gson.toJson(metaObj),
                         )
-                        messageDao.upsert(updated)
+                        messageDao.upsert(updatedDomain.toEncryptedEntity(cached.conversationId, keyExchangeHandler, cryptoManager))
 
                         val conv = conversationDao.getById(cached.conversationId)
                         if (conv != null && conv.lastMessageAt == cached.timestamp) {
@@ -490,10 +475,11 @@ class ChatRepositoryImpl
 
                     chatWebSocketService.connect()
                     unsynced.forEach { entity ->
+                        val decryptedDomain = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
                         val request = SendMessageRequest(
                             conversationId = entity.conversationId,
                             type = entity.type,
-                            content = entity.content ?: "",
+                            content = decryptedDomain.content,
                             mediaUrl = entity.mediaUrl,
                             metadata = entity.metadata,
                         )
@@ -559,9 +545,9 @@ private fun MessageResponse.toDomainModel(
                     ),
                     secretKey,
                 )
-            }.getOrDefault(content ?: "\uD83D\uDD12 Encrypted message")
+            }.getOrDefault(content ?: "Encrypted message")
         } else {
-            content ?: "\uD83D\uDD12 Encrypted message"
+            content ?: "Encrypted message"
         }
     } else {
         content ?: ""
