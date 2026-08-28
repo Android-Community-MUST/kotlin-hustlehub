@@ -12,12 +12,43 @@ import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
 import javax.inject.Inject
 
+enum class ConversationFilter(val label: String) {
+    ALL("All Chats"),
+    UNREAD("Unread"),
+    SERVICES("Services"),
+    ARCHIVED("Archived"),
+}
+
 data class ConversationListUiState(
     val conversations: List<Conversation> = emptyList(),
+    val searchQuery: String = "",
+    val selectedFilter: ConversationFilter = ConversationFilter.ALL,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val error: String? = null,
-)
+) {
+    val filteredConversations: List<Conversation>
+        get() = conversations.filter { conversation ->
+            // Filter by selected tab category
+            val matchesFilter = when (selectedFilter) {
+                ConversationFilter.ALL -> true
+                ConversationFilter.UNREAD -> conversation.unreadCount > 0
+                ConversationFilter.SERVICES -> !conversation.serviceId.isNullOrBlank()
+                ConversationFilter.ARCHIVED -> false // Placeholder for archived conversations
+            }
+
+            // Filter by search query
+            val matchesQuery = if (searchQuery.isBlank()) {
+                true
+            } else {
+                val query = searchQuery.trim().lowercase()
+                conversation.otherUserName.lowercase().contains(query) ||
+                    (conversation.lastMessage?.lowercase()?.contains(query) == true)
+            }
+
+            matchesFilter && matchesQuery
+        }
+}
 
 @HiltViewModel
 class ConversationListViewModel
@@ -40,6 +71,14 @@ class ConversationListViewModel
                     _uiState.update { it.copy(conversations = conversations, isLoading = false) }
                 }
             }
+        }
+
+        fun onSearchQueryChanged(query: String) {
+            _uiState.update { it.copy(searchQuery = query) }
+        }
+
+        fun onFilterSelected(filter: ConversationFilter) {
+            _uiState.update { it.copy(selectedFilter = filter) }
         }
 
         fun refreshConversations() {

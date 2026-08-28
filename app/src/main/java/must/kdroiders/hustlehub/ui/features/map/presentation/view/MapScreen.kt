@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -34,6 +35,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.MyLocation
@@ -59,6 +61,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -69,14 +72,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -122,6 +133,28 @@ fun MapScreen(
     val uiState by mapViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val currentView = LocalView.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val savedStateRegistryOwner = LocalSavedStateRegistryOwner.current
+    val viewModelStoreOwner = LocalViewModelStoreOwner.current
+
+    DisposableEffect(currentView, lifecycleOwner, savedStateRegistryOwner, viewModelStoreOwner) {
+        val targets = listOfNotNull(
+            currentView,
+            currentView.rootView,
+            (context as? android.app.Activity)?.window?.decorView,
+            (context as? android.app.Activity)?.findViewById(android.R.id.content),
+        )
+        targets.forEach { target ->
+            target.setViewTreeLifecycleOwner(lifecycleOwner)
+            target.setViewTreeSavedStateRegistryOwner(savedStateRegistryOwner)
+            if (viewModelStoreOwner != null) {
+                target.setViewTreeViewModelStoreOwner(viewModelStoreOwner)
+            }
+        }
+        onDispose { }
+    }
+
     val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
     val isConnected by connectivityViewModel.isConnected.collectAsStateWithLifecycle()
 
@@ -132,6 +165,9 @@ fun MapScreen(
             checkLocationPermission(context),
         )
     }
+
+    // Map loading state for instant visual radar feedback
+    var isMapLoaded by remember { mutableStateOf(false) }
 
     // Selected Pin for the bottom details overlay
     var selectedPin by remember { mutableStateOf<MapPin?>(null) }
@@ -169,7 +205,7 @@ fun MapScreen(
         MapUiSettings(
             zoomControlsEnabled = false,
             myLocationButtonEnabled = false,
-            compassEnabled = true,
+            compassEnabled = false, // Disabled native compass since it gets covered by top search HUD
             mapToolbarEnabled = false,
         )
     }
@@ -238,6 +274,7 @@ fun MapScreen(
             cameraPositionState = cameraPositionState,
             properties = mapProperties,
             uiSettings = uiSettings,
+            onMapLoaded = { isMapLoaded = true },
             onMapClick = {
                 selectedPin = null
                 showBottomSheet = false
@@ -558,13 +595,32 @@ fun MapScreen(
             }
         }
 
-        // 4. Custom Zoom and Layers Panel (Glassmorphic, Shifted down to prevent overlapping)
+        // 4. Custom Zoom, Compass and Layers Panel (Glassmorphic)
         Column(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 180.dp, end = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            // Interactive Compass Reset Button (rotates with camera bearing)
+            val currentBearing = cameraPositionState.position.bearing
+            MapControlFloatingButton(
+                icon = Icons.Default.Explore,
+                contentDescription = "Reset Compass to North",
+                modifier = Modifier.rotate(-currentBearing),
+                onClick = {
+                    scope.launch {
+                        cameraPositionState.animate(
+                            CameraUpdateFactory.newCameraPosition(
+                                CameraPosition.Builder(cameraPositionState.position)
+                                    .bearing(0f)
+                                    .build(),
+                            ),
+                        )
+                    }
+                },
+            )
+
             // Map Type Toggle
             MapControlFloatingButton(
                 icon = Icons.Default.Layers,
@@ -787,5 +843,13 @@ fun MapScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
+        // 7. Instant Radar Loading Overlay (Frame 1 instant feedback)
+        AnimatedVisibility(
+            visible = !isMapLoaded,
+            enter = fadeIn(tween(100)),
+            exit = fadeOut(tween(400)),
+        ) {
+            MapRadarLoadingOverlay()
+        }
     }
 }

@@ -5,8 +5,12 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import com.google.android.gms.maps.MapsInitializer
 import com.google.firebase.FirebaseApp
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
@@ -41,6 +45,20 @@ class HustleHubApp : Application(), ImageLoaderFactory, Configuration.Provider {
             hustleCrashlytics.setScreen("HustleHubApp")
         } catch (e: Exception) {
             Timber.e(e, "Firebase initialization failed")
+        }
+
+        // Pre-warm Google Maps C++ OpenGL engine asynchronously on launch
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                MapsInitializer.initialize(
+                    applicationContext,
+                    MapsInitializer.Renderer.LATEST,
+                ) { renderer ->
+                    Timber.d("Google Maps SDK pre-initialized with renderer: $renderer")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "MapsInitializer pre-init failed")
+            }
         }
     }
 
