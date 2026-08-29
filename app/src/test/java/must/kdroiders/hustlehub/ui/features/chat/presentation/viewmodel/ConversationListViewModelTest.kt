@@ -23,7 +23,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class ConversationListViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
-    private val chatRepository: ChatRepository = mockk(relaxed = true)
+    private lateinit var chatRepository: ChatRepository
 
     private val mockConversations = listOf(
         Conversation(
@@ -55,8 +55,10 @@ class ConversationListViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+        chatRepository = mockk(relaxed = true)
         every { chatRepository.getConversations() } returns flowOf(mockConversations)
         coEvery { chatRepository.refreshConversations() } returns Result.success(Unit)
+        coEvery { chatRepository.deleteConversation(any()) } returns Result.success(Unit)
     }
 
     @After
