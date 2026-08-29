@@ -11,6 +11,7 @@ data class ConversationResponse(
     val lastMessageAt: String?,
     val unreadCount: Int,
     val createdAt: String,
+    val isArchived: Boolean? = false,
 )
 
 data class CreateConversationRequest(
@@ -30,6 +31,9 @@ data class MessageResponse(
     val timestamp: String,
     val deliveredAt: String?,
     val readAt: String?,
+    val encryptedContent: String? = null,
+    val iv: String? = null,
+    val authTag: String? = null,
 )
 
 data class SendMessageRequest(
@@ -37,25 +41,14 @@ data class SendMessageRequest(
     val type: String,
     val content: String?,
     val mediaUrl: String? = null,
-    val thumbnailUrl: String? = null,
     val metadata: String? = null,
-)
-
-data class TypingIndicator(
-    val conversationId: String,
-    val senderId: String,
-    val isTyping: Boolean,
+    val encryptedContent: String? = null,
+    val iv: String? = null,
+    val authTag: String? = null,
 )
 
 data class VoiceUploadResponse(
-    val mediaId: String,
+    val voiceId: String,
     val url: String,
     val durationSeconds: Int,
-    val type: String,
-)
-
-data class UserPresence(
-    val uid: String,
-    val online: Boolean,
-    val lastSeenAt: String? = null,
 )

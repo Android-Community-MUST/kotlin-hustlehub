@@ -1,6 +1,5 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel
 
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -8,7 +7,6 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -70,8 +68,6 @@ class ProfileViewModelTest {
 
     @After
     fun tearDown() {
-        viewModel.viewModelScope.coroutineContext.cancelChildren()
-        testDispatcher.scheduler.advanceUntilIdle()
         Dispatchers.resetMain()
     }
 

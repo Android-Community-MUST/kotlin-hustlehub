@@ -121,7 +121,6 @@ class SplashViewModel
                                     hasProfileResult
                                         .onSuccess { hasProfile ->
                                             if (!hasProfile) {
-                                                // Auto-register customer profile in backend background
                                                 val basicUser = User(
                                                     id = currentUser.uid,
                                                     email = currentUser.email ?: "",
@@ -132,20 +131,18 @@ class SplashViewModel
                                                 }
                                             }
                                         }.onFailure { e ->
-                                            if (e is retrofit2.HttpException) {
-                                                if (e.code() == 401 || e.code() == 403) {
-                                                    firebaseAuth.signOut()
-                                                    targetDestination = SplashDestination.Login
-                                                } else if (e.code() == 404) {
-                                                    // Auto-register customer profile in backend background
-                                                    val basicUser = User(
-                                                        id = currentUser.uid,
-                                                        email = currentUser.email ?: "",
-                                                        name = currentUser.displayName ?: "Hustler",
-                                                    )
-                                                    viewModelScope.launch {
-                                                        userRepository.saveUserProfile(basicUser)
-                                                    }
+                                            if (e is retrofit2.HttpException && (e.code() == 401 || e.code() == 403)) {
+                                                firebaseAuth.signOut()
+                                                targetDestination = SplashDestination.Login
+                                            } else {
+                                                // Trigger auto-registration attempt in background for non-auth errors/missing user
+                                                val basicUser = User(
+                                                    id = currentUser.uid,
+                                                    email = currentUser.email ?: "",
+                                                    name = currentUser.displayName ?: "Hustler",
+                                                )
+                                                viewModelScope.launch {
+                                                    userRepository.saveUserProfile(basicUser)
                                                 }
                                             }
                                         }

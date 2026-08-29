@@ -9,13 +9,11 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.core.security.CryptoManager
-import must.kdroiders.hustlehub.core.security.EncryptedPayload
 import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
-import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.EncryptedMessagePayload
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.SendMessageRequest
-import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.TypingIndicator
-import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.UserPresence
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.TypingIndicator
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.UserPresence
 import okhttp3.OkHttpClient
 import org.hildan.krossbow.stomp.StompClient
 import org.hildan.krossbow.stomp.StompSession
@@ -70,39 +68,14 @@ class ChatWebSocketService
             val destination = "/topic/conversation/$conversationId"
 
             return session.subscribe(StompSubscribeHeaders(destination)).map { frame ->
-                val rawJson = frame.bodyAsText
-
-                // Try to decrypt if it's an encrypted payload
-                try {
-                    val encrypted = gson.fromJson(rawJson, EncryptedMessagePayload::class.java)
-                    if (encrypted.encryptedContent != null && encrypted.iv != null) {
-                        val secretKey = keyExchangeHandler.getCachedSecret(conversationId)
-                        if (secretKey != null) {
-                            val payload = EncryptedPayload(
-                                ciphertext = encrypted.encryptedContent,
-                                iv = encrypted.iv,
-                                authTag = encrypted.authTag,
-                            )
-                            val plaintext = cryptoManager.decrypt(payload, secretKey)
-                            val baseResponse = gson.fromJson(rawJson, MessageResponse::class.java)
-                            baseResponse.copy(content = plaintext)
-                        } else {
-                            val baseResponse = gson.fromJson(rawJson, MessageResponse::class.java)
-                            baseResponse.copy(content = "\uD83D\uDD12 Encrypted message")
-                        }
-                    } else {
-                        gson.fromJson(rawJson, MessageResponse::class.java)
-                    }
-                } catch (e: Exception) {
-                    Timber.w(e, "Decrypt failed, falling back to plaintext")
-                    gson.fromJson(rawJson, MessageResponse::class.java)
-                }
+                gson.fromJson(frame.bodyAsText, MessageResponse::class.java)
             }
         }
 
         suspend fun subscribeToTyping(conversationId: String): Flow<TypingIndicator> {
             val session = stompSession
                 ?: throw IllegalStateException("STOMP session not initialized")
+
             val destination = "/topic/conversation/$conversationId/typing"
             return session.subscribe(StompSubscribeHeaders(destination)).map { frame ->
                 gson.fromJson(frame.bodyAsText, TypingIndicator::class.java)
@@ -112,37 +85,38 @@ class ChatWebSocketService
         suspend fun subscribeToPresence(otherUserId: String): Flow<UserPresence> {
             val session = stompSession
                 ?: throw IllegalStateException("STOMP session not initialized")
+
             val destination = "/topic/user/$otherUserId/presence"
             return session.subscribe(StompSubscribeHeaders(destination)).map { frame ->
                 gson.fromJson(frame.bodyAsText, UserPresence::class.java)
             }
         }
 
-        /** Encrypts content if E2EE keys are exchanged, otherwise sends plaintext. */
+        /**
+         * Always encrypts TEXT messages before sending over WebSocket.
+         * Sets content = null and populates encryptedContent, iv, authTag so plaintext never reaches the backend database.
+         */
         suspend fun sendMessage(request: SendMessageRequest) {
             val session = stompSession
                 ?: throw IllegalStateException("STOMP session not initialized")
 
             val secretKey = keyExchangeHandler.getCachedSecret(request.conversationId)
+                ?: keyExchangeHandler.ensureKeysExchanged(request.conversationId)
+                ?: keyExchangeHandler.getOrGenerateLocalSecret(request.conversationId)
 
-            val payloadJson = if (secretKey != null && request.content != null) {
+            val finalRequest = if (request.content != null && request.type == "TEXT") {
                 val encrypted = cryptoManager.encrypt(request.content, secretKey)
-                val encryptedRequest = request.copy(
-                    content = gson.toJson(
-                        EncryptedMessagePayload(
-                            encryptedContent = encrypted.ciphertext,
-                            iv = encrypted.iv,
-                            authTag = encrypted.authTag,
-                            type = request.type,
-                        ),
-                    ),
+                request.copy(
+                    encryptedContent = encrypted.ciphertext,
+                    iv = encrypted.iv,
+                    authTag = encrypted.authTag,
+                    content = null,
                 )
-                gson.toJson(encryptedRequest)
             } else {
-                gson.toJson(request)
+                request
             }
 
-            session.sendText("/app/chat.send", payloadJson)
+            session.sendText("/app/chat.send", gson.toJson(finalRequest))
         }
 
         suspend fun sendTypingIndicator(indicator: TypingIndicator) {

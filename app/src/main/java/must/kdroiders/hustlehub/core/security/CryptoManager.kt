@@ -2,7 +2,6 @@ package must.kdroiders.hustlehub.core.security
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
-import android.util.Base64
 import timber.log.Timber
 import java.security.KeyFactory
 import java.security.KeyPair
@@ -27,6 +26,28 @@ data class EncryptedPayload(
     val iv: String,
     val authTag: String,
 )
+
+internal object Base64Util {
+    fun encodeToString(bytes: ByteArray): String {
+        return try {
+            android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+        } catch (e: Throwable) {
+            java.util.Base64
+                .getEncoder()
+                .encodeToString(bytes)
+        }
+    }
+
+    fun decode(str: String): ByteArray {
+        return try {
+            android.util.Base64.decode(str, android.util.Base64.NO_WRAP)
+        } catch (e: Throwable) {
+            java.util.Base64
+                .getDecoder()
+                .decode(str)
+        }
+    }
+}
 
 /**
  * ECDH P-256 key generation + AES-256-GCM encrypt/decrypt.
@@ -59,48 +80,61 @@ class CryptoManager
         fun getOrCreateKeyPair(conversationId: String): KeyPair {
             val alias = "$KEY_ALIAS_PREFIX$conversationId"
             val ks = keyStore
-            return if (ks != null && ks.containsAlias(alias)) {
-                val privateKey = ks.getKey(alias, null) as PrivateKey
-                val publicKey = ks.getCertificate(alias).publicKey
-                KeyPair(publicKey, privateKey)
-            } else {
+            return try {
+                if (ks != null && ks.containsAlias(alias)) {
+                    val privateKey = ks.getKey(alias, null) as? PrivateKey
+                    val publicKey = ks.getCertificate(alias)?.publicKey
+                    if (privateKey != null && publicKey != null) {
+                        KeyPair(publicKey, privateKey)
+                    } else {
+                        generateKeyPair(alias)
+                    }
+                } else {
+                    generateKeyPair(alias)
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "Error retrieving key pair from KeyStore for alias: %s", alias)
                 generateKeyPair(alias)
             }
         }
 
         private fun generateKeyPair(alias: String): KeyPair {
-            return if (keyStore != null) {
-                val parameterSpec = KeyGenParameterSpec
-                    .Builder(
-                        alias,
-                        KeyProperties.PURPOSE_AGREE_KEY,
-                    ).setAlgorithmParameterSpec(ECGenParameterSpec(EC_CURVE))
-                    .build()
+            if (keyStore != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                try {
+                    val parameterSpec = KeyGenParameterSpec
+                        .Builder(
+                            alias,
+                            KeyProperties.PURPOSE_AGREE_KEY,
+                        ).setAlgorithmParameterSpec(ECGenParameterSpec(EC_CURVE))
+                        .build()
 
-                val keyPairGenerator = KeyPairGenerator.getInstance(
-                    KeyProperties.KEY_ALGORITHM_EC,
-                    ANDROID_KEYSTORE,
-                )
-                keyPairGenerator.initialize(parameterSpec)
-                keyPairGenerator.generateKeyPair().also {
-                    Timber.d("Generated AndroidKeyStore ECDH key pair for alias: %s", alias)
+                    val keyPairGenerator = KeyPairGenerator.getInstance(
+                        KeyProperties.KEY_ALGORITHM_EC,
+                        ANDROID_KEYSTORE,
+                    )
+                    keyPairGenerator.initialize(parameterSpec)
+                    return keyPairGenerator.generateKeyPair().also {
+                        Timber.d("Generated AndroidKeyStore ECDH key pair for alias: %s", alias)
+                    }
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to generate AndroidKeyStore key pair for alias %s, falling back to standard EC generator", alias)
                 }
-            } else {
-                // Fallback for JVM unit test environment
-                val keyPairGenerator = KeyPairGenerator.getInstance("EC")
-                keyPairGenerator.initialize(ECGenParameterSpec(EC_CURVE))
-                keyPairGenerator.generateKeyPair().also {
-                    Timber.d("Generated in-memory ECDH key pair for alias: %s", alias)
-                }
+            }
+
+            // Fallback for API < 31 (Android 11 and below), JVM unit tests, or KeyStore failure
+            val keyPairGenerator = KeyPairGenerator.getInstance("EC")
+            keyPairGenerator.initialize(ECGenParameterSpec(EC_CURVE))
+            return keyPairGenerator.generateKeyPair().also {
+                Timber.d("Generated standard ECDH key pair for alias: %s", alias)
             }
         }
 
         /** Encodes a public key to Base64 for the backend. */
-        fun encodePublicKey(publicKey: PublicKey): String = Base64.encodeToString(publicKey.encoded, Base64.NO_WRAP)
+        fun encodePublicKey(publicKey: PublicKey): String = Base64Util.encodeToString(publicKey.encoded)
 
         /** Decodes a Base64-encoded public key from the backend. */
         fun decodePublicKey(base64Key: String): PublicKey {
-            val keyBytes = Base64.decode(base64Key, Base64.NO_WRAP)
+            val keyBytes = Base64Util.decode(base64Key)
             val keySpec = X509EncodedKeySpec(keyBytes)
             return KeyFactory.getInstance("EC").generatePublic(keySpec)
         }
@@ -142,9 +176,9 @@ class CryptoManager
             )
 
             return EncryptedPayload(
-                ciphertext = Base64.encodeToString(ciphertextOnly, Base64.NO_WRAP),
-                iv = Base64.encodeToString(iv, Base64.NO_WRAP),
-                authTag = Base64.encodeToString(authTag, Base64.NO_WRAP),
+                ciphertext = Base64Util.encodeToString(ciphertextOnly),
+                iv = Base64Util.encodeToString(iv),
+                authTag = Base64Util.encodeToString(authTag),
             )
         }
 
@@ -153,9 +187,9 @@ class CryptoManager
             payload: EncryptedPayload,
             secretKey: SecretKey,
         ): String {
-            val iv = Base64.decode(payload.iv, Base64.NO_WRAP)
-            val ciphertextOnly = Base64.decode(payload.ciphertext, Base64.NO_WRAP)
-            val authTag = Base64.decode(payload.authTag, Base64.NO_WRAP)
+            val iv = Base64Util.decode(payload.iv)
+            val ciphertextOnly = Base64Util.decode(payload.ciphertext)
+            val authTag = Base64Util.decode(payload.authTag)
 
             val ciphertextWithTag = ciphertextOnly + authTag
 

@@ -16,6 +16,7 @@ data class ConversationEntity(
     val lastMessageAt: String?,
     val unreadCount: Int,
     val createdAt: String,
+    val isArchived: Boolean = false,
     val cachedAt: Long = System.currentTimeMillis(),
 )
 
@@ -31,6 +32,7 @@ fun ConversationEntity.toDomain(): Conversation =
         lastMessageAt = lastMessageAt,
         unreadCount = unreadCount,
         createdAt = createdAt,
+        isArchived = isArchived,
     )
 
 fun Conversation.toEntity(cachedAt: Long = System.currentTimeMillis()): ConversationEntity =
@@ -45,5 +47,6 @@ fun Conversation.toEntity(cachedAt: Long = System.currentTimeMillis()): Conversa
         lastMessageAt = lastMessageAt,
         unreadCount = unreadCount,
         createdAt = createdAt,
+        isArchived = isArchived,
         cachedAt = cachedAt,
     )

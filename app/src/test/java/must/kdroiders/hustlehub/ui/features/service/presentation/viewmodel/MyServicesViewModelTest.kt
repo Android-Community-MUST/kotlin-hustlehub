@@ -1,13 +1,11 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel
 
 import android.content.Context
-import androidx.lifecycle.viewModelScope
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -60,8 +58,6 @@ class MyServicesViewModelTest {
 
     @After
     fun tearDown() {
-        viewModel.viewModelScope.coroutineContext.cancelChildren()
-        testDispatcher.scheduler.advanceUntilIdle()
         Dispatchers.resetMain()
     }
 

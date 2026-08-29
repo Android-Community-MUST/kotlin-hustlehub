@@ -11,4 +11,5 @@ data class Conversation(
     val lastMessageAt: String?,
     val unreadCount: Int,
     val createdAt: String,
+    val isArchived: Boolean = false,
 )

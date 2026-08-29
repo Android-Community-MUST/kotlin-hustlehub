@@ -5,6 +5,6 @@ package must.kdroiders.hustlehub.ui.features.chat.data.remote.dto
  * ECDH public key for a specific conversation.
  */
 data class PeerKeyResponse(
-    val publicKey: String, // Base64-encoded peer ECDH public key
-    val userId: String, // The peer's user ID
+    val publicKey: String? = null,
+    val userId: String? = null,
 )

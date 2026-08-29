@@ -430,30 +430,46 @@ fun ChatDetailScreen(
                             .fillMaxWidth()
                             .semantics { heading() },
                     ) {
-                        // User Avatar
-                        if (!state.otherUserAvatar.isNullOrBlank()) {
-                            AsyncImage(
-                                model = state.otherUserAvatar,
-                                contentDescription = "Avatar of ${state.otherUserName}",
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop,
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer)
-                                    .clearAndSetSemantics { },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                val firstLetter = state.otherUserName.firstOrNull()?.uppercase() ?: "?"
-                                Text(
-                                    text = firstLetter,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    fontWeight = FontWeight.Bold,
+                        // User Avatar with online indicator dot
+                        Box {
+                            if (!state.otherUserAvatar.isNullOrBlank()) {
+                                AsyncImage(
+                                    model = state.otherUserAvatar,
+                                    contentDescription = "Avatar of ${state.otherUserName}",
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop,
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primaryContainer)
+                                        .clearAndSetSemantics { },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    val firstLetter = state.otherUserName.firstOrNull()?.uppercase() ?: "?"
+                                    Text(
+                                        text = firstLetter,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+
+                            // Online presence dot
+                            if (state.isOtherUserOnline) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .size(12.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.background)
+                                        .padding(2.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.tertiary),
                                 )
                             }
                         }
@@ -462,13 +478,18 @@ fun ChatDetailScreen(
 
                         // Name and typing/presence status line
                         Column {
-                            Text(
-                                text = state.otherUserName,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = state.otherUserName,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false),
+                                )
+                            }
                             val lastSeenAt = state.otherUserLastSeenAt
                             val subtitle = when {
                                 state.isTyping -> "typing..."
@@ -682,6 +703,22 @@ fun ChatDetailScreen(
                             DateSeparator(dateString = message.timestamp)
                         }
 
+                        // Determine if this message is grouped with the next message
+                        // (same sender, within 2 minutes)
+                        val nextMessage = if (index > 0) reversedMessages[index - 1] else null
+                        val isGroupedWithNext = nextMessage != null &&
+                            nextMessage.senderId == message.senderId &&
+                            try {
+                                val currentInstant = Instant.parse(message.timestamp)
+                                val nextInstant = Instant.parse(nextMessage.timestamp)
+                                java.time.Duration
+                                    .between(currentInstant, nextInstant)
+                                    .abs()
+                                    .toMinutes() < 2
+                            } catch (_: Exception) {
+                                false
+                            }
+
                         MessageBubble(
                             message = message,
                             isCurrentUser = isSelf,
@@ -706,6 +743,7 @@ fun ChatDetailScreen(
                             onDeleteForEveryone = { msg -> chatDetailViewModel.deleteMessageForEveryone(msg.id) },
                             onReportMessage = { msg -> messageToReport = msg },
                             isOtherUserOnline = state.isOtherUserOnline,
+                            isGroupedWithNext = isGroupedWithNext,
                         )
                     }
                 }
@@ -730,16 +768,23 @@ fun ChatDetailScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 4.dp),
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = "${state.otherUserName} is typing",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    TypingIndicatorDots(color = MaterialTheme.colorScheme.primary)
+                    Box(
+                        modifier = Modifier
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = 20.dp,
+                                    topEnd = 20.dp,
+                                    bottomStart = 4.dp,
+                                    bottomEnd = 20.dp,
+                                ),
+                            ).background(MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                    ) {
+                        TypingIndicatorDots(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
 
@@ -758,6 +803,8 @@ fun ChatDetailScreen(
                     AttachmentOption(
                         icon = Icons.Default.Image,
                         label = "Gallery",
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         onClick = {
                             imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                             showAttachmentMenu = false
@@ -766,6 +813,8 @@ fun ChatDetailScreen(
                     AttachmentOption(
                         icon = Icons.Filled.CameraAlt,
                         label = "Camera",
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         onClick = {
                             showAttachmentMenu = false
                             val hasPerm = ContextCompat.checkSelfPermission(
@@ -791,6 +840,8 @@ fun ChatDetailScreen(
                     AttachmentOption(
                         icon = Icons.Default.LocationOn,
                         label = "Location",
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                         onClick = {
                             showAttachmentMenu = false
                             requestLocationAndShare()
@@ -912,11 +963,11 @@ fun ChatDetailScreen(
                 }
             }
 
-            // Bottom input bar
+            // Bottom input bar — flush against keyboard
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                    .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (isRecording) {
@@ -1010,7 +1061,8 @@ fun ChatDetailScreen(
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
                         ),
-                        singleLine = true,
+                        singleLine = false,
+                        maxLines = 5,
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -1036,7 +1088,7 @@ fun ChatDetailScreen(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary,
                             ),
-                            modifier = Modifier.size(40.dp),
+                            modifier = Modifier.size(48.dp),
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Mic,
@@ -1064,7 +1116,7 @@ fun ChatDetailScreen(
                                 contentColor = MaterialTheme.colorScheme.onPrimary,
                             ),
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(48.dp)
                                 .scale(sendScale),
                         ) {
                             Icon(
@@ -1091,6 +1143,8 @@ fun ChatDetailScreen(
 private fun AttachmentOption(
     icon: ImageVector,
     label: String,
+    containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
     onClick: () -> Unit,
 ) {
     Column(
@@ -1099,21 +1153,23 @@ private fun AttachmentOption(
     ) {
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(52.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
+                .background(containerColor),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null, // decorative since label announces it
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                tint = contentColor,
+                modifier = Modifier.size(24.dp),
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
             fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }

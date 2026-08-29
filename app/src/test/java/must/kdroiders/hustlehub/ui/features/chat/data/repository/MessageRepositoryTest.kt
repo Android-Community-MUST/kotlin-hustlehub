@@ -7,45 +7,50 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import must.kdroiders.hustlehub.core.api.ApiResponse
+import must.kdroiders.hustlehub.core.api.PageResponse
+import must.kdroiders.hustlehub.core.security.CryptoManager
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.MessageDao
-import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationEntity
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.MessageEntity
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toDecryptedDomain
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class MessageRepositoryTest {
-    private lateinit var context: Context
-    private lateinit var conversationApiService: ConversationApiService
-    private lateinit var conversationDao: ConversationDao
-    private lateinit var messageDao: MessageDao
-    private lateinit var chatWebSocketService: ChatWebSocketService
-    private lateinit var firebaseAuth: FirebaseAuth
-    private lateinit var firebaseUser: FirebaseUser
+    private val context: Context = mockk(relaxed = true)
+    private val conversationApiService: ConversationApiService = mockk(relaxed = true)
+    private val conversationDao: ConversationDao = mockk(relaxed = true)
+    private val messageDao: MessageDao = mockk(relaxed = true)
+    private val chatWebSocketService: ChatWebSocketService = mockk(relaxed = true)
+    private val firebaseAuth: FirebaseAuth = mockk(relaxed = true)
+    private val firebaseUser: FirebaseUser = mockk(relaxed = true)
+    private val keyExchangeHandler: KeyExchangeHandler = mockk(relaxed = true)
+    private val cryptoManager: CryptoManager = CryptoManager()
+
     private lateinit var repository: ChatRepositoryImpl
 
     @Before
     fun setup() {
-        context = mockk(relaxed = true)
-        conversationApiService = mockk(relaxed = true)
-        conversationDao = mockk(relaxed = true)
-        messageDao = mockk(relaxed = true)
-        chatWebSocketService = mockk(relaxed = true)
-        firebaseAuth = mockk(relaxed = true)
-        firebaseUser = mockk(relaxed = true) {
-            every { uid } returns "current-user-uid"
-        }
         every { firebaseAuth.currentUser } returns firebaseUser
+        every { firebaseUser.uid } returns "current-user-uid"
+
+        // Mock keyExchangeHandler to return a real key for local testing
+        val keyGen = javax.crypto.KeyGenerator.getInstance("AES")
+        keyGen.init(256)
+        val testSecret = keyGen.generateKey()
+        every { keyExchangeHandler.getOrGenerateLocalSecret(any()) } returns testSecret
+        every { keyExchangeHandler.getCachedSecret(any()) } returns testSecret
 
         repository = ChatRepositoryImpl(
             context = context,
@@ -54,59 +59,75 @@ class MessageRepositoryTest {
             messageDao = messageDao,
             chatWebSocketService = chatWebSocketService,
             firebaseAuth = firebaseAuth,
+            keyExchangeHandler = keyExchangeHandler,
+            cryptoManager = cryptoManager,
         )
     }
 
     @Test
-    fun `getConversations maps local entities to domain models`() =
+    fun `loadMessageHistory fetches messages and caches them in Room`() =
         runTest {
-            val entities = listOf(
-                ConversationEntity(
-                    id = "conv-1",
-                    otherUserId = "user-2",
-                    otherUserName = "Alice",
-                    otherUserAvatar = null,
-                    serviceId = null,
-                    lastMessage = "Hello",
-                    lastMessageType = "TEXT",
-                    lastMessageAt = "2026-08-16T10:00:00Z",
-                    unreadCount = 2,
-                    createdAt = "2026-08-16T10:00:00Z",
+            val mockMessages = listOf(
+                MessageResponse(
+                    id = "msg-1",
+                    conversationId = "conv-1",
+                    senderId = "other-user",
+                    type = "TEXT",
+                    content = "Hello there",
+                    mediaUrl = null,
+                    thumbnailUrl = null,
+                    metadata = null,
+                    timestamp = "2026-08-20T10:00:00Z",
+                    deliveredAt = null,
+                    readAt = null,
                 ),
             )
-            every { conversationDao.getAll() } returns flowOf(entities)
 
-            val result = repository.getConversations().first()
+            coEvery {
+                conversationApiService.getMessages("conv-1", 0, 50)
+            } returns ApiResponse(
+                success = true,
+                message = "Success",
+                data = PageResponse(
+                    content = mockMessages,
+                    page = 0,
+                    size = 50,
+                    totalElements = 1L,
+                    totalPages = 1,
+                ),
+            )
 
-            assertEquals(1, result.size)
-            assertEquals("conv-1", result[0].id)
-            assertEquals("Alice", result[0].otherUserName)
-            assertEquals(2, result[0].unreadCount)
+            val result = repository.loadMessageHistory("conv-1", 0)
+
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { messageDao.upsertAll(any()) }
         }
 
     @Test
-    fun `getMessages returns local flow of messages`() =
+    fun `getMessages returns decrypted flow of messages from Room`() =
         runTest {
-            val messages = listOf(
+            val entities = listOf(
                 MessageEntity(
                     id = "msg-1",
                     conversationId = "conv-1",
-                    senderId = "user-2",
+                    senderId = "other-user",
                     type = "TEXT",
                     content = "Hi there!",
                     mediaUrl = null,
                     thumbnailUrl = null,
                     metadata = null,
-                    timestamp = "2026-08-16T10:00:00Z",
+                    timestamp = "2026-08-20T10:00:00Z",
                     deliveredAt = null,
                     readAt = null,
-                    isSynced = true,
-                    isFailed = false,
                 ),
             )
-            every { messageDao.getByConversation("conv-1") } returns flowOf(messages)
 
-            val result = repository.getMessages("conv-1").first()
+            every { messageDao.getByConversation("conv-1") } returns flowOf(entities)
+
+            var result = emptyList<must.kdroiders.hustlehub.ui.features.chat.domain.model.Message>()
+            repository.getMessages("conv-1").collect {
+                result = it
+            }
 
             assertEquals(1, result.size)
             assertEquals("msg-1", result[0].id)
@@ -125,5 +146,57 @@ class MessageRepositoryTest {
 
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) { messageDao.upsert(any()) }
+        }
+
+    @Test
+    fun `sendMessage when offline keeps encrypted message in local database as pending unsynced`() =
+        runTest {
+            coEvery { chatWebSocketService.connect() } throws IllegalStateException("STOMP session not initialized")
+
+            val result = repository.sendMessage("conv-1", MessageType.TEXT, "Offline message test")
+
+            assertTrue(result.isSuccess)
+            val slot = io.mockk.slot<MessageEntity>()
+            coVerify(atLeast = 1) { messageDao.upsert(capture(slot)) }
+            org.junit.Assert.assertFalse(slot.captured.isSynced)
+            org.junit.Assert.assertFalse(slot.captured.isFailed)
+            assertTrue(slot.captured.isEncrypted)
+            assertNotNull(slot.captured.iv)
+            assertNotNull(slot.captured.authTag)
+
+            val decrypted = slot.captured.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+            assertEquals("Offline message test", decrypted.content)
+        }
+
+    @Test
+    fun `resendUnsyncedMessages flushes pending messages over WebSocket`() =
+        runTest {
+            val pendingEntity = MessageEntity(
+                id = "temp_123",
+                conversationId = "conv-1",
+                senderId = "current-user-uid",
+                type = "TEXT",
+                content = "Pending message",
+                mediaUrl = null,
+                thumbnailUrl = null,
+                metadata = null,
+                timestamp = "2026-08-20T10:00:00Z",
+                deliveredAt = null,
+                readAt = null,
+                isSynced = false,
+                isFailed = false,
+            )
+
+            coEvery { messageDao.getUnsyncedMessages() } returns listOf(pendingEntity)
+            coEvery { chatWebSocketService.connect() } returns Unit
+            coEvery { chatWebSocketService.sendMessage(any()) } returns Unit
+
+            val result = repository.resendUnsyncedMessages()
+
+            assertTrue(result.isSuccess)
+            coVerify(exactly = 1) { chatWebSocketService.sendMessage(any()) }
+            coVerify {
+                messageDao.upsert(match { it.id == "temp_123" && it.isSynced && !it.isFailed })
+            }
         }
 }

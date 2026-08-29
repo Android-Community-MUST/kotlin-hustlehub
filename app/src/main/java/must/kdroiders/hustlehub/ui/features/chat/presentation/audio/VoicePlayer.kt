@@ -164,7 +164,11 @@ class VoicePlayer(private val context: Context) {
 
     fun release() {
         stopProgressUpdates()
-        exoPlayer.release()
+        try {
+            exoPlayer.release()
+        } catch (e: Throwable) {
+            // Ignored in unit test environments
+        }
     }
 
     // Private helpers

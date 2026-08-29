@@ -11,6 +11,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import must.kdroiders.hustlehub.core.auth.AuthManager
+import must.kdroiders.hustlehub.core.security.CryptoManager
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
@@ -134,8 +136,11 @@ object AppModule {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "hustlehub.db",
-            ).addMigrations(AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6)
-            .fallbackToDestructiveMigration(dropAllTables = true)
+            ).addMigrations(
+                AppDatabase.MIGRATION_4_5,
+                AppDatabase.MIGRATION_5_6,
+                AppDatabase.MIGRATION_6_7,
+            ).fallbackToDestructiveMigration(dropAllTables = true)
             .build()
 
     @Provides
@@ -195,6 +200,8 @@ object AppModule {
         conversationDao: ConversationDao,
         messageDao: MessageDao,
         firebaseAuth: FirebaseAuth?,
+        keyExchangeHandler: KeyExchangeHandler,
+        cryptoManager: CryptoManager,
     ): ChatRepository {
         return ChatRepositoryImpl(
             context,
@@ -203,6 +210,8 @@ object AppModule {
             messageDao,
             chatWebSocketService,
             firebaseAuth,
+            keyExchangeHandler,
+            cryptoManager,
         )
     }
 

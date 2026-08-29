@@ -1,7 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel
 
 import android.content.Context
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.coEvery
@@ -10,7 +9,6 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -99,8 +97,7 @@ class ChatDetailViewModelTest {
 
     @After
     fun tearDown() {
-        viewModel.viewModelScope.coroutineContext.cancelChildren()
-        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.onCleared()
         Dispatchers.resetMain()
     }
 
@@ -111,6 +108,15 @@ class ChatDetailViewModelTest {
         assertFalse(state.isTyping)
         assertFalse(state.isLoading)
     }
+
+    @Test
+    fun `sendTypingIndicator sends websocket event`() =
+        runTest {
+            viewModel.initialize(conversationId = "conv-1")
+            viewModel.sendTypingIndicator(true)
+
+            coVerify { chatWebSocketService.sendTypingIndicator(any()) }
+        }
 
     @Test
     fun `blockUser delegates target user ID to userRepository`() =

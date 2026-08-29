@@ -2,6 +2,9 @@ package must.kdroiders.hustlehub.ui.features.chat.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import must.kdroiders.hustlehub.core.security.CryptoManager
+import must.kdroiders.hustlehub.core.security.EncryptedPayload
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 
@@ -44,6 +47,35 @@ fun MessageEntity.toDomain(): Message =
         isFailed = isFailed,
     )
 
+fun MessageEntity.toDecryptedDomain(
+    keyExchangeHandler: KeyExchangeHandler,
+    cryptoManager: CryptoManager,
+): Message {
+    val rawDomain = this.toDomain()
+    val cipherText = this.content
+    val ivStr = this.iv
+    val tagStr = this.authTag
+    if (!this.isEncrypted || ivStr.isNullOrBlank() || tagStr.isNullOrBlank() || cipherText.isNullOrBlank()) {
+        return rawDomain
+    }
+
+    val secretKey = keyExchangeHandler.getOrGenerateLocalSecret(this.conversationId)
+    val decryptedContent = runCatching {
+        cryptoManager.decrypt(
+            EncryptedPayload(
+                ciphertext = cipherText,
+                iv = ivStr,
+                authTag = tagStr,
+            ),
+            secretKey,
+        )
+    }.getOrElse {
+        cipherText
+    }
+
+    return rawDomain.copy(content = decryptedContent)
+}
+
 fun Message.toEntity(
     cachedAt: Long = System.currentTimeMillis(),
     isEncrypted: Boolean = false,
@@ -69,3 +101,25 @@ fun Message.toEntity(
         authTag = authTag,
         cachedAt = cachedAt,
     )
+
+fun Message.toEncryptedEntity(
+    conversationId: String,
+    keyExchangeHandler: KeyExchangeHandler,
+    cryptoManager: CryptoManager,
+    cachedAt: Long = System.currentTimeMillis(),
+): MessageEntity {
+    if (this.content.isBlank() || this.type != MessageType.TEXT) {
+        return this.toEntity(cachedAt = cachedAt)
+    }
+
+    val secretKey = keyExchangeHandler.getOrGenerateLocalSecret(conversationId)
+    val encryptedPayload = cryptoManager.encrypt(this.content, secretKey)
+
+    return this
+        .toEntity(
+            cachedAt = cachedAt,
+            isEncrypted = true,
+            iv = encryptedPayload.iv,
+            authTag = encryptedPayload.authTag,
+        ).copy(content = encryptedPayload.ciphertext)
+}

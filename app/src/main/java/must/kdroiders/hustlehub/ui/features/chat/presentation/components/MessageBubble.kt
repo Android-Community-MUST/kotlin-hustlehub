@@ -28,11 +28,13 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -120,6 +122,7 @@ fun MessageBubble(
     modifier: Modifier = Modifier,
     currentUserLocation: android.location.Location? = null,
     isOtherUserOnline: Boolean = false,
+    isGroupedWithNext: Boolean = false,
 ) {
     val haptic = LocalHapticFeedback.current
     var dragAmountX by remember { mutableStateOf(0f) }
@@ -145,7 +148,7 @@ fun MessageBubble(
         },
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 16.dp, vertical = if (isGroupedWithNext) 1.dp else 4.dp),
     ) {
         Box(
             modifier = Modifier.fillMaxWidth(),
@@ -184,19 +187,20 @@ fun MessageBubble(
                 }
             }
 
+            val tailRadius = if (isGroupedWithNext) 20.dp else 4.dp
             val bubbleShape = if (isCurrentUser) {
                 RoundedCornerShape(
-                    topStart = 16.dp,
-                    topEnd = 16.dp,
-                    bottomStart = 16.dp,
-                    bottomEnd = 2.dp,
+                    topStart = 20.dp,
+                    topEnd = 20.dp,
+                    bottomStart = 20.dp,
+                    bottomEnd = tailRadius,
                 )
             } else {
                 RoundedCornerShape(
-                    topStart = 16.dp,
-                    topEnd = 16.dp,
-                    bottomStart = 2.dp,
-                    bottomEnd = 16.dp,
+                    topStart = 20.dp,
+                    topEnd = 20.dp,
+                    bottomStart = tailRadius,
+                    bottomEnd = 20.dp,
                 )
             }
 
@@ -234,8 +238,12 @@ fun MessageBubble(
                     ),
                 horizontalAlignment = alignment,
             ) {
+                val isImageMessage = message.type == MessageType.IMAGE
+                val bubblePadding = if (isImageMessage) 4.dp else 14.dp
+
                 Box(
                     modifier = Modifier
+                        .widthIn(max = 300.dp)
                         .clip(bubbleShape)
                         .background(bubbleBackground)
                         .combinedClickable(
@@ -245,7 +253,7 @@ fun MessageBubble(
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 showMenu = true
                             },
-                        ).padding(12.dp),
+                        ).padding(bubblePadding),
                 ) {
                     DropdownMenu(
                         expanded = showMenu,
@@ -491,27 +499,35 @@ fun MessageBubble(
                                 fontSize = 10.sp,
                                 color = textColor.copy(alpha = 0.7f),
                             )
+
                             if (isCurrentUser) {
                                 Spacer(modifier = Modifier.width(4.dp))
-                                val isPending = message.id.startsWith("temp_")
+                                val isFailed = message.isFailed
+                                val isPending = message.id.startsWith("temp_") || (!message.isSynced && !isFailed)
                                 val isRead = message.readAt != null
-                                val isDelivered = message.deliveredAt != null && (isOtherUserOnline || isRead)
+                                val isDelivered = message.deliveredAt != null || (message.isSynced && !isPending && !isFailed)
+
                                 val receiptIcon = when {
+                                    isFailed -> Icons.Default.Error
                                     isPending -> Icons.Default.Schedule
                                     isRead || isDelivered -> Icons.Default.DoneAll
                                     else -> Icons.Default.Done
                                 }
-                                // Blue accent only when read; dim tint for sent/delivered
+
                                 val receiptTint = when {
+                                    isFailed -> MaterialTheme.colorScheme.error
                                     isRead -> MaterialTheme.colorScheme.tertiary
                                     else -> textColor.copy(alpha = 0.6f)
                                 }
+
                                 val receiptDescription = when {
+                                    isFailed -> "Failed to send"
                                     isPending -> "Sending"
                                     isRead -> "Read"
                                     isDelivered -> "Delivered"
                                     else -> "Sent"
                                 }
+
                                 Icon(
                                     imageVector = receiptIcon,
                                     contentDescription = receiptDescription,

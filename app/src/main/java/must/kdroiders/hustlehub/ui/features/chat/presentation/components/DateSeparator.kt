@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +41,8 @@ fun DateSeparator(
         "Unknown Date"
     }
 
+    val pillShape = RoundedCornerShape(16.dp)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -48,9 +51,10 @@ fun DateSeparator(
     ) {
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                .padding(horizontal = 12.dp, vertical = 4.dp),
+                .shadow(elevation = 1.dp, shape = pillShape)
+                .clip(pillShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.85f))
+                .padding(horizontal = 16.dp, vertical = 6.dp),
         ) {
             Text(
                 text = displayDate,
