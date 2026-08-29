@@ -302,6 +302,7 @@ class ChatDetailViewModel
                                     .launchIn(this)
 
                                 val otherUid = finalCached?.otherUserId
+                                    ?: _uiState.value.otherUserId.takeIf { it.isNotBlank() }
                                     ?: if (resolvedId != conversationId) conversationId else null
 
                                 if (otherUid != null) {

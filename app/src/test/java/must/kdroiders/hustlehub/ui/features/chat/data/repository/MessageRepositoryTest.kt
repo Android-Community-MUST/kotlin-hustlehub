@@ -149,7 +149,7 @@ class MessageRepositoryTest {
         }
 
     @Test
-    fun `sendMessage when offline keeps encrypted message in local database as pending unsynced`() =
+    fun `sendMessage when offline keeps message in local database as pending unsynced`() =
         runTest {
             coEvery { chatWebSocketService.connect() } throws IllegalStateException("STOMP session not initialized")
 
@@ -160,12 +160,7 @@ class MessageRepositoryTest {
             coVerify(atLeast = 1) { messageDao.upsert(capture(slot)) }
             org.junit.Assert.assertFalse(slot.captured.isSynced)
             org.junit.Assert.assertFalse(slot.captured.isFailed)
-            assertTrue(slot.captured.isEncrypted)
-            assertNotNull(slot.captured.iv)
-            assertNotNull(slot.captured.authTag)
-
-            val decrypted = slot.captured.toDecryptedDomain(keyExchangeHandler, cryptoManager)
-            assertEquals("Offline message test", decrypted.content)
+            assertEquals("Offline message test", slot.captured.content)
         }
 
     @Test

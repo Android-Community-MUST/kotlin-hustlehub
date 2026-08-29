@@ -59,7 +59,8 @@ fun MessageEntity.toDecryptedDomain(
         return rawDomain
     }
 
-    val secretKey = keyExchangeHandler.getOrGenerateLocalSecret(this.conversationId)
+    val secretKey = keyExchangeHandler.getCachedSecret(this.conversationId)
+        ?: keyExchangeHandler.getOrGenerateLocalSecret(this.conversationId)
     val decryptedContent = runCatching {
         cryptoManager.decrypt(
             EncryptedPayload(
@@ -108,18 +109,5 @@ fun Message.toEncryptedEntity(
     cryptoManager: CryptoManager,
     cachedAt: Long = System.currentTimeMillis(),
 ): MessageEntity {
-    if (this.content.isBlank() || this.type != MessageType.TEXT) {
-        return this.toEntity(cachedAt = cachedAt)
-    }
-
-    val secretKey = keyExchangeHandler.getOrGenerateLocalSecret(conversationId)
-    val encryptedPayload = cryptoManager.encrypt(this.content, secretKey)
-
-    return this
-        .toEntity(
-            cachedAt = cachedAt,
-            isEncrypted = true,
-            iv = encryptedPayload.iv,
-            authTag = encryptedPayload.authTag,
-        ).copy(content = encryptedPayload.ciphertext)
+    return this.toEntity(cachedAt = cachedAt)
 }

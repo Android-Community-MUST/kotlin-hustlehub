@@ -76,10 +76,8 @@ class KeyExchangeHandler
             return SecretKeySpec(Base64Util.decode(encoded), "AES")
         }
 
-        /** Returns cached shared secret OR master device secret for local disk encryption fallback. */
+        /** Returns local master device secret for local key management. */
         fun getOrGenerateLocalSecret(conversationId: String): SecretKey {
-            getCachedSecret(conversationId)?.let { return it }
-
             val masterAlias = "$MASTER_DEVICE_KEY_PREFIX$conversationId"
             val encoded = encryptedPrefs.getString(masterAlias, null)
             if (encoded != null) {
