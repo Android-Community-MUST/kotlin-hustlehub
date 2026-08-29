@@ -64,8 +64,7 @@ class ConversationListViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(): ConversationListViewModel =
-        ConversationListViewModel(chatRepository)
+    private fun createViewModel(): ConversationListViewModel = ConversationListViewModel(chatRepository)
 
     @Test
     fun `observes conversations correctly`() =
