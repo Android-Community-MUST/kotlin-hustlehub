@@ -116,4 +116,8 @@ class ConversationListViewModel
                     }
             }
         }
+
+        public override fun onCleared() {
+            super.onCleared()
+        }
     }

@@ -66,6 +66,7 @@ class ConversationListViewModelTest {
 
     @After
     fun tearDown() {
+        viewModel.onCleared()
         Dispatchers.resetMain()
     }
 
