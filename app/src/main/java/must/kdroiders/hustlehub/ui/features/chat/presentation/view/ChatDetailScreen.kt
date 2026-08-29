@@ -699,10 +699,6 @@ fun ChatDetailScreen(
                             }
                         }
 
-                        if (showDateSeparator) {
-                            DateSeparator(dateString = message.timestamp)
-                        }
-
                         // Determine if this message is grouped with the next message
                         // (same sender, within 2 minutes)
                         val nextMessage = if (index > 0) reversedMessages[index - 1] else null
@@ -719,32 +715,40 @@ fun ChatDetailScreen(
                                 false
                             }
 
-                        MessageBubble(
-                            message = message,
-                            isCurrentUser = isSelf,
-                            playerState = state.playerState,
-                            currentUserLocation = currentUserLocation,
-                            onVoicePlayClick = chatDetailViewModel::playVoice,
-                            onVoiceSpeedToggle = chatDetailViewModel::toggleVoicePlaybackSpeed,
-                            onLocationClick = { lat, lng, label ->
-                                val mapUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng($label)")
-                                val intent = Intent(Intent.ACTION_VIEW, mapUri)
-                                try {
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "Could not open map app", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            onServiceCardClick = onNavigateToServiceDetail,
-                            onImageClick = { url -> selectedImageUrl = url },
-                            onImageLongClick = { url -> imageToSave = url },
-                            onReply = chatDetailViewModel::startReplying,
-                            onDeleteForMe = { msg -> chatDetailViewModel.deleteMessageForMe(msg.id) },
-                            onDeleteForEveryone = { msg -> chatDetailViewModel.deleteMessageForEveryone(msg.id) },
-                            onReportMessage = { msg -> messageToReport = msg },
-                            isOtherUserOnline = state.isOtherUserOnline,
-                            isGroupedWithNext = isGroupedWithNext,
-                        )
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            if (showDateSeparator) {
+                                DateSeparator(dateString = message.timestamp)
+                            }
+
+                            MessageBubble(
+                                message = message,
+                                isCurrentUser = isSelf,
+                                playerState = state.playerState,
+                                currentUserLocation = currentUserLocation,
+                                onVoicePlayClick = chatDetailViewModel::playVoice,
+                                onVoiceSpeedToggle = chatDetailViewModel::toggleVoicePlaybackSpeed,
+                                onLocationClick = { lat, lng, label ->
+                                    val mapUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng($label)")
+                                    val intent = Intent(Intent.ACTION_VIEW, mapUri)
+                                    try {
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Could not open map app", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                onServiceCardClick = onNavigateToServiceDetail,
+                                onImageClick = { url -> selectedImageUrl = url },
+                                onImageLongClick = { url -> imageToSave = url },
+                                onReply = chatDetailViewModel::startReplying,
+                                onDeleteForMe = { msg -> chatDetailViewModel.deleteMessageForMe(msg.id) },
+                                onDeleteForEveryone = { msg -> chatDetailViewModel.deleteMessageForEveryone(msg.id) },
+                                onReportMessage = { msg -> messageToReport = msg },
+                                isOtherUserOnline = state.isOtherUserOnline,
+                                isGroupedWithNext = isGroupedWithNext,
+                            )
+                        }
                     }
                 }
 

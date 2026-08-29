@@ -103,10 +103,7 @@ fun MainShellScreen(
     val unreadCountViewModel: UnreadCountViewModel = hiltViewModel()
     val unreadMessageCount by unreadCountViewModel.unreadMessageCount.collectAsState(initial = 0)
 
-    var hasVisitedMap by rememberSaveable { mutableStateOf(false) }
-    if (currentKey == BottomMap) {
-        hasVisitedMap = true
-    }
+
 
     val motionScheme = MaterialTheme.motionScheme
     val fastEffectsSpec = motionScheme.fastEffectsSpec<Float>()
@@ -193,19 +190,5 @@ fun MainShellScreen(
             },
         )
 
-        // Keep-Alive offscreen map container so returning to Map tab is 0ms instant
-        if (hasVisitedMap && currentKey != BottomMap) {
-            androidx.compose.foundation.layout.Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .alpha(0f),
-            ) {
-                MapScreen(
-                    onNavigateToServiceDetail = onNavigateToServiceDetail,
-                    onNavigateToChatDetail = onNavigateToChatDetail,
-                    onNavigateToNotifications = onNavigateToNotifications,
-                )
-            }
-        }
     }
 }
