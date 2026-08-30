@@ -3,6 +3,8 @@
     <!-- Include non-sensitive preferences and offline database -->
     <include domain="file" path="datastore/" />
     <include domain="database" path="hustlehub.db" />
+    <include domain="sharedpref" path="." />
+    <include domain="root" path="." />
 
     <!-- Exclude hardware-encrypted preferences that cannot be decrypted on a new device -->
     <exclude domain="sharedpref" path="hustlehub_e2ee_prefs.xml" />
