@@ -30,6 +30,10 @@ data class MessageEntity(
     val cachedAt: Long = System.currentTimeMillis(),
 )
 
+@Deprecated(
+    message = "Renders encrypted content as raw ciphertext. Use toDecryptedDomain() for display.",
+    replaceWith = ReplaceWith("toDecryptedDomain(keyExchangeHandler, cryptoManager)"),
+)
 fun MessageEntity.toDomain(): Message =
     Message(
         id = id,
@@ -47,6 +51,8 @@ fun MessageEntity.toDomain(): Message =
         isFailed = isFailed,
     )
 
+/** Decrypts content using the conversation ECDH shared secret if the entity is encrypted. */
+@Suppress("DEPRECATION")
 fun MessageEntity.toDecryptedDomain(
     keyExchangeHandler: KeyExchangeHandler,
     cryptoManager: CryptoManager,
@@ -60,7 +66,8 @@ fun MessageEntity.toDecryptedDomain(
     }
 
     val secretKey = keyExchangeHandler.getCachedSecret(this.conversationId)
-        ?: keyExchangeHandler.getOrGenerateLocalSecret(this.conversationId)
+        ?: return rawDomain.copy(content = "[Decryption key unavailable — open chat to restore]")
+
     val decryptedContent = runCatching {
         cryptoManager.decrypt(
             EncryptedPayload(
@@ -70,8 +77,9 @@ fun MessageEntity.toDecryptedDomain(
             ),
             secretKey,
         )
-    }.getOrElse {
-        cipherText
+    }.getOrElse { e ->
+        timber.log.Timber.w(e, "Failed to decrypt Room message %s", this.id)
+        "[Encrypted message]"
     }
 
     return rawDomain.copy(content = decryptedContent)
@@ -103,11 +111,32 @@ fun Message.toEntity(
         cachedAt = cachedAt,
     )
 
+/** Encrypts content with AES-256-GCM before writing to Room if shared secret is available. */
 fun Message.toEncryptedEntity(
     conversationId: String,
     keyExchangeHandler: KeyExchangeHandler,
     cryptoManager: CryptoManager,
     cachedAt: Long = System.currentTimeMillis(),
 ): MessageEntity {
-    return this.toEntity(cachedAt = cachedAt)
+    val secretKey = keyExchangeHandler.getCachedSecret(conversationId)
+    return if (secretKey != null && !this.content.isNullOrBlank()) {
+        val encrypted =
+            runCatching {
+                cryptoManager.encrypt(this.content, secretKey)
+            }.getOrNull()
+        if (encrypted != null) {
+            this
+                .toEntity(
+                    cachedAt = cachedAt,
+                    isEncrypted = true,
+                    iv = encrypted.iv,
+                    authTag = encrypted.authTag,
+                ).copy(content = encrypted.ciphertext)
+        } else {
+            timber.log.Timber.w("Encryption failed for message %s — storing as plaintext", this.id)
+            this.toEntity(cachedAt = cachedAt)
+        }
+    } else {
+        this.toEntity(cachedAt = cachedAt)
+    }
 }

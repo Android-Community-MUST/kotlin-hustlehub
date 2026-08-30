@@ -92,10 +92,6 @@ class ChatWebSocketService
             }
         }
 
-        /**
-         * Always encrypts TEXT messages before sending over WebSocket when ECDH shared secret is available.
-         * Sets content = null and populates encryptedContent, iv, authTag so plaintext never reaches the backend database.
-         */
         suspend fun sendMessage(
             request: SendMessageRequest,
             otherUserId: String? = null,
@@ -106,16 +102,32 @@ class ChatWebSocketService
             val secretKey = keyExchangeHandler.getCachedSecret(request.conversationId)
                 ?: keyExchangeHandler.ensureKeysExchanged(request.conversationId, otherUserId)
 
-            val finalRequest = if (secretKey != null && !request.content.isNullOrBlank()) {
-                val encrypted = cryptoManager.encrypt(request.content, secretKey)
-                request.copy(
-                    encryptedContent = encrypted.ciphertext,
-                    iv = encrypted.iv,
-                    authTag = encrypted.authTag,
-                    content = null,
-                )
-            } else {
-                request
+            if (secretKey == null) {
+                Timber.w("No shared secret available for conversation %s — sending unencrypted", request.conversationId)
+                session.sendText("/app/chat.send", gson.toJson(request))
+                return
+            }
+
+            val finalRequest: SendMessageRequest = when {
+                !request.content.isNullOrBlank() -> {
+                    val encrypted = cryptoManager.encrypt(request.content, secretKey)
+                    request.copy(
+                        encryptedContent = encrypted.ciphertext,
+                        iv = encrypted.iv,
+                        authTag = encrypted.authTag,
+                        content = null,
+                    )
+                }
+                !request.metadata.isNullOrBlank() -> {
+                    val encrypted = cryptoManager.encrypt(request.metadata, secretKey)
+                    request.copy(
+                        encryptedContent = encrypted.ciphertext,
+                        iv = encrypted.iv,
+                        authTag = encrypted.authTag,
+                        metadata = null,
+                    )
+                }
+                else -> request
             }
 
             session.sendText("/app/chat.send", gson.toJson(finalRequest))
