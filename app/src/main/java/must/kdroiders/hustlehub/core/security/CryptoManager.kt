@@ -60,6 +60,7 @@ class CryptoManager
         companion object {
             private const val ANDROID_KEYSTORE = "AndroidKeyStore"
             private const val KEY_ALIAS_PREFIX = "hustlehub_e2ee_"
+            private const val IDENTITY_KEY_ALIAS = "hustlehub_e2ee_identity_key"
             private const val EC_CURVE = "secp256r1"
             private const val KEY_AGREEMENT_ALGORITHM = "ECDH"
             private const val CIPHER_TRANSFORMATION = "AES/GCM/NoPadding"
@@ -73,6 +74,27 @@ class CryptoManager
             } catch (e: Exception) {
                 Timber.w("AndroidKeyStore not available in current environment")
                 null
+            }
+        }
+
+        /** Returns existing user identity key pair or generates a new ECDH P-256 identity key pair. */
+        fun getOrCreateUserIdentityKeyPair(): KeyPair {
+            val ks = keyStore
+            return try {
+                if (ks != null && ks.containsAlias(IDENTITY_KEY_ALIAS)) {
+                    val privateKey = ks.getKey(IDENTITY_KEY_ALIAS, null) as? PrivateKey
+                    val publicKey = ks.getCertificate(IDENTITY_KEY_ALIAS)?.publicKey
+                    if (privateKey != null && publicKey != null) {
+                        KeyPair(publicKey, privateKey)
+                    } else {
+                        generateKeyPair(IDENTITY_KEY_ALIAS)
+                    }
+                } else {
+                    generateKeyPair(IDENTITY_KEY_ALIAS)
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "Error retrieving user identity key pair from KeyStore")
+                generateKeyPair(IDENTITY_KEY_ALIAS)
             }
         }
 

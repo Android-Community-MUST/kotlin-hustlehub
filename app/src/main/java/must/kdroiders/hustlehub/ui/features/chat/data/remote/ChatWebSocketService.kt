@@ -96,14 +96,17 @@ class ChatWebSocketService
          * Always encrypts TEXT messages before sending over WebSocket when ECDH shared secret is available.
          * Sets content = null and populates encryptedContent, iv, authTag so plaintext never reaches the backend database.
          */
-        suspend fun sendMessage(request: SendMessageRequest) {
+        suspend fun sendMessage(
+            request: SendMessageRequest,
+            otherUserId: String? = null,
+        ) {
             val session = stompSession
                 ?: throw IllegalStateException("STOMP session not initialized")
 
             val secretKey = keyExchangeHandler.getCachedSecret(request.conversationId)
-                ?: keyExchangeHandler.ensureKeysExchanged(request.conversationId)
+                ?: keyExchangeHandler.ensureKeysExchanged(request.conversationId, otherUserId)
 
-            val finalRequest = if (secretKey != null && request.content != null && request.type == "TEXT") {
+            val finalRequest = if (secretKey != null && !request.content.isNullOrBlank()) {
                 val encrypted = cryptoManager.encrypt(request.content, secretKey)
                 request.copy(
                     encryptedContent = encrypted.ciphertext,

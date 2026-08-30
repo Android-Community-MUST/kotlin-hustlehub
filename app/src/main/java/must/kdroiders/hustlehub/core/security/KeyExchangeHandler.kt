@@ -26,39 +26,90 @@ class KeyExchangeHandler
         companion object {
             private const val SECRET_KEY_PREFIX = "shared_secret_"
             private const val MASTER_DEVICE_KEY_PREFIX = "master_device_secret_"
+            private const val USER_PUBLIC_KEY_SYNCED = "user_identity_public_key_synced"
+        }
+
+        /**
+         * Ensures this device's public identity key is uploaded to the backend.
+         * Safe to call on app startup, login, or before messaging.
+         */
+        suspend fun syncUserPublicKey() {
+            try {
+                val identityKeyPair = cryptoManager.getOrCreateUserIdentityKeyPair()
+                val encodedPublicKey = cryptoManager.encodePublicKey(identityKeyPair.public)
+                val isSynced = encryptedPrefs.getString(USER_PUBLIC_KEY_SYNCED, null) == encodedPublicKey
+                if (!isSynced) {
+                    keyExchangeApiService.uploadUserPublicKey(PublicKeyRequest(publicKey = encodedPublicKey))
+                    encryptedPrefs.edit().putString(USER_PUBLIC_KEY_SYNCED, encodedPublicKey).apply()
+                    Timber.d("User public identity key synchronized with backend")
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to synchronize user public identity key")
+            }
         }
 
         /** Returns cached or freshly-derived [SecretKey], or null if peer key missing. */
-        suspend fun ensureKeysExchanged(conversationId: String): SecretKey? {
+        suspend fun ensureKeysExchanged(
+            conversationId: String,
+            otherUserId: String? = null,
+        ): SecretKey? {
             getCachedSecret(conversationId)?.let { return it }
 
             return try {
+                val ourIdentityKeyPair = cryptoManager.getOrCreateUserIdentityKeyPair()
                 val ourKeyPair = cryptoManager.getOrCreateKeyPair(conversationId)
 
-                // Upload our public key
+                // 1. Upload our conversation public key
                 val encodedPublicKey = cryptoManager.encodePublicKey(ourKeyPair.public)
-                keyExchangeApiService.uploadPublicKey(
-                    conversationId = conversationId,
-                    request = PublicKeyRequest(publicKey = encodedPublicKey),
-                )
-
-                // Fetch peer's public key
-                val peerResponse = keyExchangeApiService.getPeerPublicKey(conversationId)
-                val peerKeyData = peerResponse.data ?: run {
-                    Timber.d("Peer key not available yet for: %s", conversationId)
-                    return null
-                }
-                val rawPeerKey = peerKeyData.publicKey ?: run {
-                    Timber.d("Peer public key string is null for: %s", conversationId)
-                    return null
+                try {
+                    keyExchangeApiService.uploadPublicKey(
+                        conversationId = conversationId,
+                        request = PublicKeyRequest(publicKey = encodedPublicKey),
+                    )
+                } catch (e: Exception) {
+                    Timber.w(e, "Could not upload conversation key for: %s", conversationId)
                 }
 
-                // Derive + cache shared secret
+                // 2. Ensure our user identity key is synchronized
+                syncUserPublicKey()
+
+                // 3. Fetch peer's public key (try conversation key first, fallback to user identity key)
+                var rawPeerKey: String? = null
+                try {
+                    val peerResponse = keyExchangeApiService.getPeerPublicKey(conversationId)
+                    rawPeerKey = peerResponse.data?.publicKey
+                } catch (e: Exception) {
+                    Timber.d("Conversation peer key not available: %s", e.message)
+                }
+
+                if (rawPeerKey.isNullOrBlank() && !otherUserId.isNullOrBlank()) {
+                    try {
+                        val userPeerResponse = keyExchangeApiService.getUserPublicKey(otherUserId)
+                        rawPeerKey = userPeerResponse.data?.publicKey
+                    } catch (e: Exception) {
+                        Timber.d("User peer key not available for user %s: %s", otherUserId, e.message)
+                    }
+                }
+
+                if (rawPeerKey.isNullOrBlank()) {
+                    Timber.d("Peer key not available yet for conversation: %s, otherUser: %s", conversationId, otherUserId)
+                    return null
+                }
+
+                // 4. Derive + cache shared secret
                 val peerPublicKey = cryptoManager.decodePublicKey(rawPeerKey)
-                val sharedSecret = cryptoManager.deriveSharedSecret(
-                    privateKey = ourKeyPair.private,
-                    peerPublicKey = peerPublicKey,
-                )
+                val sharedSecret = try {
+                    cryptoManager.deriveSharedSecret(
+                        privateKey = ourKeyPair.private,
+                        peerPublicKey = peerPublicKey,
+                    )
+                } catch (e: Exception) {
+                    cryptoManager.deriveSharedSecret(
+                        privateKey = ourIdentityKeyPair.private,
+                        peerPublicKey = peerPublicKey,
+                    )
+                }
+
                 cacheSecret(conversationId, sharedSecret)
                 Timber.d("Key exchange complete for: %s", conversationId)
                 sharedSecret
