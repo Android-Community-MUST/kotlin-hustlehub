@@ -70,7 +70,10 @@ class ChatRepositoryImpl
                 runCatching {
                     val response = conversationApiService.getConversations(0, 50)
                     check(response.success && response.data != null) { response.message ?: "Failed to refresh conversations" }
-                    val entities = response.data.content.map { it.toEntity() }
+                    val entities = response.data.content.map { dto ->
+                        val existing = conversationDao.getById(dto.id)
+                        dto.toEntity(keyExchangeHandler, cryptoManager, existing)
+                    }
                     conversationDao.upsertAll(entities)
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
@@ -108,6 +111,7 @@ class ChatRepositoryImpl
         ): Result<Unit> =
             withContext(Dispatchers.IO) {
                 runCatching {
+                    keyExchangeHandler.ensureKeysExchanged(conversationId)
                     val response = conversationApiService.getMessages(conversationId, page, 50)
                     check(response.success && response.data != null) { response.message ?: "Failed to load message history" }
                     val gson = Gson()
@@ -232,6 +236,7 @@ class ChatRepositoryImpl
         override suspend fun connectWebSocket(conversationId: String): Flow<Message> =
             flow {
                 try {
+                    keyExchangeHandler.ensureKeysExchanged(conversationId)
                     chatWebSocketService.connect()
                     resendUnsyncedMessages()
 
@@ -516,20 +521,32 @@ private fun ConversationResponse.toDomainModel(): Conversation =
         isArchived = isArchived ?: false,
     )
 
-private fun ConversationResponse.toEntity(): ConversationEntity =
-    ConversationEntity(
+private fun ConversationResponse.toEntity(
+    keyExchangeHandler: KeyExchangeHandler? = null,
+    cryptoManager: CryptoManager? = null,
+    existingEntity: ConversationEntity? = null,
+): ConversationEntity {
+    val rawLastMessage = lastMessage
+    val resolvedLastMessage = if (!rawLastMessage.isNullOrBlank()) {
+        existingEntity?.lastMessage ?: rawLastMessage
+    } else {
+        existingEntity?.lastMessage
+    }
+
+    return ConversationEntity(
         id = id,
         otherUserId = otherUserId,
         otherUserName = otherUserName,
         otherUserAvatar = otherUserAvatar,
         serviceId = serviceId,
-        lastMessage = lastMessage,
-        lastMessageType = lastMessageType,
-        lastMessageAt = lastMessageAt,
+        lastMessage = resolvedLastMessage,
+        lastMessageType = lastMessageType ?: existingEntity?.lastMessageType,
+        lastMessageAt = lastMessageAt ?: existingEntity?.lastMessageAt,
         unreadCount = unreadCount,
         createdAt = createdAt,
         isArchived = isArchived ?: false,
     )
+}
 
 private fun MessageResponse.toDomainModel(
     keyExchangeHandler: KeyExchangeHandler? = null,
@@ -553,7 +570,6 @@ private fun MessageResponse.toDomainModel(
 
     val resolvedContent = if (!ciphertext.isNullOrBlank() && !parsedIv.isNullOrBlank() && keyExchangeHandler != null && cryptoManager != null) {
         val secretKey = keyExchangeHandler.getCachedSecret(conversationId)
-            ?: keyExchangeHandler.getOrGenerateLocalSecret(conversationId)
         if (secretKey != null) {
             runCatching {
                 cryptoManager.decrypt(
@@ -564,9 +580,12 @@ private fun MessageResponse.toDomainModel(
                     ),
                     secretKey,
                 )
-            }.getOrDefault(content ?: "Encrypted message")
+            }.getOrElse { e ->
+                Timber.w(e, "Failed to decrypt network payload for message $id")
+                if (content != null && content != ciphertext) content else "[Encrypted message]"
+            }
         } else {
-            content ?: "Encrypted message"
+            if (content != null && content != ciphertext) content else "[Encrypted message]"
         }
     } else {
         content ?: ""

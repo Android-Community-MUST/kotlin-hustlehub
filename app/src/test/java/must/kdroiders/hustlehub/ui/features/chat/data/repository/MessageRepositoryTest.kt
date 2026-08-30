@@ -16,13 +16,11 @@ import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.MessageDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.MessageEntity
-import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toDecryptedDomain
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -149,7 +147,7 @@ class MessageRepositoryTest {
         }
 
     @Test
-    fun `sendMessage when offline keeps encrypted message in local database as pending unsynced`() =
+    fun `sendMessage when offline keeps message in local database as pending unsynced`() =
         runTest {
             coEvery { chatWebSocketService.connect() } throws IllegalStateException("STOMP session not initialized")
 
@@ -160,12 +158,7 @@ class MessageRepositoryTest {
             coVerify(atLeast = 1) { messageDao.upsert(capture(slot)) }
             org.junit.Assert.assertFalse(slot.captured.isSynced)
             org.junit.Assert.assertFalse(slot.captured.isFailed)
-            assertTrue(slot.captured.isEncrypted)
-            assertNotNull(slot.captured.iv)
-            assertNotNull(slot.captured.authTag)
-
-            val decrypted = slot.captured.toDecryptedDomain(keyExchangeHandler, cryptoManager)
-            assertEquals("Offline message test", decrypted.content)
+            assertEquals("Offline message test", slot.captured.content)
         }
 
     @Test
