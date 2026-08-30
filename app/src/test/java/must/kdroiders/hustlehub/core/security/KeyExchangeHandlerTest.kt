@@ -118,4 +118,38 @@ class KeyExchangeHandlerTest {
             keyExchangeHandler.clearCachedSecret(conversationId)
             assertNull(keyExchangeHandler.getCachedSecret(conversationId))
         }
+
+    @Test
+    fun `ensureKeysExchanged falls back to user identity key when conversation key is missing`() =
+        runTest {
+            val conversationId = "conv_fallback"
+            val otherUserId = "user_bob"
+
+            val ecKeyGen = KeyPairGenerator.getInstance("EC")
+            ecKeyGen.initialize(256)
+            val bobIdentityKeyPair = ecKeyGen.generateKeyPair()
+            val bobEncodedIdentityKey = cryptoManager.encodePublicKey(bobIdentityKeyPair.public)
+
+            coEvery { keyExchangeApiService.uploadPublicKey(conversationId, any()) } returns ApiResponse(true, "Success", Unit)
+            coEvery { keyExchangeApiService.uploadUserPublicKey(any()) } returns ApiResponse(true, "Success", Unit)
+            coEvery { keyExchangeApiService.getPeerPublicKey(conversationId) } returns ApiResponse(
+                success = true,
+                data = PeerKeyResponse(publicKey = null, userId = null),
+                message = "No conv key yet",
+            )
+            coEvery { keyExchangeApiService.getUserPublicKey(otherUserId) } returns ApiResponse(
+                success = true,
+                data = PeerKeyResponse(publicKey = bobEncodedIdentityKey, userId = otherUserId),
+                message = "Success",
+            )
+
+            val secretKey = keyExchangeHandler.ensureKeysExchanged(
+                conversationId = conversationId,
+                otherUserId = otherUserId,
+            )
+
+            assertNotNull(secretKey)
+            assertEquals("AES", secretKey?.algorithm)
+            coVerify(exactly = 1) { keyExchangeApiService.getUserPublicKey(otherUserId) }
+        }
 }
