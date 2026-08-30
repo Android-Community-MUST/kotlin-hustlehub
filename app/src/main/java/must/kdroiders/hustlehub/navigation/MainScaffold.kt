@@ -7,7 +7,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -16,11 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.entryProvider
@@ -102,8 +98,6 @@ fun MainShellScreen(
     val currentKey = innerBackstack.lastOrNull() ?: BottomHome
     val unreadCountViewModel: UnreadCountViewModel = hiltViewModel()
     val unreadMessageCount by unreadCountViewModel.unreadMessageCount.collectAsState(initial = 0)
-
-
 
     val motionScheme = MaterialTheme.motionScheme
     val fastEffectsSpec = motionScheme.fastEffectsSpec<Float>()
@@ -189,6 +183,5 @@ fun MainShellScreen(
                 }
             },
         )
-
     }
 }
