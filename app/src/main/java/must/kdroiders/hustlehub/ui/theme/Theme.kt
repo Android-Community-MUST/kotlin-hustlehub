@@ -45,6 +45,11 @@ private val LightColorScheme = lightColorScheme(
     onError = HustleWhite,
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF93000A),
+
+    inverseSurface = HustleDarkNavy,
+    inverseOnSurface = HustleWhite,
+    inversePrimary = HustleSecondaryBlue,
+    scrim = Color(0xFF000000).copy(alpha = 0.32f),
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -77,6 +82,11 @@ private val DarkColorScheme = darkColorScheme(
     onError = HustleWhite,
     errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
+
+    inverseSurface = HustleDarkOnBackground,
+    inverseOnSurface = HustleDarkBackground,
+    inversePrimary = HustlePrimaryBlue,
+    scrim = Color(0xFF000000).copy(alpha = 0.6f),
 )
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

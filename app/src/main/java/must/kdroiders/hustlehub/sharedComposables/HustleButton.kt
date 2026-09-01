@@ -50,7 +50,7 @@ enum class HustleButtonVariant {
     Outlined,
 }
 
-private val ButtonShape = RoundedCornerShape(10.dp)
+private val ButtonShape = RoundedCornerShape(12.dp)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -228,11 +228,11 @@ private fun ButtonContent(
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (loading) {
             CircularWavyProgressIndicator(
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(16.dp),
                 color = loadingColor(),
                 trackColor = loadingColor().copy(alpha = 0.2f),
             )
-            Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(12.dp))
         } else if (painter != null) {
             // Bitmap / PNG icon (e.g. Google logo)
             Image(
@@ -240,7 +240,7 @@ private fun ButtonContent(
                 contentDescription = null,
                 modifier = Modifier.size(iconSize),
             )
-            Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(12.dp))
         } else if (icon != null) {
             Icon(
                 imageVector = icon,
@@ -264,7 +264,7 @@ fun HustleButtonPreview() {
     HustleHubTheme {
         Row(
             modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             HustleButton(text = "Primary", onClick = {})
             HustleButton(text = "Secondary", onClick = {}, variant = HustleButtonVariant.Secondary)
@@ -277,7 +277,7 @@ fun HustleButtonPreview() {
 @Composable
 fun HustleButtonLoadingPreview() {
     HustleHubTheme {
-        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             HustleButton(text = "Loading...", onClick = {}, loading = true)
             HustleButton(
                 text = "With Icon",

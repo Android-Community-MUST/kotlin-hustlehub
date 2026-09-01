@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 data class Dimensions(
     val horizontalPadding: Dp = 12.dp,
     val verticalPadding: Dp = 12.dp,
-    val gridSpacing: Dp = 10.dp,
+    val gridSpacing: Dp = 12.dp,
     val gridColumns: Int = 2,
     val cardCornerRadius: Dp = 20.dp,
     val cardContentPadding: Dp = 16.dp,
@@ -42,7 +42,7 @@ fun standardDimensions() =
     Dimensions(
         horizontalPadding = 12.dp,
         verticalPadding = 12.dp,
-        gridSpacing = 10.dp,
+        gridSpacing = 12.dp,
         gridColumns = 2,
         cardCornerRadius = 20.dp,
         cardContentPadding = 16.dp,
@@ -53,7 +53,7 @@ fun expandedDimensions() =
     Dimensions(
         horizontalPadding = 20.dp,
         verticalPadding = 16.dp,
-        gridSpacing = 14.dp,
+        gridSpacing = 16.dp,
         gridColumns = 3,
         cardCornerRadius = 24.dp,
         cardContentPadding = 20.dp,

@@ -125,7 +125,7 @@ fun LoginScreen(
                 style = MaterialTheme.typography.headlineLarge,
             )
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
 
             Text(
                 text = "Login to your account",
@@ -233,7 +233,7 @@ fun LoginScreen(
                 onClick = { onGoogleSignInClick() },
                 variant = HustleButtonVariant.Outlined,
                 painter = painterResource(id = R.drawable.google),
-                iconSize = 22.dp,
+                iconSize = 24.dp,
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -367,7 +367,7 @@ private fun LoginBackground() {
         val dotR = 3.0f
         val dotGap = 18f
         val gx = w - 6 * dotGap - 20f
-        val gy = with(density) { 50.dp.toPx() }
+        val gy = with(density) { 48.dp.toPx() }
         repeat(5) { row ->
             repeat(6) { col ->
                 drawCircle(
