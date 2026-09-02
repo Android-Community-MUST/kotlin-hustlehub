@@ -30,7 +30,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.MoreVert
@@ -78,6 +77,8 @@ import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
 import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.ErrorView
+import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
+import must.kdroiders.hustlehub.sharedComposables.HustleBackButtonStyle
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
@@ -240,19 +241,10 @@ fun ServiceDetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         // Back Button
-                        IconButton(
+                        HustleBackButton(
                             onClick = onBack,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.3f)),
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White,
-                            )
-                        }
+                            style = HustleBackButtonStyle.Overlay(),
+                        )
 
                         // Share, Bookmark and More
                         Row(
@@ -262,11 +254,11 @@ fun ServiceDetailScreen(
                             IconButton(
                                 onClick = { scope.launch { snackbarHostState.showSnackbar("Share feature coming soon!") } },
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(44.dp)
                                     .clip(CircleShape)
-                                    .background(Color.Black.copy(alpha = 0.3f)),
+                                    .background(Color.Black.copy(alpha = 0.4f)),
                             ) {
-                                Icon(Icons.Default.Share, contentDescription = "Share", tint = Color.White)
+                                Icon(Icons.Default.Share, contentDescription = "Share", tint = Color.White, modifier = Modifier.size(22.dp))
                             }
                             var isBookmarked by remember { mutableStateOf(false) }
                             val bookmarkInteractionSource = remember { MutableInteractionSource() }
@@ -296,15 +288,16 @@ fun ServiceDetailScreen(
                                 },
                                 interactionSource = bookmarkInteractionSource,
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(44.dp)
                                     .clip(CircleShape)
-                                    .background(Color.Black.copy(alpha = 0.3f))
+                                    .background(Color.Black.copy(alpha = 0.4f))
                                     .scale(bookmarkScale),
                             ) {
                                 Icon(
                                     if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                                     contentDescription = "Save",
                                     tint = if (isBookmarked) MaterialTheme.colorScheme.primary else Color.White,
+                                    modifier = Modifier.size(22.dp),
                                 )
                             }
 
@@ -315,11 +308,11 @@ fun ServiceDetailScreen(
                                 IconButton(
                                     onClick = { showMenu = true },
                                     modifier = Modifier
-                                        .size(40.dp)
+                                        .size(44.dp)
                                         .clip(CircleShape)
-                                        .background(Color.Black.copy(alpha = 0.3f)),
+                                        .background(Color.Black.copy(alpha = 0.4f)),
                                 ) {
-                                    Icon(Icons.Default.MoreVert, contentDescription = "More options", tint = Color.White)
+                                    Icon(Icons.Default.MoreVert, contentDescription = "More options", tint = Color.White, modifier = Modifier.size(22.dp))
                                 }
                                 DropdownMenu(
                                     expanded = showMenu,

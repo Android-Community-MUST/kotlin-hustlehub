@@ -164,7 +164,7 @@ fun SplashScreen(
             // App name
             Text(
                 text = "HustleHub",
-                fontSize = 32.sp,
+                style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
                 color = onBackground,
                 textAlign = TextAlign.Center,
@@ -176,7 +176,7 @@ fun SplashScreen(
             // Tagline
             Text(
                 text = "Your Campus Marketplace",
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyMedium,
                 color = onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.graphicsLayer { alpha = textAlpha.value },
@@ -213,13 +213,13 @@ fun SplashScreen(
                 Icon(
                     imageVector = Icons.Filled.VerifiedUser,
                     contentDescription = null,
-                    modifier = Modifier.size(14.dp),
+                    modifier = Modifier.size(16.dp),
                     tint = onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "MERU UNIVERSITY · VERIFIED",
-                    fontSize = 11.sp,
+                    style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
                     color = onSurfaceVariant,
                     letterSpacing = 1.sp,

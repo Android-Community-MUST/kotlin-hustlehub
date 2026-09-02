@@ -17,7 +17,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -30,6 +29,7 @@ import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleSuccess
 import must.kdroiders.hustlehub.ui.theme.HustleWarning
+import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 @Composable
 fun BottomSheetContent(
@@ -148,7 +148,7 @@ fun BottomSheetContent(
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = "Rating",
-                    tint = Color(0xFFFFB300),
+                    tint = HustleWarningAmber,
                     modifier = Modifier.size(18.dp),
                 )
                 Text(

@@ -196,31 +196,26 @@ fun OnboardingScreen(
                     Column {
                         Text(
                             text = slide.titleTop,
-                            fontSize = 28.sp,
+                            style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme
-                                .onSurface,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.semantics { heading() },
                         )
                         Text(
                             text = slide.titleHighlight,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography
-                                .headlineMedium
+                            style = MaterialTheme.typography.headlineLarge
                                 .copy(
                                     brush = Brush.linearGradient(
                                         listOf(primary, tertiary),
                                     ),
                                 ),
+                            fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.height(16.dp))
                         Text(
                             text = slide.description,
-                            fontSize = 14.sp,
-                            lineHeight = 21.sp,
-                            color = MaterialTheme.colorScheme
-                                .onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

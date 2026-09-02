@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.ui.features.auth.presentation.view
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,10 +12,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -94,6 +95,7 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -125,7 +127,7 @@ fun LoginScreen(
                 style = MaterialTheme.typography.headlineLarge,
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
 
             Text(
                 text = "Login to your account",
@@ -233,39 +235,30 @@ fun LoginScreen(
                 onClick = { onGoogleSignInClick() },
                 variant = HustleButtonVariant.Outlined,
                 painter = painterResource(id = R.drawable.google),
-                iconSize = 24.dp,
+                iconSize = 22.dp,
                 modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(Modifier.height(36.dp))
 
             // Sign up link
-            val signUpText = buildAnnotatedString {
-                withStyle(
-                    SpanStyle(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                    ),
-                ) { append("New here?  ") }
-                pushStringAnnotation("signup", "signup")
-                withStyle(
-                    SpanStyle(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                    ),
-                ) { append("Create Account") }
-                pop()
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "New here?  ",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = "Create Account",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable { onNavigateToSignUp() },
+                )
             }
-            ClickableText(
-                text = signUpText,
-                onClick = { offset ->
-                    signUpText
-                        .getStringAnnotations("signup", offset, offset)
-                        .firstOrNull()
-                        ?.let { onNavigateToSignUp() }
-                },
-            )
 
             Spacer(Modifier.height(48.dp))
         }
