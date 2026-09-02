@@ -18,8 +18,12 @@ data class MapPin(
     val lng: Double,
     val distanceMeters: Double? = null,
 ) : ClusterItem {
-    override fun getPosition(): LatLng = LatLng(lat, lng)
-    override fun getTitle(): String = serviceTitle
-    override fun getSnippet(): String = providerName
-    override fun getZIndex(): Float? = null
+    override val position: LatLng
+        get() = LatLng(lat, lng)
+    override val title: String
+        get() = serviceTitle
+    override val snippet: String
+        get() = providerName
+    override val zIndex: Float?
+        get() = null
 }
