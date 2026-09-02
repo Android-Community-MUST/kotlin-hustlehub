@@ -176,9 +176,6 @@ dependencies {
     // Gemini AI
     implementation(libs.generativeai)
 
-    // Supabase
-    implementation(platform(libs.supabase.bom))
-    implementation(libs.supabase.storage)
     implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.okhttp)
 
