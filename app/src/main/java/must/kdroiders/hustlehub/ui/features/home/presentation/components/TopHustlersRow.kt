@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -37,6 +36,11 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.ui.features.home.domain.model.TopHustler
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonCyan
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonDefault
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonGreen
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonPurple
+import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 @Composable
 fun TopHustlersRow(
@@ -113,10 +117,10 @@ fun TopHustlerCard(
                 .background(
                     Brush.linearGradient(
                         colors = when (hustler.category) {
-                            ServiceCategory.SALON -> listOf(Color(0xFF4A148C), Color(0xFF880E4F))
-                            ServiceCategory.TUTORING -> listOf(Color(0xFF1A237E), Color(0xFF0D47A1))
-                            ServiceCategory.DESIGN -> listOf(Color(0xFF004D40), Color(0xFF006064))
-                            else -> listOf(Color(0xFF1B5E20), Color(0xFF33691E))
+                            ServiceCategory.SALON -> listOf(CategoryNeonPurple.copy(alpha = 0.4f), MaterialTheme.colorScheme.surfaceVariant)
+                            ServiceCategory.TUTORING -> listOf(CategoryNeonGreen.copy(alpha = 0.4f), MaterialTheme.colorScheme.surfaceVariant)
+                            ServiceCategory.DESIGN -> listOf(CategoryNeonCyan.copy(alpha = 0.4f), MaterialTheme.colorScheme.surfaceVariant)
+                            else -> listOf(CategoryNeonDefault.copy(alpha = 0.4f), MaterialTheme.colorScheme.surfaceVariant)
                         },
                     ),
                 ),
@@ -168,7 +172,7 @@ fun TopHustlerCard(
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = "Rating",
-                        tint = Color(0xFFFFB300),
+                        tint = HustleWarningAmber,
                         modifier = Modifier.size(14.dp),
                     )
                     Spacer(modifier = Modifier.width(4.dp))

@@ -20,6 +20,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
+import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
+import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 @Composable
 fun AvailabilityBadge(
@@ -27,9 +30,9 @@ fun AvailabilityBadge(
     modifier: Modifier = Modifier,
 ) {
     val (dotColor, label) = when (availability) {
-        ServiceAvailability.AVAILABLE -> Color(0xFF10B981) to "Available Now"
-        ServiceAvailability.BUSY -> Color(0xFFF59E0B) to "Busy"
-        ServiceAvailability.OFFLINE -> Color(0xFF9CA3AF) to "Offline"
+        ServiceAvailability.AVAILABLE -> HustleActiveGreen to "Available Now"
+        ServiceAvailability.BUSY -> HustleWarningAmber to "Busy"
+        ServiceAvailability.OFFLINE -> HustleOfflineGray to "Offline"
     }
 
     Row(

@@ -53,7 +53,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -68,6 +67,8 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.MapLocationPickerModal
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.extractAreaName
+import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
+import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 import java.util.Locale
 
 // Campus Landmark Presets
@@ -422,7 +423,7 @@ private fun CurrentLocationCard(
  */
 @Composable
 private fun AccuracyDot(accuracy: Float) {
-    val dotColor = if (accuracy <= 50f) Color(0xFF34C759) else Color(0xFFFF9500)
+    val dotColor = if (accuracy <= 50f) HustleActiveGreen else HustleWarningAmber
     val infiniteTransition = rememberInfiniteTransition(label = "gpsDot")
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0.4f,

@@ -38,6 +38,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.ChangePasswordViewModel
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.PasswordStrength
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
+import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -163,7 +164,7 @@ fun PasswordStrengthIndicator(strength: PasswordStrength) {
     val (color, text, weight) = when (strength) {
         PasswordStrength.NONE -> Triple(Color.Transparent, "", 0.01f)
         PasswordStrength.WEAK -> Triple(MaterialTheme.colorScheme.error, "Weak", 0.25f)
-        PasswordStrength.MEDIUM -> Triple(Color(0xFFFFB300), "Medium", 0.5f) // Amber
+        PasswordStrength.MEDIUM -> Triple(HustleWarningAmber, "Medium", 0.5f)
         PasswordStrength.STRONG -> Triple(HustleActiveGreen, "Strong", 0.75f)
         PasswordStrength.VERY_STRONG -> Triple(HustleActiveGreen, "Very Strong", 1f)
     }

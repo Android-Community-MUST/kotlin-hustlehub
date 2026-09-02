@@ -27,8 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonPurple
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -69,7 +69,7 @@ fun HomeTopBar(
                     .clip(RoundedCornerShape(10.dp))
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF7C4DFF)),
+                            colors = listOf(MaterialTheme.colorScheme.primary, CategoryNeonPurple),
                         ),
                     ).clearAndSetSemantics { }, // Hides "Capital H" from TalkBack,
                 contentAlignment = Alignment.Center,
@@ -134,7 +134,7 @@ fun HomeTopBar(
                     .border(
                         width = 2.dp,
                         brush = Brush.linearGradient(
-                            colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFF7C4DFF)),
+                            colors = listOf(MaterialTheme.colorScheme.primary, CategoryNeonPurple),
                         ),
                         shape = CircleShape,
                     ).background(MaterialTheme.colorScheme.surfaceVariant)

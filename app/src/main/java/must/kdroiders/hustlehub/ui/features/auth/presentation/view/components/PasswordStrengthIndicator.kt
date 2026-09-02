@@ -24,6 +24,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.PasswordStrength
+import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
+import must.kdroiders.hustlehub.ui.theme.HustleTertiaryTeal
+import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 @Composable
 fun PasswordStrengthIndicator(strength: PasswordStrength) {
@@ -36,9 +39,9 @@ fun PasswordStrengthIndicator(strength: PasswordStrength) {
     }
 
     val errorColor = MaterialTheme.colorScheme.error
-    val warningColor = Color(0xFFFFA500) // Orange
-    val infoColor = Color(0xFF03A9F4) // Light Blue
-    val successColor = Color(0xFF4CAF50) // Green
+    val warningColor = HustleWarningAmber
+    val infoColor = HustleTertiaryTeal
+    val successColor = HustleActiveGreen
     val primaryColor = MaterialTheme.colorScheme.primary
 
     val strengthColor = when (strength) {

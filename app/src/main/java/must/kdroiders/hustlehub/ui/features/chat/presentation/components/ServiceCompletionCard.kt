@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.ui.theme.HustleSuccess
+import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 @Composable
 fun ServiceCompletionCard(
@@ -98,7 +99,7 @@ fun ServiceCompletionCard(
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = Color(0xFFFFD700),
+                    tint = HustleWarningAmber,
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(Modifier.width(4.dp))
