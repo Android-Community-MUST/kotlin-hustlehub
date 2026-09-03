@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class BookmarkViewModel : ViewModel() {
-
     private val _uiState = MutableStateFlow<BookmarkUiState>(BookmarkUiState.Loading)
     val uiState: StateFlow<BookmarkUiState> = _uiState.asStateFlow()
 
@@ -31,7 +30,7 @@ class BookmarkViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _uiState.value = BookmarkUiState.Error(
-                    e.localizedMessage ?: "Failed to load bookmarks"
+                    e.localizedMessage ?: "Failed to load bookmarks",
                 )
             }
         }

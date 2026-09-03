@@ -23,15 +23,15 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import must.kdroiders.hustlehub.navigation.AiSearchScreen
+import must.kdroiders.hustlehub.navigation.BottomBookmarks
 import must.kdroiders.hustlehub.navigation.SearchScreen
 import must.kdroiders.hustlehub.navigation.ServiceDetail
+import must.kdroiders.hustlehub.ui.features.bookmarks.BookmarkScreen
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatScreen
 import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.UnreadCountViewModel
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.HomeScreen
 import must.kdroiders.hustlehub.ui.features.map.presentation.view.MapScreen
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.ProfileScreen
-import must.kdroiders.hustlehub.ui.features.bookmarks.BookmarkScreen
-import must.kdroiders.hustlehub.navigation.BottomBookmarks
 
 /**
  * Main application shell hosting the bottom navigation bar.
@@ -189,7 +189,7 @@ fun MainShellScreen(
                             // Switches back to home tab if user presses back on bookmarks
                             innerBackstack.clear()
                             innerBackstack.add(BottomHome)
-                        }
+                        },
                     )
                 }
             },

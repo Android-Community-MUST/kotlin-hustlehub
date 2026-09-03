@@ -5,7 +5,7 @@ data class BookmarkItem(
     val title: String,
     val category: String,
     val price: String,
-    val rating: Double
+    val rating: Double,
 )
 
 sealed interface BookmarkUiState {
