@@ -618,11 +618,11 @@ fun MapScreen(
                 onClick = {
                     scope.launch {
                         cameraPositionState.animate(
-                             CameraUpdateFactory.newCameraPosition(
-                                 CameraPosition
-                                     .Builder(cameraPositionState.position)
-                                     .bearing(0f)
-                                     .build(),
+                            CameraUpdateFactory.newCameraPosition(
+                                CameraPosition
+                                    .Builder(cameraPositionState.position)
+                                    .bearing(0f)
+                                    .build(),
                             ),
                         )
                     }

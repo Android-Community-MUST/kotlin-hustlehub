@@ -196,7 +196,10 @@ private fun FeaturedServiceCard(
             )
             Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.Bottom) {
-                val rawPrice = service.priceRange.split("-").first().trim()
+                val rawPrice = service.priceRange
+                    .split("-")
+                    .first()
+                    .trim()
                 val displayPrice = stringResource(R.string.currency_kes_format, rawPrice)
                 Text(
                     text = stringResource(R.string.price_from_prefix),

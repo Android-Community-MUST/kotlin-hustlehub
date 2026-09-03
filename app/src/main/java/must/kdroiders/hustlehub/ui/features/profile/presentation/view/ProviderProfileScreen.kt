@@ -123,7 +123,7 @@ fun ProviderProfileScreen(
                                         showMenu = false
                                         showReportDialog = true
                                     },
-                                    )
+                                )
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.action_block_user), color = MaterialTheme.colorScheme.error) },
                                     onClick = {

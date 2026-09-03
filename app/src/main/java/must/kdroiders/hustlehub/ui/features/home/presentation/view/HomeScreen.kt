@@ -55,11 +55,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import must.kdroiders.hustlehub.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
