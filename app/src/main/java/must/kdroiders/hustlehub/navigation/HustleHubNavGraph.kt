@@ -60,6 +60,7 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.ServiceDet
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.WriteReviewScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.BlockedUsersScreen
 import must.kdroiders.hustlehub.ui.features.settings.presentation.view.SettingsScreen
+import must.kdroiders.hustlehub.ui.features.bookmarks.BookmarkScreen
 
 /**
  * Root Navigation 3 navigator for HustleHub.
@@ -565,6 +566,13 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         entry<Analytics> {
                             AnalyticsScreen(
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                            )
+                        }
+                        entry<BottomBookmarks> {
+                            BookmarkScreen(
+                                onBack = {
+                                    if (backstack.size > 1) backstack.remove(backstack.last())
+                                }
                             )
                         }
                     },

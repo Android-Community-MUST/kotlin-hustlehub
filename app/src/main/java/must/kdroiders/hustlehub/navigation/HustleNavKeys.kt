@@ -66,6 +66,9 @@ data object BottomChat : NavKey
 @Serializable
 data object BottomProfile : NavKey
 
+/** Bookmarks tab. */
+@Serializable
+data object BottomBookmarks : NavKey
 // Detail / full-screen keys  (pushed over the shell)
 
 /** Change Password screen */
