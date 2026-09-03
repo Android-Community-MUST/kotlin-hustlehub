@@ -19,10 +19,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.google.android.gms.maps.model.LatLng
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
@@ -73,7 +75,7 @@ fun BottomSheetContent(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
-                        contentDescription = "Default Avatar",
+                        contentDescription = stringResource(R.string.cd_default_avatar),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(32.dp),
                     )
@@ -81,7 +83,7 @@ fun BottomSheetContent(
             } else {
                 AsyncImage(
                     model = pin.providerPhotoUrl,
-                    contentDescription = "Profile Photo",
+                    contentDescription = stringResource(R.string.cd_profile_photo),
                     modifier = Modifier
                         .size(60.dp)
                         .clip(CircleShape)
@@ -117,7 +119,7 @@ fun BottomSheetContent(
                             ),
                     )
                     Text(
-                        text = if (isAvailable) "Available" else "Busy/Away",
+                        text = if (isAvailable) stringResource(R.string.status_available) else stringResource(R.string.status_busy_away),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = if (isAvailable) HustleSuccess else HustleWarning,
                             fontWeight = FontWeight.SemiBold,
@@ -147,7 +149,7 @@ fun BottomSheetContent(
             ) {
                 Icon(
                     imageVector = Icons.Default.Star,
-                    contentDescription = "Rating",
+                    contentDescription = stringResource(R.string.cd_rating),
                     tint = HustleWarningAmber,
                     modifier = Modifier.size(18.dp),
                 )
@@ -177,7 +179,7 @@ fun BottomSheetContent(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Place,
-                        contentDescription = "Location info",
+                        contentDescription = stringResource(R.string.map_cd_location_info),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp),
                     )
@@ -198,7 +200,7 @@ fun BottomSheetContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             HustleButton(
-                text = "View Profile",
+                text = stringResource(R.string.action_view_profile),
                 onClick = {
                     onDismiss()
                     onNavigateToServiceDetail(pin.serviceId)
@@ -208,7 +210,7 @@ fun BottomSheetContent(
             )
 
             HustleButton(
-                text = "Message",
+                text = stringResource(R.string.action_message),
                 onClick = {
                     onDismiss()
                     onNavigateToChatDetail(pin.providerId)
@@ -219,7 +221,7 @@ fun BottomSheetContent(
         }
 
         HustleButton(
-            text = "Get Directions",
+            text = stringResource(R.string.action_get_directions),
             onClick = {
                 val intent = Intent(
                     Intent.ACTION_VIEW,

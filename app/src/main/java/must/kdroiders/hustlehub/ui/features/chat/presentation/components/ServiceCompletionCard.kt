@@ -28,8 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.theme.HustleSuccess
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
@@ -75,7 +77,7 @@ fun ServiceCompletionCard(
                 }
                 Spacer(Modifier.width(10.dp))
                 Text(
-                    text = "Service Completed!",
+                    text = stringResource(R.string.chat_service_completed_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -84,10 +86,11 @@ fun ServiceCompletionCard(
 
             Spacer(Modifier.height(8.dp))
 
-            val displayTitle = if (!serviceTitle.isNullOrBlank()) serviceTitle else "service"
+            val fallbackTitle = stringResource(R.string.chat_service_fallback)
+            val displayTitle = if (!serviceTitle.isNullOrBlank()) serviceTitle else fallbackTitle
             val providerFirstName = providerName.split(" ").firstOrNull() ?: providerName
             Text(
-                text = "How was $providerFirstName's $displayTitle?",
+                text = stringResource(R.string.chat_service_rating_prompt_format, providerFirstName, displayTitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium,
@@ -104,7 +107,7 @@ fun ServiceCompletionCard(
                 )
                 Spacer(Modifier.width(4.dp))
                 Text(
-                    text = "Rate your experience",
+                    text = stringResource(R.string.chat_rate_experience),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -133,7 +136,7 @@ fun ServiceCompletionCard(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Write a Review",
+                        text = stringResource(R.string.chat_write_review),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                     )

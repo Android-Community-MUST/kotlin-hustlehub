@@ -26,11 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
@@ -49,12 +51,14 @@ fun ChangePasswordScreen(
     val uiState by changePasswordViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    val successToastMessage = stringResource(R.string.auth_password_changed_success)
+
     HustleScaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        "Change Password",
+                        stringResource(R.string.auth_change_password_title),
                         modifier = Modifier.semantics { heading() },
                     )
                 },
@@ -78,7 +82,7 @@ fun ChangePasswordScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Secure your account",
+                text = stringResource(R.string.auth_secure_account_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.semantics { heading() },
@@ -87,7 +91,7 @@ fun ChangePasswordScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Enter your current password to verify your identity, then choose a new strong password.",
+                text = stringResource(R.string.auth_change_password_desc),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -97,7 +101,7 @@ fun ChangePasswordScreen(
             HustleTextField(
                 value = uiState.currentPassword,
                 onValueChange = changePasswordViewModel::onCurrentPasswordChange,
-                placeholder = "Current Password",
+                placeholder = stringResource(R.string.auth_current_password_hint),
                 isPassword = true,
                 leadingIcon = Icons.Default.Lock,
                 modifier = Modifier.fillMaxWidth(),
@@ -108,7 +112,7 @@ fun ChangePasswordScreen(
             HustleTextField(
                 value = uiState.newPassword,
                 onValueChange = changePasswordViewModel::onNewPasswordChange,
-                placeholder = "New Password",
+                placeholder = stringResource(R.string.auth_new_password_hint),
                 isPassword = true,
                 leadingIcon = Icons.Default.Lock,
                 modifier = Modifier.fillMaxWidth(),
@@ -125,7 +129,7 @@ fun ChangePasswordScreen(
             HustleTextField(
                 value = uiState.confirmPassword,
                 onValueChange = changePasswordViewModel::onConfirmPasswordChange,
-                placeholder = "Confirm New Password",
+                placeholder = stringResource(R.string.auth_confirm_new_password_hint),
                 isPassword = true,
                 leadingIcon = Icons.Default.Lock,
                 modifier = Modifier.fillMaxWidth(),
@@ -143,11 +147,11 @@ fun ChangePasswordScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             HustleButton(
-                text = "Save Password",
+                text = stringResource(R.string.auth_btn_save_password),
                 onClick = {
                     changePasswordViewModel.changePassword(
                         onSuccess = {
-                            Toast.makeText(context, "Password changed successfully", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, successToastMessage, Toast.LENGTH_SHORT).show()
                             onBack()
                         },
                     )
@@ -163,10 +167,10 @@ fun ChangePasswordScreen(
 fun PasswordStrengthIndicator(strength: PasswordStrength) {
     val (color, text, weight) = when (strength) {
         PasswordStrength.NONE -> Triple(Color.Transparent, "", 0.01f)
-        PasswordStrength.WEAK -> Triple(MaterialTheme.colorScheme.error, "Weak", 0.25f)
-        PasswordStrength.MEDIUM -> Triple(HustleWarningAmber, "Medium", 0.5f)
-        PasswordStrength.STRONG -> Triple(HustleActiveGreen, "Strong", 0.75f)
-        PasswordStrength.VERY_STRONG -> Triple(HustleActiveGreen, "Very Strong", 1f)
+        PasswordStrength.WEAK -> Triple(MaterialTheme.colorScheme.error, stringResource(R.string.auth_strength_weak), 0.25f)
+        PasswordStrength.MEDIUM -> Triple(HustleWarningAmber, stringResource(R.string.auth_strength_medium), 0.5f)
+        PasswordStrength.STRONG -> Triple(HustleActiveGreen, stringResource(R.string.auth_strength_strong), 0.75f)
+        PasswordStrength.VERY_STRONG -> Triple(HustleActiveGreen, stringResource(R.string.auth_strength_very_strong), 1f)
     }
 
     if (strength == PasswordStrength.NONE) return

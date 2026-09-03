@@ -16,9 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import must.kdroiders.hustlehub.R
 
 /**
  * A horizontal row of up to 3 portfolio thumbnails.
@@ -55,7 +57,7 @@ fun PortfolioGallery(
             ) {
                 AsyncImage(
                     model = url,
-                    contentDescription = "Portfolio image ${index + 1}",
+                    contentDescription = stringResource(R.string.cd_portfolio_image_format, index + 1),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )

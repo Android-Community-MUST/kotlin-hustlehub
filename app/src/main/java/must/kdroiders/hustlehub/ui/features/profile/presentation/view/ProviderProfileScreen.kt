@@ -48,9 +48,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
@@ -84,12 +86,15 @@ fun ProviderProfileScreen(
         providerProfileViewModel.initialize(providerId)
     }
 
+    val userBlockedToast = stringResource(R.string.toast_user_blocked)
+    val defaultUserName = stringResource(R.string.label_user)
+
     HustleScaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = state.provider?.name ?: "Provider Profile",
+                        text = state.provider?.name ?: stringResource(R.string.profile_provider_fallback_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
@@ -106,21 +111,21 @@ fun ProviderProfileScreen(
 
                         Box {
                             IconButton(onClick = { showMenu = true }) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                                Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.cd_more_options))
                             }
                             DropdownMenu(
                                 expanded = showMenu,
                                 onDismissRequest = { showMenu = false },
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Report Profile") },
+                                    text = { Text(stringResource(R.string.action_report_profile)) },
                                     onClick = {
                                         showMenu = false
                                         showReportDialog = true
                                     },
-                                )
+                                    )
                                 DropdownMenuItem(
-                                    text = { Text("Block User", color = MaterialTheme.colorScheme.error) },
+                                    text = { Text(stringResource(R.string.action_block_user), color = MaterialTheme.colorScheme.error) },
                                     onClick = {
                                         showMenu = false
                                         showBlockDialog = true
@@ -132,24 +137,24 @@ fun ProviderProfileScreen(
                         if (showBlockDialog) {
                             AlertDialog(
                                 onDismissRequest = { showBlockDialog = false },
-                                title = { Text("Block ${state.provider?.name ?: "User"}?") },
-                                text = { Text("They will no longer be able to message you, view your profile, or see your map pins.") },
+                                title = { Text(stringResource(R.string.dialog_block_user_title, state.provider?.name ?: defaultUserName)) },
+                                text = { Text(stringResource(R.string.dialog_block_user_msg)) },
                                 confirmButton = {
                                     TextButton(
                                         onClick = {
                                             showBlockDialog = false
                                             providerProfileViewModel.blockUser {
-                                                Toast.makeText(context, "User blocked", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, userBlockedToast, Toast.LENGTH_SHORT).show()
                                                 onBack()
                                             }
                                         },
                                     ) {
-                                        Text("Block", color = MaterialTheme.colorScheme.error)
+                                        Text(stringResource(R.string.action_block), color = MaterialTheme.colorScheme.error)
                                     }
                                 },
                                 dismissButton = {
                                     TextButton(onClick = { showBlockDialog = false }) {
-                                        Text("Cancel")
+                                        Text(stringResource(R.string.action_cancel))
                                     }
                                 },
                             )
@@ -184,13 +189,13 @@ fun ProviderProfileScreen(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 HustleButton(
-                                    text = "Edit Profile",
+                                    text = stringResource(R.string.profile_edit_button),
                                     variant = HustleButtonVariant.Secondary,
                                     onClick = onNavigateToEditProfile,
                                     modifier = Modifier.weight(1f),
                                 )
                                 HustleButton(
-                                    text = "Manage Services",
+                                    text = stringResource(R.string.action_manage_services),
                                     variant = HustleButtonVariant.Primary,
                                     onClick = onNavigateToMyServices,
                                     modifier = Modifier.weight(1f),
@@ -206,7 +211,7 @@ fun ProviderProfileScreen(
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 ) {
                                     HustleButton(
-                                        text = "Call",
+                                        text = stringResource(R.string.action_call),
                                         variant = HustleButtonVariant.Secondary,
                                         icon = Icons.Default.Call,
                                         onClick = {
@@ -216,7 +221,7 @@ fun ProviderProfileScreen(
                                         modifier = Modifier.weight(1f),
                                     )
                                     HustleButton(
-                                        text = "Message",
+                                        text = stringResource(R.string.action_message),
                                         variant = HustleButtonVariant.Primary,
                                         onClick = {
                                             onNavigateToChat(provider.id)
@@ -226,7 +231,7 @@ fun ProviderProfileScreen(
                                 }
                             } else {
                                 HustleButton(
-                                    text = "Message",
+                                    text = stringResource(R.string.action_message),
                                     onClick = {
                                         state.provider?.id?.let { onNavigateToChat(it) }
                                     },
@@ -348,7 +353,7 @@ fun ProviderProfileScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                SectionHeader(title = "Services (${state.services.size})")
+                                SectionHeader(title = stringResource(R.string.profile_services_count_format, state.services.size))
                             }
                             Spacer(Modifier.height(4.dp))
                         }
@@ -356,8 +361,8 @@ fun ProviderProfileScreen(
                         if (state.services.isEmpty()) {
                             item(key = "empty_services") {
                                 must.kdroiders.hustlehub.sharedComposables.EmptyStateView(
-                                    title = "No services listed yet",
-                                    description = "This provider has not added any active services.",
+                                    title = stringResource(R.string.profile_no_services_title),
+                                    description = stringResource(R.string.profile_no_services_desc),
                                     icon = Icons.Default.WorkOff,
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                                 )

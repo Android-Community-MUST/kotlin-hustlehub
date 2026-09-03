@@ -55,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
@@ -79,6 +81,7 @@ fun WriteReviewScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val reviewSubmittedMsg = stringResource(R.string.review_submitted_snackbar)
 
     LaunchedEffect(serviceId) {
         viewModel.initialize(serviceId)
@@ -86,7 +89,7 @@ fun WriteReviewScreen(
 
     LaunchedEffect(state.submitSuccess) {
         if (state.submitSuccess) {
-            snackbarHostState.showSnackbar("Review submitted! Thank you.")
+            snackbarHostState.showSnackbar(reviewSubmittedMsg)
             delay(1200)
             onSubmitSuccess()
         }
@@ -106,7 +109,7 @@ fun WriteReviewScreen(
                 windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Text(
-                        text = "Write a Review",
+                        text = stringResource(R.string.review_write_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.semantics { heading() },
@@ -152,7 +155,7 @@ fun WriteReviewScreen(
                         Box(modifier = Modifier.size(56.dp)) {
                             AsyncImage(
                                 model = state.provider?.profilePhotoUrl,
-                                contentDescription = "Provider Avatar",
+                                contentDescription = stringResource(R.string.cd_provider_avatar),
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .clip(CircleShape)
@@ -172,7 +175,7 @@ fun WriteReviewScreen(
                         Spacer(Modifier.width(16.dp))
                         Column {
                             Text(
-                                text = state.provider?.name ?: "Unknown",
+                                text = state.provider?.name ?: stringResource(R.string.label_unknown),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -190,7 +193,7 @@ fun WriteReviewScreen(
                                     .padding(horizontal = 8.dp, vertical = 4.dp),
                             ) {
                                 Text(
-                                    text = "Verified Student",
+                                    text = stringResource(R.string.settings_verified_student),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                                     fontWeight = FontWeight.Bold,
@@ -217,7 +220,7 @@ fun WriteReviewScreen(
                         )
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            text = "You have already submitted a review for this service.",
+                            text = stringResource(R.string.review_already_submitted),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             fontWeight = FontWeight.Medium,
@@ -238,12 +241,12 @@ fun WriteReviewScreen(
 
                 // Rating Feedback Text
                 val feedbackText = when (state.rating) {
-                    5 -> "Outstanding!"
-                    4 -> "Great!"
-                    3 -> "Good"
-                    2 -> "Could be better"
-                    1 -> "Poor"
-                    else -> "Tap or drag stars to rate"
+                    5 -> stringResource(R.string.review_rate_5)
+                    4 -> stringResource(R.string.review_rate_4)
+                    3 -> stringResource(R.string.review_rate_3)
+                    2 -> stringResource(R.string.review_rate_2)
+                    1 -> stringResource(R.string.review_rate_1)
+                    else -> stringResource(R.string.review_rate_hint)
                 }
                 Text(
                     text = feedbackText,
@@ -255,7 +258,10 @@ fun WriteReviewScreen(
                 if (state.rating > 0) {
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "You rated this service ${state.rating} star${if (state.rating > 1) "s" else ""}",
+                        text = stringResource(
+                            if (state.rating > 1) R.string.review_rated_stars_plural else R.string.review_rated_stars_singular,
+                            state.rating,
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -264,15 +270,16 @@ fun WriteReviewScreen(
                 Spacer(Modifier.height(32.dp))
 
                 // Review Input Area
+                val defaultProviderName = stringResource(R.string.profile_fallback_name)
                 val providerFirstName = state.provider
                     ?.name
                     ?.split(" ")
-                    ?.firstOrNull() ?: "the provider"
+                    ?.firstOrNull() ?: defaultProviderName
 
                 HustleTextField(
                     value = state.comment,
                     onValueChange = viewModel::onCommentChanged,
-                    placeholder = "Share your experience with $providerFirstName...\nWas the delivery on time? How was the quality?",
+                    placeholder = stringResource(R.string.review_comment_placeholder, providerFirstName),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = false,
                     minLines = 5,
@@ -283,7 +290,7 @@ fun WriteReviewScreen(
 
                 // Live Character Count Indicator
                 Text(
-                    text = "${state.commentLength} / ${state.maxCommentLength} characters",
+                    text = stringResource(R.string.review_char_count_format, state.commentLength, state.maxCommentLength),
                     style = MaterialTheme.typography.labelMedium,
                     color = if (state.commentLength >=
                         state.maxCommentLength
@@ -342,7 +349,7 @@ fun WriteReviewScreen(
                         onCheckedChange = viewModel::onAnonymousToggled,
                     )
                     Text(
-                        text = "Post anonymously",
+                        text = stringResource(R.string.review_post_anonymously),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -372,7 +379,11 @@ fun WriteReviewScreen(
                             horizontalArrangement = Arrangement.Center,
                         ) {
                             Text(
-                                text = if (state.hasAlreadyReviewed) "Already Reviewed" else "Submit Review",
+                                text = if (state.hasAlreadyReviewed) {
+                                    stringResource(R.string.review_already_reviewed_btn)
+                                } else {
+                                    stringResource(R.string.review_submit_btn)
+                                },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                             )
@@ -411,20 +422,20 @@ fun WriteReviewScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Success",
+                            contentDescription = stringResource(R.string.cd_success),
                             tint = must.kdroiders.hustlehub.ui.theme.HustleSuccess,
                             modifier = Modifier.size(96.dp),
                         )
                         Spacer(Modifier.height(16.dp))
                         Text(
-                            text = "Review Submitted!",
+                            text = stringResource(R.string.review_success_title),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "Thank you for sharing your feedback",
+                            text = stringResource(R.string.review_success_subtitle),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

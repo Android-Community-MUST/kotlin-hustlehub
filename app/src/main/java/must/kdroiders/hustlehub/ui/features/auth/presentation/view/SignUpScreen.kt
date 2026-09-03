@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -59,7 +60,7 @@ fun SignUpScreen(
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
-                text = "Create Account",
+                text = stringResource(R.string.auth_signup_title),
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold,
@@ -71,7 +72,7 @@ fun SignUpScreen(
 
             )
             Text(
-                text = "Join HustleHub with your student email",
+                text = stringResource(R.string.auth_signup_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 32.dp),
@@ -80,7 +81,7 @@ fun SignUpScreen(
             HustleTextField(
                 value = uiState.name,
                 onValueChange = signUpViewModel::onNameChanged,
-                label = "Full Name",
+                label = stringResource(R.string.auth_name_label),
                 modifier = Modifier.fillMaxWidth(),
                 isError = uiState.nameError != null,
                 errorText = uiState.nameError,
@@ -95,8 +96,8 @@ fun SignUpScreen(
             HustleTextField(
                 value = uiState.email,
                 onValueChange = signUpViewModel::onEmailChanged,
-                label = "Must Student Email",
-                placeholder = "example@students.must.ac.ke",
+                label = stringResource(R.string.auth_student_email_label),
+                placeholder = stringResource(R.string.auth_student_email_hint),
                 modifier = Modifier.fillMaxWidth(),
                 isError = uiState.emailError != null,
                 errorText = uiState.emailError,
@@ -111,7 +112,7 @@ fun SignUpScreen(
             HustleTextField(
                 value = uiState.password,
                 onValueChange = signUpViewModel::onPasswordChanged,
-                label = "Password",
+                label = stringResource(R.string.auth_password_hint),
                 modifier = Modifier.fillMaxWidth(),
                 isError = uiState.passwordError != null,
                 errorText = uiState.passwordError,
@@ -130,7 +131,7 @@ fun SignUpScreen(
             HustleTextField(
                 value = uiState.confirmPassword,
                 onValueChange = signUpViewModel::onConfirmPasswordChanged,
-                label = "Confirm Password",
+                label = stringResource(R.string.auth_confirm_password_hint),
                 modifier = Modifier.fillMaxWidth(),
                 isError = uiState.confirmPasswordError != null,
                 errorText = uiState.confirmPasswordError,
@@ -141,7 +142,7 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             HustleButton(
-                text = "Sign Up",
+                text = stringResource(R.string.auth_btn_signup),
                 onClick = { signUpViewModel.signUp(onSignUpSuccess) },
                 modifier = Modifier.fillMaxWidth(),
                 loading = uiState.isLoading,
@@ -168,7 +169,7 @@ fun SignUpScreen(
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
                 Text(
-                    text = "  OR  ",
+                    text = stringResource(R.string.divider_or),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     letterSpacing = 1.sp,
@@ -183,7 +184,7 @@ fun SignUpScreen(
 
             // Google sign-in button
             HustleButton(
-                text = "Continue with Google",
+                text = stringResource(R.string.auth_btn_google),
                 onClick = { onGoogleSignInClick() },
                 variant = HustleButtonVariant.Outlined,
                 painter = painterResource(id = R.drawable.google),
@@ -198,12 +199,12 @@ fun SignUpScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Already have an account?  ",
+                    text = stringResource(R.string.auth_already_have_account),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "Login",
+                    text = stringResource(R.string.auth_btn_login),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,

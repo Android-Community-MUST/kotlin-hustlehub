@@ -27,10 +27,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.android.gms.location.LocationServices
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleCard
 import must.kdroiders.hustlehub.sharedComposables.HustleCardVariant
@@ -78,7 +80,7 @@ fun ServiceLocationCard(
                     modifier = Modifier.size(20.dp),
                 )
                 Text(
-                    text = "Service Operating Location",
+                    text = stringResource(R.string.service_location_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -88,19 +90,21 @@ fun ServiceLocationCard(
             Spacer(Modifier.height(4.dp))
 
             Text(
-                text = "Where will you provide this service when operating on campus?",
+                text = stringResource(R.string.service_location_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             Spacer(Modifier.height(12.dp))
 
+            val currentDeviceLocationLabel = stringResource(R.string.loc_current_device_location)
+
             // Selection Mode Chips
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
                     selected = locationMode == LocationSelectionMode.CAMPUS_PRESET,
                     onClick = { onModeChange(LocationSelectionMode.CAMPUS_PRESET) },
-                    label = { Text("Preset", fontSize = 11.sp) },
+                    label = { Text(stringResource(R.string.loc_mode_preset), fontSize = 11.sp) },
                     leadingIcon = {
                         Icon(Icons.Default.School, contentDescription = null, modifier = Modifier.size(14.dp))
                     },
@@ -114,14 +118,14 @@ fun ServiceLocationCard(
                         try {
                             fusedClient.lastLocation.addOnSuccessListener { loc ->
                                 loc?.let {
-                                    onCustomLocationSelect(it.latitude, it.longitude, "Current Device Location")
+                                    onCustomLocationSelect(it.latitude, it.longitude, currentDeviceLocationLabel)
                                 }
                             }
                         } catch (e: SecurityException) {
                             timber.log.Timber.e(e, "GPS permission error")
                         }
                     },
-                    label = { Text("My GPS", fontSize = 11.sp) },
+                    label = { Text(stringResource(R.string.loc_mode_gps), fontSize = 11.sp) },
                     leadingIcon = {
                         Icon(Icons.Default.MyLocation, contentDescription = null, modifier = Modifier.size(14.dp))
                     },
@@ -133,7 +137,7 @@ fun ServiceLocationCard(
                         onModeChange(LocationSelectionMode.MAP_PICKER)
                         showMapModal = true
                     },
-                    label = { Text("Pick on Map", fontSize = 11.sp) },
+                    label = { Text(stringResource(R.string.loc_mode_pick_map), fontSize = 11.sp) },
                     leadingIcon = {
                         Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(14.dp))
                     },
@@ -146,7 +150,7 @@ fun ServiceLocationCard(
             when (locationMode) {
                 LocationSelectionMode.CAMPUS_PRESET -> {
                     Text(
-                        text = "Select Campus Landmark:",
+                        text = stringResource(R.string.service_landmark_select_label),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -173,9 +177,9 @@ fun ServiceLocationCard(
                 LocationSelectionMode.CURRENT_GPS -> {
                     Text(
                         text = if (selectedLat != null) {
-                            "Detected Coordinates: ${"%.4f".format(selectedLat)}, ${"%.4f".format(selectedLng)}"
+                            stringResource(R.string.loc_detected_coords_format, selectedLat, selectedLng ?: 0.0)
                         } else {
-                            "Detecting GPS location..."
+                            stringResource(R.string.loc_detecting_gps)
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
@@ -184,7 +188,7 @@ fun ServiceLocationCard(
                 }
                 LocationSelectionMode.MAP_PICKER -> {
                     HustleButton(
-                        text = if (selectedLat != null) "Change Location on Map" else "Open Map Picker",
+                        text = if (selectedLat != null) stringResource(R.string.loc_change_map) else stringResource(R.string.loc_open_map_picker),
                         onClick = { showMapModal = true },
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -197,7 +201,7 @@ fun ServiceLocationCard(
             HustleTextField(
                 value = locationLabel,
                 onValueChange = onLabelChange,
-                placeholder = "Location note (e.g. Hostel 3, Room 12 or Block B)",
+                placeholder = stringResource(R.string.service_location_note_placeholder),
             )
         }
     }

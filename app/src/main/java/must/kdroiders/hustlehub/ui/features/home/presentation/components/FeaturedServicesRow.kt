@@ -32,11 +32,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.sharedComposables.FeaturedBadge
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
@@ -127,7 +130,7 @@ private fun FeaturedServiceCard(
             }
 
             if (service.isFeatured) {
-                must.kdroiders.hustlehub.sharedComposables.FeaturedBadge(
+                FeaturedBadge(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(8.dp),
@@ -193,11 +196,10 @@ private fun FeaturedServiceCard(
             )
             Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.Bottom) {
-                val displayPrice = remember(service.priceRange) {
-                    "KES ${service.priceRange.split("-").first().trim()}"
-                }
+                val rawPrice = service.priceRange.split("-").first().trim()
+                val displayPrice = stringResource(R.string.currency_kes_format, rawPrice)
                 Text(
-                    text = "from ",
+                    text = stringResource(R.string.price_from_prefix),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White.copy(alpha = 0.7f),
                     fontSize = 10.sp,

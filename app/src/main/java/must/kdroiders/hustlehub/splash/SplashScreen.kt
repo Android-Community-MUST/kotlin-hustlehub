@@ -37,11 +37,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import must.kdroiders.hustlehub.R
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -147,7 +149,7 @@ fun SplashScreen(
                 // Lightning bolt icon
                 Icon(
                     imageVector = Icons.Filled.Bolt,
-                    contentDescription = "HustleHub Logo",
+                    contentDescription = stringResource(R.string.splash_logo_cd),
                     modifier = Modifier
                         .size(64.dp)
                         .graphicsLayer {
@@ -163,7 +165,7 @@ fun SplashScreen(
 
             // App name
             Text(
-                text = "HustleHub",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
                 color = onBackground,
@@ -175,7 +177,7 @@ fun SplashScreen(
 
             // Tagline
             Text(
-                text = "Your Campus Marketplace",
+                text = stringResource(R.string.splash_tagline),
                 style = MaterialTheme.typography.bodyMedium,
                 color = onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -218,7 +220,7 @@ fun SplashScreen(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "MERU UNIVERSITY · VERIFIED",
+                    text = stringResource(R.string.splash_university_verified),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
                     color = onSurfaceVariant,

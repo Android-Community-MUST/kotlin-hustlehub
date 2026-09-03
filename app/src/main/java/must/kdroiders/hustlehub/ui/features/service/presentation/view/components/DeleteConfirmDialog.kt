@@ -7,9 +7,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import must.kdroiders.hustlehub.R
 
 @Composable
 fun DeleteConfirmDialog(
@@ -21,7 +23,7 @@ fun DeleteConfirmDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Delete Service",
+                text = stringResource(R.string.dialog_delete_service_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.semantics { heading() },
@@ -29,7 +31,7 @@ fun DeleteConfirmDialog(
         },
         text = {
             Text(
-                text = "Are you sure you want to delete \"$serviceName\"? This action cannot be undone.",
+                text = stringResource(R.string.dialog_delete_service_msg, serviceName),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -40,7 +42,7 @@ fun DeleteConfirmDialog(
                 modifier = Modifier.minimumInteractiveComponentSize(),
             ) {
                 Text(
-                    text = "Delete",
+                    text = stringResource(R.string.action_delete),
                     color = MaterialTheme.colorScheme.error,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -51,7 +53,7 @@ fun DeleteConfirmDialog(
                 onClick = onDismiss,
                 modifier = Modifier.minimumInteractiveComponentSize(),
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         },
         containerColor = MaterialTheme.colorScheme.surface,

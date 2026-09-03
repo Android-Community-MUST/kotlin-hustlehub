@@ -21,12 +21,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import must.kdroiders.hustlehub.R
 
 // Analytics / Earnings tabs
 
@@ -41,13 +43,13 @@ fun ProfileBottomTabs(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         TabButton(
-            label = "Analytics",
+            label = stringResource(R.string.profile_tab_analytics),
             icon = Icons.Default.BarChart,
             modifier = Modifier.weight(1f),
             onClick = onAnalyticsClick,
         )
         TabButton(
-            label = "Earnings",
+            label = stringResource(R.string.profile_tab_earnings),
             icon = Icons.Outlined.MonetizationOn,
             modifier = Modifier.weight(1f),
             onClick = onEarningsClick,
@@ -62,6 +64,8 @@ fun TabButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
 ) {
+    val tabCd = stringResource(R.string.cd_tab_format, label)
+
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
@@ -74,7 +78,7 @@ fun TabButton(
             .padding(vertical = 18.dp, horizontal = 20.dp)
             .semantics {
                 role = androidx.compose.ui.semantics.Role.Tab
-                contentDescription = "$label tab"
+                contentDescription = tabCd
             },
     ) {
         Row(

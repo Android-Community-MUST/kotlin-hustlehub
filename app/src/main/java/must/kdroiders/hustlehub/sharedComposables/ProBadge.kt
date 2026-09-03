@@ -10,9 +10,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.R
 
 /**
  * Compact PRO badge chip shown next to provider names on discovery cards,
@@ -27,13 +29,14 @@ fun ProBadge(
     modifier: Modifier = Modifier,
 ) {
     if (!isVisible) return
+    val cd = stringResource(R.string.badge_pro_cd)
     AssistChip(
         onClick = {},
         enabled = false,
-        modifier = modifier.semantics { contentDescription = "HustleHub Pro member" },
+        modifier = modifier.semantics { contentDescription = cd },
         label = {
             Text(
-                text = "PRO",
+                text = stringResource(R.string.badge_pro_text),
                 style = MaterialTheme.typography.labelSmall,
             )
         },

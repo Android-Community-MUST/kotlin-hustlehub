@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -37,6 +38,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import must.kdroiders.hustlehub.R
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -94,15 +96,18 @@ private fun FilledSlot(
     index: Int,
     onRemove: () -> Unit,
 ) {
+    val imgCd = stringResource(R.string.cd_portfolio_image_format, index + 1)
+    val removeImgCd = stringResource(R.string.cd_remove_portfolio_image_format, index + 1)
+
     Box(
         modifier = Modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(12.dp))
-            .semantics { contentDescription = "Portfolio image ${index + 1}" },
+            .semantics { contentDescription = imgCd },
     ) {
         AsyncImage(
             model = model,
-            contentDescription = "Portfolio photo ${index + 1}",
+            contentDescription = imgCd,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
         )
@@ -115,7 +120,7 @@ private fun FilledSlot(
                 .clip(CircleShape)
                 .background(Color.Black.copy(alpha = 0.6f))
                 .semantics {
-                    contentDescription = "Remove portfolio image ${index + 1}"
+                    contentDescription = removeImgCd
                     role = Role.Button
                 }.clickable { onRemove() },
             contentAlignment = Alignment.Center,
@@ -132,6 +137,8 @@ private fun FilledSlot(
 
 @Composable
 private fun EmptySlot(onClick: (() -> Unit)?) {
+    val addImgCd = stringResource(R.string.cd_add_portfolio_image)
+
     Box(
         modifier = Modifier
             .aspectRatio(1f)
@@ -142,7 +149,7 @@ private fun EmptySlot(onClick: (() -> Unit)?) {
                 shape = RoundedCornerShape(12.dp),
             ).background(MaterialTheme.colorScheme.surface)
             .semantics {
-                contentDescription = "Add portfolio image"
+                contentDescription = addImgCd
                 if (onClick != null) role = Role.Button
             }.clickable(enabled = onClick != null) { onClick?.invoke() },
         contentAlignment = Alignment.Center,
@@ -160,7 +167,7 @@ private fun EmptySlot(onClick: (() -> Unit)?) {
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Add",
+                text = stringResource(R.string.action_add),
                 fontSize = 12.sp,
                 color = if (onClick != null) {
                     MaterialTheme.colorScheme.onSurfaceVariant

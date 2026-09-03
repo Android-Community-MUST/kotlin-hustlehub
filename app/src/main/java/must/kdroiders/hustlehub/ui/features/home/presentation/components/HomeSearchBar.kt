@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,7 +41,7 @@ fun HomeSearchBar(
     HustleSearchBar(
         query = query,
         onQueryChanged = onQueryChanged,
-        placeholder = "Search services...",
+        placeholder = stringResource(R.string.search_services_hint),
         readOnly = true,
         onSearchClick = onSearchClick,
         modifier = modifier,
@@ -65,13 +66,13 @@ fun HomeSearchBar(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_ai_sparkle),
-                    contentDescription = "AI Search",
+                    contentDescription = stringResource(R.string.cd_ai_search),
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(13.dp),
                 )
                 Spacer(Modifier.width(4.dp))
                 Text(
-                    text = "AI",
+                    text = stringResource(R.string.search_ai_chip_label),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary,

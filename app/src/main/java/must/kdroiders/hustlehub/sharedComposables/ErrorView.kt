@@ -27,13 +27,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 
 @Composable
 fun ErrorView(
     message: String,
     modifier: Modifier = Modifier,
-    title: String = "Something went wrong",
+    title: String = stringResource(R.string.error_default_title),
     icon: ImageVector = Icons.Rounded.ErrorOutline,
     onRetry: (() -> Unit)? = null,
 ) {
@@ -89,7 +91,7 @@ fun ErrorView(
         if (onRetry != null) {
             Spacer(Modifier.height(36.dp))
             HustleButton(
-                text = "Try Again",
+                text = stringResource(R.string.action_try_again),
                 onClick = onRetry,
                 variant = HustleButtonVariant.Outlined,
             )

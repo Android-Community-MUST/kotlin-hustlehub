@@ -24,9 +24,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import must.kdroiders.hustlehub.R
 
 @Composable
 fun MapRadarLoadingOverlay(
@@ -98,7 +100,7 @@ fun MapRadarLoadingOverlay(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Initializing campus map...",
+                text = stringResource(R.string.map_radar_initializing),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -107,7 +109,7 @@ fun MapRadarLoadingOverlay(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Locating nearby hustlers & services",
+                text = stringResource(R.string.map_radar_locating),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 12.sp,

@@ -50,6 +50,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -73,6 +74,7 @@ import com.google.maps.android.compose.rememberUpdatedMarkerState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import java.util.Locale
 
@@ -205,11 +207,12 @@ fun MapLocationPickerModal(
         }
     }
 
-    val displayAreaName = remember(geocodedAddress, confirmedLat, confirmedLng) {
+    val customLocFormat = stringResource(R.string.map_custom_location_format)
+    val displayAreaName = remember(geocodedAddress, confirmedLat, confirmedLng, customLocFormat) {
         if (geocodedAddress.isNotBlank()) {
             extractAreaName(geocodedAddress)
         } else {
-            "Custom Map Location (${"%.4f".format(confirmedLat)}, ${"%.4f".format(confirmedLng)})"
+            String.format(customLocFormat, confirmedLat, confirmedLng)
         }
     }
 
@@ -233,14 +236,14 @@ fun MapLocationPickerModal(
             ) {
                 Column {
                     Text(
-                        text = "Pin Operating Location",
+                        text = stringResource(R.string.map_pin_operating_location),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.semantics { heading() },
                     )
                     Text(
-                        text = "Tap the map to drop a pin, or drag to center",
+                        text = stringResource(R.string.map_drop_pin_guide),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -253,7 +256,7 @@ fun MapLocationPickerModal(
                 }) {
                     Icon(
                         imageVector = Icons.Default.Layers,
-                        contentDescription = "Toggle map type",
+                        contentDescription = stringResource(R.string.map_cd_toggle_type),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
@@ -312,11 +315,13 @@ fun MapLocationPickerModal(
                     }
                 }
 
+                val findCurrentLocCd = stringResource(R.string.map_cd_find_current_loc)
+
                 // Center crosshair — visible when no pin is dropped yet
                 if (pinnedLatLng == null) {
                     Icon(
                         imageVector = Icons.Default.Place,
-                        contentDescription = "Drag target",
+                        contentDescription = stringResource(R.string.map_cd_drag_target),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .size(40.dp)
@@ -355,12 +360,12 @@ fun MapLocationPickerModal(
                         .size(44.dp)
                         .semantics {
                             role = Role.Button
-                            contentDescription = "Find my current location"
+                            contentDescription = findCurrentLocCd
                         },
                 ) {
                     Icon(
                         imageVector = Icons.Default.MyLocation,
-                        contentDescription = "My Location",
+                        contentDescription = stringResource(R.string.map_cd_my_location),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
@@ -430,7 +435,7 @@ fun MapLocationPickerModal(
                     Spacer(Modifier.height(4.dp))
 
                     HustleButton(
-                        text = "Confirm Location",
+                        text = stringResource(R.string.action_confirm_location),
                         onClick = {
                             onLocationConfirmed(confirmedLat, confirmedLng, displayAreaName)
                         },

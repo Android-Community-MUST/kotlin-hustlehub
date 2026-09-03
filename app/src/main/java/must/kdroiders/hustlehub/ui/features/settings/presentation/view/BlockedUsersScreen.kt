@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
@@ -60,7 +62,7 @@ fun BlockedUsersScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Blocked Users",
+                        text = stringResource(R.string.settings_blocked_users_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.semantics { heading() },
@@ -104,14 +106,14 @@ fun BlockedUsersScreen(
                         )
                         Spacer(Modifier.height(16.dp))
                         Text(
-                            text = "No Blocked Users",
+                            text = stringResource(R.string.blocked_users_empty_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "Users you block will appear here. They won't be able to message you or see your profile.",
+                            text = stringResource(R.string.blocked_users_empty_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -204,7 +206,7 @@ private fun BlockedUserItem(
         Spacer(Modifier.width(8.dp))
 
         HustleButton(
-            text = "Unblock",
+            text = stringResource(R.string.action_unblock),
             onClick = onUnblock,
             variant = HustleButtonVariant.Outlined,
             modifier = Modifier.height(36.dp),

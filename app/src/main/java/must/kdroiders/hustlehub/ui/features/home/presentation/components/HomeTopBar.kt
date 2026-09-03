@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -37,6 +38,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.theme.CategoryNeonPurple
 
 @Composable
@@ -81,7 +83,7 @@ fun HomeTopBar(
             }
             Spacer(Modifier.width(10.dp))
             Text(
-                text = "HustleHub",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -90,6 +92,14 @@ fun HomeTopBar(
         }
 
         // Right icons
+        val notificationsCd = if (notificationCount > 0) {
+            stringResource(R.string.cd_notifications_unread_format, notificationCount)
+        } else {
+            stringResource(R.string.cd_notifications)
+        }
+        val profileCd = stringResource(R.string.cd_user_profile_initials_format, initials)
+        val comingSoonText = stringResource(R.string.home_coming_soon)
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -119,7 +129,7 @@ fun HomeTopBar(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notifications${if (notificationCount > 0) ", $notificationCount unread" else ""}",
+                        contentDescription = notificationsCd,
                         tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(20.dp),
                     )
@@ -140,12 +150,12 @@ fun HomeTopBar(
                     ).background(MaterialTheme.colorScheme.surfaceVariant)
                     .semantics {
                         role = Role.Button
-                        contentDescription = "User profile, initials $initials"
+                        contentDescription = profileCd
                     }.clickable {
                         if (onProfileClick != null) {
                             onProfileClick()
                         } else {
-                            Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, comingSoonText, Toast.LENGTH_SHORT).show()
                         }
                     },
                 contentAlignment = Alignment.Center,

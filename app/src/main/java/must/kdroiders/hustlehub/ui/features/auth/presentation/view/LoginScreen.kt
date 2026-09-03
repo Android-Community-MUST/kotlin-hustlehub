@@ -42,6 +42,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -108,7 +109,7 @@ fun LoginScreen(
             val logoResId = if (isDarkTheme) R.drawable.dark_logo else R.drawable.light_logo
             Image(
                 painter = painterResource(id = logoResId),
-                contentDescription = "HustleHub Logo",
+                contentDescription = stringResource(R.string.splash_logo_cd),
                 modifier = Modifier.size(92.dp),
             )
 
@@ -130,7 +131,7 @@ fun LoginScreen(
             Spacer(Modifier.height(6.dp))
 
             Text(
-                text = "Login to your account",
+                text = stringResource(R.string.auth_login_title),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.semantics { heading() },
@@ -142,7 +143,7 @@ fun LoginScreen(
             HustleTextField(
                 value = uiState.email,
                 onValueChange = { loginViewModel.onEmailChange(it) },
-                placeholder = "Email",
+                placeholder = stringResource(R.string.auth_email_hint),
                 leadingIcon = Icons.Default.Email,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
@@ -157,7 +158,7 @@ fun LoginScreen(
             HustleTextField(
                 value = uiState.password,
                 onValueChange = { loginViewModel.onPasswordChange(it) },
-                placeholder = "Password",
+                placeholder = stringResource(R.string.auth_password_hint),
                 isPassword = true,
                 leadingIcon = Icons.Default.Lock,
                 modifier = Modifier.fillMaxWidth(),
@@ -169,7 +170,7 @@ fun LoginScreen(
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                 TextButton(onClick = { showForgotPasswordDialog = true }) {
                     Text(
-                        text = "Forgot password?",
+                        text = stringResource(R.string.auth_forgot_password),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
@@ -193,7 +194,7 @@ fun LoginScreen(
 
             // Login primary button
             HustleButton(
-                text = "Login",
+                text = stringResource(R.string.auth_btn_login),
                 onClick = {
                     loginViewModel.login(
                         onSuccess = { hasProfile -> onLoginSuccess(hasProfile) },
@@ -216,7 +217,7 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
                 Text(
-                    text = "  OR  ",
+                    text = stringResource(R.string.divider_or),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     letterSpacing = 1.sp,
@@ -231,7 +232,7 @@ fun LoginScreen(
 
             // Google sign-in — Outlined HustleButton with Google painter
             HustleButton(
-                text = "Continue with Google",
+                text = stringResource(R.string.auth_btn_google),
                 onClick = { onGoogleSignInClick() },
                 variant = HustleButtonVariant.Outlined,
                 painter = painterResource(id = R.drawable.google),
@@ -247,12 +248,12 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "New here?  ",
+                    text = stringResource(R.string.auth_new_here),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "Create Account",
+                    text = stringResource(R.string.auth_create_account),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -264,12 +265,13 @@ fun LoginScreen(
         }
 
         if (showForgotPasswordDialog) {
+            val resetSuccessMessage = stringResource(R.string.auth_reset_password_success)
             AlertDialog(
                 onDismissRequest = { showForgotPasswordDialog = false },
-                title = { Text("Reset Password") },
+                title = { Text(stringResource(R.string.auth_reset_password_dialog_title)) },
                 text = {
                     Text(
-                        "Enter your student email address to receive a password reset link.",
+                        stringResource(R.string.auth_reset_password_dialog_desc),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 },
@@ -281,7 +283,7 @@ fun LoginScreen(
                                 email = uiState.email,
                                 onSuccess = {
                                     scope.launch {
-                                        snackbarHostState.showSnackbar("Password reset link sent to your email")
+                                        snackbarHostState.showSnackbar(resetSuccessMessage)
                                     }
                                 },
                                 onError = { err ->
@@ -292,12 +294,12 @@ fun LoginScreen(
                             )
                         },
                     ) {
-                        Text("Send Link")
+                        Text(stringResource(R.string.auth_btn_send_link))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showForgotPasswordDialog = false }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.action_cancel))
                     }
                 },
             )

@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -60,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
@@ -83,10 +85,11 @@ fun EditProfileScreen(
         uri?.let { viewModel.onAvatarPicked(it) }
     }
 
+    val profileUpdatedToast = stringResource(R.string.profile_updated_toast)
     // Navigate back on successful save
     LaunchedEffect(state.saveSuccess) {
         if (state.saveSuccess) {
-            snackbarHostState.showSnackbar("Profile updated!")
+            snackbarHostState.showSnackbar(profileUpdatedToast)
             onSaveSuccess()
         }
     }
@@ -105,7 +108,7 @@ fun EditProfileScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Edit Profile",
+                        text = stringResource(R.string.profile_edit_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.semantics { heading() },
@@ -127,6 +130,8 @@ fun EditProfileScreen(
             return@HustleScaffold
         }
 
+        val changePhotoCd = stringResource(R.string.cd_change_profile_photo)
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -142,7 +147,7 @@ fun EditProfileScreen(
             Box(contentAlignment = Alignment.BottomEnd) {
                 AsyncImage(
                     model = state.pendingAvatarUri ?: state.user?.profilePhotoUrl,
-                    contentDescription = "Profile photo",
+                    contentDescription = stringResource(R.string.cd_profile_photo),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(96.dp)
@@ -151,7 +156,7 @@ fun EditProfileScreen(
                         .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
                         .semantics {
                             role = Role.Button
-                            contentDescription = "Change Profile Photo"
+                            contentDescription = changePhotoCd
                         }.clickable {
                             photoPicker.launch(
                                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
@@ -179,7 +184,7 @@ fun EditProfileScreen(
             HustleTextField(
                 value = state.name,
                 onValueChange = viewModel::onNameChanged,
-                label = "Full Name",
+                label = stringResource(R.string.label_full_name),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
@@ -188,8 +193,8 @@ fun EditProfileScreen(
             HustleTextField(
                 value = state.bio,
                 onValueChange = viewModel::onBioChanged,
-                label = "Bio",
-                placeholder = "Tell customers about yourself...",
+                label = stringResource(R.string.label_bio),
+                placeholder = stringResource(R.string.placeholder_bio),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = false,
             )
@@ -198,7 +203,7 @@ fun EditProfileScreen(
             HustleTextField(
                 value = state.phone,
                 onValueChange = viewModel::onPhoneChanged,
-                label = "Phone Number",
+                label = stringResource(R.string.label_phone_number),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
@@ -207,12 +212,15 @@ fun EditProfileScreen(
             HustleTextField(
                 value = state.campusLocation,
                 onValueChange = viewModel::onCampusLocationChanged,
-                label = "Campus Location",
-                placeholder = "e.g. Hostel C, Room 204",
+                label = stringResource(R.string.label_campus_location),
+                placeholder = stringResource(R.string.placeholder_campus_location),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
             Spacer(Modifier.height(16.dp))
+
+            val allowCallsStateDesc = if (state.allowCalls) stringResource(R.string.state_on) else stringResource(R.string.state_off)
+            val allowCallsCd = stringResource(R.string.cd_allow_direct_calls)
 
             // Phone Call Privacy Toggle Card
             Card(
@@ -234,8 +242,8 @@ fun EditProfileScreen(
                         .padding(16.dp)
                         .semantics {
                             role = Role.Switch
-                            stateDescription = if (state.allowCalls) "On" else "Off"
-                            contentDescription = "Allow Direct Calls"
+                            stateDescription = allowCallsStateDesc
+                            contentDescription = allowCallsCd
                         },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -252,7 +260,7 @@ fun EditProfileScreen(
                                 modifier = Modifier.size(20.dp),
                             )
                             Text(
-                                text = "Allow Direct Calls",
+                                text = stringResource(R.string.profile_allow_calls_title),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -260,7 +268,7 @@ fun EditProfileScreen(
                         }
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "Let clients call your phone number directly for urgent service requests.",
+                            text = stringResource(R.string.profile_allow_calls_desc),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 16.sp,
@@ -285,7 +293,7 @@ fun EditProfileScreen(
             Spacer(Modifier.height(32.dp))
 
             HustleButton(
-                text = "Save Changes",
+                text = stringResource(R.string.action_save_changes),
                 onClick = viewModel::save,
                 loading = state.isSaving,
                 modifier = Modifier.fillMaxWidth(),

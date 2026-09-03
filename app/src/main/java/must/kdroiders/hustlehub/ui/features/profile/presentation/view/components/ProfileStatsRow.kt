@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 // Stats row — Score / Services / Reviews
@@ -50,19 +52,19 @@ fun ProfileStatsRow(
     ) {
         StatCard(
             value = hustleScore.toString(),
-            label = "HUSTLE\nSCORE",
+            label = stringResource(R.string.profile_stat_hustle_score),
             icon = Icons.Default.Star,
             iconTint = HustleWarningAmber,
             modifier = Modifier.weight(1f),
         )
         StatCard(
             value = serviceCount.toString(),
-            label = "SERVICES",
+            label = stringResource(R.string.profile_stat_services),
             modifier = Modifier.weight(1f),
         )
         StatCard(
             value = reviewCount.toString(),
-            label = "REVIEWS",
+            label = stringResource(R.string.profile_stat_reviews),
             onClick = onReviewsClick,
             modifier = Modifier.weight(1f),
         )

@@ -12,11 +12,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import must.kdroiders.hustlehub.R
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -27,18 +29,22 @@ fun DateSeparator(
     dateString: String,
     modifier: Modifier = Modifier,
 ) {
+    val todayText = stringResource(R.string.chat_date_today)
+    val yesterdayText = stringResource(R.string.chat_date_yesterday)
+    val unknownDateText = stringResource(R.string.chat_date_unknown)
+
     val displayDate = try {
         val instant = Instant.parse(dateString)
         val zonedDateTime = instant.atZone(ZoneId.systemDefault())
         val now = Instant.now().atZone(ZoneId.systemDefault())
 
         when (ChronoUnit.DAYS.between(zonedDateTime.toLocalDate(), now.toLocalDate())) {
-            0L -> "Today"
-            1L -> "Yesterday"
+            0L -> todayText
+            1L -> yesterdayText
             else -> zonedDateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
         }
     } catch (e: Exception) {
-        "Unknown Date"
+        unknownDateText
     }
 
     val pillShape = RoundedCornerShape(16.dp)

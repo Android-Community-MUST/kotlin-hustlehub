@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleCard
@@ -50,7 +52,7 @@ fun EmailVerificationScreen(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "Verify your email",
+            text = stringResource(R.string.auth_verify_email_title),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
@@ -59,7 +61,7 @@ fun EmailVerificationScreen(
         )
 
         Text(
-            text = "We sent a verification link to:\n$email\n\nPlease check your email and click the link to verify, then tap \"Verify Status\" below.",
+            text = stringResource(R.string.auth_verify_email_desc_format, email),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -91,7 +93,11 @@ fun EmailVerificationScreen(
 
                 // Verify button
                 HustleButton(
-                    text = if (uiState.isLoading) "Verifying..." else "Verify Status",
+                    text = if (uiState.isLoading) {
+                        stringResource(R.string.auth_btn_verifying)
+                    } else {
+                        stringResource(R.string.auth_btn_verify_status)
+                    },
                     onClick = {
                         emailVerificationViewModel.verifyOtp("", onVerified)
                     },
@@ -105,13 +111,13 @@ fun EmailVerificationScreen(
                 // Resend with 60s countdown
                 if (uiState.resendCooldown > 0) {
                     Text(
-                        text = "Resend email in ${uiState.resendCooldown}s",
+                        text = stringResource(R.string.auth_resend_cooldown_format, uiState.resendCooldown),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall,
                     )
                 } else {
                     HustleButton(
-                        text = "Resend Verification Email",
+                        text = stringResource(R.string.auth_btn_resend_email),
                         onClick = { emailVerificationViewModel.resendOtp() },
                         variant = HustleButtonVariant.Outlined,
                         modifier = Modifier.fillMaxWidth(),

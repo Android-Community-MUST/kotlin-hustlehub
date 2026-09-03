@@ -18,8 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.RatingBar
 
 @Composable
@@ -56,7 +58,7 @@ fun ReviewSummaryCard(
             RatingBar(rating = averageRating, starSize = 14.dp)
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "$totalReviews reviews",
+                text = stringResource(R.string.reviews_count_format, totalReviews),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

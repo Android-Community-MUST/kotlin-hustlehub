@@ -30,10 +30,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.features.home.domain.model.TopHustler
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.theme.CategoryNeonCyan
@@ -65,7 +67,7 @@ fun TopHustlersHeader(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
-            text = "Top Hustlers",
+            text = stringResource(R.string.home_section_top_hustlers),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -97,6 +99,7 @@ fun TopHustlerCard(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val comingSoon = stringResource(R.string.home_coming_soon)
 
     Box(
         modifier = modifier
@@ -105,7 +108,7 @@ fun TopHustlerCard(
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
             .clickable {
-                Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, comingSoon, Toast.LENGTH_SHORT).show()
                 onHustlerClick(hustler.id)
             },
     ) {
@@ -171,7 +174,7 @@ fun TopHustlerCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Star,
-                        contentDescription = "Rating",
+                        contentDescription = stringResource(R.string.cd_rating),
                         tint = HustleWarningAmber,
                         modifier = Modifier.size(14.dp),
                     )

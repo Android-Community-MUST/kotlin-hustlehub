@@ -19,9 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.PasswordStrength
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleTertiaryTeal
@@ -30,11 +32,11 @@ import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 @Composable
 fun PasswordStrengthIndicator(strength: PasswordStrength) {
     val strengthText = when (strength) {
-        PasswordStrength.NONE -> "Very Weak"
-        PasswordStrength.WEAK -> "Weak"
-        PasswordStrength.MEDIUM -> "Medium"
-        PasswordStrength.STRONG -> "Strong"
-        PasswordStrength.VERY_STRONG -> "Very Strong"
+        PasswordStrength.NONE -> stringResource(R.string.auth_strength_very_weak)
+        PasswordStrength.WEAK -> stringResource(R.string.auth_strength_weak)
+        PasswordStrength.MEDIUM -> stringResource(R.string.auth_strength_medium)
+        PasswordStrength.STRONG -> stringResource(R.string.auth_strength_strong)
+        PasswordStrength.VERY_STRONG -> stringResource(R.string.auth_strength_very_strong)
     }
 
     val errorColor = MaterialTheme.colorScheme.error
@@ -66,12 +68,13 @@ fun PasswordStrengthIndicator(strength: PasswordStrength) {
         label = "PasswordStrengthProgress",
     )
 
+    val cd = stringResource(R.string.cd_password_strength_format, strengthText)
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 4.dp, bottom = 8.dp)
             .semantics(mergeDescendants = true) {
-                contentDescription = "Password strength level: $strengthText"
+                contentDescription = cd
             },
     ) {
         Row(
@@ -80,7 +83,7 @@ fun PasswordStrengthIndicator(strength: PasswordStrength) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Password Strength",
+                text = stringResource(R.string.auth_password_strength_label),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

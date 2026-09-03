@@ -9,11 +9,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import must.kdroiders.hustlehub.R
 
 @Composable
 fun FeaturedBadge(
@@ -22,9 +24,10 @@ fun FeaturedBadge(
 ) {
     if (!isVisible) return
 
+    val cd = stringResource(R.string.badge_featured_cd)
     Row(
         modifier = modifier
-            .semantics { contentDescription = "Featured listing badge" }
+            .semantics { contentDescription = cd }
             .background(
                 color = MaterialTheme.colorScheme.tertiaryContainer,
                 shape = RoundedCornerShape(12.dp),
@@ -32,7 +35,7 @@ fun FeaturedBadge(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "\u26A1 FEATURED",
+            text = stringResource(R.string.badge_featured_text),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onTertiaryContainer,

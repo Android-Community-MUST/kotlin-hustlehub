@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 import must.kdroiders.hustlehub.ui.theme.HustleWhite
@@ -92,7 +94,7 @@ fun OfflineBanner(
                     modifier = Modifier.size(16.dp),
                 )
                 Text(
-                    text = if (isOffline) "You're offline. Browsing cached data." else "Back online",
+                    text = if (isOffline) stringResource(R.string.offline_banner_offline) else stringResource(R.string.offline_banner_online),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = HustleWhite,
@@ -105,7 +107,7 @@ fun OfflineBanner(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Retry connection",
+                            contentDescription = stringResource(R.string.offline_retry_cd),
                             tint = HustleWhite,
                             modifier = Modifier.size(16.dp),
                         )
