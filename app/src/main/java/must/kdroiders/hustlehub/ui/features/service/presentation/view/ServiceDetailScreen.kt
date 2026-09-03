@@ -30,7 +30,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.MoreVert
@@ -65,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -74,10 +74,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
 import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.ErrorView
+import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
+import must.kdroiders.hustlehub.sharedComposables.HustleBackButtonStyle
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
@@ -166,13 +169,13 @@ fun ServiceDetailScreen(
                     ) {
                         Column {
                             Text(
-                                text = "STARTING AT",
+                                text = stringResource(R.string.service_starting_at),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
-                                text = "KES ${state.service?.priceRange ?: ""} +",
+                                text = stringResource(R.string.service_price_starting_format, state.service?.priceRange ?: ""),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -181,13 +184,13 @@ fun ServiceDetailScreen(
 
                         if (state.isOwnService) {
                             HustleButton(
-                                text = "Edit Service",
+                                text = stringResource(R.string.action_edit_service),
                                 onClick = { onNavigateToEditService(serviceId) },
                                 modifier = Modifier.width(200.dp),
                             )
                         } else {
                             HustleButton(
-                                text = "DM Provider",
+                                text = stringResource(R.string.action_dm_provider),
                                 onClick = {
                                     showQuickContactModal = true
                                 },
@@ -240,33 +243,28 @@ fun ServiceDetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         // Back Button
-                        IconButton(
+                        HustleBackButton(
                             onClick = onBack,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.3f)),
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White,
-                            )
-                        }
+                            style = HustleBackButtonStyle.Overlay(),
+                        )
 
                         // Share, Bookmark and More
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            val shareComingSoonMsg = stringResource(R.string.service_share_coming_soon)
+                            val bookmarkSavedMsg = stringResource(R.string.bookmark_saved)
+                            val bookmarkRemovedMsg = stringResource(R.string.bookmark_removed)
+
                             IconButton(
-                                onClick = { scope.launch { snackbarHostState.showSnackbar("Share feature coming soon!") } },
+                                onClick = { scope.launch { snackbarHostState.showSnackbar(shareComingSoonMsg) } },
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(44.dp)
                                     .clip(CircleShape)
-                                    .background(Color.Black.copy(alpha = 0.3f)),
+                                    .background(Color.Black.copy(alpha = 0.4f)),
                             ) {
-                                Icon(Icons.Default.Share, contentDescription = "Share", tint = Color.White)
+                                Icon(Icons.Default.Share, contentDescription = stringResource(R.string.action_share), tint = Color.White, modifier = Modifier.size(22.dp))
                             }
                             var isBookmarked by remember { mutableStateOf(false) }
                             val bookmarkInteractionSource = remember { MutableInteractionSource() }
@@ -282,6 +280,7 @@ fun ServiceDetailScreen(
                                 animationSpec = spring(
                                     dampingRatio = Spring.DampingRatioHighBouncy,
                                     stiffness = Spring.StiffnessLow,
+                                    visibilityThreshold = null,
                                 ),
                                 label = "bookmark_scale",
                             )
@@ -290,21 +289,22 @@ fun ServiceDetailScreen(
                                 onClick = {
                                     isBookmarked = !isBookmarked
                                     scope.launch {
-                                        val msg = if (isBookmarked) "Saved!" else "Removed from saved"
+                                        val msg = if (isBookmarked) bookmarkSavedMsg else bookmarkRemovedMsg
                                         snackbarHostState.showSnackbar(msg)
                                     }
                                 },
                                 interactionSource = bookmarkInteractionSource,
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(44.dp)
                                     .clip(CircleShape)
-                                    .background(Color.Black.copy(alpha = 0.3f))
+                                    .background(Color.Black.copy(alpha = 0.4f))
                                     .scale(bookmarkScale),
                             ) {
                                 Icon(
                                     if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                    contentDescription = "Save",
+                                    contentDescription = stringResource(R.string.action_save),
                                     tint = if (isBookmarked) MaterialTheme.colorScheme.primary else Color.White,
+                                    modifier = Modifier.size(22.dp),
                                 )
                             }
 
@@ -315,18 +315,18 @@ fun ServiceDetailScreen(
                                 IconButton(
                                     onClick = { showMenu = true },
                                     modifier = Modifier
-                                        .size(40.dp)
+                                        .size(44.dp)
                                         .clip(CircleShape)
-                                        .background(Color.Black.copy(alpha = 0.3f)),
+                                        .background(Color.Black.copy(alpha = 0.4f)),
                                 ) {
-                                    Icon(Icons.Default.MoreVert, contentDescription = "More options", tint = Color.White)
+                                    Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.cd_more_options), tint = Color.White, modifier = Modifier.size(22.dp))
                                 }
                                 DropdownMenu(
                                     expanded = showMenu,
                                     onDismissRequest = { showMenu = false },
                                 ) {
                                     DropdownMenuItem(
-                                        text = { Text("Report Service") },
+                                        text = { Text(stringResource(R.string.action_report_service)) },
                                         onClick = {
                                             showMenu = false
                                             showReportDialog = true
@@ -405,7 +405,7 @@ private fun ServiceDetailContent(
 
                         AsyncImage(
                             model = service.portfolio[page],
-                            contentDescription = "Service Hero Image ${page + 1}",
+                            contentDescription = stringResource(R.string.cd_service_hero_image_page, page + 1),
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxSize()
@@ -442,7 +442,7 @@ private fun ServiceDetailContent(
                 } else if (service.iconUrl.isNotBlank()) {
                     AsyncImage(
                         model = service.iconUrl,
-                        contentDescription = "Service Hero Image",
+                        contentDescription = stringResource(R.string.cd_service_hero_image),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -484,7 +484,7 @@ private fun ServiceDetailContent(
 
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        text = "KES ",
+                        text = stringResource(R.string.currency_kes_prefix),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 2.dp),
@@ -535,7 +535,7 @@ private fun ServiceDetailContent(
                         ) {
                             Icon(
                                 Icons.Default.Verified,
-                                contentDescription = "Verified",
+                                contentDescription = stringResource(R.string.cd_verified),
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(14.dp),
                             )
@@ -545,7 +545,7 @@ private fun ServiceDetailContent(
 
                 Column(modifier = Modifier.weight(1f)) {
                     ServiceProviderBadge(
-                        name = provider?.name ?: "Loading…",
+                        name = provider?.name ?: stringResource(R.string.loading_ellipsis),
                         isVerifiedPro = provider?.isVerifiedPro == true,
                     )
                     provider?.campusLocation?.takeIf { it.isNotBlank() }?.let { location ->
@@ -575,14 +575,14 @@ private fun ServiceDetailContent(
                         Spacer(Modifier.width(4.dp))
                         Icon(
                             imageVector = Icons.Default.Star,
-                            contentDescription = "Rating",
+                            contentDescription = stringResource(R.string.cd_rating),
                             tint = MaterialTheme.colorScheme.tertiary,
                             modifier = Modifier.size(14.dp),
                         )
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "${state.totalReviewCount} jobs done",
+                        text = stringResource(R.string.service_jobs_done_format, state.totalReviewCount),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -594,7 +594,7 @@ private fun ServiceDetailContent(
         // About section
         if (service.description.isNotBlank()) {
             item(key = "about_header") {
-                SectionHeader(title = "About Service", modifier = Modifier.padding(horizontal = 20.dp))
+                SectionHeader(title = stringResource(R.string.service_about_title), modifier = Modifier.padding(horizontal = 20.dp))
                 Spacer(Modifier.height(12.dp))
             }
             item(key = "about_body") {
@@ -617,9 +617,9 @@ private fun ServiceDetailContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    SectionHeader(title = "Portfolio")
+                    SectionHeader(title = stringResource(R.string.service_portfolio_title))
                     TextButton(onClick = { /* Full gallery view later */ }) {
-                        Text("View All", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(R.string.home_view_all), style = MaterialTheme.typography.labelLarge)
                     }
                 }
                 Spacer(Modifier.height(8.dp))
@@ -644,7 +644,7 @@ private fun ServiceDetailContent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Reviews",
+                    text = stringResource(R.string.service_reviews_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -656,7 +656,7 @@ private fun ServiceDetailContent(
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                         modifier = Modifier.height(32.dp),
                     ) {
-                        Text("Write a Review", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                        Text(stringResource(R.string.chat_write_review), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -675,8 +675,8 @@ private fun ServiceDetailContent(
         if (state.reviews.isEmpty()) {
             item(key = "no_reviews") {
                 EmptyStateView(
-                    title = "No reviews yet",
-                    description = "Complete a service to leave the first review!",
+                    title = stringResource(R.string.reviews_empty_title),
+                    description = stringResource(R.string.reviews_empty_desc),
                     icon = Icons.Default.RateReview,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
                 )
@@ -694,7 +694,7 @@ private fun ServiceDetailContent(
                 item(key = "see_all") {
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         TextButton(onClick = { onNavigateToAllReviews(service.id) }) {
-                            Text("See all ${state.totalReviewCount} reviews")
+                            Text(stringResource(R.string.service_see_all_reviews_format, state.totalReviewCount))
                         }
                     }
                 }

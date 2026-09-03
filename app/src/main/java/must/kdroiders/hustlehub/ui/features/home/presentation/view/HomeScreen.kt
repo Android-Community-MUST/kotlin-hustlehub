@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,6 +59,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
@@ -223,6 +225,7 @@ fun HomeScreen(
 
                     if (state.featuredServices.isNotEmpty()) {
                         item(key = "featured_header", span = { GridItemSpan(maxLineSpan) }) {
+                            val comingSoon = stringResource(R.string.home_coming_soon)
                             Spacer(Modifier.height(4.dp))
                             Row(
                                 modifier = Modifier
@@ -232,7 +235,7 @@ fun HomeScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
-                                    text = "Featured Hustlers",
+                                    text = stringResource(R.string.home_section_featured),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onBackground,
@@ -240,13 +243,13 @@ fun HomeScreen(
                                 TextButton(
                                     onClick = {
                                         coroutineScope.launch {
-                                            snackbarHostState.showSnackbar("Coming soon")
+                                            snackbarHostState.showSnackbar(comingSoon)
                                         }
                                     },
                                     contentPadding = PaddingValues(0.dp),
                                 ) {
                                     Text(
-                                        text = "View All",
+                                        text = stringResource(R.string.home_view_all),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontSize = 12.sp,
@@ -282,7 +285,7 @@ fun HomeScreen(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                text = "Available Now",
+                                text = stringResource(R.string.home_section_available_now),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground,

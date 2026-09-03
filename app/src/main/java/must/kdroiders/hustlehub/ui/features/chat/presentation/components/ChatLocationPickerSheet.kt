@@ -53,8 +53,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -66,8 +66,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.MapLocationPickerModal
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.extractAreaName
+import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
+import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 import java.util.Locale
 
 // Campus Landmark Presets
@@ -168,6 +171,8 @@ fun ChatLocationPickerSheet(
         return
     }
 
+    val defaultLocationLabel = stringResource(R.string.chat_current_location)
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -180,7 +185,7 @@ fun ChatLocationPickerSheet(
         ) {
             // Sheet title
             Text(
-                text = "Share Location",
+                text = stringResource(R.string.chat_share_location_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -196,12 +201,12 @@ fun ChatLocationPickerSheet(
             CurrentLocationCard(
                 isLoadingGps = isLoadingGps,
                 isGeocodingGps = isGeocodingGps,
-                gpsAreaName = gpsAreaName.ifBlank { "Current Location" },
+                gpsAreaName = gpsAreaName.ifBlank { defaultLocationLabel },
                 gpsAddress = gpsAddress,
                 gpsAccuracy = gpsAccuracy,
                 onSend = {
                     if (gpsLat != 0.0 || gpsLng != 0.0) {
-                        onLocationSelected(gpsLat, gpsLng, gpsAreaName.ifBlank { "Current Location" })
+                        onLocationSelected(gpsLat, gpsLng, gpsAreaName.ifBlank { defaultLocationLabel })
                         scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
                     }
                 },
@@ -216,7 +221,7 @@ fun ChatLocationPickerSheet(
 
             // Section 2: Campus landmark presets
             Text(
-                text = "Campus Landmarks",
+                text = stringResource(R.string.chat_campus_landmarks),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -273,12 +278,12 @@ fun ChatLocationPickerSheet(
                 Spacer(Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Choose on Map",
+                        text = stringResource(R.string.chat_choose_on_map),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
-                        text = "Drop a pin anywhere on the map",
+                        text = stringResource(R.string.chat_drop_pin_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -333,7 +338,7 @@ private fun CurrentLocationCard(
         Column(modifier = Modifier.weight(1f)) {
             if (isLoadingGps) {
                 Text(
-                    text = "Getting your location…",
+                    text = stringResource(R.string.chat_getting_location),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -370,7 +375,7 @@ private fun CurrentLocationCard(
                         AccuracyDot(accuracy = gpsAccuracy)
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = "Accurate to ${gpsAccuracy.toInt()}m",
+                            text = stringResource(R.string.chat_accurate_to_format, gpsAccuracy.toInt()),
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -411,7 +416,7 @@ private fun CurrentLocationCard(
                 modifier = Modifier.size(16.dp),
             )
             Spacer(Modifier.width(4.dp))
-            Text("Send", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Text(stringResource(R.string.action_send), fontWeight = FontWeight.Bold, fontSize = 13.sp)
         }
     }
 }
@@ -422,7 +427,7 @@ private fun CurrentLocationCard(
  */
 @Composable
 private fun AccuracyDot(accuracy: Float) {
-    val dotColor = if (accuracy <= 50f) Color(0xFF34C759) else Color(0xFFFF9500)
+    val dotColor = if (accuracy <= 50f) HustleActiveGreen else HustleWarningAmber
     val infiniteTransition = rememberInfiniteTransition(label = "gpsDot")
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0.4f,

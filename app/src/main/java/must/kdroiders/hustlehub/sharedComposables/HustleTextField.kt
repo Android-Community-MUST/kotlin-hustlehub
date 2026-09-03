@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 
-private val TextFieldShape = RoundedCornerShape(10.dp)
+private val TextFieldShape = RoundedCornerShape(12.dp)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -205,7 +205,7 @@ fun HustleTextField(
         ) {
             Row(
                 modifier = Modifier
-                    .padding(start = 12.dp, top = 6.dp)
+                    .padding(start = 12.dp, top = 8.dp)
                     .semantics {
                         liveRegion = LiveRegionMode.Polite
                     },
@@ -214,7 +214,7 @@ fun HustleTextField(
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = null,
-                    modifier = Modifier.size(13.dp),
+                    modifier = Modifier.size(12.dp),
                     tint = MaterialTheme.colorScheme.error,
                 )
                 Spacer(Modifier.width(4.dp))

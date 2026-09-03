@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -25,6 +26,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
@@ -46,21 +48,21 @@ fun AvailabilityChipSelector(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         AvailabilityChip(
-            label = "Available",
+            label = stringResource(R.string.status_available),
             dotColor = HustleActiveGreen,
             selected = current == ServiceAvailability.AVAILABLE,
             enabled = enabled,
             onClick = { onSelect(ServiceAvailability.AVAILABLE) },
         )
         AvailabilityChip(
-            label = "Busy",
+            label = stringResource(R.string.status_busy),
             dotColor = HustleWarningAmber,
             selected = current == ServiceAvailability.BUSY,
             enabled = enabled,
             onClick = { onSelect(ServiceAvailability.BUSY) },
         )
         AvailabilityChip(
-            label = "Offline",
+            label = stringResource(R.string.status_offline),
             dotColor = HustleOfflineGray,
             selected = current == ServiceAvailability.OFFLINE,
             enabled = enabled,
@@ -84,6 +86,7 @@ private fun AvailabilityChip(
     }
 
     val borderColor = if (selected) dotColor else Color.Transparent
+    val selectedStateDesc = if (selected) stringResource(R.string.cd_selected) else stringResource(R.string.cd_not_selected)
 
     Row(
         modifier = Modifier
@@ -95,7 +98,7 @@ private fun AvailabilityChip(
             .semantics {
                 role = Role.RadioButton
                 this.selected = selected
-                stateDescription = if (selected) "Selected" else "Not selected"
+                stateDescription = selectedStateDesc
             }.padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),

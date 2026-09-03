@@ -18,9 +18,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
@@ -46,7 +48,7 @@ fun AccountSuspendedScreen(
         ) {
             Icon(
                 imageVector = Icons.Default.Block,
-                contentDescription = "Account Suspended",
+                contentDescription = stringResource(R.string.cd_account_suspended),
                 modifier = Modifier.size(80.dp),
                 tint = MaterialTheme.colorScheme.error,
             )
@@ -54,7 +56,7 @@ fun AccountSuspendedScreen(
             Spacer(Modifier.height(24.dp))
 
             Text(
-                text = "Account Suspended",
+                text = stringResource(R.string.auth_account_suspended_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -63,7 +65,7 @@ fun AccountSuspendedScreen(
             Spacer(Modifier.height(12.dp))
 
             Text(
-                text = "Your HustleHub account has been suspended.\nReason: $reason",
+                text = stringResource(R.string.auth_account_suspended_reason_format, reason),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -72,7 +74,7 @@ fun AccountSuspendedScreen(
             Spacer(Modifier.height(32.dp))
 
             HustleButton(
-                text = "Contact Support",
+                text = stringResource(R.string.action_contact_support),
                 onClick = onContactSupport,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -80,7 +82,7 @@ fun AccountSuspendedScreen(
             Spacer(Modifier.height(12.dp))
 
             HustleButton(
-                text = "Log Out",
+                text = stringResource(R.string.settings_logout),
                 onClick = onLogout,
                 variant = HustleButtonVariant.Secondary,
                 modifier = Modifier.fillMaxWidth(),

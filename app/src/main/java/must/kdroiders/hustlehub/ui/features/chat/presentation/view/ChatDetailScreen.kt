@@ -32,10 +32,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -47,7 +49,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.CameraAlt
@@ -100,6 +101,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
@@ -115,10 +117,12 @@ import coil.compose.AsyncImage
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.notification.ActiveConversationTracker
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.core.utils.createTempCameraFile
 import must.kdroiders.hustlehub.core.utils.saveImageToGallery
+import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
@@ -386,7 +390,7 @@ fun ChatDetailScreen(
                     .padding(bottom = 32.dp),
             ) {
                 Text(
-                    text = "Image Options",
+                    text = stringResource(R.string.chat_image_options_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
@@ -403,14 +407,14 @@ fun ChatDetailScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Download,
-                        contentDescription = "Save to Gallery",
+                        contentDescription = stringResource(R.string.chat_save_to_gallery),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
-                        Text("Save to Gallery", fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.chat_save_to_gallery), fontWeight = FontWeight.Medium)
                         Text(
-                            text = "Download this image to your photos",
+                            text = stringResource(R.string.chat_save_to_gallery_desc),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -435,7 +439,7 @@ fun ChatDetailScreen(
                             if (!state.otherUserAvatar.isNullOrBlank()) {
                                 AsyncImage(
                                     model = state.otherUserAvatar,
-                                    contentDescription = "Avatar of ${state.otherUserName}",
+                                    contentDescription = stringResource(R.string.cd_avatar_format, state.otherUserName),
                                     modifier = Modifier
                                         .size(40.dp)
                                         .clip(CircleShape),
@@ -492,11 +496,11 @@ fun ChatDetailScreen(
                             }
                             val lastSeenAt = state.otherUserLastSeenAt
                             val subtitle = when {
-                                state.isTyping -> "typing..."
-                                state.isOtherUserOnline -> "online"
+                                state.isTyping -> stringResource(R.string.chat_status_typing)
+                                state.isOtherUserOnline -> stringResource(R.string.chat_status_online)
                                 lastSeenAt != null ->
-                                    "Last seen ${formatLastSeen(lastSeenAt)}"
-                                else -> "offline"
+                                    stringResource(R.string.chat_status_last_seen_format, formatLastSeen(lastSeenAt))
+                                else -> stringResource(R.string.chat_status_offline)
                             }
                             Text(
                                 text = subtitle,
@@ -512,19 +516,14 @@ fun ChatDetailScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
+                    HustleBackButton(onClick = onBackClick)
                 },
                 actions = {
                     if (state.isCurrentUserProvider && !state.isServiceCompleted) {
                         IconButton(onClick = { chatDetailViewModel.markServiceCompleted() }) {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Mark as Complete",
+                                contentDescription = stringResource(R.string.chat_mark_as_complete),
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                         }
@@ -536,21 +535,21 @@ fun ChatDetailScreen(
 
                     Box {
                         IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                            Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.cd_more_options))
                         }
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Report User") },
+                                text = { Text(stringResource(R.string.chat_report_user)) },
                                 onClick = {
                                     showMenu = false
                                     showReportDialog = true
                                 },
                             )
                             DropdownMenuItem(
-                                text = { Text("Block User", color = MaterialTheme.colorScheme.error) },
+                                text = { Text(stringResource(R.string.chat_block_user), color = MaterialTheme.colorScheme.error) },
                                 onClick = {
                                     showMenu = false
                                     showBlockDialog = true
@@ -560,7 +559,7 @@ fun ChatDetailScreen(
                     }
 
                     if (showReportDialog) {
-                        must.kdroiders.hustlehub.ui.features.report.presentation.ReportDialog(
+                        ReportDialog(
                             targetId = state.otherUserId,
                             targetType = "user",
                             onDismiss = { showReportDialog = false },
@@ -568,26 +567,28 @@ fun ChatDetailScreen(
                     }
 
                     if (showBlockDialog) {
+                        val blockedUserName = state.otherUserName.ifBlank { "User" }
+                        val userBlockedToast = stringResource(R.string.chat_user_blocked_toast)
                         AlertDialog(
                             onDismissRequest = { showBlockDialog = false },
-                            title = { Text("Block ${state.otherUserName.ifBlank { "User" }}?") },
-                            text = { Text("They will no longer be able to message you, view your profile, or see your map pins.") },
+                            title = { Text(stringResource(R.string.chat_block_user_title_format, blockedUserName)) },
+                            text = { Text(stringResource(R.string.chat_block_user_desc)) },
                             confirmButton = {
                                 TextButton(
                                     onClick = {
                                         showBlockDialog = false
                                         chatDetailViewModel.blockUser {
-                                            Toast.makeText(context, "User blocked", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, userBlockedToast, Toast.LENGTH_SHORT).show()
                                             onBackClick()
                                         }
                                     },
                                 ) {
-                                    Text("Block", color = MaterialTheme.colorScheme.error)
+                                    Text(stringResource(R.string.action_block), color = MaterialTheme.colorScheme.error)
                                 }
                             },
                             dismissButton = {
                                 TextButton(onClick = { showBlockDialog = false }) {
-                                    Text("Cancel")
+                                    Text(stringResource(R.string.action_cancel))
                                 }
                             },
                         )
@@ -604,11 +605,17 @@ fun ChatDetailScreen(
         containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier,
     ) { innerPadding ->
+        val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
+        val navBottom = innerPadding.calculateBottomPadding()
+        val effectiveBottomPadding = maxOf(navBottom, imeBottom)
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .imePadding(),
+                .padding(
+                    top = innerPadding.calculateTopPadding(),
+                    bottom = effectiveBottomPadding,
+                ),
         ) {
             // Mark as complete banner for provider when service not yet marked complete
             if (state.isCurrentUserProvider && !state.isServiceCompleted) {
@@ -630,14 +637,14 @@ fun ChatDetailScreen(
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = "Service finished? Mark as complete",
+                            text = stringResource(R.string.chat_service_finished_prompt),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
                     }
                     Text(
-                        text = "Mark Complete",
+                        text = stringResource(R.string.chat_mark_as_complete),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -664,6 +671,7 @@ fun ChatDetailScreen(
 
             // Messages list (reversed so it starts at the bottom)
             val reversedMessages = state.messages.reversed()
+            val cannotOpenMapToast = stringResource(R.string.chat_cannot_open_map)
             Box(modifier = Modifier.weight(1f)) {
                 LazyColumn(
                     state = listState,
@@ -735,7 +743,7 @@ fun ChatDetailScreen(
                                     try {
                                         context.startActivity(intent)
                                     } catch (e: Exception) {
-                                        Toast.makeText(context, "Could not open map app", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, cannotOpenMapToast, Toast.LENGTH_SHORT).show()
                                     }
                                 },
                                 onServiceCardClick = onNavigateToServiceDetail,
@@ -806,7 +814,7 @@ fun ChatDetailScreen(
                 ) {
                     AttachmentOption(
                         icon = Icons.Default.Image,
-                        label = "Gallery",
+                        label = stringResource(R.string.chat_attach_gallery),
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         onClick = {
@@ -816,7 +824,7 @@ fun ChatDetailScreen(
                     )
                     AttachmentOption(
                         icon = Icons.Filled.CameraAlt,
-                        label = "Camera",
+                        label = stringResource(R.string.chat_attach_camera),
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         onClick = {
@@ -843,7 +851,7 @@ fun ChatDetailScreen(
                     )
                     AttachmentOption(
                         icon = Icons.Default.LocationOn,
-                        label = "Location",
+                        label = stringResource(R.string.chat_attach_location),
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                         onClick = {
@@ -904,14 +912,14 @@ fun ChatDetailScreen(
                 val replyingTo = state.replyingToMessage
                 if (replyingTo != null) {
                     val replyText = when (replyingTo.type) {
-                        MessageType.VOICE -> "[Voice note]"
-                        MessageType.IMAGE -> "[Image]"
-                        MessageType.LOCATION -> "[Location]"
-                        MessageType.SERVICE_CARD -> "[Service Card]"
+                        MessageType.VOICE -> stringResource(R.string.chat_type_voice_note)
+                        MessageType.IMAGE -> stringResource(R.string.chat_type_photo)
+                        MessageType.LOCATION -> stringResource(R.string.chat_type_location)
+                        MessageType.SERVICE_CARD -> stringResource(R.string.chat_type_service_shared)
                         else -> replyingTo.content
                     }
                     val senderName = if (replyingTo.senderId == state.currentUserId) {
-                        "You"
+                        stringResource(R.string.chat_you)
                     } else {
                         state.otherUserName
                     }
@@ -936,7 +944,7 @@ fun ChatDetailScreen(
                             modifier = Modifier.weight(1f),
                         ) {
                             Text(
-                                text = "Replying to $senderName",
+                                text = stringResource(R.string.chat_replying_to_format, senderName),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary,
@@ -958,7 +966,7 @@ fun ChatDetailScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Cancel reply",
+                                contentDescription = stringResource(R.string.cd_cancel_reply),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(16.dp),
                             )
@@ -971,7 +979,7 @@ fun ChatDetailScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (isRecording) {
@@ -994,7 +1002,7 @@ fun ChatDetailScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Recording: ${formatSeconds(recordingDurationSeconds)}",
+                                text = stringResource(R.string.chat_recording_format, formatSeconds(recordingDurationSeconds)),
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 14.sp,
@@ -1011,7 +1019,7 @@ fun ChatDetailScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Cancel,
-                                    contentDescription = "Cancel",
+                                    contentDescription = stringResource(R.string.action_cancel),
                                     tint = MaterialTheme.colorScheme.error,
                                 )
                             }
@@ -1028,7 +1036,7 @@ fun ChatDetailScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
-                                    contentDescription = "Send",
+                                    contentDescription = stringResource(R.string.action_send),
                                     tint = MaterialTheme.colorScheme.primary,
                                 )
                             }
@@ -1044,7 +1052,7 @@ fun ChatDetailScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.AttachFile,
-                            contentDescription = "Attach",
+                            contentDescription = stringResource(R.string.cd_attach),
                         )
                     }
 
@@ -1054,7 +1062,7 @@ fun ChatDetailScreen(
                             textInput = newText
                             chatDetailViewModel.onTypingChanged(newText)
                         },
-                        placeholder = { Text("Type a message...") },
+                        placeholder = { Text(stringResource(R.string.chat_type_message_hint)) },
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp)),
@@ -1096,7 +1104,7 @@ fun ChatDetailScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Mic,
-                                contentDescription = "Record Voice Note",
+                                contentDescription = stringResource(R.string.cd_record_voice_note),
                             )
                         }
                     } else {
@@ -1125,7 +1133,7 @@ fun ChatDetailScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Send,
-                                contentDescription = "Send",
+                                contentDescription = stringResource(R.string.action_send),
                             )
                         }
                     }

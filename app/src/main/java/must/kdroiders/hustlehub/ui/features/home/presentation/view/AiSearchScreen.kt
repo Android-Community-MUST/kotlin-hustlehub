@@ -18,13 +18,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -41,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -48,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
+import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
@@ -87,19 +87,14 @@ fun AiSearchScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             TopAppBar(
                 windowInsets = WindowInsets(0, 0, 0, 0),
-                title = { Text("AI Search", fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { heading() }) },
+                title = { Text(stringResource(R.string.ai_search_title), fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { heading() }) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
+                    HustleBackButton(onClick = onBack)
                 },
                 actions = {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_ai_sparkle),
-                        contentDescription = "AI powered",
+                        contentDescription = stringResource(R.string.cd_ai_powered),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(end = 16.dp).size(20.dp),
                     )
@@ -121,8 +116,8 @@ fun AiSearchScreen(
                         HustleTextField(
                             value = state.query,
                             onValueChange = aiSearchViewModel::onQueryChanged,
-                            label = "What do you need?",
-                            placeholder = "e.g. braids near Hostel C under 500",
+                            label = stringResource(R.string.ai_search_input_label),
+                            placeholder = stringResource(R.string.ai_search_input_hint),
                             singleLine = true,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -130,7 +125,7 @@ fun AiSearchScreen(
                         )
                         Spacer(Modifier.height(12.dp))
                         HustleButton(
-                            text = "Find Match",
+                            text = stringResource(R.string.ai_search_btn_find_match),
                             onClick = { aiSearchViewModel.onSearch() },
                             enabled = state.query.isNotBlank(),
                             loading = state.isLoading,
@@ -162,7 +157,7 @@ fun AiSearchScreen(
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
-                                text = "AI is temporarily unavailable — showing keyword results instead.",
+                                text = stringResource(R.string.ai_search_fallback_notice),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
                                 modifier = Modifier.padding(12.dp),
@@ -184,7 +179,7 @@ fun AiSearchScreen(
                 if (!state.isLoading && state.matches.isNotEmpty()) {
                     item(key = "results_header") {
                         Text(
-                            text = "Best Matches",
+                            text = stringResource(R.string.ai_search_best_matches),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
@@ -206,8 +201,8 @@ fun AiSearchScreen(
                 if (!state.isLoading && state.matches.isEmpty() && state.query.isNotEmpty() && state.error == null) {
                     item(key = "empty") {
                         EmptyStateView(
-                            title = "No AI matches found",
-                            description = "Try rephrasing your search query.",
+                            title = stringResource(R.string.ai_search_empty_title),
+                            description = stringResource(R.string.ai_search_empty_desc),
                             icon = Icons.Default.Search,
                             modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
                         )
@@ -232,16 +227,16 @@ private fun QueryUnderstandingRow(understanding: QueryUnderstanding) {
         contentPadding = PaddingValues(vertical = 4.dp),
     ) {
         understanding.service?.let {
-            item { InputChip(selected = false, onClick = {}, label = { Text("Service: $it") }) }
+            item { InputChip(selected = false, onClick = {}, label = { Text(stringResource(R.string.ai_chip_service_format, it)) }) }
         }
         understanding.category?.let {
-            item { InputChip(selected = false, onClick = {}, label = { Text("Category: $it") }) }
+            item { InputChip(selected = false, onClick = {}, label = { Text(stringResource(R.string.ai_chip_category_format, it)) }) }
         }
         understanding.location?.let {
-            item { InputChip(selected = false, onClick = {}, label = { Text("Near: $it") }) }
+            item { InputChip(selected = false, onClick = {}, label = { Text(stringResource(R.string.ai_chip_near_format, it)) }) }
         }
         understanding.maxPrice?.let {
-            item { InputChip(selected = false, onClick = {}, label = { Text("≤ KES $it") }) }
+            item { InputChip(selected = false, onClick = {}, label = { Text(stringResource(R.string.ai_chip_price_format, it)) }) }
         }
     }
 }

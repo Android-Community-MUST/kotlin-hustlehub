@@ -29,12 +29,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -49,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -62,6 +61,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.AvailabilityChipSelector
@@ -127,15 +128,9 @@ fun CreateServiceScreen(
                     .padding(horizontal = 8.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Navigate back",
-                        tint = MaterialTheme.colorScheme.onBackground,
-                    )
-                }
+                HustleBackButton(onClick = onBack)
                 Text(
-                    text = if (state.isEditMode) "Edit Service" else "Create Service",
+                    text = if (state.isEditMode) stringResource(R.string.service_edit_service) else stringResource(R.string.service_create_service),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -159,9 +154,13 @@ fun CreateServiceScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    SectionLabel(text = "Portfolio")
+                    SectionLabel(text = stringResource(R.string.service_portfolio_title))
                     Text(
-                        text = if (state.isProUser) "PRO • $totalImages/$maxAllowed photos" else "Max $maxAllowed photos • $totalImages/$maxAllowed",
+                        text = if (state.isProUser) {
+                            stringResource(R.string.service_portfolio_pro_format, totalImages, maxAllowed)
+                        } else {
+                            stringResource(R.string.service_portfolio_free_format, maxAllowed, totalImages)
+                        },
                         fontSize = 12.sp,
                         fontWeight = if (state.isProUser) FontWeight.Bold else FontWeight.Normal,
                         color = if (state.isProUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -192,9 +191,9 @@ fun CreateServiceScreen(
                     Spacer(Modifier.height(6.dp))
                     Text(
                         text = if (totalImages > 3) {
-                            "You have $totalImages photos attached to this service. Upgrade to PRO to add or swap more photos!"
+                            stringResource(R.string.service_portfolio_pro_upgrade_attached, totalImages)
                         } else {
-                            "Free limit reached (3/3 photos). Upgrade to PRO to upload up to 15 portfolio photos!"
+                            stringResource(R.string.service_portfolio_free_limit_upgrade)
                         },
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
@@ -207,11 +206,11 @@ fun CreateServiceScreen(
                 Spacer(Modifier.height(20.dp))
 
                 // Service title
-                SectionLabel(text = "Service Title", required = true)
+                SectionLabel(text = stringResource(R.string.service_title_label), required = true)
                 HustleTextField(
                     value = state.title,
                     onValueChange = createServiceViewModel::onTitleChange,
-                    placeholder = "e.g. Professional Braiding Services",
+                    placeholder = stringResource(R.string.service_title_placeholder),
                     isError = state.titleError != null,
                     errorText = state.titleError,
                     keyboardOptions = KeyboardOptions(
@@ -222,7 +221,7 @@ fun CreateServiceScreen(
                 Spacer(Modifier.height(16.dp))
 
                 // Category
-                SectionLabel(text = "Category", required = true)
+                SectionLabel(text = stringResource(R.string.filter_category_label), required = true)
                 CategoryDropdown(
                     selected = state.category,
                     onSelect = createServiceViewModel::onCategoryChange,
@@ -232,11 +231,11 @@ fun CreateServiceScreen(
                 Spacer(Modifier.height(16.dp))
 
                 // Description
-                SectionLabel(text = "Description")
+                SectionLabel(text = stringResource(R.string.service_desc_label))
                 HustleTextField(
                     value = state.description,
                     onValueChange = createServiceViewModel::onDescriptionChange,
-                    placeholder = "Describe your service details, what you offer, and any prerequisites...",
+                    placeholder = stringResource(R.string.service_desc_placeholder),
                     isError = state.descriptionError != null,
                     errorText = state.descriptionError,
                     singleLine = false,
@@ -261,12 +260,12 @@ fun CreateServiceScreen(
                 Spacer(Modifier.height(16.dp))
 
                 // Price range
-                SectionLabel(text = "Price Range (KES)", required = true)
+                SectionLabel(text = stringResource(R.string.service_price_range_label), required = true)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     HustleTextField(
                         value = state.minPrice,
                         onValueChange = createServiceViewModel::onMinPriceChange,
-                        placeholder = "Min",
+                        placeholder = stringResource(R.string.service_price_min_placeholder),
                         isError = state.priceError != null,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
@@ -277,7 +276,7 @@ fun CreateServiceScreen(
                     HustleTextField(
                         value = state.maxPrice,
                         onValueChange = createServiceViewModel::onMaxPriceChange,
-                        placeholder = "Max",
+                        placeholder = stringResource(R.string.service_price_max_placeholder),
                         isError = state.priceError != null,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
@@ -297,9 +296,9 @@ fun CreateServiceScreen(
                 Spacer(Modifier.height(16.dp))
 
                 // Tags
-                SectionLabel(text = "Tags")
+                SectionLabel(text = stringResource(R.string.service_tags_label))
                 Text(
-                    text = "Max 5 tags • press Enter or + to add",
+                    text = stringResource(R.string.service_tags_hint),
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp),
@@ -315,6 +314,10 @@ fun CreateServiceScreen(
                         }
                     }
                 }
+                val addTagCd = stringResource(R.string.cd_add_tag)
+                val barterStateDesc = if (state.openToBarter) stringResource(R.string.state_on) else stringResource(R.string.state_off)
+                val barterCd = stringResource(R.string.cd_barter_service)
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -322,7 +325,7 @@ fun CreateServiceScreen(
                     HustleTextField(
                         value = state.tagInput,
                         onValueChange = createServiceViewModel::onTagInputChange,
-                        placeholder = "e.g. braids",
+                        placeholder = stringResource(R.string.service_tags_placeholder),
                         isError = state.tagError != null,
                         errorText = state.tagError,
                         keyboardOptions = KeyboardOptions(
@@ -345,7 +348,7 @@ fun CreateServiceScreen(
                             .background(MaterialTheme.colorScheme.primary)
                             .semantics {
                                 role = Role.Button
-                                contentDescription = "Add tag"
+                                contentDescription = addTagCd
                             }.clickable { createServiceViewModel.addTag() },
                         contentAlignment = Alignment.Center,
                     ) {
@@ -368,21 +371,21 @@ fun CreateServiceScreen(
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                         .semantics {
                             role = Role.Switch
-                            stateDescription = if (state.openToBarter) "On" else "Off"
-                            contentDescription = "Open to Barter Service"
+                            stateDescription = barterStateDesc
+                            contentDescription = barterCd
                         },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Open to Barter",
+                            text = stringResource(R.string.service_open_to_barter),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            text = "Accept service exchanges instead of cash",
+                            text = stringResource(R.string.service_barter_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         )
@@ -415,7 +418,7 @@ fun CreateServiceScreen(
                 Spacer(Modifier.height(16.dp))
 
                 // Current status
-                SectionLabel(text = "Current Status")
+                SectionLabel(text = stringResource(R.string.service_current_status_label))
                 AvailabilityChipSelector(
                     current = state.availability,
                     onSelect = createServiceViewModel::onAvailabilityChange,
@@ -449,7 +452,7 @@ fun CreateServiceScreen(
                 Spacer(Modifier.height(28.dp))
 
                 HustleButton(
-                    text = if (state.isLoading) "Publishing…" else "Publish Service",
+                    text = if (state.isLoading) stringResource(R.string.service_publishing) else stringResource(R.string.service_publish_button),
                     onClick = {
                         focusManager.clearFocus()
                         createServiceViewModel.publish()

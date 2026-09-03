@@ -6,9 +6,11 @@ import androidx.compose.animation.core.spring
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.PersonOutline
@@ -60,6 +62,13 @@ private val bottomTabs = listOf(
         label = "Chat",
         selectedIcon = Icons.AutoMirrored.Filled.Chat,
         unselectedIcon = Icons.AutoMirrored.Outlined.Chat,
+    ),
+
+    BottomTabItem(
+        key = BottomBookmarks,
+        label = "saved",
+        selectedIcon = Icons.Outlined.BookmarkBorder,
+        unselectedIcon = Icons.Default.Bookmark,
     ),
     BottomTabItem(
         key = BottomProfile,

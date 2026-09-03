@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.theme
 
+import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -11,9 +12,12 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
     primary = HustlePrimaryBlue,
@@ -45,6 +49,11 @@ private val LightColorScheme = lightColorScheme(
     onError = HustleWhite,
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF93000A),
+
+    inverseSurface = HustleDarkNavy,
+    inverseOnSurface = HustleWhite,
+    inversePrimary = HustleSecondaryBlue,
+    scrim = Color(0xFF000000).copy(alpha = 0.32f),
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -77,6 +86,11 @@ private val DarkColorScheme = darkColorScheme(
     onError = HustleWhite,
     errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
+
+    inverseSurface = HustleDarkOnBackground,
+    inverseOnSurface = HustleDarkBackground,
+    inversePrimary = HustlePrimaryBlue,
+    scrim = Color(0xFF000000).copy(alpha = 0.6f),
 )
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -102,6 +116,16 @@ fun HustleHubTheme(
         screenWidthDp < 360 -> compactDimensions()
         screenWidthDp >= 600 -> expandedDimensions()
         else -> standardDimensions()
+    }
+
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? Activity)?.window ?: return@SideEffect
+            val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightStatusBars = !darkTheme
+            insetsController.isAppearanceLightNavigationBars = !darkTheme
+        }
     }
 
     CompositionLocalProvider(LocalDimensions provides dimensions) {

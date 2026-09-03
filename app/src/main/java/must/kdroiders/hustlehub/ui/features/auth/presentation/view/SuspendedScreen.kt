@@ -23,11 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 
 @Composable
@@ -58,7 +60,7 @@ fun SuspendedScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Block,
-                    contentDescription = "Account suspended icon",
+                    contentDescription = stringResource(R.string.cd_account_suspended_icon),
                     tint = MaterialTheme.colorScheme.onErrorContainer,
                     modifier = Modifier.size(44.dp),
                 )
@@ -66,7 +68,7 @@ fun SuspendedScreen(
 
             Spacer(Modifier.height(24.dp))
             Text(
-                text = "Account Suspended",
+                text = stringResource(R.string.auth_account_suspended_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -75,7 +77,7 @@ fun SuspendedScreen(
 
             Spacer(Modifier.height(12.dp))
             Text(
-                text = "Your HustleHub account has been suspended due to the following reason:",
+                text = stringResource(R.string.auth_account_suspended_notice),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -90,7 +92,7 @@ fun SuspendedScreen(
                     .padding(16.dp),
             ) {
                 Text(
-                    text = suspensionReason ?: "Account review pending",
+                    text = suspensionReason ?: stringResource(R.string.auth_account_review_pending),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -100,12 +102,13 @@ fun SuspendedScreen(
             }
 
             Spacer(Modifier.height(32.dp))
+            val appealSubject = stringResource(R.string.auth_account_suspended_appeal_subject)
             HustleButton(
-                text = "Contact Support",
+                text = stringResource(R.string.action_contact_support),
                 onClick = {
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
                         data = Uri.parse("mailto:kotlin.hustlehub@gmail.com")
-                        putExtra(Intent.EXTRA_SUBJECT, "HustleHub Account Suspension Appeal")
+                        putExtra(Intent.EXTRA_SUBJECT, appealSubject)
                     }
                     context.startActivity(intent)
                 },
@@ -117,7 +120,7 @@ fun SuspendedScreen(
                 onClick = onSignOut,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Sign Out")
+                Text(stringResource(R.string.action_sign_out))
             }
         }
     }

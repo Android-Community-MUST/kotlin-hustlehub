@@ -23,10 +23,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.ServiceProviderBadge
 import must.kdroiders.hustlehub.ui.theme.HustleSuccess
 
@@ -43,8 +45,13 @@ fun ProfileInfo(
     isVerifiedPro: Boolean = false,
     onAvailabilityToggle: ((Boolean) -> Unit)? = null,
 ) {
+    val fallbackName = stringResource(R.string.profile_fallback_name)
+    val statusAvailable = stringResource(R.string.profile_status_available)
+    val statusOffDuty = stringResource(R.string.profile_status_off_duty)
+    val fallbackCampusLoc = stringResource(R.string.profile_fallback_campus_location)
+
     ServiceProviderBadge(
-        name = name.ifBlank { "Hustler Provider" },
+        name = name.ifBlank { fallbackName },
         isVerifiedPro = isVerifiedPro,
     )
 
@@ -55,7 +62,7 @@ fun ProfileInfo(
         val successColor = HustleSuccess
         val errorColor = MaterialTheme.colorScheme.error
         val statusColor = if (isOnline) successColor else errorColor
-        val statusText = if (isOnline) "Available on Campus" else "Off Duty"
+        val statusText = if (isOnline) statusAvailable else statusOffDuty
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -130,7 +137,7 @@ fun ProfileInfo(
         )
         Spacer(Modifier.width(4.dp))
         Text(
-            text = campusLocation.ifBlank { "MUST Main Campus" },
+            text = campusLocation.ifBlank { fallbackCampusLoc },
             fontSize = 13.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

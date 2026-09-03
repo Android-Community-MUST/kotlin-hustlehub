@@ -79,6 +79,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -101,6 +102,7 @@ import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.clustering.Clustering
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
@@ -210,6 +212,7 @@ fun MapScreen(
         )
     }
 
+    val locationPermRequiredMsg = stringResource(R.string.map_perm_required)
     // Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
@@ -219,7 +222,7 @@ fun MapScreen(
         isLocationPermissionGranted = granted
         if (!granted) {
             scope.launch {
-                snackbarHostState.showSnackbar("Location permission is required to center on your position.")
+                snackbarHostState.showSnackbar(locationPermRequiredMsg)
             }
         }
     }
@@ -362,7 +365,7 @@ fun MapScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
+                            contentDescription = stringResource(R.string.cd_search),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp),
                         )
@@ -382,7 +385,7 @@ fun MapScreen(
                                 Box(contentAlignment = Alignment.CenterStart) {
                                     if (uiState.searchQuery.isEmpty()) {
                                         Text(
-                                            text = "Search services on campus..",
+                                            text = stringResource(R.string.map_search_placeholder),
                                             style = MaterialTheme.typography.bodyMedium.copy(
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                             ),
@@ -396,7 +399,7 @@ fun MapScreen(
                         // Filter slider icon
                         Icon(
                             imageVector = Icons.Default.Tune,
-                            contentDescription = "Filters",
+                            contentDescription = stringResource(R.string.cd_filters),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp),
                         )
@@ -437,7 +440,7 @@ fun MapScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Notifications,
-                                contentDescription = "Notifications",
+                                contentDescription = stringResource(R.string.cd_notifications),
                                 tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(22.dp),
                             )
@@ -529,7 +532,7 @@ fun MapScreen(
                             if (isAvailableOnly) null else ServiceAvailability.AVAILABLE,
                         )
                     },
-                    label = { Text("Available Only", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                    label = { Text(stringResource(R.string.map_filter_available_only), fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
                     leadingIcon = {
                         if (isAvailableOnly) {
                             Icon(
@@ -584,7 +587,11 @@ fun MapScreen(
                                 .background(MaterialTheme.colorScheme.primary, CircleShape),
                         )
                         Text(
-                            text = "Showing $count provider${if (count == 1) "" else "s"}",
+                            text = if (count == 1) {
+                                stringResource(R.string.map_showing_providers_singular, count)
+                            } else {
+                                stringResource(R.string.map_showing_providers_plural, count)
+                            },
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -606,7 +613,7 @@ fun MapScreen(
             val currentBearing = cameraPositionState.position.bearing
             MapControlFloatingButton(
                 icon = Icons.Default.Explore,
-                contentDescription = "Reset Compass to North",
+                contentDescription = stringResource(R.string.map_cd_reset_compass),
                 modifier = Modifier.rotate(-currentBearing),
                 onClick = {
                     scope.launch {
@@ -625,7 +632,7 @@ fun MapScreen(
             // Map Type Toggle
             MapControlFloatingButton(
                 icon = Icons.Default.Layers,
-                contentDescription = "Toggle Map Type",
+                contentDescription = stringResource(R.string.map_cd_toggle_type),
                 onClick = {
                     mapType = if (mapType == MapType.NORMAL) MapType.HYBRID else MapType.NORMAL
                 },
@@ -648,7 +655,7 @@ fun MapScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Zoom In",
+                        contentDescription = stringResource(R.string.map_cd_zoom_in),
                         tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
@@ -668,7 +675,7 @@ fun MapScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Remove,
-                        contentDescription = "Zoom Out",
+                        contentDescription = stringResource(R.string.map_cd_zoom_out),
                         tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
@@ -676,6 +683,7 @@ fun MapScreen(
         }
 
         // 5. Custom Recenter Action Panel (Bottom Right)
+        val fetchingLocationMsg = stringResource(R.string.map_fetching_location)
         Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -685,7 +693,7 @@ fun MapScreen(
             // Recenter to MUST
             MapControlFloatingButton(
                 icon = Icons.Default.School,
-                contentDescription = "Center on Meru University",
+                contentDescription = stringResource(R.string.map_cd_center_campus),
                 onClick = {
                     scope.launch {
                         cameraPositionState.animate(
@@ -701,7 +709,7 @@ fun MapScreen(
             // Center on user location
             MapControlFloatingButton(
                 icon = Icons.Default.MyLocation,
-                contentDescription = "Center on My Location",
+                contentDescription = stringResource(R.string.map_cd_center_my_location),
                 onClick = {
                     if (isLocationPermissionGranted) {
                         scope.launch {
@@ -718,7 +726,7 @@ fun MapScreen(
                                         }
                                     } else {
                                         scope.launch {
-                                            snackbarHostState.showSnackbar("Fetching current location...")
+                                            snackbarHostState.showSnackbar(fetchingLocationMsg)
                                         }
                                     }
                                 }
@@ -806,25 +814,25 @@ fun MapScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Info,
-                            contentDescription = "Location Info",
+                            contentDescription = stringResource(R.string.map_cd_location_info),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp),
                         )
                         Text(
-                            text = "Enable Location Services",
+                            text = stringResource(R.string.map_enable_location_title),
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                     Text(
-                        text = "To find nearby student service providers and view your position on campus, please grant location access.",
+                        text = stringResource(R.string.map_enable_location_desc),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 16.sp,
                     )
                     HustleButton(
-                        text = "Grant Access",
+                        text = stringResource(R.string.action_grant_access),
                         onClick = {
                             permissionLauncher.launch(
                                 arrayOf(

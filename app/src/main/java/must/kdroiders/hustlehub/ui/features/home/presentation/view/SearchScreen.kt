@@ -58,12 +58,14 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SearchFilters
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SortOrder
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.EmptyServicesView
@@ -219,13 +221,13 @@ fun SearchScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "Recent",
+                                text = stringResource(R.string.search_recent_label),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             TextButton(onClick = { searchViewModel.clearRecentSearches() }) {
-                                Text("Clear", style = MaterialTheme.typography.labelMedium)
+                                Text(stringResource(R.string.action_clear), style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
@@ -272,7 +274,7 @@ fun SearchScreen(
                 if (!state.isLoading && state.services.isEmpty() && state.query.isNotEmpty()) {
                     item(key = "empty") {
                         EmptyServicesView(
-                            message = "No results for \"${state.query}\"",
+                            message = stringResource(R.string.search_no_results_format, state.query),
                             modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
                         )
                     }
@@ -331,7 +333,7 @@ private fun SearchTopBar(
         IconButton(onClick = onBack) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.action_back),
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
@@ -365,7 +367,7 @@ private fun SearchTopBar(
                 decorationBox = { inner ->
                     if (query.isEmpty()) {
                         Text(
-                            text = "Search services...",
+                            text = stringResource(R.string.search_services_hint),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -381,7 +383,7 @@ private fun SearchTopBar(
                 IconButton(onClick = { onQueryChanged("") }, modifier = Modifier.size(20.dp)) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Clear search",
+                        contentDescription = stringResource(R.string.cd_clear_search),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp),
                     )
@@ -395,7 +397,7 @@ private fun SearchTopBar(
         ) {
             Icon(
                 imageVector = Icons.Default.Tune,
-                contentDescription = "Filters",
+                contentDescription = stringResource(R.string.cd_filters),
                 tint = if (hasActiveFilters) {
                     MaterialTheme.colorScheme.primary
                 } else {
@@ -451,8 +453,13 @@ private fun ActiveFilterChipRow(
         }
         filters.availability?.let { avail ->
             item(key = "avail") {
+                val availLabel = if (avail == ServiceAvailability.AVAILABLE) {
+                    stringResource(R.string.filter_available)
+                } else {
+                    stringResource(R.string.filter_busy)
+                }
                 PremiumFilterChip(
-                    label = if (avail == ServiceAvailability.AVAILABLE) "Available" else "Busy",
+                    label = availLabel,
                     onRemove = onRemoveAvailability,
                 )
             }
@@ -471,7 +478,7 @@ private fun ActiveFilterChipRow(
                 modifier = Modifier.testTag("clear_all_filters_button"),
             ) {
                 Text(
-                    text = "Clear All",
+                    text = stringResource(R.string.action_clear_all),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.error,
                 )
@@ -502,7 +509,7 @@ private fun PremiumFilterChip(
         )
         Icon(
             imageVector = Icons.Default.Close,
-            contentDescription = "Remove",
+            contentDescription = stringResource(R.string.action_remove),
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(14.dp),
         )

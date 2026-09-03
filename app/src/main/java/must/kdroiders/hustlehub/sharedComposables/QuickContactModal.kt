@@ -22,8 +22,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.R
 
 /**
  * Just-In-Time (JIT) contact info modal.
@@ -50,13 +52,16 @@ fun QuickContactModal(
         containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
     ) {
+        val phoneRequiredError = stringResource(R.string.quick_contact_phone_required)
+        val locationRequiredError = stringResource(R.string.quick_contact_location_required)
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 16.dp),
         ) {
             Text(
-                text = "Delivery & Contact Info",
+                text = stringResource(R.string.quick_contact_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -65,7 +70,7 @@ fun QuickContactModal(
             Spacer(Modifier.height(6.dp))
 
             Text(
-                text = "Enter your phone number and campus location so the service provider can reach you.",
+                text = stringResource(R.string.quick_contact_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -78,8 +83,8 @@ fun QuickContactModal(
                     phone = it
                     error = null
                 },
-                label = { Text("Phone Number") },
-                placeholder = { Text("e.g. 0712345678") },
+                label = { Text(stringResource(R.string.quick_contact_phone_label)) },
+                placeholder = { Text(stringResource(R.string.quick_contact_phone_hint)) },
                 leadingIcon = {
                     Icon(Icons.Default.Phone, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 },
@@ -95,8 +100,8 @@ fun QuickContactModal(
                     campusLocation = it
                     error = null
                 },
-                label = { Text("Campus Residence / Location") },
-                placeholder = { Text("e.g. Hostel B Room 204 or Mess 2") },
+                label = { Text(stringResource(R.string.quick_contact_location_label)) },
+                placeholder = { Text(stringResource(R.string.quick_contact_location_hint)) },
                 leadingIcon = {
                     Icon(Icons.Default.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 },
@@ -116,14 +121,14 @@ fun QuickContactModal(
             Spacer(Modifier.height(24.dp))
 
             HustleButton(
-                text = "Save & Continue",
+                text = stringResource(R.string.action_save_and_continue),
                 onClick = {
                     if (phone.isBlank()) {
-                        error = "Phone number is required"
+                        error = phoneRequiredError
                         return@HustleButton
                     }
                     if (campusLocation.isBlank()) {
-                        error = "Campus location is required"
+                        error = locationRequiredError
                         return@HustleButton
                     }
                     onSaveContactInfo(phone.trim(), campusLocation.trim())

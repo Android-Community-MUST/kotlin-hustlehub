@@ -28,11 +28,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SearchFilters
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SortOrder
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
@@ -75,7 +77,7 @@ fun FilterBottomSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Filter Results",
+                    text = stringResource(R.string.filter_results_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -86,7 +88,7 @@ fun FilterBottomSheet(
                     modifier = Modifier.testTag("filter_reset_button"),
                 ) {
                     Text(
-                        "Reset",
+                        stringResource(R.string.action_reset),
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -95,7 +97,7 @@ fun FilterBottomSheet(
             Spacer(Modifier.height(24.dp))
 
             // Category multi-select chips
-            FilterSectionLabel("Category")
+            FilterSectionLabel(stringResource(R.string.filter_category_label))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ServiceCategory.entries
                     .filter { it != ServiceCategory.ALL }
@@ -119,7 +121,12 @@ fun FilterBottomSheet(
             Spacer(Modifier.height(20.dp))
 
             // Minimum rating slider
-            FilterSectionLabel("Min Rating: ${if (draft.minRating == 0f) "Any" else "%.1f+ stars".format(draft.minRating)}")
+            val ratingValueText = if (draft.minRating == 0f) {
+                stringResource(R.string.filter_rating_any)
+            } else {
+                stringResource(R.string.filter_rating_stars_format, draft.minRating)
+            }
+            FilterSectionLabel(stringResource(R.string.filter_min_rating_label_format, ratingValueText))
             Slider(
                 value = draft.minRating,
                 onValueChange = { onDraftChanged(draft.copy(minRating = it)) },
@@ -137,9 +144,13 @@ fun FilterBottomSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                FilterSectionLabel("PRICE RANGE")
+                FilterSectionLabel(stringResource(R.string.filter_price_range_label))
                 Text(
-                    text = if (draft.maxPrice >= 5000) "Any" else "KES 0 - ${draft.maxPrice}",
+                    text = if (draft.maxPrice >= 5000) {
+                        stringResource(R.string.filter_price_any)
+                    } else {
+                        stringResource(R.string.filter_price_range_format, draft.maxPrice)
+                    },
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -164,9 +175,13 @@ fun FilterBottomSheet(
             Spacer(Modifier.height(32.dp))
 
             // Availability segmented button
-            FilterSectionLabel("AVAILABILITY")
+            FilterSectionLabel(stringResource(R.string.filter_availability_label))
             val availabilityOptions = listOf(null, ServiceAvailability.AVAILABLE, ServiceAvailability.BUSY)
-            val availabilityLabels = listOf("All", "Available", "Busy")
+            val availabilityLabels = listOf(
+                stringResource(R.string.filter_all),
+                stringResource(R.string.filter_available),
+                stringResource(R.string.filter_busy),
+            )
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -185,7 +200,7 @@ fun FilterBottomSheet(
             Spacer(Modifier.height(32.dp))
 
             // Sort order segmented button
-            FilterSectionLabel("Sort By")
+            FilterSectionLabel(stringResource(R.string.filter_sort_by_label))
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -211,7 +226,7 @@ fun FilterBottomSheet(
                     .height(56.dp)
                     .testTag("filter_apply_button"),
             ) {
-                Text("Show Results", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.action_show_results), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(32.dp))
         }

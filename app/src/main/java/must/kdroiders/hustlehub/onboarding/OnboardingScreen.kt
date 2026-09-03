@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.onboarding
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -40,6 +41,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -49,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 
@@ -56,35 +59,29 @@ import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 
 private data class OnboardingSlide(
     val icon: ImageVector,
-    val titleTop: String,
-    val titleHighlight: String,
-    val description: String,
+    @StringRes val titleTopRes: Int,
+    @StringRes val titleHighlightRes: Int,
+    @StringRes val descriptionRes: Int,
 )
 
 private val slides = listOf(
     OnboardingSlide(
         icon = Icons.Filled.Bolt,
-        titleTop = "Campus Services,",
-        titleHighlight = "Organised",
-        description = "Find laundry, salon, tutoring, food " +
-            "and more from verified Meru University " +
-            "students. No WhatsApp groups.",
+        titleTopRes = R.string.onboarding_slide1_title_top,
+        titleHighlightRes = R.string.onboarding_slide1_title_highlight,
+        descriptionRes = R.string.onboarding_slide1_desc,
     ),
     OnboardingSlide(
         icon = Icons.Filled.Forum,
-        titleTop = "Discover &",
-        titleHighlight = "Chat",
-        description = "Find the services you need and " +
-            "message providers directly. " +
-            "Fast, easy, campus-first.",
+        titleTopRes = R.string.onboarding_slide2_title_top,
+        titleHighlightRes = R.string.onboarding_slide2_title_highlight,
+        descriptionRes = R.string.onboarding_slide2_desc,
     ),
     OnboardingSlide(
         icon = Icons.Filled.Build,
-        titleTop = "Build Your",
-        titleHighlight = "Hustle",
-        description = "Create your service profile, " +
-            "showcase your skills, and start " +
-            "earning on campus.",
+        titleTopRes = R.string.onboarding_slide3_title_top,
+        titleHighlightRes = R.string.onboarding_slide3_title_highlight,
+        descriptionRes = R.string.onboarding_slide3_desc,
     ),
 )
 
@@ -140,7 +137,7 @@ fun OnboardingScreen(
                         modifier = Modifier.minimumInteractiveComponentSize(),
                     ) {
                         Text(
-                            "Back",
+                            text = stringResource(R.string.action_back),
                             color = MaterialTheme.colorScheme
                                 .onSurfaceVariant,
                         )
@@ -155,7 +152,7 @@ fun OnboardingScreen(
                         modifier = Modifier.minimumInteractiveComponentSize(),
                     ) {
                         Text(
-                            "Skip",
+                            text = stringResource(R.string.action_skip),
                             color = MaterialTheme.colorScheme
                                 .onSurfaceVariant,
                         )
@@ -195,32 +192,27 @@ fun OnboardingScreen(
                     val slide = slides[page]
                     Column {
                         Text(
-                            text = slide.titleTop,
-                            fontSize = 28.sp,
+                            text = stringResource(slide.titleTopRes),
+                            style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme
-                                .onSurface,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.semantics { heading() },
                         )
                         Text(
-                            text = slide.titleHighlight,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography
-                                .headlineMedium
+                            text = stringResource(slide.titleHighlightRes),
+                            style = MaterialTheme.typography.headlineLarge
                                 .copy(
                                     brush = Brush.linearGradient(
                                         listOf(primary, tertiary),
                                     ),
                                 ),
+                            fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.height(16.dp))
                         Text(
-                            text = slide.description,
-                            fontSize = 14.sp,
-                            lineHeight = 21.sp,
-                            color = MaterialTheme.colorScheme
-                                .onSurfaceVariant,
+                            text = stringResource(slide.descriptionRes),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -238,9 +230,9 @@ fun OnboardingScreen(
                 // next / get started
                 HustleButton(
                     text = if (isLastPage) {
-                        "Get Started"
+                        stringResource(R.string.action_get_started)
                     } else {
-                        "Next"
+                        stringResource(R.string.action_next)
                     },
                     icon = if (!isLastPage) {
                         Icons.AutoMirrored.Filled.ArrowForward
@@ -325,9 +317,10 @@ private fun PageIndicator(
     pageCount: Int,
     modifier: Modifier = Modifier,
 ) {
+    val cd = stringResource(R.string.cd_onboarding_page_format, pagerState.currentPage + 1, pageCount)
     Row(
         modifier = modifier.semantics {
-            contentDescription = "Page ${pagerState.currentPage + 1} of $pageCount"
+            contentDescription = cd
         },
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -410,14 +403,14 @@ private fun OnboardingPreview() {
                         ),
                 ) {
                     Text(
-                        slide.titleTop,
+                        stringResource(slide.titleTopRes),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme
                             .onSurface,
                     )
                     Text(
-                        slide.titleHighlight,
+                        stringResource(slide.titleHighlightRes),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography
@@ -430,7 +423,7 @@ private fun OnboardingPreview() {
                     )
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        slide.description,
+                        stringResource(slide.descriptionRes),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme
                             .onSurfaceVariant,

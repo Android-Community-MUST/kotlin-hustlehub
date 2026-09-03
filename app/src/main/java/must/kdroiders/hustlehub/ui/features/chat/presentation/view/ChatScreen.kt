@@ -56,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
@@ -67,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
@@ -99,7 +101,7 @@ fun ChatScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            text = "Messages",
+                            text = stringResource(R.string.chat_messages_title),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -125,7 +127,7 @@ fun ChatScreen(
             HustleSearchBar(
                 query = state.searchQuery,
                 onQueryChanged = conversationListViewModel::onSearchQueryChanged,
-                placeholder = "Search messages or services...",
+                placeholder = stringResource(R.string.chat_search_placeholder),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
             )
 
@@ -222,19 +224,19 @@ fun ChatScreen(
                         filteredList.isEmpty() -> {
                             val (title, description) = when {
                                 state.searchQuery.isNotBlank() ->
-                                    "No results found" to "No conversations match \"${state.searchQuery}\""
+                                    stringResource(R.string.chat_empty_search_title) to stringResource(R.string.chat_empty_search_desc_format, state.searchQuery)
 
                                 state.selectedFilter == ConversationFilter.UNREAD ->
-                                    "No unread messages" to "You're all caught up! No unread conversations."
+                                    stringResource(R.string.chat_empty_unread_title) to stringResource(R.string.chat_empty_unread_desc)
 
                                 state.selectedFilter == ConversationFilter.SERVICES ->
-                                    "No service chats" to "Start a conversation on a service to see it here."
+                                    stringResource(R.string.chat_empty_services_title) to stringResource(R.string.chat_empty_services_desc)
 
                                 state.selectedFilter == ConversationFilter.ARCHIVED ->
-                                    "No archived chats" to "Archived conversations will appear here."
+                                    stringResource(R.string.chat_empty_archived_title) to stringResource(R.string.chat_empty_archived_desc)
 
                                 else ->
-                                    "No messages yet" to "Start a conversation with a service provider to chat about tasks."
+                                    stringResource(R.string.chat_empty_default_title) to stringResource(R.string.chat_empty_default_desc)
                             }
 
                             EmptyStateView(
@@ -299,7 +301,7 @@ fun ChatScreen(
                                             ) {
                                                 Icon(
                                                     imageVector = icon,
-                                                    contentDescription = "Swipe Action",
+                                                    contentDescription = stringResource(R.string.cd_swipe_action),
                                                     tint = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
                                                         MaterialTheme.colorScheme.onErrorContainer
                                                     } else {
@@ -412,11 +414,11 @@ private fun ConversationItem(
 
             // Subtitle Line: Last message or service context
             val messageText = when (conversation.lastMessageType) {
-                "VOICE" -> "Voice note"
-                "IMAGE" -> "Photo"
-                "LOCATION" -> "Location"
-                "SERVICE_CARD" -> "Service shared"
-                else -> conversation.lastMessage ?: "No messages yet"
+                "VOICE" -> stringResource(R.string.chat_type_voice_note)
+                "IMAGE" -> stringResource(R.string.chat_type_photo)
+                "LOCATION" -> stringResource(R.string.chat_type_location)
+                "SERVICE_CARD" -> stringResource(R.string.chat_type_service_shared)
+                else -> conversation.lastMessage ?: stringResource(R.string.chat_type_no_messages)
             }
             val icon = when (conversation.lastMessageType) {
                 "VOICE" -> Icons.Default.Mic

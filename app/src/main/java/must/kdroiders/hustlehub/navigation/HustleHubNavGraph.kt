@@ -41,6 +41,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.view.EmailVerifica
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.LoginScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.SignUpScreen
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
+import must.kdroiders.hustlehub.ui.features.bookmarks.BookmarkScreen
 import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatDetailScreen
 import must.kdroiders.hustlehub.ui.features.help.presentation.view.HelpScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.AiSearchScreen
@@ -565,6 +566,13 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         entry<Analytics> {
                             AnalyticsScreen(
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                            )
+                        }
+                        entry<BottomBookmarks> {
+                            BookmarkScreen(
+                                onBack = {
+                                    if (backstack.size > 1) backstack.remove(backstack.last())
+                                },
                             )
                         }
                     },

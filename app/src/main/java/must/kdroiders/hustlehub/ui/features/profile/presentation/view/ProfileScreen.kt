@@ -32,8 +32,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
@@ -94,6 +96,9 @@ fun ProfileScreen(
     val state by profileViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val shareSubject = stringResource(R.string.profile_share_subject)
+    val shareTextFormat = stringResource(R.string.profile_share_text_format)
+    val shareChooserTitle = stringResource(R.string.profile_share_chooser_title)
 
     HustleScaffold(
         topBar = {
@@ -103,13 +108,13 @@ fun ProfileScreen(
                     val userId = state.user?.id ?: ""
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
-                        putExtra(Intent.EXTRA_SUBJECT, "Check out my profile on HustleHub")
+                        putExtra(Intent.EXTRA_SUBJECT, shareSubject)
                         putExtra(
                             Intent.EXTRA_TEXT,
-                            "Check out my profile on HustleHub: https://hustlehub.must.ac.ke/profile/$userId",
+                            String.format(shareTextFormat, userId),
                         )
                     }
-                    context.startActivity(Intent.createChooser(shareIntent, "Share Profile"))
+                    context.startActivity(Intent.createChooser(shareIntent, shareChooserTitle))
                 },
             )
         },
@@ -119,7 +124,7 @@ fun ProfileScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add New Service")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_new_service))
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -210,7 +215,7 @@ private fun ProfileContent(
                 )
                 Spacer(Modifier.height(16.dp))
                 HustleButton(
-                    text = "Edit Profile",
+                    text = stringResource(R.string.profile_edit_button),
                     variant = HustleButtonVariant.Secondary,
                     onClick = onEditClick,
                     modifier = Modifier

@@ -19,14 +19,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.WorkOff
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHost
@@ -42,13 +40,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
+import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
@@ -96,10 +97,11 @@ fun MyServicesScreen(
 
     // Delete confirmation dialog
     val pendingDeleteId = state.pendingDeleteServiceId
+    val defaultServiceTitle = stringResource(R.string.service_fallback_title)
     if (pendingDeleteId != null) {
         val serviceName = state.services
             .find { it.id == pendingDeleteId }
-            ?.title ?: "this service"
+            ?.title ?: defaultServiceTitle
         DeleteConfirmDialog(
             serviceName = serviceName,
             onConfirm = viewModel::confirmDelete,
@@ -122,14 +124,14 @@ fun MyServicesScreen(
                         .padding(bottom = 32.dp), // extra padding for bottom navigation
                 ) {
                     Text(
-                        text = "Quick Gallery",
+                        text = stringResource(R.string.service_quick_gallery_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Manage photos for ${selectedService.title}",
+                        text = stringResource(R.string.service_manage_photos_format, selectedService.title),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -160,7 +162,7 @@ fun MyServicesScreen(
                         }
                     } else {
                         HustleButton(
-                            text = "Save Changes",
+                            text = stringResource(R.string.action_save_changes),
                             onClick = viewModel::saveGallery,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -176,18 +178,13 @@ fun MyServicesScreen(
                 windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Text(
-                        text = "My Services",
+                        text = stringResource(R.string.service_my_services_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
+                    HustleBackButton(onClick = onBack)
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
@@ -202,7 +199,7 @@ fun MyServicesScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add service")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_service))
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -272,13 +269,13 @@ private fun EmptyServicesPlaceholder(
     modifier: Modifier = Modifier,
 ) {
     EmptyStateView(
-        title = "No service listings",
-        description = "List your first service to start earning on campus.",
+        title = stringResource(R.string.service_empty_listings_title),
+        description = stringResource(R.string.service_empty_listings_desc),
         icon = Icons.Default.WorkOff,
         modifier = modifier,
         action = {
             HustleButton(
-                text = "Add Service",
+                text = stringResource(R.string.action_add_service),
                 onClick = onCreateClick,
             )
         },

@@ -72,6 +72,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -92,6 +93,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
@@ -174,7 +176,7 @@ fun MessageBubble(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Reply,
-                        contentDescription = "Reply",
+                        contentDescription = stringResource(R.string.cd_reply),
                         tint = iconTint,
                         modifier = Modifier
                             .size(20.dp)
@@ -260,14 +262,14 @@ fun MessageBubble(
                         onDismissRequest = { showMenu = false },
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Delete for me") },
+                            text = { Text(stringResource(R.string.action_delete_for_me)) },
                             onClick = {
                                 showMenu = false
                                 onDeleteForMe(message)
                             },
                         )
                         DropdownMenuItem(
-                            text = { Text("Report Message") },
+                            text = { Text(stringResource(R.string.action_report_message)) },
                             onClick = {
                                 showMenu = false
                                 onReportMessage(message)
@@ -275,7 +277,7 @@ fun MessageBubble(
                         )
                         if (isCurrentUser) {
                             DropdownMenuItem(
-                                text = { Text("Delete for everyone") },
+                                text = { Text(stringResource(R.string.action_delete_for_everyone)) },
                                 onClick = {
                                     showMenu = false
                                     onDeleteForEveryone(message)
@@ -284,7 +286,7 @@ fun MessageBubble(
                         }
                         if (message.type == MessageType.IMAGE && !message.mediaUrl.isNullOrBlank()) {
                             DropdownMenuItem(
-                                text = { Text("Save Image") },
+                                text = { Text(stringResource(R.string.action_save_image)) },
                                 onClick = {
                                     showMenu = false
                                     onImageLongClick(message.mediaUrl)
@@ -378,7 +380,11 @@ fun MessageBubble(
 
                         if (message.isDeleted) {
                             Text(
-                                text = if (isCurrentUser) "You deleted this message" else "This message was deleted",
+                                text = if (isCurrentUser) {
+                                    stringResource(R.string.chat_msg_deleted_self)
+                                } else {
+                                    stringResource(R.string.chat_msg_deleted_other)
+                                },
                                 color = textColor.copy(alpha = 0.65f),
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontStyle = FontStyle.Italic,
@@ -430,7 +436,7 @@ fun MessageBubble(
                                         } else {
                                             AsyncImage(
                                                 model = imageUrl,
-                                                contentDescription = "Shared Image",
+                                                contentDescription = stringResource(R.string.cd_shared_image),
                                                 modifier = Modifier.fillMaxWidth(),
                                                 contentScale = ContentScale.FillWidth,
                                             )
@@ -521,11 +527,11 @@ fun MessageBubble(
                                 }
 
                                 val receiptDescription = when {
-                                    isFailed -> "Failed to send"
-                                    isPending -> "Sending"
-                                    isRead -> "Read"
-                                    isDelivered -> "Delivered"
-                                    else -> "Sent"
+                                    isFailed -> stringResource(R.string.chat_status_failed)
+                                    isPending -> stringResource(R.string.chat_status_sending)
+                                    isRead -> stringResource(R.string.chat_status_read)
+                                    isDelivered -> stringResource(R.string.chat_status_delivered)
+                                    else -> stringResource(R.string.chat_status_sent)
                                 }
 
                                 Icon(
@@ -594,7 +600,7 @@ private fun VoiceMessageContent(
                 ) {
                     Icon(
                         imageVector = if (isPlayingThis) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlayingThis) "Pause" else "Play",
+                        contentDescription = if (isPlayingThis) stringResource(R.string.cd_pause) else stringResource(R.string.cd_play),
                         modifier = Modifier.size(20.dp),
                     )
                 }
@@ -724,6 +730,10 @@ private fun LocationMessageContent(
         if (locationData != null) LatLng(locationData.lat, locationData.lng) else null
     }
 
+    val metersAwayFormat = stringResource(R.string.chat_distance_meters_away_format)
+    val kmAwayFormat = stringResource(R.string.chat_distance_km_away_format)
+    val defaultLocationLabel = stringResource(R.string.chat_shared_location)
+
     val distanceText = remember(locationData, currentUserLocation) {
         if (locationData != null && currentUserLocation != null) {
             val results = FloatArray(1)
@@ -737,9 +747,9 @@ private fun LocationMessageContent(
                 )
                 val distanceMeters = results[0]
                 if (distanceMeters < 1000f) {
-                    "${distanceMeters.toInt()}m away"
+                    String.format(metersAwayFormat, distanceMeters.toInt())
                 } else {
-                    "${String.format("%.1f", distanceMeters / 1000f)}km away"
+                    String.format(kmAwayFormat, distanceMeters / 1000f)
                 }
             } catch (e: Exception) {
                 null
@@ -757,7 +767,7 @@ private fun LocationMessageContent(
                     onClick(
                         locationData.lat,
                         locationData.lng,
-                        locationData.label ?: "Shared Location",
+                        locationData.label ?: defaultLocationLabel,
                     )
                 }
             }.padding(2.dp),
@@ -776,7 +786,7 @@ private fun LocationMessageContent(
             Spacer(modifier = Modifier.width(6.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = locationData?.label ?: "Shared Location",
+                    text = locationData?.label ?: defaultLocationLabel,
                     color = textColor,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium,
@@ -830,14 +840,14 @@ private fun LocationMessageContent(
                             onClick(
                                 locationData.lat,
                                 locationData.lng,
-                                locationData.label ?: "Shared Location",
+                                locationData.label ?: defaultLocationLabel,
                             )
                         }
                     },
                 ) {
                     Marker(
                         state = markerState,
-                        title = locationData?.label ?: "Shared Location",
+                        title = locationData?.label ?: defaultLocationLabel,
                     )
                 }
             } else {
@@ -850,7 +860,7 @@ private fun LocationMessageContent(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Shared Location Pin",
+                        text = stringResource(R.string.chat_shared_location_pin),
                         fontSize = 11.sp,
                         color = textColor.copy(alpha = 0.7f),
                     )
@@ -867,7 +877,7 @@ private fun LocationMessageContent(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
-                text = "Tap to view in Maps",
+                text = stringResource(R.string.chat_tap_view_maps),
                 color = textColor.copy(alpha = 0.85f),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -916,7 +926,7 @@ private fun ServiceCardMessageContent(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "SERVICE REQUEST",
+                        text = stringResource(R.string.chat_service_request),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -967,7 +977,7 @@ private fun ServiceCardMessageContent(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 HustleButton(
-                    text = "View Service",
+                    text = stringResource(R.string.chat_view_service),
                     onClick = { onClick(serviceData.serviceId) },
                     variant = HustleButtonVariant.Outlined,
                     modifier = Modifier.fillMaxWidth(),

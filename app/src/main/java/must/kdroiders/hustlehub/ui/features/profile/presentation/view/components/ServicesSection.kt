@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
@@ -55,7 +57,7 @@ fun ServicesHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "My Services",
+            text = stringResource(R.string.profile_my_services_title),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -64,7 +66,7 @@ fun ServicesHeader(
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             TextButton(onClick = onManageServicesClick) {
                 Text(
-                    text = "Manage",
+                    text = stringResource(R.string.action_manage),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.secondary,
@@ -72,7 +74,7 @@ fun ServicesHeader(
             }
             TextButton(onClick = onAddNewServiceClick) {
                 Text(
-                    text = "Add New +",
+                    text = stringResource(R.string.action_add_new_plus),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -89,6 +91,13 @@ fun ServiceCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val cdService = stringResource(R.string.cd_service_item_format, service.title, service.priceRange)
+    val statusText = if (service.availability == ServiceAvailability.AVAILABLE) {
+        stringResource(R.string.status_active)
+    } else {
+        stringResource(R.string.status_offline)
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -99,7 +108,7 @@ fun ServiceCard(
             .padding(16.dp)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
-                contentDescription = "Service: ${service.title}, Price: KES ${service.priceRange}"
+                contentDescription = cdService
             },
     ) {
         Column {
@@ -150,7 +159,7 @@ fun ServiceCard(
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "KES ${service.priceRange}",
+                            text = stringResource(R.string.service_kes_price_format, service.priceRange),
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -191,11 +200,7 @@ fun ServiceCard(
                         ),
                     )
                     Text(
-                        text = if (service.availability == ServiceAvailability.AVAILABLE) {
-                            "Active"
-                        } else {
-                            "Offline"
-                        },
+                        text = statusText,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         color = if (service.availability == ServiceAvailability.AVAILABLE) {

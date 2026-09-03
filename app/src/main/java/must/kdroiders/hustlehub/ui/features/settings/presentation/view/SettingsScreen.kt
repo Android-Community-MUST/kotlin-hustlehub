@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Code
@@ -64,6 +63,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.datastore.AppTheme
+import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
@@ -94,6 +94,7 @@ fun SettingsScreen(
     val state by settingsViewModel.uiState.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val featureComingSoonToast = stringResource(R.string.toast_feature_coming_soon)
     var showLicensesDialog by remember { mutableStateOf(false) }
     var showVersionDialog by remember { mutableStateOf(false) }
 
@@ -122,7 +123,7 @@ fun SettingsScreen(
                 -> onNavigateToHelp()
                 is SettingsEvent.NavigateToLicenses -> showLicensesDialog = true
                 else -> {
-                    Toast.makeText(context, "Feature coming soon", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, featureComingSoonToast, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -176,14 +177,14 @@ fun SettingsScreen(
                 title = { Text(stringResource(R.string.settings_delete_account_title)) },
                 text = {
                     Text(
-                        "This action cannot be undone. Your profile and listed services will be permanently deleted. Reviews you wrote will be anonymized.",
+                        stringResource(R.string.settings_delete_account_body),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 },
                 confirmButton = {
                     TextButton(onClick = settingsViewModel::onDeleteWarningConfirmed) {
                         Text(
-                            "Continue",
+                            stringResource(R.string.action_continue),
                             color = MaterialTheme.colorScheme.error,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                         )
@@ -202,11 +203,11 @@ fun SettingsScreen(
 
             AlertDialog(
                 onDismissRequest = settingsViewModel::onDeleteAccountDismissed,
-                title = { Text("Enter your password to confirm") },
+                title = { Text(stringResource(R.string.settings_delete_confirm_password_title)) },
                 text = {
                     Column {
                         Text(
-                            "Please re-enter your account password to authorize permanent deletion.",
+                            stringResource(R.string.settings_delete_confirm_password_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -214,7 +215,7 @@ fun SettingsScreen(
                         androidx.compose.material3.OutlinedTextField(
                             value = state.deletePasswordInput,
                             onValueChange = settingsViewModel::onDeletePasswordChanged,
-                            label = { Text("Password") },
+                            label = { Text(stringResource(R.string.label_password)) },
                             singleLine = true,
                             isError = state.deletePasswordError != null,
                             visualTransformation = if (passwordVisible) {
@@ -231,7 +232,11 @@ fun SettingsScreen(
                                         } else {
                                             Icons.Default.VisibilityOff
                                         },
-                                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                        contentDescription = if (passwordVisible) {
+                                            stringResource(R.string.cd_hide_password)
+                                        } else {
+                                            stringResource(R.string.cd_show_password)
+                                        },
                                     )
                                 }
                             },
@@ -254,7 +259,7 @@ fun SettingsScreen(
                             containerColor = MaterialTheme.colorScheme.error,
                         ),
                     ) {
-                        Text("Delete My Account")
+                        Text(stringResource(R.string.settings_delete_my_account_btn))
                     }
                 },
                 dismissButton = {
@@ -287,7 +292,7 @@ fun SettingsScreen(
                     )
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        text = "Deleting your account...",
+                        text = stringResource(R.string.settings_deleting_account_progress),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
                     )
@@ -405,12 +410,10 @@ fun SettingsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.cd_navigate_back),
-                        )
-                    }
+                    HustleBackButton(
+                        onClick = onBack,
+                        contentDescription = stringResource(R.string.cd_navigate_back),
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -549,7 +552,7 @@ fun SettingsScreen(
                 SettingsRowNavigate(
                     icon = Icons.Default.Info,
                     label = stringResource(R.string.settings_app_version),
-                    trailing = "v${state.appVersion}",
+                    trailing = stringResource(R.string.version_prefix_format, state.appVersion),
                     onClick = { showVersionDialog = true },
                 )
                 SettingsDivider()
@@ -588,7 +591,7 @@ fun SettingsScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "v${state.appVersion} · HustleHub",
+                    text = stringResource(R.string.settings_version_footer_format, state.appVersion),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline,
                     fontSize = 11.sp,

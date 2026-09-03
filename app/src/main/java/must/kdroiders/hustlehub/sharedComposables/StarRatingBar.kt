@@ -28,6 +28,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.ui.theme.HustleHintGrey
+import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
 
 /**
  * Interactive 5-star rating bar supporting both tap and drag gestures.
@@ -46,8 +48,8 @@ fun StarRatingBar(
     onRatingChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
     starSize: Dp = 40.dp,
-    activeColor: Color = Color(0xFFFFD700),
-    inactiveColor: Color = Color(0xFFCCCCCC),
+    activeColor: Color = HustleWarningAmber,
+    inactiveColor: Color = HustleHintGrey.copy(alpha = 0.5f),
 ) {
     var rowWidth by remember { mutableIntStateOf(0) }
 
