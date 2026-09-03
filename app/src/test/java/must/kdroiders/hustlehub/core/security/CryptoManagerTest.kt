@@ -80,4 +80,47 @@ class CryptoManagerTest {
             bobSharedSecret.encoded.contentToString(),
         )
     }
+
+    @Test
+    fun `public key encode and decode round trip preserves public key`() {
+        val ecKeyGen = KeyPairGenerator.getInstance("EC")
+        ecKeyGen.initialize(256)
+        val keyPair = ecKeyGen.generateKeyPair()
+
+        val encoded = cryptoManager.encodePublicKey(keyPair.public)
+        assertNotNull(encoded)
+
+        val decoded = cryptoManager.decodePublicKey(encoded)
+        assertEquals(keyPair.public.encoded.contentToString(), decoded.encoded.contentToString())
+    }
+
+    @Test(expected = Exception::class)
+    fun `tampered ciphertext throws AEADBadTagException or security exception`() {
+        val keyGen = KeyGenerator.getInstance("AES")
+        keyGen.init(256)
+        val secretKey = keyGen.generateKey()
+
+        val text = "Confidential financial transaction"
+        val payload = cryptoManager.encrypt(text, secretKey)
+
+        val tamperedCiphertext = "X" + payload.ciphertext.substring(1)
+        val tamperedPayload = payload.copy(ciphertext = tamperedCiphertext)
+
+        cryptoManager.decrypt(tamperedPayload, secretKey)
+    }
+
+    @Test(expected = Exception::class)
+    fun `tampered auth tag throws AEADBadTagException or security exception`() {
+        val keyGen = KeyGenerator.getInstance("AES")
+        keyGen.init(256)
+        val secretKey = keyGen.generateKey()
+
+        val text = "Confidential financial transaction"
+        val payload = cryptoManager.encrypt(text, secretKey)
+
+        val tamperedAuthTag = "Y" + payload.authTag.substring(1)
+        val tamperedPayload = payload.copy(authTag = tamperedAuthTag)
+
+        cryptoManager.decrypt(tamperedPayload, secretKey)
+    }
 }

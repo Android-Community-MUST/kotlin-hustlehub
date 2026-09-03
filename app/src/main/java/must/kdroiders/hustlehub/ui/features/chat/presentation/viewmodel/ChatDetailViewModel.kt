@@ -202,10 +202,6 @@ class ChatDetailViewModel
 
                 chatRepository.setActiveConversation(resolvedId)
 
-                // 2. Initiate E2EE key exchange AFTER resolving real conversation ID
-                val secretKey = keyExchangeHandler.ensureKeysExchanged(resolvedId)
-                _uiState.update { it.copy(isEncryptionReady = secretKey != null) }
-
                 // 2. Load cached conversation details to show other user's info in header instantly
                 val finalCached = withContext(Dispatchers.IO) { conversationDao.getById(resolvedId) }
                 if (finalCached != null) {
@@ -243,6 +239,14 @@ class ChatDetailViewModel
                         )
                     }
                 }
+
+                val otherUid = finalCached?.otherUserId
+                    ?: _uiState.value.otherUserId.takeIf { it.isNotBlank() }
+                    ?: if (resolvedId != conversationId) conversationId else null
+
+                // 3. Initiate E2EE key exchange AFTER resolving real conversation ID and other user ID
+                val secretKey = keyExchangeHandler.ensureKeysExchanged(resolvedId, otherUid)
+                _uiState.update { it.copy(isEncryptionReady = secretKey != null) }
 
                 // 3. Cancel the notification for this conversation
                 withContext(Dispatchers.IO) {

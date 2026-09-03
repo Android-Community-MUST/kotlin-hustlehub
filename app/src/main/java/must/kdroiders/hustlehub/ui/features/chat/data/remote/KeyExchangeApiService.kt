@@ -35,4 +35,20 @@ interface KeyExchangeApiService {
     suspend fun getPeerPublicKey(
         @Path("conversationId") conversationId: String,
     ): ApiResponse<PeerKeyResponse>
+
+    /**
+     * Uploads this device's ECDH user identity public key.
+     */
+    @POST("users/me/public-key")
+    suspend fun uploadUserPublicKey(
+        @Body request: PublicKeyRequest,
+    ): ApiResponse<Unit>
+
+    /**
+     * Fetches a user's ECDH public identity key.
+     */
+    @GET("users/{userId}/public-key")
+    suspend fun getUserPublicKey(
+        @Path("userId") userId: String,
+    ): ApiResponse<PeerKeyResponse>
 }

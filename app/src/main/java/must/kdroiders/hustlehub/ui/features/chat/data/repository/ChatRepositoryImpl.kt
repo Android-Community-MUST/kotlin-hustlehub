@@ -111,7 +111,8 @@ class ChatRepositoryImpl
         ): Result<Unit> =
             withContext(Dispatchers.IO) {
                 runCatching {
-                    keyExchangeHandler.ensureKeysExchanged(conversationId)
+                    val cachedConv = conversationDao.getById(conversationId)
+                    keyExchangeHandler.ensureKeysExchanged(conversationId, cachedConv?.otherUserId)
                     val response = conversationApiService.getMessages(conversationId, page, 50)
                     check(response.success && response.data != null) { response.message ?: "Failed to load message history" }
                     val gson = Gson()
@@ -197,6 +198,7 @@ class ChatRepositoryImpl
 
                     messageDao.upsert(tempMessage.toEncryptedEntity(conversationId, keyExchangeHandler, cryptoManager))
 
+                    val cachedConv = conversationDao.getById(conversationId)
                     val request = SendMessageRequest(
                         conversationId = conversationId,
                         type = type.name,
@@ -205,7 +207,7 @@ class ChatRepositoryImpl
                         metadata = newMetadataString,
                     )
                     chatWebSocketService.connect()
-                    chatWebSocketService.sendMessage(request)
+                    chatWebSocketService.sendMessage(request, cachedConv?.otherUserId)
                     Unit
                 }.recover { e ->
                     if (e is CancellationException) throw e
@@ -236,7 +238,8 @@ class ChatRepositoryImpl
         override suspend fun connectWebSocket(conversationId: String): Flow<Message> =
             flow {
                 try {
-                    keyExchangeHandler.ensureKeysExchanged(conversationId)
+                    val cachedConv = conversationDao.getById(conversationId)
+                    keyExchangeHandler.ensureKeysExchanged(conversationId, cachedConv?.otherUserId)
                     chatWebSocketService.connect()
                     resendUnsyncedMessages()
 

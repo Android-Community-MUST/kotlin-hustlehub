@@ -16,6 +16,7 @@ import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.MessageDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.MessageEntity
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toDecryptedDomain
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
@@ -158,7 +159,9 @@ class MessageRepositoryTest {
             coVerify(atLeast = 1) { messageDao.upsert(capture(slot)) }
             org.junit.Assert.assertFalse(slot.captured.isSynced)
             org.junit.Assert.assertFalse(slot.captured.isFailed)
-            assertEquals("Offline message test", slot.captured.content)
+            org.junit.Assert.assertTrue(slot.captured.isEncrypted)
+            val decrypted = slot.captured.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+            assertEquals("Offline message test", decrypted.content)
         }
 
     @Test
