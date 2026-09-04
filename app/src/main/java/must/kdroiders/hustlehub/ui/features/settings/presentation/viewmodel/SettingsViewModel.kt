@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.BuildConfig
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.AppTheme
@@ -290,7 +291,7 @@ class SettingsViewModel
                     },
                     onFailure = { throwable ->
                         Timber.e(throwable, "Account deletion failed")
-                        val errorMessage = throwable.message ?: "Failed to delete account."
+                        val errorMessage = throwable.userFriendlyMessage("Failed to delete account.")
                         _uiState.update { state ->
                             state.copy(
                                 isDeletingAccount = false,

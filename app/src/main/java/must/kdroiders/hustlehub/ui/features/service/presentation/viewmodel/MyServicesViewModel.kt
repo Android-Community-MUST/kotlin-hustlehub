@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult
@@ -49,7 +50,7 @@ class MyServicesViewModel
                     }.onFailure { e ->
                         Timber.e(e, "Failed to load my services")
                         _uiState.update {
-                            it.copy(isLoading = false, error = e.message ?: "Failed to load services")
+                            it.copy(isLoading = false, error = e.userFriendlyMessage("Failed to load services"))
                         }
                     }
             }
@@ -119,7 +120,7 @@ class MyServicesViewModel
                         _uiState.update {
                             it.copy(
                                 updatingServiceId = null,
-                                error = e.message ?: "Failed to delete service",
+                                error = e.userFriendlyMessage("Failed to delete service"),
                             )
                         }
                     }
@@ -227,11 +228,11 @@ class MyServicesViewModel
                             }
                         }.onFailure { e ->
                             Timber.e(e, "Failed to update service portfolio")
-                            _uiState.update { it.copy(isGallerySaving = false, error = e.message ?: "Failed to update portfolio") }
+                            _uiState.update { it.copy(isGallerySaving = false, error = e.userFriendlyMessage("Failed to update portfolio")) }
                         }
                 } catch (e: Exception) {
                     Timber.e(e, "Error saving gallery")
-                    _uiState.update { it.copy(isGallerySaving = false, error = e.message ?: "Error saving gallery") }
+                    _uiState.update { it.copy(isGallerySaving = false, error = e.userFriendlyMessage("Error saving gallery")) }
                 }
             }
         }

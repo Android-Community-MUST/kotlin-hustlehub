@@ -74,11 +74,19 @@ object NetworkModule {
             val baseHost = runCatching { java.net.URI(BuildConfig.BASE_URL).host }.getOrNull()
             val pinnerBuilder = CertificatePinner.Builder()
 
-            // Valid SSL Public Key Pins for api.hustlehub.app & Cloud Run (GTS CA chain)
+            // Google Trust Services (GTS) Root & Intermediate CA chain for Cloud Run & custom domains
             val gtsPins = arrayOf(
-                "sha256/8jVhONRfoLxp9xEO7Gc/HdRfHqtEqkqd44YdfeZq5Wo=", // GTS Leaf
-                "sha256/YPtHaftLw6/0vnc2BnNKGF54xiCA28WFcccjkA4ypCM=", // GTS WR2 Intermediate
+                // GTS Root CAs (Permanent Google Root Authorities)
                 "sha256/hxqRlPTu1bMS/0DITB1SSu0vd4u/8l8TjPgfaAp63Gc=", // GTS Root R1
+                "sha256/Vfd95BwDeSQo+NUYxVEEecvvnnJtDeM8SOr0g8jfZ28=", // GTS Root R2
+                "sha256/QXnt2YHvdHR3tJYmQIr0Paosp6t/YM2SqRGH0CTRem8=", // GTS Root R3
+                "sha256/mEfIZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=", // GTS Root R4 (active Cloud Run root)
+                "sha256/K87oWBWM9UZfyddvDfoxL+8IpNyoUB2ptGtn0fv6G2Q=", // GlobalSign Root CA (GTS cross-signer)
+                // Active Intermediates & Leaf
+                "sha256/vh78KSg1Ry4NaqGDV10w/cTb9VH3BQUZoCWNa93W/EY=", // GTS Intermediate WE2
+                "sha256/9voVCSg/xBZgKjiuM901dNEPYEcqSJm381lxRK7hIDc=", // *.a.run.app Leaf
+                "sha256/YPtHaftLw6/0vnc2BnNKGF54xiCA28WFcccjkA4ypCM=", // GTS WR2 Intermediate
+                "sha256/8jVhONRfoLxp9xEO7Gc/HdRfHqtEqkqd44YdfeZq5Wo=", // GTS Leaf
             )
 
             pinnerBuilder.add("api.hustlehub.app", *gtsPins)

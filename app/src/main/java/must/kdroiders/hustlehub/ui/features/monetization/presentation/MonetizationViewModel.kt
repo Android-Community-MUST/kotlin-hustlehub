@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.ui.features.monetization.data.remote.dto.SubscriptionResponseDto
 import must.kdroiders.hustlehub.ui.features.monetization.domain.usecase.GetSubscriptionUseCase
 import must.kdroiders.hustlehub.ui.features.monetization.domain.usecase.InitiateStkPushUseCase
@@ -90,7 +91,7 @@ class MonetizationViewModel
                         _pendingCheckoutId.update { response.checkoutRequestId }
                     }.onFailure { e ->
                         Timber.e(e, "STK push failed")
-                        _paymentState.update { PaymentUiState.Failed(e.message ?: "Payment initiation failed.") }
+                        _paymentState.update { PaymentUiState.Failed(e.userFriendlyMessage("Payment initiation failed.")) }
                     }
             }
         }

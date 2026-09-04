@@ -76,14 +76,12 @@ object FirebaseAuthErrorMapper {
                 // Generic Firebase fallback
                 else ->
                     e.message
-                        ?.takeIf { it.isNotBlank() }
+                        ?.takeIf { it.isNotBlank() && !ErrorSanitizer.isSensitiveOrTechnical(it) }
                         ?: "Authentication failed. Please try again."
             }
         }
 
-        // Non-Firebase exceptions (network timeouts, etc.)
-        return e.message
-            ?.takeIf { it.isNotBlank() }
-            ?: "Something went wrong. Please try again."
+        // Non-Firebase exceptions (network timeouts, SSL, etc.)
+        return ErrorSanitizer.sanitize(e, "Something went wrong. Please try again.")
     }
 }

@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.CheckUserProfileUseCase
@@ -142,7 +143,7 @@ class LoginViewModel
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = e.message ?: "Login failed. Please try again.",
+                                errorMessage = e.userFriendlyMessage("Login failed. Please try again."),
                             )
                         }
                     },
@@ -187,7 +188,7 @@ class LoginViewModel
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = e.message ?: "Google sign-in failed. Please try again.",
+                                errorMessage = e.userFriendlyMessage("Google sign-in failed. Please try again."),
                             )
                         }
                     },
@@ -212,13 +213,14 @@ class LoginViewModel
                         onSuccess()
                     },
                     onFailure = { e ->
+                        val safeError = e.userFriendlyMessage("Failed to send reset email.")
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = e.message ?: "Failed to send reset email.",
+                                errorMessage = safeError,
                             )
                         }
-                        onError(e.message ?: "Failed to send reset email.")
+                        onError(safeError)
                     },
                 )
             }

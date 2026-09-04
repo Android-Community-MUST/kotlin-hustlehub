@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.datastore.UserPreferences
@@ -199,7 +200,7 @@ class SignUpViewModel
                             _uiState.update {
                                 it.copy(
                                     isLoading = false,
-                                    signUpError = e.message ?: "Sign-up failed. Please try again.",
+                                    signUpError = e.userFriendlyMessage("Sign-up failed. Please try again."),
                                 )
                             }
                         },
