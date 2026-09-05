@@ -60,8 +60,18 @@
 -dontwarn androidx.credentials.**
 
 # =============================================================================
-# APP DATA MODELS & DTOs
+# APP DATA MODELS, DTOs & API PAYLOADS
 # =============================================================================
+# Core API models (ApiResponse, PageResponse, etc.)
+-keep class must.kdroiders.hustlehub.core.api.** { *; }
+-keepclassmembers class must.kdroiders.hustlehub.core.api.** { *; }
+
+# Remote network DTOs & request/response classes across all features
+-keep class must.kdroiders.hustlehub.**.remote.** { *; }
+-keepclassmembers class must.kdroiders.hustlehub.**.remote.** { *; }
+-keep class must.kdroiders.hustlehub.**.data.remote.** { *; }
+-keepclassmembers class must.kdroiders.hustlehub.**.data.remote.** { *; }
+
 -keep class must.kdroiders.hustlehub.**.dto.** { *; }
 -keepclassmembers class must.kdroiders.hustlehub.**.dto.** { *; }
 -keep class must.kdroiders.hustlehub.**.model.** { *; }
@@ -78,12 +88,22 @@
 }
 
 # =============================================================================
-# SERIALIZATION (Moshi, Gson, Kotlinx.Serialization)
+# SERIALIZATION (Gson, Moshi, Kotlinx.Serialization)
 # =============================================================================
+# Gson reflection, type adapters, and field preservation
+-keep class com.google.gson.** { *; }
+-keepclassmembers class com.google.gson.** { *; }
+-dontwarn com.google.gson.**
+-keep class * implements com.google.gson.TypeAdapter
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
+
 -keepclassmembers class * {
     @com.squareup.moshi.Json <fields>;
     @com.google.gson.annotations.SerializedName <fields>;
 }
+-keepclassmembers enum * { *; }
 
 -dontnote kotlinx.serialization.AnnotationsKt
 -keepclassmembers class kotlinx.serialization.json.** { *** Companion; }
