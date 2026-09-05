@@ -4,13 +4,10 @@
 
 The **HustleHub In-App Admin Dashboard** was designed to provide designated campus administrators with native mobile moderation and operational controls directly inside the Android application (`kotlin-hustlehub`).
 
-### The Challenge
-- The standalone web admin dashboard was an early-stage frontend prototype with placeholder pages (`<div>page</div>`) and mock login states.
-- The Spring Boot backend (`hustlehub-backend`) already had production-ready REST API endpoints under `/api/v1/admin/*` with full database support for analytics, report resolution, user suspension, and service delisting.
-- Student campus administrators needed an immediate, reliable way to manage reports, ban abusive accounts, grant verified badges, and monitor real-time platform metrics from their mobile devices.
-
-### The Solution
-Drawing from the proven control center design in **Campus Connect**, we integrated a native Jetpack Compose **Admin Center** into `kotlin-hustlehub` coupled with automatic role assignment on `hustlehub-backend`.
+### Motivation
+- Campus administrators need a convenient, on-the-go way to review user reports, moderate content, manage student accounts, and monitor platform metrics directly from their mobile devices.
+- The Spring Boot backend (`hustlehub-backend`) provides administrative REST API endpoints under `/api/v1/admin/*` for platform analytics, user moderation, report resolution, and service listings.
+- By integrating native in-app admin controls directly within the Android client, administrators can quickly respond to reports, ban abusive accounts, and ensure community safety on the go.
 
 ---
 
