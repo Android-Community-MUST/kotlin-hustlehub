@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.ui.features.analytics.data.remote.dto.ProviderAnalyticsDto
 import must.kdroiders.hustlehub.ui.features.analytics.domain.usecase.GetProviderAnalyticsUseCase
 import javax.inject.Inject
@@ -55,7 +56,7 @@ class AnalyticsViewModel
                     }.onFailure { e ->
                         _state.value = _state.value.copy(
                             isLoading = false,
-                            error = e.message ?: "Failed to load analytics",
+                            error = e.userFriendlyMessage("Failed to load analytics"),
                         )
                     }
             }

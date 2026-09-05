@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.core.network.ConnectivityObserver
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
@@ -194,7 +195,7 @@ class ChatDetailViewModel
                         },
                         onFailure = { e ->
                             Timber.e(e, "Failed to resolve conversation")
-                            _uiState.update { it.copy(isLoading = false, error = e.message ?: "Could not open conversation") }
+                            _uiState.update { it.copy(isLoading = false, error = e.userFriendlyMessage("Could not open conversation")) }
                             return@launch
                         },
                     )
@@ -520,7 +521,7 @@ class ChatDetailViewModel
                     }
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to upload voice note")
-                    _uiState.update { it.copy(error = e.message ?: "Failed to upload voice note") }
+                    _uiState.update { it.copy(error = e.userFriendlyMessage("Failed to upload voice note")) }
                 } finally {
                     _uiState.update { it.copy(isLoading = false) }
                 }
@@ -549,7 +550,7 @@ class ChatDetailViewModel
                     }
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to upload chat image")
-                    _uiState.update { it.copy(error = e.message ?: "Failed to upload chat image") }
+                    _uiState.update { it.copy(error = e.userFriendlyMessage("Failed to upload chat image")) }
                 } finally {
                     _uiState.update { it.copy(isLoading = false) }
                 }

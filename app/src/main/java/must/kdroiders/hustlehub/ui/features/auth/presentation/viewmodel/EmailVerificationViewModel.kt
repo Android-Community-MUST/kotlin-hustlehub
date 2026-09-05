@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.ResendOtpUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.VerifyOtpUseCase
 import javax.inject.Inject
@@ -46,7 +47,7 @@ class EmailVerificationViewModel
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = e.message ?: "Verification failed. Check your code.",
+                                errorMessage = e.userFriendlyMessage("Verification failed. Check your code."),
                             )
                         }
                     }
@@ -70,7 +71,7 @@ class EmailVerificationViewModel
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = e.message ?: "Failed to resend verification email",
+                                errorMessage = e.userFriendlyMessage("Failed to resend verification email"),
                             )
                         }
                     }

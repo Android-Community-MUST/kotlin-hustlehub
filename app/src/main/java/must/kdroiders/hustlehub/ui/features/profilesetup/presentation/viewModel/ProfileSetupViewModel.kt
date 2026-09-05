@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SyncUserProfileUseCase
@@ -191,16 +192,16 @@ class ProfileSetupViewModel
             viewModelScope.launch {
                 syncUserProfileUseCase(user)
                     .onSuccess {
-                        hustleAnalytics.setUserProperties(role = "CUSTOMER", campus = currentState.campusLocation, isVerifiedPro = false)
+                        hustleAnalytics.setUserProperties(role = "ROLE_CUSTOMER", campus = currentState.campusLocation, isVerifiedPro = false)
                         hustleCrashlytics.setCrashlyticsUserContext(userId, "ProfileSetupScreen")
                         _state.update { it.copy(isSaving = false) }
                         _events.emit(ProfileSetupEvent.ProfileSaved)
                     }.onFailure { e ->
+                        Timber.e(e, "ProfileSetupViewModel: Failed to save user profile")
                         _state.update {
                             it.copy(
                                 isSaving = false,
-                                errorMessage =
-                                    "Save failed: ${e.message}",
+                                errorMessage = e.userFriendlyMessage("Unable to save profile. Please try again."),
                             )
                         }
                     }

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.ChangePasswordUseCase
 import javax.inject.Inject
 
@@ -76,7 +77,7 @@ class ChangePasswordViewModel
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = e.message ?: "Failed to change password",
+                                errorMessage = e.userFriendlyMessage("Failed to change password"),
                             )
                         }
                     },

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
@@ -118,7 +119,7 @@ class WriteReviewViewModel
                     Timber.e(e, "WriteReviewViewModel: submit failed for serviceId=$sid")
                     val isDuplicate = e.message?.contains("409", ignoreCase = true) == true ||
                         e.message?.contains("already reviewed", ignoreCase = true) == true
-                    val errorMsg = if (isDuplicate) "You have already reviewed this service." else e.message ?: "Failed to submit review."
+                    val errorMsg = if (isDuplicate) "You have already reviewed this service." else e.userFriendlyMessage("Failed to submit review.")
                     _uiState.update {
                         it.copy(
                             isSubmitting = false,
