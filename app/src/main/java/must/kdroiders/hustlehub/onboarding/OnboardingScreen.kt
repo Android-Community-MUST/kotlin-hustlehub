@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.onboarding
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -30,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -39,12 +41,17 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 
@@ -52,36 +59,30 @@ import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 
 private data class OnboardingSlide(
     val icon: ImageVector,
-    val titleTop: String,
-    val titleHighlight: String,
-    val description: String
+    @StringRes val titleTopRes: Int,
+    @StringRes val titleHighlightRes: Int,
+    @StringRes val descriptionRes: Int,
 )
 
 private val slides = listOf(
     OnboardingSlide(
         icon = Icons.Filled.Bolt,
-        titleTop = "Campus Services,",
-        titleHighlight = "Organised",
-        description = "Find laundry, salon, tutoring, food " +
-            "and more from verified Meru University " +
-            "students. No WhatsApp groups."
+        titleTopRes = R.string.onboarding_slide1_title_top,
+        titleHighlightRes = R.string.onboarding_slide1_title_highlight,
+        descriptionRes = R.string.onboarding_slide1_desc,
     ),
     OnboardingSlide(
         icon = Icons.Filled.Forum,
-        titleTop = "Discover &",
-        titleHighlight = "Chat",
-        description = "Find the services you need and " +
-            "message providers directly. " +
-            "Fast, easy, campus-first."
+        titleTopRes = R.string.onboarding_slide2_title_top,
+        titleHighlightRes = R.string.onboarding_slide2_title_highlight,
+        descriptionRes = R.string.onboarding_slide2_desc,
     ),
     OnboardingSlide(
         icon = Icons.Filled.Build,
-        titleTop = "Build Your",
-        titleHighlight = "Hustle",
-        description = "Create your service profile, " +
-            "showcase your skills, and start " +
-            "earning on campus."
-    )
+        titleTopRes = R.string.onboarding_slide3_title_top,
+        titleHighlightRes = R.string.onboarding_slide3_title_highlight,
+        descriptionRes = R.string.onboarding_slide3_desc,
+    ),
 )
 
 // main composable
@@ -89,10 +90,10 @@ private val slides = listOf(
 @Composable
 fun OnboardingScreen(
     onboardingViewModel: OnboardingViewModel = hiltViewModel(),
-    onFinished: () -> Unit = {}
+    onFinished: () -> Unit = {},
 ) {
     val pagerState = rememberPagerState(
-        pageCount = { slides.size }
+        pageCount = { slides.size },
     )
     val scope = rememberCoroutineScope()
     val isLastPage = pagerState.currentPage == slides.lastIndex
@@ -111,10 +112,10 @@ fun OnboardingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background),
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             // top bar
             Row(
@@ -122,20 +123,23 @@ fun OnboardingScreen(
                     .fillMaxWidth()
                     .statusBarsPadding()
                     .padding(horizontal = 8.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 if (!isFirstPage) {
-                    TextButton(onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(
-                                pagerState.currentPage - 1
-                            )
-                        }
-                    }) {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(
+                                    pagerState.currentPage - 1,
+                                )
+                            }
+                        },
+                        modifier = Modifier.minimumInteractiveComponentSize(),
+                    ) {
                         Text(
-                            "Back",
+                            text = stringResource(R.string.action_back),
                             color = MaterialTheme.colorScheme
-                                .onSurfaceVariant
+                                .onSurfaceVariant,
                         )
                     }
                 } else {
@@ -143,11 +147,14 @@ fun OnboardingScreen(
                 }
 
                 if (!isLastPage) {
-                    TextButton(onClick = onComplete) {
+                    TextButton(
+                        onClick = onComplete,
+                        modifier = Modifier.minimumInteractiveComponentSize(),
+                    ) {
                         Text(
-                            "Skip",
+                            text = stringResource(R.string.action_skip),
                             color = MaterialTheme.colorScheme
-                                .onSurfaceVariant
+                                .onSurfaceVariant,
                         )
                     }
                 }
@@ -158,7 +165,7 @@ fun OnboardingScreen(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(0.50f)
+                    .weight(0.50f),
             ) { page ->
                 HeroSection(slide = slides[page])
             }
@@ -172,44 +179,40 @@ fun OnboardingScreen(
                         MaterialTheme.colorScheme.surface,
                         RoundedCornerShape(
                             topStart = 28.dp,
-                            topEnd = 28.dp
-                        )
-                    )
-                    .padding(horizontal = 28.dp)
-                    .padding(top = 32.dp, bottom = 16.dp)
+                            topEnd = 28.dp,
+                        ),
+                    ).padding(horizontal = 28.dp)
+                    .padding(top = 32.dp, bottom = 16.dp),
             ) {
                 // title + description
                 Crossfade(
                     targetState = pagerState.currentPage,
-                    label = "slideText"
+                    label = "slideText",
                 ) { page ->
                     val slide = slides[page]
                     Column {
                         Text(
-                            text = slide.titleTop,
-                            fontSize = 28.sp,
+                            text = stringResource(slide.titleTopRes),
+                            style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme
-                                .onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.semantics { heading() },
                         )
                         Text(
-                            text = slide.titleHighlight,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography
-                                .headlineMedium.copy(
+                            text = stringResource(slide.titleHighlightRes),
+                            style = MaterialTheme.typography.headlineLarge
+                                .copy(
                                     brush = Brush.linearGradient(
-                                        listOf(primary, tertiary)
-                                    )
-                                )
+                                        listOf(primary, tertiary),
+                                    ),
+                                ),
+                            fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.height(16.dp))
                         Text(
-                            text = slide.description,
-                            fontSize = 14.sp,
-                            lineHeight = 21.sp,
-                            color = MaterialTheme.colorScheme
-                                .onSurfaceVariant
+                            text = stringResource(slide.descriptionRes),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -219,30 +222,35 @@ fun OnboardingScreen(
                 // page dots
                 PageIndicator(
                     pagerState = pagerState,
-                    pageCount = slides.size
+                    pageCount = slides.size,
                 )
 
                 Spacer(Modifier.height(24.dp))
 
                 // next / get started
                 HustleButton(
-                    text = if (isLastPage) "Get Started"
-                    else "Next",
-                    icon = if (!isLastPage)
+                    text = if (isLastPage) {
+                        stringResource(R.string.action_get_started)
+                    } else {
+                        stringResource(R.string.action_next)
+                    },
+                    icon = if (!isLastPage) {
                         Icons.AutoMirrored.Filled.ArrowForward
-                    else null,
+                    } else {
+                        null
+                    },
                     onClick = {
                         if (isLastPage) {
                             onComplete()
                         } else {
                             scope.launch {
                                 pagerState.animateScrollToPage(
-                                    pagerState.currentPage + 1
+                                    pagerState.currentPage + 1,
                                 )
                             }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(Modifier.height(32.dp))
@@ -256,7 +264,7 @@ fun OnboardingScreen(
 @Composable
 private fun HeroSection(
     slide: OnboardingSlide,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val primary = MaterialTheme.colorScheme.primary
     val tertiary = MaterialTheme.colorScheme.tertiary
@@ -264,7 +272,7 @@ private fun HeroSection(
 
     Box(
         modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         // glow behind icon
         Box(
@@ -276,11 +284,11 @@ private fun HeroSection(
                         colors = listOf(
                             primary.copy(alpha = 0.45f),
                             tertiary.copy(alpha = 0.15f),
-                            background.copy(alpha = 0f)
-                        )
+                            background.copy(alpha = 0f),
+                        ),
                     ),
-                    shape = CircleShape
-                )
+                    shape = CircleShape,
+                ),
         )
 
         // icon in rounded square
@@ -289,18 +297,17 @@ private fun HeroSection(
                 .size(88.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(primary.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = slide.icon,
                 contentDescription = null,
                 modifier = Modifier.size(44.dp),
-                tint = primary
+                tint = primary,
             )
         }
     }
 }
-
 
 // page dots
 
@@ -308,27 +315,35 @@ private fun HeroSection(
 private fun PageIndicator(
     pagerState: PagerState,
     pageCount: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
+    val cd = stringResource(R.string.cd_onboarding_page_format, pagerState.currentPage + 1, pageCount)
     Row(
-        modifier = modifier,
+        modifier = modifier.semantics {
+            contentDescription = cd
+        },
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         repeat(pageCount) { index ->
             val isSelected =
                 pagerState.currentPage == index
 
             val width by animateDpAsState(
-                targetValue = if (isSelected) 24.dp
-                else 8.dp,
-                label = "dotWidth"
+                targetValue = if (isSelected) {
+                    24.dp
+                } else {
+                    8.dp
+                },
+                label = "dotWidth",
             )
             val color by animateColorAsState(
-                targetValue = if (isSelected)
+                targetValue = if (isSelected) {
                     MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.outlineVariant,
-                label = "dotColor"
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant
+                },
+                label = "dotColor",
             )
 
             Box(
@@ -336,7 +351,7 @@ private fun PageIndicator(
                     .height(8.dp)
                     .width(width)
                     .clip(CircleShape)
-                    .background(color)
+                    .background(color),
             )
         }
     }
@@ -349,26 +364,26 @@ private fun PageIndicator(
 private fun OnboardingPreview() {
     HustleHubTheme(
         darkTheme = true,
-        dynamicColor = false
+        dynamicColor = false,
     ) {
         val slide = slides[0]
         val primary = MaterialTheme.colorScheme.primary
         val tertiary = MaterialTheme.colorScheme.tertiary
         val pagerState = rememberPagerState(
-            pageCount = { 3 }
+            pageCount = { 3 },
         )
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    MaterialTheme.colorScheme.background
-                )
+                    MaterialTheme.colorScheme.background,
+                ),
         ) {
             Column(Modifier.fillMaxSize()) {
                 Box(
                     Modifier.weight(0.50f),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     HeroSection(slide = slide)
                 }
@@ -380,43 +395,43 @@ private fun OnboardingPreview() {
                             MaterialTheme.colorScheme.surface,
                             RoundedCornerShape(
                                 topStart = 28.dp,
-                                topEnd = 28.dp
-                            )
-                        )
-                        .padding(
+                                topEnd = 28.dp,
+                            ),
+                        ).padding(
                             horizontal = 28.dp,
-                            vertical = 32.dp
-                        )
+                            vertical = 32.dp,
+                        ),
                 ) {
                     Text(
-                        slide.titleTop,
+                        stringResource(slide.titleTopRes),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme
-                            .onSurface
+                            .onSurface,
                     )
                     Text(
-                        slide.titleHighlight,
+                        stringResource(slide.titleHighlightRes),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography
-                            .headlineMedium.copy(
+                            .headlineMedium
+                            .copy(
                                 brush = Brush.linearGradient(
-                                    listOf(primary, tertiary)
-                                )
-                            )
+                                    listOf(primary, tertiary),
+                                ),
+                            ),
                     )
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        slide.description,
+                        stringResource(slide.descriptionRes),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme
-                            .onSurfaceVariant
+                            .onSurfaceVariant,
                     )
                     Spacer(Modifier.weight(1f))
                     PageIndicator(
                         pagerState = pagerState,
-                        pageCount = 3
+                        pageCount = 3,
                     )
                     Spacer(Modifier.height(24.dp))
                     HustleButton(
@@ -424,7 +439,7 @@ private fun OnboardingPreview() {
                         icon = Icons.AutoMirrored.Filled
                             .ArrowForward,
                         onClick = {},
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(32.dp))
                 }

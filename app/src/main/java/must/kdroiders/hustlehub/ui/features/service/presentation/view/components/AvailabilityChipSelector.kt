@@ -1,0 +1,117 @@
+package must.kdroiders.hustlehub.ui.features.service.presentation.view.components
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
+import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
+import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
+
+/**
+ * 3-state availability selector chip row.
+ * 🟢 Available  🟡 Busy  🔴 Offline
+ */
+@Composable
+fun AvailabilityChipSelector(
+    current: ServiceAvailability,
+    onSelect: (ServiceAvailability) -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        AvailabilityChip(
+            label = stringResource(R.string.status_available),
+            dotColor = HustleActiveGreen,
+            selected = current == ServiceAvailability.AVAILABLE,
+            enabled = enabled,
+            onClick = { onSelect(ServiceAvailability.AVAILABLE) },
+        )
+        AvailabilityChip(
+            label = stringResource(R.string.status_busy),
+            dotColor = HustleWarningAmber,
+            selected = current == ServiceAvailability.BUSY,
+            enabled = enabled,
+            onClick = { onSelect(ServiceAvailability.BUSY) },
+        )
+        AvailabilityChip(
+            label = stringResource(R.string.status_offline),
+            dotColor = HustleOfflineGray,
+            selected = current == ServiceAvailability.OFFLINE,
+            enabled = enabled,
+            onClick = { onSelect(ServiceAvailability.OFFLINE) },
+        )
+    }
+}
+
+@Composable
+private fun AvailabilityChip(
+    label: String,
+    dotColor: Color,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val bgColor = if (selected) {
+        dotColor.copy(alpha = 0.15f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+
+    val borderColor = if (selected) dotColor else Color.Transparent
+    val selectedStateDesc = if (selected) stringResource(R.string.cd_selected) else stringResource(R.string.cd_not_selected)
+
+    Row(
+        modifier = Modifier
+            .minimumInteractiveComponentSize()
+            .clip(RoundedCornerShape(20.dp))
+            .background(bgColor)
+            .border(1.dp, borderColor, RoundedCornerShape(20.dp))
+            .clickable(enabled = enabled) { onClick() }
+            .semantics {
+                role = Role.RadioButton
+                this.selected = selected
+                stateDescription = selectedStateDesc
+            }.padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        // Dot indicator
+        Canvas(modifier = Modifier.size(8.dp)) {
+            drawCircle(color = dotColor)
+        }
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (selected) dotColor else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}

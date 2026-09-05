@@ -1,16 +1,11 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 
-import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
-import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
-import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.Badge
-import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.BadgeType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,84 +13,73 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.MonetizationOn
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
-import must.kdroiders.hustlehub.data.model.Service
+import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeBlue
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeGold
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeGreen
-import must.kdroiders.hustlehub.ui.theme.HustleDarkSurfaceBright
-import must.kdroiders.hustlehub.ui.theme.HustleDarkSurfaceVariant
 import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
-import must.kdroiders.hustlehub.ui.theme.HustlePrimary
-import must.kdroiders.hustlehub.ui.theme.HustlePrimaryVariant
-import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
-import androidx.compose.material3.*
-
-// ─────────────────────────────────────────────────
-// Services section
-// ─────────────────────────────────────────────────
 
 @Composable
 fun ServicesHeader(
     onAddNewServiceClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onManageServicesClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "My Services",
+            text = stringResource(R.string.profile_my_services_title),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.semantics { heading() },
         )
-        TextButton(onClick = onAddNewServiceClick) {
-            Text(
-                text = "Add New +",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = HustlePrimary
-            )
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            TextButton(onClick = onManageServicesClick) {
+                Text(
+                    text = stringResource(R.string.action_manage),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+            }
+            TextButton(onClick = onAddNewServiceClick) {
+                Text(
+                    text = stringResource(R.string.action_add_new_plus),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }
@@ -104,134 +88,127 @@ fun ServicesHeader(
 fun ServiceCard(
     service: Service,
     onToggle: () -> Unit,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
+    val cdService = stringResource(R.string.cd_service_item_format, service.title, service.priceRange)
+    val statusText = if (service.availability == ServiceAvailability.AVAILABLE) {
+        stringResource(R.string.status_active)
+    } else {
+        stringResource(R.string.status_offline)
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(HustleDarkSurfaceVariant)
+            .clip(RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
+            .clickable { onClick() }
             .padding(16.dp)
+            .semantics(mergeDescendants = true) {
+                role = Role.Button
+                contentDescription = cdService
+            },
     ) {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement =
                     Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment =
-                        Alignment.CenterVertically
+                        Alignment.CenterVertically,
                 ) {
                     // Service icon placeholder
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(
-                                HustleDarkSurfaceBright
-                            ),
-                        contentAlignment = Alignment.Center
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        if (
-                            service.iconUrl.isNotBlank()
-                        ) {
+                        if (service.iconUrl.isNotBlank()) {
                             AsyncImage(
                                 model = service.iconUrl,
                                 contentDescription = null,
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(
-                                        RoundedCornerShape(
-                                            8.dp
-                                        )
-                                    ),
-                                contentScale =
-                                    ContentScale.Crop
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
                             )
                         } else {
                             Icon(
-                                imageVector =
-                                    Icons.Default
-                                        .Description,
-                                contentDescription =
-                                    null,
-                                tint = MaterialTheme
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                modifier = Modifier
-                                    .size(24.dp)
+                                imageVector = Icons.Default.Description,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(24.dp),
                             )
                         }
                     }
 
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(Modifier.width(16.dp))
 
                     Column {
                         Text(
                             text = service.title,
-                            fontSize = 15.sp,
-                            fontWeight =
-                                FontWeight.SemiBold,
-                            color = MaterialTheme
-                                .colorScheme.onSurface
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
-                        Spacer(Modifier.height(2.dp))
+                        Spacer(Modifier.height(4.dp))
                         Text(
-                            text = service.priceRange,
-                            fontSize = 13.sp,
-                            color = MaterialTheme
-                                .colorScheme
-                                .onSurfaceVariant
+                            text = stringResource(R.string.service_kes_price_format, service.priceRange),
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+
+                        // Tags inside the text column below price
+                        if (service.tags.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                service.tags.take(2).forEach { tag ->
+                                    TagChip(label = tag)
+                                }
+                            }
+                        }
                     }
                 }
 
                 Column(
                     horizontalAlignment =
-                        Alignment.End
+                        Alignment.End,
                 ) {
                     Switch(
-                        checked = service.isActive,
+                        checked = service.availability == ServiceAvailability.AVAILABLE,
                         onCheckedChange = {
                             onToggle()
                         },
                         colors = SwitchDefaults.colors(
                             checkedTrackColor =
-                                HustlePrimary,
+                                MaterialTheme.colorScheme.primary,
                             checkedThumbColor =
                                 Color.White,
                             uncheckedTrackColor =
                                 HustleOfflineGray
                                     .copy(alpha = 0.4f),
                             uncheckedThumbColor =
-                                HustleOfflineGray
-                        )
+                            HustleOfflineGray,
+                        ),
                     )
                     Text(
-                        text = if (service.isActive)
-                            "Active" else "Offline",
+                        text = statusText,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        color = if (service.isActive)
+                        color = if (service.availability == ServiceAvailability.AVAILABLE) {
                             HustleActiveGreen
-                        else HustleOfflineGray
+                        } else {
+                            HustleOfflineGray
+                        },
                     )
-                }
-            }
-
-            // Tags
-            if (service.tags.isNotEmpty()) {
-                Spacer(Modifier.height(10.dp))
-                Row(
-                    horizontalArrangement =
-                        Arrangement.spacedBy(8.dp)
-                ) {
-                    service.tags.forEach { tag ->
-                        TagChip(label = tag)
-                    }
                 }
             }
         }
@@ -242,21 +219,15 @@ fun ServiceCard(
 fun TagChip(label: String) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(
-                HustleDarkSurfaceBright
-            )
-            .padding(
-                horizontal = 10.dp,
-                vertical = 4.dp
-            )
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
     ) {
         Text(
             text = label,
-            fontSize = 11.sp,
-            color = MaterialTheme.colorScheme
-                .onSurfaceVariant
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
-

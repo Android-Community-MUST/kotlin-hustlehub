@@ -1,95 +1,58 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 
-import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
-import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
-import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.Badge
-import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.BadgeType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.MonetizationOn
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import coil.compose.AsyncImage
-import must.kdroiders.hustlehub.data.model.Service
-import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeBlue
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeGold
-import must.kdroiders.hustlehub.ui.theme.HustleBadgeGreen
-import must.kdroiders.hustlehub.ui.theme.HustleDarkSurfaceBright
-import must.kdroiders.hustlehub.ui.theme.HustleDarkSurfaceVariant
-import must.kdroiders.hustlehub.ui.theme.HustleOfflineGray
-import must.kdroiders.hustlehub.ui.theme.HustlePrimary
-import must.kdroiders.hustlehub.ui.theme.HustlePrimaryVariant
-import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
-import androidx.compose.material3.*
+import must.kdroiders.hustlehub.R
 
-// ─────────────────────────────────────────────────
 // Analytics / Earnings tabs
-// ─────────────────────────────────────────────────
 
 @Composable
 fun ProfileBottomTabs(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAnalyticsClick: () -> Unit = {},
+    onEarningsClick: () -> Unit = {},
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         TabButton(
-            label = "Analytics",
+            label = stringResource(R.string.profile_tab_analytics),
             icon = Icons.Default.BarChart,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            onClick = onAnalyticsClick,
         )
         TabButton(
-            label = "Earnings",
+            label = stringResource(R.string.profile_tab_earnings),
             icon = Icons.Outlined.MonetizationOn,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            onClick = onEarningsClick,
         )
     }
 }
@@ -98,38 +61,43 @@ fun ProfileBottomTabs(
 fun TabButton(
     label: String,
     icon: ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
 ) {
+    val tabCd = stringResource(R.string.cd_tab_format, label)
+
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(HustleDarkSurfaceVariant)
+            .clip(RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
             .border(
                 width = 1.dp,
-                color = MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(vertical = 14.dp),
-        contentAlignment = Alignment.Center
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(24.dp),
+            ).clickable(onClick = onClick)
+            .padding(vertical = 18.dp, horizontal = 20.dp)
+            .semantics {
+                role = androidx.compose.ui.semantics.Role.Tab
+                contentDescription = tabCd
+            },
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
+            Text(
+                text = label,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme
-                    .onSurfaceVariant
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = label,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
 }
-

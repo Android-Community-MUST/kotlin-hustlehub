@@ -810,6 +810,34 @@ Code Push → GitHub Actions → Build & Test → APK/AAB
 
 ---
 
+### 10.4 Storage & Monetization Strategy
+
+Given the student demographic, HustleHub employs a **"Freemium" Model** to ensure rapid adoption while sustaining server storage costs.
+
+#### Platform Scale Estimates (Year 1)
+- **Total Consumers (Buyers):** ~5,000 students
+- **Total Providers (Sellers):** ~1,000 students
+
+#### Storage Limits & Tiering
+All images are compressed client-side to **~150KB - 300KB** via Android `ImageCompressor` before uploading.
+
+| Feature | Free Tier (Starter) | HustleHub Pro (Power Seller) |
+|---------|---------------------|------------------------------|
+| **Cost** | Free forever | ~150 KES / month (M-Pesa) |
+| **Target Users** | Casual providers (~800 users) | Top-earning providers (~200 users) |
+| **Service Limit** | Up to 2 active services | Unlimited services |
+| **Portfolio Images** | Max 3 images per service | Max 15 images per service |
+| **Video Pitch** | ❌ Not supported | ✅ 1 short video allowed |
+| **Visibility** | Standard ranking | "Pro" badge + search boost |
+| **Storage per User** | **~2 MB** (Total: ~1.6 GB) | **~15 MB** (Total: ~3 GB) |
+
+**Total Estimated Platform Storage:** 
+- **Consumers** (Profile pics only): 5,000 × 200KB = ~1 GB
+- **Providers** (Free + Pro): ~4.6 GB
+- **Total requirement:** ~6 GB (Easily fits within standard cloud hosting $5-$10/mo tiers).
+
+---
+
 ## 11. Appendices
 
 ### A. Glossary

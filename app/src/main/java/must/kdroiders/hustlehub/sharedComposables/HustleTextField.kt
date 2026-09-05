@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -38,6 +39,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -46,14 +50,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 
-private val TextFieldShape = RoundedCornerShape(10.dp)
+private val TextFieldShape = RoundedCornerShape(12.dp)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HustleTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String,
+    /** Optional floating label. When null, only [placeholder] is shown — no label floats on focus. */
+    label: String? = null,
     modifier: Modifier = Modifier,
     isError: Boolean = false,
     errorText: String? = null,
@@ -62,13 +67,20 @@ fun HustleTextField(
     trailingIcon: @Composable (() -> Unit)? = null,
     isPassword: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = true,
+    minLines: Int = 1,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     placeholder: String? = null,
+    suffix: @Composable (() -> Unit)? = null,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
-    val visualTransformation = if (isPassword && !passwordVisible)
-        PasswordVisualTransformation() else VisualTransformation.None
+    val visualTransformation = if (isPassword && !passwordVisible) {
+        PasswordVisualTransformation()
+    } else {
+        VisualTransformation.None
+    }
 
     val successColor = MaterialTheme.colorScheme.tertiary
     val motionScheme = MaterialTheme.motionScheme
@@ -80,7 +92,7 @@ fun HustleTextField(
             else -> MaterialTheme.colorScheme.primary
         },
         animationSpec = motionScheme.fastEffectsSpec(),
-        label = "focusedBorder"
+        label = "focusedBorder",
     )
 
     val unfocusedBorderColor by animateColorAsState(
@@ -90,29 +102,33 @@ fun HustleTextField(
             else -> MaterialTheme.colorScheme.outline
         },
         animationSpec = motionScheme.fastEffectsSpec(),
-        label = "unfocusedBorder"
+        label = "unfocusedBorder",
     )
 
     val actualTrailingIcon: @Composable (() -> Unit)? = when {
-        isPassword -> ({
-            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+        isPassword -> (
+            {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        )
+
+        isSuccess -> (
+            {
                 Icon(
-                    imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                    contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Valid",
                     modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = successColor,
                 )
             }
-        })
-
-        isSuccess -> ({
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = "Valid",
-                modifier = Modifier.size(20.dp),
-                tint = successColor
-            )
-        })
+        )
 
         trailingIcon != null -> trailingIcon
         else -> null
@@ -123,19 +139,21 @@ fun HustleTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            label = {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
+            label = label?.let {
+                {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
             },
             placeholder = placeholder?.let {
                 {
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     )
                 }
             },
@@ -151,16 +169,22 @@ fun HustleTextField(
                             isError -> MaterialTheme.colorScheme.error
                             isSuccess -> successColor
                             else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        },
                     )
                 }
             },
             trailingIcon = actualTrailingIcon,
             keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
             singleLine = singleLine,
+            minLines = minLines,
+            maxLines = maxLines,
+            suffix = suffix,
             shape = TextFieldShape,
             textStyle = MaterialTheme.typography.bodyLarge,
             colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                 focusedBorderColor = focusedBorderColor,
                 unfocusedBorderColor = unfocusedBorderColor,
                 errorBorderColor = MaterialTheme.colorScheme.error,
@@ -170,24 +194,28 @@ fun HustleTextField(
                 cursorColor = MaterialTheme.colorScheme.primary,
                 focusedContainerColor = MaterialTheme.colorScheme.surface,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            )
+            ),
         )
 
         // Animated helper / error message
         AnimatedVisibility(
             visible = isError && errorText != null,
             enter = expandVertically(motionScheme.fastSpatialSpec()) + fadeIn(motionScheme.fastEffectsSpec()),
-            exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.fastEffectsSpec())
+            exit = shrinkVertically(motionScheme.fastSpatialSpec()) + fadeOut(motionScheme.fastEffectsSpec()),
         ) {
             Row(
-                modifier = Modifier.padding(start = 12.dp, top = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier
+                    .padding(start = 12.dp, top = 8.dp)
+                    .semantics {
+                        liveRegion = LiveRegionMode.Polite
+                    },
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = null,
-                    modifier = Modifier.size(13.dp),
-                    tint = MaterialTheme.colorScheme.error
+                    modifier = Modifier.size(12.dp),
+                    tint = MaterialTheme.colorScheme.error,
                 )
                 Spacer(Modifier.width(4.dp))
                 Text(
@@ -195,7 +223,7 @@ fun HustleTextField(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.2.sp
+                    letterSpacing = 0.2.sp,
                 )
             }
         }
@@ -212,32 +240,32 @@ fun HustleTextFieldPreview() {
                 onValueChange = {},
                 label = "Username",
                 leadingIcon = Icons.Default.Person,
-                placeholder = "Enter your username"
+                placeholder = "Enter your username",
             )
-            androidx.compose.foundation.layout.Spacer(Modifier.padding(8.dp))
+            Spacer(Modifier.padding(8.dp))
             HustleTextField(
                 value = "bad@email",
                 onValueChange = {},
                 label = "Email",
                 leadingIcon = Icons.Default.Email,
                 isError = true,
-                errorText = "Please enter a valid email address"
+                errorText = "Please enter a valid email address",
             )
-            androidx.compose.foundation.layout.Spacer(Modifier.padding(8.dp))
+            Spacer(Modifier.padding(8.dp))
             HustleTextField(
                 value = "valid@email.com",
                 onValueChange = {},
                 label = "Email",
                 leadingIcon = Icons.Default.Email,
-                isSuccess = true
+                isSuccess = true,
             )
-            androidx.compose.foundation.layout.Spacer(Modifier.padding(8.dp))
+            Spacer(Modifier.padding(8.dp))
             HustleTextField(
                 value = "password123",
                 onValueChange = {},
                 label = "Password",
                 leadingIcon = Icons.Default.Lock,
-                isPassword = true
+                isPassword = true,
             )
         }
     }

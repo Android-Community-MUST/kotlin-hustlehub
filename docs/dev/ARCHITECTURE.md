@@ -211,6 +211,23 @@ must.kdroiders.hustlehub/
 
 ---
 
+## 🚀 Customer Onboarding & Just-In-Time (JIT) Contact Collection Architecture
+
+HustleHub uses a **Zero-Friction Customer Onboarding** paradigm:
+
+1. **Instant Onboarding:**
+   - When a new customer signs up or verifies their email with Firebase Auth, they are **automatically registered in PostgreSQL as `ROLE_CUSTOMER` in the background**.
+   - Customers bypass mandatory setup screens and land directly on `HomeScreen` to browse services immediately.
+
+2. **Just-In-Time (JIT) Contact Collection:**
+   - Phone number and campus residence location (e.g. *"Hostel B, Room 204"*) are collected **only when a customer takes a transaction action** (e.g. tapping `"DM Provider"` or `"Book Service"`).
+   - A lightweight `QuickContactModal` collects contact info on the spot, saves it to PostgreSQL via `userRepository.saveUserProfile()`, and seamlessly completes the DM/Booking flow.
+
+3. **Provider Onboarding:**
+   - Full profile setup (bio, avatar, campus location, published services) is required only when a user decides to **Become a Provider** or publish a service.
+
+---
+
 ## Key Design Patterns
 
 ### UiState (every screen)
@@ -329,34 +346,39 @@ class TokenAuthenticator @Inject constructor(
 ```kotlin
 class ChatWebSocketService @Inject constructor(
     private val okHttpClient: OkHttpClient,
-    private val tokenProvider: TokenProvider
+    private val firebaseAuth: FirebaseAuth?
 ) {
-    private var webSocket: WebSocket? = null
+    private var stompSession: StompSession? = null
+    private val gson = Gson()
 
-    fun connect(conversationId: String, onMessage: (ChatMessage) -> Unit) {
-        val token = tokenProvider.getCachedToken()
-        val request = Request.Builder()
-            .url("${BuildConfig.WS_BASE_URL}?token=$token")
-            .build()
-
-        webSocket = okHttpClient.newWebSocket(request, object : WebSocketListener() {
-            override fun onMessage(webSocket: WebSocket, text: String) {
-                val message = Json.decodeFromString<ChatMessage>(text)
-                onMessage(message)
-            }
-        })
+    suspend fun connect() {
+        val token = firebaseAuth?.currentUser?.getIdToken(false)?.await()?.token
+        val webSocketClient = OkHttpWebSocketClient(okHttpClient)
+        val stompClient = StompClient(webSocketClient)
+        stompSession = stompClient.connect(
+            url = BuildConfig.WS_BASE_URL,
+            customStompConnectHeaders = mapOf("token" to token)
+        )
     }
 
-    fun sendMessage(payload: SendMessagePayload) {
-        webSocket?.send(Json.encodeToString(payload))
+    suspend fun subscribeToConversation(conversationId: String): Flow<MessageResponse> {
+        val session = stompSession ?: throw IllegalStateException()
+        return session.subscribe(StompSubscribeHeaders("/topic/conversation/$conversationId")).map { frame ->
+            gson.fromJson(frame.bodyAsText, MessageResponse::class.java)
+        }
     }
 
-    fun disconnect() {
-        webSocket?.close(1000, "User left chat")
-        webSocket = null
+    suspend fun sendMessage(request: SendMessageRequest) {
+        stompSession?.sendText("/app/chat.send", gson.toJson(request))
+    }
+
+    suspend fun disconnect() {
+        stompSession?.disconnect()
+        stompSession = null
     }
 }
 ```
+
 
 ---
 

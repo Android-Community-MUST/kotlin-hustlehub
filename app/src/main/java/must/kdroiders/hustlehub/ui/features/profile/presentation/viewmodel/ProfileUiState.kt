@@ -1,7 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel
 
-import must.kdroiders.hustlehub.data.model.Service
-import must.kdroiders.hustlehub.data.model.User
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 
 /**
  * Immutable UI state for the Profile screen.
@@ -14,7 +14,8 @@ data class ProfileUiState(
     val reviewCount: Int = 0,
     val badges: List<Badge> = emptyList(),
     val isLoading: Boolean = true,
-    val error: String? = null
+    val isRefreshing: Boolean = false,
+    val error: String? = null,
 )
 
 /**
@@ -22,12 +23,12 @@ data class ProfileUiState(
  */
 data class Badge(
     val label: String,
-    val type: BadgeType = BadgeType.DEFAULT
+    val type: BadgeType = BadgeType.DEFAULT,
 )
 
 enum class BadgeType {
     GOLD,
     GREEN,
     BLUE,
-    DEFAULT
+    DEFAULT,
 }

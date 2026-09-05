@@ -1,3 +1,4 @@
+
 # 🚀 HustleHub
 
 <div align="center">
@@ -10,7 +11,7 @@
 [![Language](https://img.shields.io/badge/Language-Kotlin-purple.svg)](https://kotlinlang.org)
 [![Framework](https://img.shields.io/badge/UI-Jetpack%20Compose-blue.svg)](https://developer.android.com/jetpack/compose)
 [![Backend](https://img.shields.io/badge/Backend-Spring%20Boot-green.svg)](https://spring.io/projects/spring-boot)
-[![License](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](docs/CONTRIBUTING.md)
 
 *Connecting campus hustlers with customers through trust, convenience, and innovation*
@@ -168,11 +169,12 @@ See [ARCHITECTURE.md](docs/dev/ARCHITECTURE.md) for full detail.
    ```
    Edit `keys.properties`:
    ```properties
-   MAPS_API_KEY=AIzaSy...your_maps_key
-   BASE_URL=http://10.0.2.2:8080/api/v1/
-   WS_BASE_URL=ws://10.0.2.2:8080/ws
-   GEMINI_API_KEY=AIzaSy...your_gemini_key
-   ```
+    MAPS_API_KEY=AIzaSy...your_maps_key
+    BASE_URL=http://10.0.2.2:8080/api/v1/
+    WS_BASE_URL=ws://10.0.2.2:8080/ws
+    GEMINI_API_KEY=AIzaSy...your_gemini_key
+    GOOGLE_WEB_CLIENT_ID=your_google_web_client_id_here
+    ```
 
 5. **Build and run**
    ```bash
@@ -187,9 +189,9 @@ See [SETUP.md](docs/dev/SETUP.md) for full setup instructions.
 
 <div align="center">
 
-| Home / Discovery | Chat | Profile |
-|-----------------|------|---------|
-| ![Home](https://via.placeholder.com/200x400/6C5CE7/FFFFFF?text=Home) | ![Chat](https://via.placeholder.com/200x400/00B894/FFFFFF?text=Chat) | ![Profile](https://via.placeholder.com/200x400/E17055/FFFFFF?text=Profile) |
+| Login | Home / Discovery | Chat | Profile |
+|-------|-----------------|------|---------|
+| <img src="screenshots/login_light.png" width="200"/> | ![Home](https://via.placeholder.com/200x400/6C5CE7/FFFFFF?text=Home) | ![Chat](https://via.placeholder.com/200x400/00B894/FFFFFF?text=Chat) | ![Profile](https://via.placeholder.com/200x400/E17055/FFFFFF?text=Profile) |
 
 *Screenshots coming soon as development progresses*
 
@@ -219,7 +221,7 @@ See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for full guidelines.
 - [x] Design system + shared composables
 - [ ] Service creation & discovery feed
 - [ ] AI-powered search
-- [ ] Real-time messaging (WebSocket)
+- [x] Real-time messaging (WebSocket)
 - [ ] Campus map with provider pins
 - [ ] Ratings & reviews
 - [ ] Beta launch (500 users)
@@ -279,9 +281,20 @@ See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for full guidelines.
 
 ---
 
+## 👥 Team & Contributors
+
+Built and maintained with ❤️ by the **Android Community MUST** engineering team at Meru University of Science & Technology:
+
+- **Korir Aldo** — [@korryrdev](https://github.com/korryrdev) — *Lead Android Engineer & Backend Architect*
+- **Vertigo** — [@vertigo0628](https://github.com/vertigo0628) — *Android Developer*
+- **Botmaster Kenya** — [@Botmasterkenya](https://github.com/Botmasterkenya) — *Android Developer*
+- **Nancy** — [@NancyN00](https://github.com/NancyN00) — *Android & KMP Developer*
+
+---
+
 ## 📜 License
 
-MIT License — see [LICENSE](LICENSE) for details.
+Proprietary & Confidential License — see [LICENSE](LICENSE) for details.
 
 ---
 

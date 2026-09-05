@@ -100,9 +100,27 @@ WS_BASE_URL=ws://10.0.2.2:8080/ws
 
 # Gemini API Key (used by backend, but keep here for client-side config if needed)
 GEMINI_API_KEY=AIzaSy...your_actual_gemini_key
+
+# Google OAuth Web Client ID (from Firebase Console → Google Provider or Google Cloud Console)
+GOOGLE_WEB_CLIENT_ID=your_google_web_client_id_here
+# Release Signing Keystore Configuration
+# (Add these when building a signed release AAB/APK)
+KEYSTORE_FILE=release.keystore
+KEYSTORE_PASSWORD=your_keystore_password
+KEY_ALIAS=your_key_alias
+KEY_PASSWORD=your_key_password
 ```
 
 > ⚠️ `keys.properties` is gitignored. **Never commit it.**
+
+### System JDK (`JAVA_HOME`) Setup
+
+If running Gradle commands directly from Linux/macOS terminal, set `JAVA_HOME` to your installed OpenJDK to ensure proper JDK transforms (`jlink`):
+
+```bash
+export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+```
+*(Add the `export` line above to your `~/.bashrc` or `~/.zshrc` file to persist it).*
 
 ### Get Your API Keys
 
@@ -210,6 +228,12 @@ Make sure the Spring Boot backend is running before launching the app.
 
 # Generate debug APK
 ./gradlew assembleDebug
+
+# Generate signed release AAB (Play Store)
+./gradlew bundleRelease
+
+# Run Android Lint
+./gradlew lint
 
 # Check code style
 ./gradlew ktlintCheck

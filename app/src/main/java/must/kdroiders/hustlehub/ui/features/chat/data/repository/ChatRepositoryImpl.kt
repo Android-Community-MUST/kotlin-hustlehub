@@ -1,0 +1,625 @@
+package must.kdroiders.hustlehub.ui.features.chat.data.repository
+
+import android.content.Context
+import com.google.firebase.auth.FirebaseAuth
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.core.notification.NotificationHelper
+import must.kdroiders.hustlehub.core.security.CryptoManager
+import must.kdroiders.hustlehub.core.security.EncryptedPayload
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
+import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
+import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.MessageDao
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationEntity
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.MessageEntity
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toDecryptedDomain
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toDomain
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toEncryptedEntity
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.toEntity
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.ConversationResponse
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.CreateConversationRequest
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.MessageResponse
+import must.kdroiders.hustlehub.ui.features.chat.data.remote.dto.SendMessageRequest
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.UserPresence
+import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
+import timber.log.Timber
+import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class ChatRepositoryImpl
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+        private val conversationApiService: ConversationApiService,
+        private val conversationDao: ConversationDao,
+        private val messageDao: MessageDao,
+        private val chatWebSocketService: ChatWebSocketService,
+        private val firebaseAuth: FirebaseAuth?,
+        private val keyExchangeHandler: KeyExchangeHandler,
+        private val cryptoManager: CryptoManager,
+    ) : ChatRepository {
+        @Volatile
+        private var activeConversationId: String? = null
+
+        override fun setActiveConversation(conversationId: String?) {
+            activeConversationId = conversationId
+        }
+
+        override fun getConversations(): Flow<List<Conversation>> {
+            return conversationDao.getAll().map { entities ->
+                entities.map { it.toDomain() }
+            }
+        }
+
+        override suspend fun refreshConversations(): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = conversationApiService.getConversations(0, 50)
+                    check(response.success && response.data != null) { response.message ?: "Failed to refresh conversations" }
+                    val entities = response.data.content.map { dto ->
+                        val existing = conversationDao.getById(dto.id)
+                        dto.toEntity(keyExchangeHandler, cryptoManager, existing)
+                    }
+                    conversationDao.upsertAll(entities)
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to refresh conversations")
+                }
+            }
+
+        override suspend fun getOrCreateConversation(
+            otherUserId: String,
+            serviceId: String?,
+        ): Result<Conversation> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val request = CreateConversationRequest(otherUserId, serviceId)
+                    val response = conversationApiService.getOrCreateConversation(request)
+                    check(response.success && response.data != null) { response.message ?: "Failed to get or create conversation" }
+                    val conversation = response.data.toDomainModel()
+                    conversationDao.upsert(conversation.toEntity())
+                    conversation
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to get or create conversation")
+                }
+            }
+
+        override fun getMessages(conversationId: String): Flow<List<Message>> {
+            return messageDao.getByConversation(conversationId).map { entities ->
+                entities.map { it.toDecryptedDomain(keyExchangeHandler, cryptoManager) }
+            }
+        }
+
+        override suspend fun loadMessageHistory(
+            conversationId: String,
+            page: Int,
+        ): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val cachedConv = conversationDao.getById(conversationId)
+                    keyExchangeHandler.ensureKeysExchanged(conversationId, cachedConv?.otherUserId)
+                    val response = conversationApiService.getMessages(conversationId, page, 50)
+                    check(response.success && response.data != null) { response.message ?: "Failed to load message history" }
+                    val gson = Gson()
+                    val localIdsToDelete = response.data.content.mapNotNull { msg ->
+                        if (msg.metadata != null) {
+                            runCatching {
+                                val metaObj = gson.fromJson(msg.metadata, JsonObject::class.java)
+                                if (metaObj.has("localId")) {
+                                    metaObj.get("localId").asString
+                                } else {
+                                    null
+                                }
+                            }.getOrNull()
+                        } else {
+                            null
+                        }
+                    }
+                    if (localIdsToDelete.isNotEmpty()) {
+                        localIdsToDelete.forEach { messageDao.deleteById(it) }
+                    }
+                    val entities = response.data.content.mapNotNull { msgDto ->
+                        val msgDomain = msgDto.toDomainModel(keyExchangeHandler, cryptoManager)
+                        val processed = applyDeletionStatusToMessage(msgDomain)
+                        processed?.toEncryptedEntity(conversationId, keyExchangeHandler, cryptoManager)
+                    }
+                    messageDao.upsertAll(entities)
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to load message history")
+                    if (e is retrofit2.HttpException && e.code() == 404) {
+                        conversationDao.deleteById(conversationId)
+                        messageDao.deleteByConversation(conversationId)
+                    }
+                }
+            }
+
+        override suspend fun sendMessage(
+            conversationId: String,
+            type: MessageType,
+            content: String,
+            mediaUrl: String?,
+            metadata: String?,
+        ): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val tempId = "temp_${UUID.randomUUID()}"
+                    val currentUserId = firebaseAuth?.currentUser?.uid ?: ""
+                    val currentTimestamp = runCatching {
+                        java.time.Instant
+                            .now()
+                            .toString()
+                    }.getOrDefault(System.currentTimeMillis().toString())
+
+                    val gson = Gson()
+                    val metadataJson = if (metadata != null) {
+                        runCatching {
+                            gson.fromJson(metadata, JsonObject::class.java).apply {
+                                addProperty("localId", tempId)
+                            }
+                        }.getOrElse {
+                            JsonObject().apply { addProperty("localId", tempId) }
+                        }
+                    } else {
+                        JsonObject().apply { addProperty("localId", tempId) }
+                    }
+                    val newMetadataString = gson.toJson(metadataJson)
+
+                    val tempMessage = Message(
+                        id = tempId,
+                        conversationId = conversationId,
+                        senderId = currentUserId,
+                        type = type,
+                        content = content,
+                        mediaUrl = mediaUrl,
+                        thumbnailUrl = null,
+                        metadata = newMetadataString,
+                        timestamp = currentTimestamp,
+                        deliveredAt = null,
+                        readAt = null,
+                        isSynced = false,
+                        isFailed = false,
+                    )
+
+                    messageDao.upsert(tempMessage.toEncryptedEntity(conversationId, keyExchangeHandler, cryptoManager))
+
+                    val cachedConv = conversationDao.getById(conversationId)
+                    val request = SendMessageRequest(
+                        conversationId = conversationId,
+                        type = type.name,
+                        content = content,
+                        mediaUrl = mediaUrl,
+                        metadata = newMetadataString,
+                    )
+                    chatWebSocketService.connect()
+                    chatWebSocketService.sendMessage(request, cachedConv?.otherUserId)
+                    Unit
+                }.recover { e ->
+                    if (e is CancellationException) throw e
+                    Timber.d(e, "Message queued in local database for auto-sync")
+                    Unit
+                }
+            }
+
+        override suspend fun markAsRead(conversationId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = conversationApiService.markAsRead(conversationId)
+                    check(response.success) { response.message ?: "Failed to mark conversation as read" }
+                    val cached = conversationDao.getById(conversationId)
+                    if (cached != null) {
+                        conversationDao.upsert(cached.copy(unreadCount = 0))
+                    }
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to mark conversation as read")
+                    if (e is retrofit2.HttpException && e.code() == 404) {
+                        conversationDao.deleteById(conversationId)
+                        messageDao.deleteByConversation(conversationId)
+                    }
+                }
+            }
+
+        override suspend fun connectWebSocket(conversationId: String): Flow<Message> =
+            flow {
+                try {
+                    val cachedConv = conversationDao.getById(conversationId)
+                    keyExchangeHandler.ensureKeysExchanged(conversationId, cachedConv?.otherUserId)
+                    chatWebSocketService.connect()
+                    resendUnsyncedMessages()
+
+                    chatWebSocketService
+                        .subscribeToConversation(conversationId)
+                        .map { it.toDomainModel(keyExchangeHandler, cryptoManager) }
+                        .collect { message ->
+                            val processed = withContext(Dispatchers.IO) {
+                                val gson = Gson()
+
+                                val cachedConv = conversationDao.getById(conversationId)
+                                val isFromOtherUser = cachedConv?.let { message.senderId == it.otherUserId } ?: false
+                                val isFromSelf = !isFromOtherUser
+
+                                if (isFromSelf) {
+                                    if (message.metadata != null) {
+                                        runCatching {
+                                            val metaObj = gson.fromJson(message.metadata, JsonObject::class.java)
+                                            if (metaObj.has("localId")) {
+                                                val localId = metaObj.get("localId").asString
+                                                messageDao.deleteById(localId)
+                                            }
+                                        }.onFailure { e ->
+                                            if (e is CancellationException) throw e
+                                            Timber.e(e, "Error processing localId from metadata")
+                                        }
+                                    }
+                                    val unsynced = messageDao.getUnsyncedMessages().filter { it.conversationId == conversationId }
+                                    unsynced.forEach { messageDao.deleteById(it.id) }
+                                }
+
+                                val proc = applyDeletionStatusToMessage(message)
+                                if (proc != null) {
+                                    messageDao.upsert(proc.toEncryptedEntity(conversationId, keyExchangeHandler, cryptoManager))
+                                    if (cachedConv != null) {
+                                        val isActive = conversationId == activeConversationId
+
+                                        conversationDao.upsert(
+                                            cachedConv.copy(
+                                                lastMessage = proc.content,
+                                                lastMessageType = proc.type.name,
+                                                lastMessageAt = proc.timestamp,
+                                                unreadCount = if (isFromOtherUser && !isActive) {
+                                                    cachedConv.unreadCount + 1
+                                                } else {
+                                                    0
+                                                },
+                                            ),
+                                        )
+
+                                        if (isFromOtherUser && !isActive) {
+                                            val senderName = cachedConv.otherUserName
+                                            val preview = when (proc.type.name) {
+                                                "VOICE" -> "Sent a voice note"
+                                                "IMAGE" -> "Sent an image"
+                                                "LOCATION" -> "Shared a location"
+                                                else -> proc.content.take(80)
+                                            }
+                                            NotificationHelper.postMessageNotification(
+                                                context = context,
+                                                conversationId = conversationId,
+                                                senderName = senderName,
+                                                messagePreview = preview,
+                                            )
+                                        } else if (isFromOtherUser && isActive) {
+                                            markAsRead(conversationId)
+                                        }
+                                    }
+                                } else {
+                                    messageDao.deleteById(message.id)
+                                    if (cachedConv != null && cachedConv.lastMessageAt == message.timestamp) {
+                                        val latest = messageDao.getLatestMessage(conversationId)
+                                        if (latest != null) {
+                                            val decryptedLatest = latest.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                                            conversationDao.upsert(
+                                                cachedConv.copy(
+                                                    lastMessage = decryptedLatest.content,
+                                                    lastMessageType = decryptedLatest.type.name,
+                                                    lastMessageAt = decryptedLatest.timestamp,
+                                                ),
+                                            )
+                                        }
+                                    }
+                                }
+                                proc
+                            }
+                            if (processed != null) {
+                                emit(processed)
+                            }
+                        }
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Error in connectWebSocket flow")
+                }
+            }
+
+        override suspend fun subscribeToPresence(otherUserId: String): Flow<UserPresence> {
+            return chatWebSocketService.subscribeToPresence(otherUserId)
+        }
+
+        override suspend fun disconnectWebSocket() {
+            chatWebSocketService.disconnect()
+        }
+
+        override suspend fun deleteConversation(conversationId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = conversationApiService.deleteConversation(conversationId)
+                    check(response.success) { response.message ?: "Failed to delete conversation" }
+                    conversationDao.deleteById(conversationId)
+                    messageDao.deleteByConversation(conversationId)
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to delete conversation")
+                }
+            }
+
+        override suspend fun deleteMessageForMe(messageId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    markMessageDeletedForMe(messageId)
+
+                    runCatching {
+                        conversationApiService.deleteMessageForMe(messageId)
+                    }.onFailure { e ->
+                        if (e is CancellationException) throw e
+                        Timber.w(e, "Remote deleteMessageForMe failed, treating as local-only success")
+                    }
+
+                    val cached = messageDao.getById(messageId)
+                    messageDao.deleteById(messageId)
+                    if (cached != null) {
+                        val conv = conversationDao.getById(cached.conversationId)
+                        if (conv != null && conv.lastMessageAt == cached.timestamp) {
+                            val latest = messageDao.getLatestMessage(cached.conversationId)
+                            if (latest != null) {
+                                val decryptedLatest = latest.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                                conversationDao.upsert(
+                                    conv.copy(
+                                        lastMessage = decryptedLatest.content,
+                                        lastMessageType = decryptedLatest.type.name,
+                                        lastMessageAt = decryptedLatest.timestamp,
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                    Unit
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                }
+            }
+
+        override suspend fun deleteMessageForEveryone(messageId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    markMessageDeletedForEveryone(messageId)
+
+                    runCatching {
+                        conversationApiService.deleteMessageForEveryone(messageId)
+                    }.onFailure { e ->
+                        if (e is CancellationException) throw e
+                        Timber.w(e, "Remote deleteMessageForEveryone failed, treating as local-only success")
+                    }
+
+                    val cached = messageDao.getById(messageId)
+                    if (cached != null) {
+                        val gson = Gson()
+                        val metaObj = runCatching {
+                            if (!cached.metadata.isNullOrBlank()) {
+                                gson.fromJson(cached.metadata, JsonObject::class.java)
+                            } else {
+                                JsonObject()
+                            }
+                        }.getOrElse { JsonObject() }
+
+                        metaObj.addProperty("isDeleted", true)
+                        val updatedDomain = cached.toDecryptedDomain(keyExchangeHandler, cryptoManager).copy(
+                            content = "This message was deleted",
+                            mediaUrl = null,
+                            thumbnailUrl = null,
+                            metadata = gson.toJson(metaObj),
+                        )
+                        messageDao.upsert(updatedDomain.toEncryptedEntity(cached.conversationId, keyExchangeHandler, cryptoManager))
+
+                        val conv = conversationDao.getById(cached.conversationId)
+                        if (conv != null && conv.lastMessageAt == cached.timestamp) {
+                            conversationDao.upsert(
+                                conv.copy(
+                                    lastMessage = "This message was deleted",
+                                    lastMessageType = "TEXT",
+                                ),
+                            )
+                        }
+                    }
+                    Unit
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                }
+            }
+
+        private val sharedPrefs by lazy {
+            context.getSharedPreferences("hustlehub_chat_deletions", Context.MODE_PRIVATE)
+        }
+
+        private fun markMessageDeletedForMe(messageId: String) {
+            sharedPrefs.edit().putString(messageId, "for_me").apply()
+        }
+
+        private fun markMessageDeletedForEveryone(messageId: String) {
+            sharedPrefs.edit().putString(messageId, "for_everyone").apply()
+        }
+
+        private fun getDeletionStatus(messageId: String): String? {
+            return sharedPrefs.getString(messageId, null)
+        }
+
+        private fun applyDeletionStatusToMessage(message: Message): Message? {
+            val status = getDeletionStatus(message.id) ?: return message
+            if (status == "for_me") return null
+
+            val gson = Gson()
+            val metaObj = runCatching {
+                if (!message.metadata.isNullOrBlank()) {
+                    gson.fromJson(message.metadata, JsonObject::class.java)
+                } else {
+                    JsonObject()
+                }
+            }.getOrElse { JsonObject() }
+
+            metaObj.addProperty("isDeleted", true)
+            return message.copy(
+                content = "This message was deleted",
+                mediaUrl = null,
+                thumbnailUrl = null,
+                metadata = gson.toJson(metaObj),
+            )
+        }
+
+        override suspend fun resendUnsyncedMessages(): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val unsynced = messageDao.getUnsyncedMessages()
+                    if (unsynced.isEmpty()) return@runCatching
+
+                    chatWebSocketService.connect()
+                    unsynced.forEach { entity ->
+                        val decryptedDomain = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                        val request = SendMessageRequest(
+                            conversationId = entity.conversationId,
+                            type = entity.type,
+                            content = decryptedDomain.content,
+                            mediaUrl = entity.mediaUrl,
+                            metadata = entity.metadata,
+                        )
+                        runCatching {
+                            chatWebSocketService.sendMessage(request)
+                            messageDao.upsert(entity.copy(isSynced = true, isFailed = false))
+                        }.onFailure { e ->
+                            Timber.e(e, "Failed to sync pending message ${entity.id}")
+                        }
+                    }
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to resend unsynced messages")
+                }
+            }
+    }
+
+private fun ConversationResponse.toDomainModel(): Conversation =
+    Conversation(
+        id = id,
+        otherUserId = otherUserId,
+        otherUserName = otherUserName,
+        otherUserAvatar = otherUserAvatar,
+        serviceId = serviceId,
+        lastMessage = lastMessage,
+        lastMessageType = lastMessageType,
+        lastMessageAt = lastMessageAt,
+        unreadCount = unreadCount,
+        createdAt = createdAt,
+        isArchived = isArchived ?: false,
+    )
+
+private fun ConversationResponse.toEntity(
+    keyExchangeHandler: KeyExchangeHandler? = null,
+    cryptoManager: CryptoManager? = null,
+    existingEntity: ConversationEntity? = null,
+): ConversationEntity {
+    val rawLastMessage = lastMessage
+    val resolvedLastMessage = if (!rawLastMessage.isNullOrBlank()) {
+        existingEntity?.lastMessage ?: rawLastMessage
+    } else {
+        existingEntity?.lastMessage
+    }
+
+    return ConversationEntity(
+        id = id,
+        otherUserId = otherUserId,
+        otherUserName = otherUserName,
+        otherUserAvatar = otherUserAvatar,
+        serviceId = serviceId,
+        lastMessage = resolvedLastMessage,
+        lastMessageType = lastMessageType ?: existingEntity?.lastMessageType,
+        lastMessageAt = lastMessageAt ?: existingEntity?.lastMessageAt,
+        unreadCount = unreadCount,
+        createdAt = createdAt,
+        isArchived = isArchived ?: false,
+    )
+}
+
+private fun MessageResponse.toDomainModel(
+    keyExchangeHandler: KeyExchangeHandler? = null,
+    cryptoManager: CryptoManager? = null,
+): Message {
+    val gson = Gson()
+    var parsedIv: String? = iv
+    var parsedAuthTag: String? = authTag
+    var isEncrypted = false
+
+    if (!metadata.isNullOrBlank()) {
+        runCatching {
+            val metaObj = gson.fromJson(metadata, JsonObject::class.java)
+            if (metaObj.has("iv")) parsedIv = metaObj.get("iv").asString
+            if (metaObj.has("authTag")) parsedAuthTag = metaObj.get("authTag").asString
+            if (metaObj.has("encrypted")) isEncrypted = metaObj.get("encrypted").asBoolean
+        }
+    }
+
+    val ciphertext = encryptedContent ?: if (isEncrypted || !parsedIv.isNullOrBlank()) content else null
+
+    val resolvedContent = if (!ciphertext.isNullOrBlank() && !parsedIv.isNullOrBlank() && keyExchangeHandler != null && cryptoManager != null) {
+        val secretKey = keyExchangeHandler.getCachedSecret(conversationId)
+        if (secretKey != null) {
+            runCatching {
+                cryptoManager.decrypt(
+                    EncryptedPayload(
+                        ciphertext = ciphertext,
+                        iv = parsedIv!!,
+                        authTag = parsedAuthTag ?: "",
+                    ),
+                    secretKey,
+                )
+            }.getOrElse { e ->
+                Timber.w(e, "Failed to decrypt network payload for message $id")
+                if (content != null && content != ciphertext) content else "[Encrypted message]"
+            }
+        } else {
+            if (content != null && content != ciphertext) content else "[Encrypted message]"
+        }
+    } else {
+        content ?: ""
+    }
+
+    return Message(
+        id = id,
+        conversationId = conversationId,
+        senderId = senderId,
+        type = runCatching { MessageType.valueOf(type) }.getOrDefault(MessageType.TEXT),
+        content = resolvedContent,
+        mediaUrl = mediaUrl,
+        thumbnailUrl = thumbnailUrl,
+        metadata = metadata,
+        timestamp = timestamp,
+        deliveredAt = deliveredAt,
+        readAt = readAt,
+    )
+}
+
+private fun MessageResponse.toEntity(): MessageEntity =
+    MessageEntity(
+        id = id,
+        conversationId = conversationId,
+        senderId = senderId,
+        type = type,
+        content = content,
+        mediaUrl = mediaUrl,
+        thumbnailUrl = thumbnailUrl,
+        metadata = metadata,
+        timestamp = timestamp,
+        deliveredAt = deliveredAt,
+        readAt = readAt,
+    )

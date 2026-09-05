@@ -1,26 +1,27 @@
 package must.kdroiders.hustlehub.sharedComposables
 
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -30,10 +31,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
@@ -41,10 +47,10 @@ import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
 enum class HustleButtonVariant {
     Primary,
     Secondary,
-    Outlined
+    Outlined,
 }
 
-private val ButtonShape = RoundedCornerShape(10.dp)
+private val ButtonShape = RoundedCornerShape(12.dp)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -56,15 +62,22 @@ fun HustleButton(
     enabled: Boolean = true,
     loading: Boolean = false,
     icon: ImageVector? = null,
+    /** Bitmap/PNG icon — use when an ImageVector is not available (e.g. Google logo). */
+    painter: Painter? = null,
+    /** Size applied to both [icon] and [painter]. Defaults to 20dp. */
+    iconSize: Dp = 20.dp,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val motionScheme = MaterialTheme.motionScheme
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = motionScheme.fastSpatialSpec(),
-        label = "scale"
+        targetValue = if (isPressed) 0.96f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow,
+        ),
+        label = "scale",
     )
 
     val isActive = enabled && !loading
@@ -75,23 +88,44 @@ fun HustleButton(
                 onClick = onClick,
                 modifier = modifier
                     .height(52.dp)
-                    .graphicsLayer { scaleX = scale; scaleY = scale },
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    }.semantics {
+                        if (loading) {
+                            stateDescription = "Loading"
+                        }
+                    },
                 enabled = isActive,
                 shape = ButtonShape,
                 interactionSource = interactionSource,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    disabledContainerColor = if (loading) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
+                    disabledContentColor = if (loading) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 ),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 0.dp,
-                    pressedElevation = 0.dp
-                )
+                    pressedElevation = 0.dp,
+                ),
             ) {
-                ButtonContent(text = text, loading = loading, icon = icon,
-                    loadingColor = { MaterialTheme.colorScheme.onPrimary })
+                ButtonContent(
+                    text = text,
+                    loading = loading,
+                    icon = icon,
+                    painter = painter,
+                    iconSize = iconSize,
+                    loadingColor = { MaterialTheme.colorScheme.onPrimary },
+                )
             }
         }
 
@@ -100,23 +134,40 @@ fun HustleButton(
                 onClick = onClick,
                 modifier = modifier
                     .height(52.dp)
-                    .graphicsLayer { scaleX = scale; scaleY = scale },
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    },
                 enabled = isActive,
                 shape = ButtonShape,
                 interactionSource = interactionSource,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    disabledContainerColor = if (loading) {
+                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
+                    disabledContentColor = if (loading) {
+                        MaterialTheme.colorScheme.onSecondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 ),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 0.dp,
-                    pressedElevation = 0.dp
-                )
+                    pressedElevation = 0.dp,
+                ),
             ) {
-                ButtonContent(text = text, loading = loading, icon = icon,
-                    loadingColor = { MaterialTheme.colorScheme.onSecondaryContainer })
+                ButtonContent(
+                    text = text,
+                    loading = loading,
+                    icon = icon,
+                    painter = painter,
+                    iconSize = iconSize,
+                    loadingColor = { MaterialTheme.colorScheme.onSecondaryContainer },
+                )
             }
         }
 
@@ -125,22 +176,40 @@ fun HustleButton(
                 onClick = onClick,
                 modifier = modifier
                     .height(52.dp)
-                    .graphicsLayer { scaleX = scale; scaleY = scale },
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    },
                 enabled = isActive,
                 shape = ButtonShape,
                 interactionSource = interactionSource,
                 border = BorderStroke(
                     width = 1.5.dp,
-                    color = if (isActive) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                    color = if (isActive) {
+                        MaterialTheme.colorScheme.primary
+                    } else if (loading) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                    } else {
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                    },
                 ),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.primary,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                    disabledContentColor = if (loading) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                ),
             ) {
-                ButtonContent(text = text, loading = loading, icon = icon,
-                    loadingColor = { MaterialTheme.colorScheme.primary })
+                ButtonContent(
+                    text = text,
+                    loading = loading,
+                    icon = icon,
+                    painter = painter,
+                    iconSize = iconSize,
+                    loadingColor = { MaterialTheme.colorScheme.primary },
+                )
             }
         }
     }
@@ -152,21 +221,31 @@ private fun ButtonContent(
     text: String,
     loading: Boolean,
     icon: ImageVector?,
-    loadingColor: @Composable () -> androidx.compose.ui.graphics.Color
+    painter: Painter?,
+    iconSize: Dp,
+    loadingColor: @Composable () -> Color,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (loading) {
             CircularWavyProgressIndicator(
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(16.dp),
                 color = loadingColor(),
-                trackColor = loadingColor().copy(alpha = 0.2f)
+                trackColor = loadingColor().copy(alpha = 0.2f),
             )
-            Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(12.dp))
+        } else if (painter != null) {
+            // Bitmap / PNG icon (e.g. Google logo)
+            Image(
+                painter = painter,
+                contentDescription = null,
+                modifier = Modifier.size(iconSize),
+            )
+            Spacer(Modifier.width(12.dp))
         } else if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(iconSize),
             )
             Spacer(Modifier.width(8.dp))
         }
@@ -174,7 +253,7 @@ private fun ButtonContent(
             text = text,
             fontWeight = FontWeight.SemiBold,
             letterSpacing = 0.3.sp,
-            style = MaterialTheme.typography.labelLarge
+            style = MaterialTheme.typography.labelLarge,
         )
     }
 }
@@ -185,7 +264,7 @@ fun HustleButtonPreview() {
     HustleHubTheme {
         Row(
             modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             HustleButton(text = "Primary", onClick = {})
             HustleButton(text = "Secondary", onClick = {}, variant = HustleButtonVariant.Secondary)
@@ -198,13 +277,13 @@ fun HustleButtonPreview() {
 @Composable
 fun HustleButtonLoadingPreview() {
     HustleHubTheme {
-        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             HustleButton(text = "Loading...", onClick = {}, loading = true)
             HustleButton(
                 text = "With Icon",
                 onClick = {},
-                icon = Icons.Default.ArrowForward,
-                variant = HustleButtonVariant.Outlined
+                icon = Icons.AutoMirrored.Filled.ArrowForward,
+                variant = HustleButtonVariant.Outlined,
             )
         }
     }

@@ -47,6 +47,50 @@ dependencies {
 org.gradle.jvmargs=-Xmx4096m -XX:MaxPermSize=1024m
 ```
 
+### Terminal JDK Transform Error (`jlink` path not found)
+
+**Problem:** `jlink executable ... /bin/jlink does not exist` when running Gradle commands in terminal.
+
+**Solution:**
+Export your system `JAVA_HOME`:
+```bash
+export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+```
+*(Add this export line to your `~/.bashrc` or `~/.zshrc` file to persist it).*
+
+### AAPT2 Resource Compilation Error (`file failed to compile`)
+
+**Problem:** `AAPT: error: file failed to compile` for a `.png` or `.jpg` file in `res/drawable`.
+
+**Solution:**
+This usually occurs when a JPEG file has been incorrectly named with a `.png` extension. Verify real image MIME types:
+```bash
+file app/src/main/res/drawable/*
+```
+Convert misnamed JPEGs to valid PNG image data format using Python PIL or ImageMagick:
+```bash
+python3 -c "from PIL import Image; im = Image.open('app/src/main/res/drawable/dark_logo.png'); im.save('app/src/main/res/drawable/dark_logo.png', 'PNG')"
+```
+
+### WorkManagerInitializer Lint Error (`RemoveWorkManagerInitializer`)
+
+**Problem:** `Remove androidx.work.WorkManagerInitializer from your AndroidManifest.xml when using on-demand initialization`.
+
+**Solution:**
+Disable standard `WorkManagerInitializer` in `AndroidManifest.xml` under `<application>` so Hilt on-demand initialization (`HiltWorkerFactory`) takes effect:
+```xml
+<provider
+    android:name="androidx.startup.InitializationProvider"
+    android:authorities="${applicationId}.androidx-startup"
+    android:exported="false"
+    tools:node="merge">
+    <meta-data
+        android:name="androidx.work.WorkManagerInitializer"
+        android:value="androidx.startup"
+        tools:node="remove" />
+</provider>
+```
+
 ## Firebase Issues
 
 ### google-services.json Not Found

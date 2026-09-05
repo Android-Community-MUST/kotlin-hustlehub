@@ -1,0 +1,51 @@
+package must.kdroiders.hustlehub.ui.features.chat.domain.repository
+
+import kotlinx.coroutines.flow.Flow
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.UserPresence
+
+interface ChatRepository {
+    fun getConversations(): Flow<List<Conversation>>
+
+    suspend fun refreshConversations(): Result<Unit>
+
+    suspend fun getOrCreateConversation(
+        otherUserId: String,
+        serviceId: String? = null,
+    ): Result<Conversation>
+
+    fun getMessages(conversationId: String): Flow<List<Message>>
+
+    suspend fun loadMessageHistory(
+        conversationId: String,
+        page: Int = 0,
+    ): Result<Unit>
+
+    suspend fun sendMessage(
+        conversationId: String,
+        type: MessageType,
+        content: String,
+        mediaUrl: String? = null,
+        metadata: String? = null,
+    ): Result<Unit>
+
+    suspend fun markAsRead(conversationId: String): Result<Unit>
+
+    suspend fun connectWebSocket(conversationId: String): Flow<Message>
+
+    suspend fun subscribeToPresence(otherUserId: String): Flow<UserPresence>
+
+    suspend fun disconnectWebSocket()
+
+    fun setActiveConversation(conversationId: String?)
+
+    suspend fun deleteConversation(conversationId: String): Result<Unit>
+
+    suspend fun deleteMessageForMe(messageId: String): Result<Unit>
+
+    suspend fun deleteMessageForEveryone(messageId: String): Result<Unit>
+
+    suspend fun resendUnsyncedMessages(): Result<Unit>
+}

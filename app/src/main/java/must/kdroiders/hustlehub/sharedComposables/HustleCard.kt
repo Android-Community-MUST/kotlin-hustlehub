@@ -21,13 +21,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
-
-private val CardShape = RoundedCornerShape(12.dp)
+import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
 enum class HustleCardVariant {
     /** Default surface card — subtle, clean */
@@ -36,11 +38,14 @@ enum class HustleCardVariant {
     /** Slightly elevated card with a soft shadow */
     Elevated,
 
-    /** Outlined card — no elevation, defined by a border */
+    /** Outlined translucent glass card — 30% alpha fill + 20% alpha border */
     Outlined,
 
-    /** Filled with surfaceVariant — useful for secondary sections */
+    /** Tonal translucent section card */
     Tonal,
+
+    /** Translucent glass card — matches StatCard style */
+    Glass,
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -49,9 +54,13 @@ fun HustleCard(
     modifier: Modifier = Modifier,
     variant: HustleCardVariant = HustleCardVariant.Elevated,
     onClick: (() -> Unit)? = null,
-    contentPadding: PaddingValues = PaddingValues(20.dp),
-    content: @Composable () -> Unit
+    contentPadding: PaddingValues? = null,
+    containerColor: Color? = null,
+    content: @Composable () -> Unit,
 ) {
+    val dimensions = LocalDimensions.current
+    val effectivePadding = contentPadding ?: PaddingValues(dimensions.cardContentPadding)
+    val cardShape = RoundedCornerShape(dimensions.cardCornerRadius)
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val motionScheme = MaterialTheme.motionScheme
@@ -59,12 +68,25 @@ fun HustleCard(
     val scale by animateFloatAsState(
         targetValue = if (isPressed && onClick != null) 0.985f else 1f,
         animationSpec = motionScheme.fastSpatialSpec(),
-        label = "cardScale"
+        label = "cardScale",
     )
 
     val cardModifier = modifier
         .fillMaxWidth()
-        .graphicsLayer { scaleX = scale; scaleY = scale }
+        .graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        }.semantics(mergeDescendants = true) {
+            if (onClick != null) {
+                role = Role.Button
+            }
+        }
+
+    val glassBackground = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+    val glassBorder = BorderStroke(
+        width = 1.dp,
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+    )
 
     when (variant) {
         HustleCardVariant.Surface -> {
@@ -72,15 +94,15 @@ fun HustleCard(
                 onClick = onClick ?: {},
                 enabled = onClick != null,
                 modifier = cardModifier,
-                shape = CardShape,
+                shape = cardShape,
                 interactionSource = interactionSource,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = containerColor ?: MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             ) {
-                Box(Modifier.padding(contentPadding)) { content() }
+                Box(Modifier.padding(effectivePadding)) { content() }
             }
         }
 
@@ -89,19 +111,19 @@ fun HustleCard(
                 onClick = onClick ?: {},
                 enabled = onClick != null,
                 modifier = cardModifier,
-                shape = CardShape,
+                shape = cardShape,
                 interactionSource = interactionSource,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = containerColor ?: MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ),
                 elevation = CardDefaults.cardElevation(
                     defaultElevation = 2.dp,
                     pressedElevation = 6.dp,
-                    hoveredElevation = 4.dp
-                )
+                    hoveredElevation = 4.dp,
+                ),
             ) {
-                Box(Modifier.padding(contentPadding)) { content() }
+                Box(Modifier.padding(effectivePadding)) { content() }
             }
         }
 
@@ -110,36 +132,37 @@ fun HustleCard(
                 onClick = onClick ?: {},
                 enabled = onClick != null,
                 modifier = cardModifier,
-                shape = CardShape,
+                shape = cardShape,
                 interactionSource = interactionSource,
                 border = BorderStroke(
                     width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
                 ),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = containerColor ?: MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             ) {
-                Box(Modifier.padding(contentPadding)) { content() }
+                Box(Modifier.padding(effectivePadding)) { content() }
             }
         }
 
-        HustleCardVariant.Tonal -> {
+        HustleCardVariant.Tonal, HustleCardVariant.Glass -> {
             Card(
                 onClick = onClick ?: {},
                 enabled = onClick != null,
                 modifier = cardModifier,
-                shape = CardShape,
+                shape = cardShape,
                 interactionSource = interactionSource,
+                border = glassBorder,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    containerColor = containerColor ?: glassBackground,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             ) {
-                Box(Modifier.padding(contentPadding)) { content() }
+                Box(Modifier.padding(effectivePadding)) { content() }
             }
         }
     }
@@ -156,7 +179,7 @@ fun HustleCardPreview() {
                 Text(
                     "Clickable with press scale animation.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -166,7 +189,7 @@ fun HustleCardPreview() {
                 Text(
                     "Clean border, no shadow.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -176,7 +199,7 @@ fun HustleCardPreview() {
                 Text(
                     "Uses surfaceVariant for secondary sections.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

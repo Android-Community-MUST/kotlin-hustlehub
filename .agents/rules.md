@@ -31,7 +31,7 @@
 | **State** | Kotlin Flow + StateFlow | — |
 | **Auth** | Firebase Auth (Email + Google Sign-In) | Latest |
 | **Backend API** | Retrofit → Spring Boot backend | `/api/v1/` |
-| **Real-time** | WebSocket client (OkHttp) → Spring Boot | — |
+| **Real-time** | Krossbow STOMP Client (via OkHttp WS) | Latest |
 | **Notifications** | Firebase Cloud Messaging (FCM) | Latest |
 | **Maps** | Google Maps SDK for Android | Latest |
 | **AI Search** | Via backend `/api/v1/discovery/ai-search` | — |
@@ -96,7 +96,7 @@ must.kdroiders.hustlehub/
 ├── 📁 datastore/
 │   └── UserPreferences.kt           # DataStore: auth state, user prefs
 │
-├── 📁 feature/                      # All features live here
+├── 📁 ui/features/                  # All features live here (actual package: ui.features.*)
 │   ├── 📁 auth/
 │   │   ├── 📁 data/
 │   │   │   ├── remote/AuthApiService.kt
@@ -177,9 +177,28 @@ must.kdroiders.hustlehub/
 │   │       ├── NotificationScreen.kt
 │   │       └── NotificationViewModel.kt
 │   │
-│   └── 📁 media/                    # Upload images, voice notes to backend
+│   ├── 📁 media/                    # Upload images, voice notes to backend
+│   │   ├── 📁 data/
+│   │   └── MediaUploadService.kt
+│   │
+│   ├── 📁 privacy/
+│   ├── 📁 report/
+│   ├── 📁 settings/
+│   └── 📁 monetization/             # Lane 8 — M-Pesa payments & Pro subscriptions
 │       ├── 📁 data/
-│       └── MediaUploadService.kt
+│       │   ├── remote/PaymentApiService.kt
+│       │   ├── remote/dto/
+│       │   └── repository/PaymentRepositoryImpl.kt
+│       ├── 📁 domain/
+│       │   ├── repository/PaymentRepository.kt
+│       │   └── usecase/
+│       │       ├── InitiateStkPushUseCase.kt
+│       │       ├── PollPaymentStatusUseCase.kt
+│       │       └── GetSubscriptionUseCase.kt
+│       └── 📁 presentation/
+│           ├── MonetizationViewModel.kt
+│           ├── SubscriptionScreen.kt
+│           └── PaymentStatusScreen.kt
 │
 └── 📁 local/                        # Room database (offline cache)
     ├── HustleDatabase.kt
@@ -192,6 +211,8 @@ must.kdroiders.hustlehub/
         ├── CachedMessage.kt
         └── CachedConversation.kt
 ```
+
+> **Package Convention**: All features use `must.kdroiders.hustlehub.ui.features.*` — NOT `feature.*`. This is the established codebase convention and must be followed for all new features.
 
 ---
 
@@ -266,15 +287,16 @@ sealed class Result<out T> {
 
 ---
 
-## 💬 Real-Time Chat — WebSocket
+## 💬 Real-Time Chat — STOMP WebSockets
 
-- Use **OkHttp WebSocket** client connected to the Spring Boot STOMP endpoint.
-- `ChatWebSocketService` manages connection lifecycle within the chat feature.
+- Use **Krossbow STOMP client** connected to the Spring Boot STOMP WebSocket endpoint.
+- `ChatWebSocketService` manages the STOMP session connection lifecycle.
 - Connect on `ChatScreen` entry, disconnect on exit — use `DisposableEffect`.
-- Send messages as JSON over `/app/chat.send`.
-- Receive messages from `/topic/conversation/{conversationId}`.
+- Send messages over the `/app/chat.send` destination.
+- Subscribe and receive messages from the `/topic/conversation/{conversationId}` topic.
 - All received messages are persisted to Room (`MessageDao`) immediately.
-- Show optimistic UI: add message to local state before server ack.
+- Show optimistic UI: add message to local state before server acknowledgment.
+
 
 ---
 

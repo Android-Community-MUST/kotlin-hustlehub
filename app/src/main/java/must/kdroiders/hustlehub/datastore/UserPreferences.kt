@@ -6,53 +6,383 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// extension to create DataStore instance
+/** Extension property to create / retrieve the DataStore singleton on [Context]. */
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
-    name = "hustlehub_preferences"
+    name = "hustlehub_preferences",
 )
 
+/**
+ * Lightweight DataStore wrapper for app-wide user preferences.
+ *
+ * Stores:
+ * - First-launch flag (controls onboarding).
+ * - Lightweight user identity fields (uid, name, email, role, avatar) so the
+ *   app can show profile info offline without hitting the network.
+ *
+ * Use [writeUser] after successful login / sign-up and [clearUser] on logout.
+ */
 @Singleton
-class UserPreferences @Inject constructor(
-    private val dataStore: DataStore<Preferences>
-) {
-    private companion object {
-        val IS_FIRST_LAUNCH = booleanPreferencesKey(
-            "is_first_launch"
-        )
-    }
+class UserPreferences
+    @Inject
+    constructor(
+        private val dataStore: DataStore<Preferences>,
+    ) {
+        // Keys
 
-    // defaults to true on read failure so onboarding shows
-    val isFirstLaunch: Flow<Boolean> = dataStore.data
-        .catch { e ->
-            if (e is IOException) {
-                Timber.e(e, "Error reading preferences")
-                emit(emptyPreferences())
-            } else {
-                throw e
+        private companion object {
+            val IS_FIRST_LAUNCH = booleanPreferencesKey("is_first_launch")
+            val USER_ID = stringPreferencesKey("user_id")
+            val USER_NAME = stringPreferencesKey("user_name")
+            val USER_EMAIL = stringPreferencesKey("user_email")
+            val USER_ROLE = stringPreferencesKey("user_role")
+            val USER_AVATAR_URL = stringPreferencesKey("user_avatar_url")
+            val USER_UUID = stringPreferencesKey("user_uuid")
+            val APP_THEME = stringPreferencesKey("app_theme")
+            val RECENT_SEARCHES = stringSetPreferencesKey("recent_searches")
+            val LAST_SELECTED_CATEGORY = stringPreferencesKey("last_selected_category")
+            val PROVIDER_BANNER_DISMISSED = booleanPreferencesKey("provider_banner_dismissed")
+            val IS_PRO_USER = booleanPreferencesKey("is_pro_user")
+            val PRO_EXPIRES_AT = stringPreferencesKey("pro_expires_at")
+
+            /** Set before any network deletion call so a crash mid-flow is recoverable on next launch. */
+            val PENDING_DELETION = booleanPreferencesKey("pending_deletion")
+
+            const val MAX_RECENT_SEARCHES = 10
+        }
+
+        // Reads
+
+        /**
+         * Emits the user's selected [AppTheme] preference (defaults to [AppTheme.SYSTEM]).
+         */
+        val appTheme: Flow<AppTheme> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading app theme preference")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs ->
+                val raw = prefs[APP_THEME] ?: AppTheme.SYSTEM.name
+                runCatching { AppTheme.valueOf(raw) }.getOrDefault(AppTheme.SYSTEM)
+            }
+
+        /** Saves the user's chosen [AppTheme] preference. */
+        suspend fun saveTheme(theme: AppTheme) {
+            try {
+                dataStore.edit { prefs ->
+                    prefs[APP_THEME] = theme.name
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error saving app theme preference")
             }
         }
-        .map { prefs ->
-            prefs[IS_FIRST_LAUNCH] ?: true
+
+        /**
+         * Emits true on first launch (or on DataStore read error so onboarding is
+         * never accidentally skipped due to a transient error).
+         */
+        val isFirstLaunch: Flow<Boolean> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs -> prefs[IS_FIRST_LAUNCH] ?: true }
+
+        /**
+         * Emits the cached [User] fields stored after the last successful auth.
+         * Returns a default (empty) [User] if no data is persisted yet.
+         */
+        val cachedUser: Flow<User> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading cached user")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs ->
+                User(
+                    id = prefs[USER_ID] ?: "",
+                    uuid = prefs[USER_UUID] ?: "",
+                    name = prefs[USER_NAME] ?: "",
+                    email = prefs[USER_EMAIL] ?: "",
+                    role = prefs[USER_ROLE]
+                        ?.let { runCatching { UserRole.valueOf(it) }.getOrDefault(UserRole.CUSTOMER) }
+                        ?: UserRole.CUSTOMER,
+                    profilePhotoUrl = prefs[USER_AVATAR_URL] ?: "",
+                    isVerifiedPro = prefs[IS_PRO_USER] ?: false,
+                )
+            }
+
+        // Writes
+
+        /** Marks onboarding as seen. */
+        suspend fun setFirstLaunchComplete() {
+            try {
+                dataStore.edit { prefs ->
+                    prefs[IS_FIRST_LAUNCH] = false
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error writing is_first_launch")
+            }
         }
 
-    // catches IOException so a write failure
-    // doesn't crash the app
-    suspend fun setFirstLaunchComplete() {
-        try {
-            dataStore.edit { prefs ->
-                prefs[IS_FIRST_LAUNCH] = false
+        /**
+         * Persists lightweight user identity fields to DataStore.
+         *
+         * Call this after every successful login or sign-up so the app can show
+         * the user's name and avatar without a network round-trip.
+         */
+        suspend fun writeUser(user: User) {
+            try {
+                dataStore.edit { prefs ->
+                    prefs[USER_ID] = user.id
+                    prefs[USER_UUID] = user.uuid
+                    prefs[USER_NAME] = user.name
+                    prefs[USER_EMAIL] = user.email
+                    prefs[USER_ROLE] = user.role.name
+                    prefs[USER_AVATAR_URL] = user.profilePhotoUrl
+                    prefs[IS_PRO_USER] = user.isVerifiedPro
+                }
+                Timber.d("User written to DataStore: uid=%s", user.id)
+            } catch (e: IOException) {
+                Timber.e(e, "Error writing user to DataStore")
             }
-        } catch (e: IOException) {
-            Timber.e(e, "Error writing preferences")
+        }
+
+        /**
+         * Removes all stored user fields from DataStore.
+         *
+         * Call this on logout so stale identity is not shown to the next session.
+         */
+        suspend fun clearUser() {
+            try {
+                dataStore.edit { prefs ->
+                    prefs.remove(USER_ID)
+                    prefs.remove(USER_UUID)
+                    prefs.remove(USER_NAME)
+                    prefs.remove(USER_EMAIL)
+                    prefs.remove(USER_ROLE)
+                    prefs.remove(USER_AVATAR_URL)
+                    prefs.remove(PROVIDER_BANNER_DISMISSED)
+                    prefs.remove(IS_PRO_USER)
+                    prefs.remove(PRO_EXPIRES_AT)
+                }
+                Timber.d("User cleared from DataStore")
+            } catch (e: IOException) {
+                Timber.e(e, "Error clearing user from DataStore")
+            }
+        }
+
+        /**
+         * Emits true if a deletion was started but not completed (e.g. app killed mid-flight).
+         * Checked on app startup to complete local cleanup even without network.
+         */
+        val hasPendingDeletion: Flow<Boolean> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading pending deletion flag")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs -> prefs[PENDING_DELETION] ?: false }
+
+        /** Written before any network deletion call to enable crash recovery on next launch. */
+        suspend fun markPendingDeletion() {
+            try {
+                dataStore.edit { prefs -> prefs[PENDING_DELETION] = true }
+            } catch (e: IOException) {
+                Timber.e(e, "Error marking pending deletion")
+            }
+        }
+
+        /** Cleared after local Room + DataStore wipe succeeds. */
+        suspend fun clearPendingDeletion() {
+            try {
+                dataStore.edit { prefs -> prefs.remove(PENDING_DELETION) }
+            } catch (e: IOException) {
+                Timber.e(e, "Error clearing pending deletion flag")
+            }
+        }
+
+        /**
+         * Emits whether the current user has an active HustleHub Pro subscription.
+         * Cached locally so the badge appears immediately without a network call.
+         * Refreshed on app launch via [GetSubscriptionUseCase].
+         */
+        val isProUser: Flow<Boolean> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading pro status")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs -> prefs[IS_PRO_USER] ?: false }
+
+        /** Caches Pro subscription status locally after a successful [GetSubscriptionUseCase] call. */
+        suspend fun saveProStatus(
+            isActive: Boolean,
+            expiresAt: String?,
+        ) {
+            try {
+                dataStore.edit { prefs ->
+                    prefs[IS_PRO_USER] = isActive
+                    if (expiresAt != null) {
+                        prefs[PRO_EXPIRES_AT] = expiresAt
+                    } else {
+                        prefs.remove(PRO_EXPIRES_AT)
+                    }
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error saving pro status")
+            }
+        }
+
+        val isProviderBannerDismissed: Flow<Boolean> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading provider banner state")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs -> prefs[PROVIDER_BANNER_DISMISSED] ?: false }
+
+        suspend fun dismissProviderBanner() {
+            try {
+                dataStore.edit { prefs -> prefs[PROVIDER_BANNER_DISMISSED] = true }
+            } catch (e: IOException) {
+                Timber.e(e, "Error saving provider banner dismiss state")
+            }
+        }
+
+        /**
+         * Emits the list of the user's recent search queries, most recent first.
+         * Returns an empty list if no history is stored.
+         */
+        val recentSearches: Flow<List<String>> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading recent searches")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs ->
+                // StringSet has no guaranteed order; we encode insertion order as
+                // "index:value" so we can restore recency after reading from DataStore.
+                prefs[RECENT_SEARCHES]
+                    ?.mapNotNull { entry ->
+                        val idx = entry.substringBefore(':').toIntOrNull() ?: return@mapNotNull null
+                        val value = entry.substringAfter(':')
+                        idx to value
+                    }?.sortedByDescending { it.first }
+                    ?.map { it.second }
+                    ?: emptyList()
+            }
+
+        /**
+         * Saves [query] to recent searches, evicting the oldest entry when the list
+         * exceeds [MAX_RECENT_SEARCHES]. Duplicate entries are deduplicated (existing
+         * entry is removed and the query is re-inserted at the front).
+         */
+        suspend fun addRecentSearch(query: String) {
+            if (query.isBlank()) return
+            try {
+                dataStore.edit { prefs ->
+                    val existing = prefs[RECENT_SEARCHES]?.toMutableSet() ?: mutableSetOf()
+                    // Parse current entries: "idx:value"
+                    val parsed = existing
+                        .mapNotNull { entry ->
+                            val idx = entry.substringBefore(':').toIntOrNull() ?: return@mapNotNull null
+                            idx to entry.substringAfter(':')
+                        }.toMutableList()
+
+                    // Remove any existing entry for this query (dedup)
+                    parsed.removeAll { it.second == query }
+
+                    // Assign a new index higher than the current max
+                    val nextIdx = (parsed.maxOfOrNull { it.first } ?: 0) + 1
+                    parsed.add(nextIdx to query)
+
+                    // Evict oldest entries beyond the cap
+                    val trimmed = parsed.sortedByDescending { it.first }.take(MAX_RECENT_SEARCHES)
+
+                    prefs[RECENT_SEARCHES] = trimmed.map { "${it.first}:${it.second}" }.toSet()
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error saving recent search")
+            }
+        }
+
+        /** Clears all recent search history. */
+        suspend fun clearRecentSearches() {
+            try {
+                dataStore.edit { prefs -> prefs.remove(RECENT_SEARCHES) }
+            } catch (e: IOException) {
+                Timber.e(e, "Error clearing recent searches")
+            }
+        }
+
+        /** Restores a list of recent searches (used for Snackbar Undo action). */
+        suspend fun restoreRecentSearches(searches: List<String>) {
+            try {
+                dataStore.edit { prefs ->
+                    val set = searches.mapIndexed { idx, query -> "$idx:$query" }.toSet()
+                    prefs[RECENT_SEARCHES] = set
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error restoring recent searches")
+            }
+        }
+
+        /**
+         * Emits the last selected map filter category.
+         */
+        val lastSelectedCategory: Flow<String?> = dataStore.data
+            .catch { e ->
+                if (e is IOException) {
+                    Timber.e(e, "Error reading last selected category")
+                    emit(emptyPreferences())
+                } else {
+                    throw e
+                }
+            }.map { prefs -> prefs[LAST_SELECTED_CATEGORY] }
+
+        /**
+         * Saves the last selected category filter to Datastore.
+         */
+        suspend fun saveLastSelectedCategory(category: String?) {
+            try {
+                dataStore.edit { prefs ->
+                    if (category == null) {
+                        prefs.remove(LAST_SELECTED_CATEGORY)
+                    } else {
+                        prefs[LAST_SELECTED_CATEGORY] = category
+                    }
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error saving last selected category")
+            }
         }
     }
-}
