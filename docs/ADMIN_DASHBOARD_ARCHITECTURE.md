@@ -42,7 +42,6 @@ A **defense-in-depth** model ensures administrative features remain inaccessible
 - `kipyegonaldo@gmail.com`
 - `vertigoproject.lab@gmail.com`
 - `jumaderick89@gmail.com`
-- Pattern match: Any verified email starting with `vertigo`
 
 ---
 
