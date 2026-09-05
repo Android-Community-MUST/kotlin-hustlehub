@@ -33,6 +33,7 @@ import must.kdroiders.hustlehub.core.notification.InAppNotificationBanner
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
+import must.kdroiders.hustlehub.ui.features.admin.presentation.view.AdminDashboardScreen
 import must.kdroiders.hustlehub.ui.features.analytics.presentation.view.AnalyticsScreen
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthState
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.AccountSuspendedScreen
@@ -320,6 +321,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onNavigateToNotifications = { backstack.add(Notifications) },
                                 onNavigateToSubscription = { backstack.add(Subscription) },
                                 onNavigateToAnalytics = { tab -> backstack.add(Analytics(initialTab = tab)) },
+                                onNavigateToAdminDashboard = { backstack.add(AdminDashboard) },
                             )
                         }
 
@@ -573,6 +575,13 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onBack = {
                                     if (backstack.size > 1) backstack.remove(backstack.last())
                                 },
+                            )
+                        }
+
+                        // In-app Admin Dashboard
+                        entry<AdminDashboard> {
+                            AdminDashboardScreen(
+                                onNavigateBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                             )
                         }
                     },

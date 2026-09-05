@@ -182,3 +182,7 @@ data class PaymentStatus(val checkoutRequestId: String) : NavKey
 /** Pro Analytics dashboard screen — pushed from Profile screen. */
 @Serializable
 data class Analytics(val initialTab: String = "OVERVIEW") : NavKey
+
+/** In-app Admin Dashboard screen for authorized campus administrators. */
+@Serializable
+data object AdminDashboard : NavKey

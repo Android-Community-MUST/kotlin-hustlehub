@@ -66,6 +66,7 @@ fun MainShellScreen(
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
     onNavigateToAnalytics: (tab: String) -> Unit = {},
+    onNavigateToAdminDashboard: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val innerBackstack = rememberNavBackStack(BottomHome)
@@ -181,6 +182,7 @@ fun MainShellScreen(
                         onSettingsClick = onNavigateToSettings,
                         onNavigateToSubscription = onNavigateToSubscription,
                         onNavigateToAnalytics = onNavigateToAnalytics,
+                        onNavigateToAdminDashboard = onNavigateToAdminDashboard,
                     )
                 }
                 entry<BottomBookmarks> {
