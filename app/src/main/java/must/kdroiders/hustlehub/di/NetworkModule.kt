@@ -167,4 +167,10 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideKeyExchangeApiService(retrofit: Retrofit): KeyExchangeApiService = retrofit.create(KeyExchangeApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideAdminApiService(retrofit: Retrofit): must.kdroiders.hustlehub.ui.features.admin.data.remote.AdminApiService {
+        return retrofit.create(must.kdroiders.hustlehub.ui.features.admin.data.remote.AdminApiService::class.java)
+    }
 }

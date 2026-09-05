@@ -69,6 +69,7 @@ fun MyProfileScreen(
     onSettingsClick: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
     onNavigateToAnalytics: (tab: String) -> Unit = {},
+    onNavigateToAdminDashboard: () -> Unit = {},
 ) {
     ProfileScreen(
         profileViewModel = profileViewModel,
@@ -79,6 +80,7 @@ fun MyProfileScreen(
         onSettingsClick = onSettingsClick,
         onNavigateToSubscription = onNavigateToSubscription,
         onNavigateToAnalytics = onNavigateToAnalytics,
+        onNavigateToAdminDashboard = onNavigateToAdminDashboard,
     )
 }
 
@@ -92,6 +94,7 @@ fun ProfileScreen(
     onSettingsClick: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
     onNavigateToAnalytics: (tab: String) -> Unit = {},
+    onNavigateToAdminDashboard: () -> Unit = {},
 ) {
     val state by profileViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -155,6 +158,7 @@ fun ProfileScreen(
                             onSettingsClick = onSettingsClick,
                             onNavigateToSubscription = onNavigateToSubscription,
                             onNavigateToAnalytics = onNavigateToAnalytics,
+                            onNavigateToAdminDashboard = onNavigateToAdminDashboard,
                         )
                     }
                 }
@@ -177,10 +181,12 @@ private fun ProfileContent(
     onSettingsClick: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
     onNavigateToAnalytics: (tab: String) -> Unit = {},
+    onNavigateToAdminDashboard: () -> Unit = {},
 ) {
     val user = state.user ?: return
     val horizontalPadding = LocalDimensions.current.horizontalPadding
     val isProvider = user.role == UserRole.PROVIDER || user.role == UserRole.BOTH || state.services.isNotEmpty()
+    val isAdmin = must.kdroiders.hustlehub.core.auth.AdminAuthUtils.isAuthorizedAdmin(user.email, user.role.name)
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -222,6 +228,17 @@ private fun ProfileContent(
                         .fillMaxWidth()
                         .padding(horizontal = horizontalPadding),
                 )
+                if (isAdmin) {
+                    Spacer(Modifier.height(10.dp))
+                    HustleButton(
+                        text = "🛡️ Admin Center",
+                        variant = HustleButtonVariant.Primary,
+                        onClick = onNavigateToAdminDashboard,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = horizontalPadding),
+                    )
+                }
             }
         }
 

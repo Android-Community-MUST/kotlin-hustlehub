@@ -254,6 +254,11 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAnalyticsRepository(analyticsApiService: AnalyticsApiService): AnalyticsRepository = AnalyticsRepositoryImpl(analyticsApiService)
+
+    @Provides
+    @Singleton
+    fun provideAdminRepository(adminApiService: must.kdroiders.hustlehub.ui.features.admin.data.remote.AdminApiService): must.kdroiders.hustlehub.ui.features.admin.domain.repository.AdminRepository =
+        must.kdroiders.hustlehub.ui.features.admin.data.repository.AdminRepositoryImpl(adminApiService)
 }
 
 private class NoopAuthRepository : AuthRepository {
