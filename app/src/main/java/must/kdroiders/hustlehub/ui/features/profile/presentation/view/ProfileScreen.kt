@@ -186,7 +186,8 @@ private fun ProfileContent(
     val user = state.user ?: return
     val horizontalPadding = LocalDimensions.current.horizontalPadding
     val isProvider = user.role == UserRole.PROVIDER || user.role == UserRole.BOTH || state.services.isNotEmpty()
-    val isAdmin = must.kdroiders.hustlehub.core.auth.AdminAuthUtils.isAuthorizedAdmin(user.email, user.role.name)
+    val isAdmin = must.kdroiders.hustlehub.core.auth.AdminAuthUtils
+        .isAuthorizedAdmin(user.email, user.role.name)
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),

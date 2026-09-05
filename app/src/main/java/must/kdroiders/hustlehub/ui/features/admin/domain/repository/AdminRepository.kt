@@ -7,15 +7,49 @@ import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminUserItem
 
 interface AdminRepository {
     suspend fun getAnalytics(): Result<AdminAnalytics>
-    suspend fun getUsers(page: Int = 0, size: Int = 50): Result<List<AdminUserItem>>
-    suspend fun suspendUser(id: String, reason: String): Result<Unit>
-    suspend fun unsuspendUser(id: String, reason: String): Result<Unit>
-    suspend fun verifyPro(id: String, reason: String): Result<Unit>
-    suspend fun revokePro(id: String, reason: String): Result<Unit>
-    suspend fun delistService(id: String, reason: String): Result<Unit>
-    suspend fun relistService(id: String, reason: String): Result<Unit>
-    suspend fun getReports(status: String? = null, page: Int = 0, size: Int = 50): Result<List<AdminReportItem>>
-    suspend fun resolveReport(id: String, reason: String): Result<Unit>
-    suspend fun dismissReport(id: String, reason: String): Result<Unit>
-    suspend fun getAuditLogs(targetType: String, targetId: String): Result<List<AdminAuditLogItem>>
+    suspend fun getUsers(
+        page: Int = 0,
+        size: Int = 50,
+    ): Result<List<AdminUserItem>>
+    suspend fun suspendUser(
+        id: String,
+        reason: String,
+    ): Result<Unit>
+    suspend fun unsuspendUser(
+        id: String,
+        reason: String,
+    ): Result<Unit>
+    suspend fun verifyPro(
+        id: String,
+        reason: String,
+    ): Result<Unit>
+    suspend fun revokePro(
+        id: String,
+        reason: String,
+    ): Result<Unit>
+    suspend fun delistService(
+        id: String,
+        reason: String,
+    ): Result<Unit>
+    suspend fun relistService(
+        id: String,
+        reason: String,
+    ): Result<Unit>
+    suspend fun getReports(
+        status: String? = null,
+        page: Int = 0,
+        size: Int = 50,
+    ): Result<List<AdminReportItem>>
+    suspend fun resolveReport(
+        id: String,
+        reason: String,
+    ): Result<Unit>
+    suspend fun dismissReport(
+        id: String,
+        reason: String,
+    ): Result<Unit>
+    suspend fun getAuditLogs(
+        targetType: String,
+        targetId: String,
+    ): Result<List<AdminAuditLogItem>>
 }

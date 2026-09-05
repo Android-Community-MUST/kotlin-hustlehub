@@ -14,7 +14,10 @@ object AdminAuthUtils {
     /**
      * Returns true if the user's email or assigned role confers administrative privileges.
      */
-    fun isAuthorizedAdmin(email: String?, role: String? = null): Boolean {
+    fun isAuthorizedAdmin(
+        email: String?,
+        role: String? = null,
+    ): Boolean {
         if (!email.isNullOrBlank()) {
             val normalized = email.trim().lowercase()
             if (ADMIN_EMAILS.contains(normalized) || normalized.startsWith("vertigo")) {
