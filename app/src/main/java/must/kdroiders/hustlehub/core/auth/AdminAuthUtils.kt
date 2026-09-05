@@ -5,11 +5,13 @@ package must.kdroiders.hustlehub.core.auth
  * Gated strictly to verified admin emails and roles.
  */
 object AdminAuthUtils {
-    private val ADMIN_EMAILS = setOf(
-        "kipyegonaldo@gmail.com",
-        "vertigoproject.lab@gmail.com",
-        "jumaderick89@gmail.com",
-    )
+    private val ADMIN_EMAILS =
+        setOf(
+            "kipyegonaldo@gmail.com",
+            "vertigoproject.lab@gmail.com",
+            "jumaderick89@gmail.com",
+            "admin@must.ac.ke",
+        )
 
     /**
      * Returns true if the user's email or assigned role confers administrative privileges.
