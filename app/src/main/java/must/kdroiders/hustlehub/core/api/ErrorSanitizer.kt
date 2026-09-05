@@ -14,17 +14,20 @@ import javax.net.ssl.SSLException
  * exposed to end users.
  */
 object ErrorSanitizer {
-
     /**
      * Converts a [Throwable] into a safe, human-friendly message.
      */
-    fun sanitize(throwable: Throwable, fallback: String = "Something went wrong. Please try again."): String {
+    fun sanitize(
+        throwable: Throwable,
+        fallback: String = "Something went wrong. Please try again.",
+    ): String {
         return when (throwable) {
             is SSLException -> "Secure connection failed. Please check your network or try again."
             is UnknownHostException,
             is ConnectException,
             is SocketTimeoutException,
-            is IOException -> "Network connection error. Please check your internet connection and try again."
+            is IOException,
+            -> "Network connection error. Please check your internet connection and try again."
             else -> {
                 val msg = throwable.message?.trim()
                 if (msg.isNullOrBlank() || isSensitiveOrTechnical(msg)) {

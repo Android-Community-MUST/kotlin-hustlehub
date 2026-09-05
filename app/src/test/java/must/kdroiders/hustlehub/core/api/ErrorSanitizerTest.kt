@@ -11,7 +11,6 @@ import java.net.UnknownHostException
 import javax.net.ssl.SSLException
 
 class ErrorSanitizerTest {
-
     @Test
     fun `should_sanitize_ssl_exception`() {
         val ex = SSLException("SSL handshake failed with cert chain")

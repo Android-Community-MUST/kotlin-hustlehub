@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
 enum class MessagingPermission {
     @SerializedName("EVERYONE")
     EVERYONE,
+
     @SerializedName("VERIFIED_ONLY")
     VERIFIED_ONLY,
 }
