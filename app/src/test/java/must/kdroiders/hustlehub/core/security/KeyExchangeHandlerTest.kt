@@ -152,4 +152,49 @@ class KeyExchangeHandlerTest {
             assertEquals("AES", secretKey?.algorithm)
             coVerify(exactly = 1) { keyExchangeApiService.getUserPublicKey(otherUserId) }
         }
+
+    @Test
+    fun `two users exchanging keys derive identical shared secrets and can mutually encrypt and decrypt`() =
+        runTest {
+            val conversationId = "conv_alice_bob"
+
+            val ecKeyGen = KeyPairGenerator.getInstance("EC")
+            ecKeyGen.initialize(256)
+            val aliceKeyPair = ecKeyGen.generateKeyPair()
+            val bobKeyPair = ecKeyGen.generateKeyPair()
+
+            // Alice derives shared secret using her private key + Bob's public key
+            val aliceDerivedSecret = cryptoManager.deriveSharedSecret(
+                privateKey = aliceKeyPair.private,
+                peerPublicKey = bobKeyPair.public,
+                conversationId = conversationId,
+            )
+
+            // Bob derives shared secret using his private key + Alice's public key
+            val bobDerivedSecret = cryptoManager.deriveSharedSecret(
+                privateKey = bobKeyPair.private,
+                peerPublicKey = aliceKeyPair.public,
+                conversationId = conversationId,
+            )
+
+            // 1. Verify exact secret key byte match
+            assertNotNull(aliceDerivedSecret)
+            assertNotNull(bobDerivedSecret)
+            assertEquals(
+                aliceDerivedSecret.encoded.contentToString(),
+                bobDerivedSecret.encoded.contentToString(),
+            )
+
+            // 2. Alice encrypts -> Bob decrypts
+            val plaintextFromAlice = "Hey Bob, E2EE is now working!"
+            val encryptedByAlice = cryptoManager.encrypt(plaintextFromAlice, aliceDerivedSecret)
+            val decryptedByBob = cryptoManager.decrypt(encryptedByAlice, bobDerivedSecret)
+            assertEquals(plaintextFromAlice, decryptedByBob)
+
+            // 3. Bob encrypts -> Alice decrypts
+            val plaintextFromBob = "I can read your message perfectly Alice!"
+            val encryptedByBob = cryptoManager.encrypt(plaintextFromBob, bobDerivedSecret)
+            val decryptedByAlice = cryptoManager.decrypt(encryptedByBob, aliceDerivedSecret)
+            assertEquals(plaintextFromBob, decryptedByAlice)
+        }
 }

@@ -441,7 +441,8 @@ class ChatDetailViewModel
                 typingClearJob?.cancel()
 
                 if (!_uiState.value.isEncryptionReady) {
-                    val secretKey = keyExchangeHandler.ensureKeysExchanged(id)
+                    val otherUid = _uiState.value.otherUserId.takeIf { it.isNotBlank() }
+                    val secretKey = keyExchangeHandler.ensureKeysExchanged(id, otherUid)
                     if (secretKey != null) {
                         _uiState.update { it.copy(isEncryptionReady = true) }
                     }

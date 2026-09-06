@@ -252,12 +252,15 @@
 -dontwarn androidx.media3.**
 
 # =============================================================================
-# JETPACK SECURITY / TINK (EncryptedSharedPreferences & E2EE Key Storage)
+# JETPACK SECURITY / TINK & E2EE (EncryptedSharedPreferences & E2EE Key Storage)
 # =============================================================================
 -keep class com.google.crypto.tink.** { *; }
 -dontwarn com.google.crypto.tink.**
 -keep class androidx.security.crypto.** { *; }
 -dontwarn androidx.security.crypto.**
+-keep class must.kdroiders.hustlehub.core.security.** { *; }
+-keepclassmembers class must.kdroiders.hustlehub.core.security.** { *; }
+-dontwarn must.kdroiders.hustlehub.core.security.**
 
 # =============================================================================
 # SHORTCUTBADGER (App Icon Launcher Unread Badges)
