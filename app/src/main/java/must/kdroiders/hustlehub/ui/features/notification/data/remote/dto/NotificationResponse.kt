@@ -10,7 +10,7 @@ data class NotificationResponse(
     @SerializedName("id")
     val id: String,
     @SerializedName("userId")
-    val userId: String,
+    val userId: String = "",
     @SerializedName("type")
     val type: String,
     @SerializedName("title")
@@ -20,7 +20,7 @@ data class NotificationResponse(
     @SerializedName("data")
     val data: Map<String, String>? = null,
     @SerializedName("isRead")
-    val isRead: Boolean,
-    @SerializedName("sentAt")
-    val sentAt: String,
+    val isRead: Boolean = false,
+    @SerializedName("sentAt", alternate = ["createdAt"])
+    val sentAt: String = "",
 )
