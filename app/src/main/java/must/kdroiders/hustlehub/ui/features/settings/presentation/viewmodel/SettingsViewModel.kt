@@ -3,6 +3,7 @@ package must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -95,6 +96,8 @@ class SettingsViewModel
         private val chatRepository: ChatRepository,
         private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
+        internal var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+
         private val _uiState = MutableStateFlow(SettingsUiState())
         val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
@@ -200,7 +203,7 @@ class SettingsViewModel
                     runCatching { chatRepository.disconnectWebSocket() }
                     signOutUseCase()
                     userPreferences.clearUser()
-                    withContext(Dispatchers.IO) {
+                    withContext(ioDispatcher) {
                         appDatabase.clearAllTables()
                     }
                     _events.send(SettingsEvent.LoggedOut)
@@ -283,7 +286,7 @@ class SettingsViewModel
                         runCatching { chatRepository.disconnectWebSocket() }
                         runCatching { signOutUseCase() }
                         runCatching { userPreferences.clearUser() }
-                        withContext(Dispatchers.IO) {
+                        withContext(ioDispatcher) {
                             runCatching { appDatabase.clearAllTables() }
                         }
                         _uiState.update { state -> state.copy(isDeletingAccount = false) }
