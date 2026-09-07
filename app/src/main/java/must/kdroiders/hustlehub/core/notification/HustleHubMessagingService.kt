@@ -30,13 +30,54 @@ class HustleHubMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        val type = remoteMessage.data["type"] ?: return
-        val title = remoteMessage.data["title"] ?: remoteMessage.notification?.title ?: "HustleHub"
-        val body = remoteMessage.data["body"] ?: remoteMessage.notification?.body ?: ""
+        val rawType = remoteMessage.data["type"] ?: "generic"
+        val type = rawType.lowercase()
+        val title = remoteMessage.data["title"]
+            ?: remoteMessage.notification?.title
+            ?: "HustleHub"
+        val body = remoteMessage.data["body"]
+            ?: remoteMessage.notification?.body
+            ?: ""
 
         val customDeepLink = remoteMessage.data["deepLink"] ?: remoteMessage.data["targetUri"]
 
+        Timber.d("FCM message received — type=$type, title=$title, body=$body")
+
         when (type) {
+            "payment_success", "payment_completed" -> {
+                val deepLink = customDeepLink ?: "hustlehub://notifications"
+                NotificationHelper.postPaymentNotification(
+                    context = this,
+                    title = title,
+                    body = body,
+                    isSuccess = true,
+                    deepLinkUri = deepLink,
+                )
+                InAppBannerManager.postBanner(
+                    InAppBannerData(
+                        title = title,
+                        body = body,
+                        deepLinkUri = deepLink,
+                    ),
+                )
+            }
+            "payment_failed" -> {
+                val deepLink = customDeepLink ?: "hustlehub://notifications"
+                NotificationHelper.postPaymentNotification(
+                    context = this,
+                    title = title,
+                    body = body,
+                    isSuccess = false,
+                    deepLinkUri = deepLink,
+                )
+                InAppBannerManager.postBanner(
+                    InAppBannerData(
+                        title = title,
+                        body = body,
+                        deepLinkUri = deepLink,
+                    ),
+                )
+            }
             "new_message" -> {
                 val conversationId = remoteMessage.data["conversationId"] ?: return
                 val senderName = remoteMessage.data["senderName"] ?: title
@@ -94,7 +135,15 @@ class HustleHubMessagingService : FirebaseMessagingService() {
                 )
             }
             else -> {
-                Timber.d("Received unknown FCM message type: $type")
+                Timber.d("Received generic or unknown FCM message type: $rawType")
+                if (title.isNotBlank() && body.isNotBlank()) {
+                    NotificationHelper.postReviewNotification(
+                        this,
+                        title,
+                        body,
+                        customDeepLink ?: "hustlehub://notifications",
+                    )
+                }
             }
         }
     }

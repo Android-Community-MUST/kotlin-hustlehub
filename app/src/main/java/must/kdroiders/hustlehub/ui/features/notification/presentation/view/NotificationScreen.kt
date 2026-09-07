@@ -22,8 +22,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Star
@@ -62,6 +64,8 @@ import must.kdroiders.hustlehub.ui.features.chat.presentation.viewmodel.UnreadCo
 import must.kdroiders.hustlehub.ui.features.notification.domain.model.Notification
 import must.kdroiders.hustlehub.ui.features.notification.domain.model.NotificationType
 import must.kdroiders.hustlehub.ui.features.notification.presentation.viewmodel.NotificationViewModel
+import must.kdroiders.hustlehub.ui.theme.success
+import must.kdroiders.hustlehub.ui.theme.successContainer
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -296,6 +300,16 @@ fun NotificationItem(
             MaterialTheme.colorScheme.secondary,
             MaterialTheme.colorScheme.secondaryContainer,
         )
+        NotificationType.PAYMENT_SUCCESS -> Triple(
+            Icons.Default.CheckCircle,
+            MaterialTheme.colorScheme.success,
+            MaterialTheme.colorScheme.successContainer,
+        )
+        NotificationType.PAYMENT_FAILED -> Triple(
+            Icons.Default.Error,
+            MaterialTheme.colorScheme.error,
+            MaterialTheme.colorScheme.errorContainer,
+        )
         NotificationType.SYSTEM -> Triple(
             Icons.Default.Info,
             MaterialTheme.colorScheme.outline,
@@ -464,6 +478,10 @@ private fun handleNotificationTap(
         NotificationType.SERVICE_INQUIRY -> {
             onBack()
             mainNavigationViewModel.triggerDeepLink(DeepLinkAction.OpenChatList)
+        }
+        NotificationType.PAYMENT_SUCCESS, NotificationType.PAYMENT_FAILED -> {
+            onBack()
+            mainNavigationViewModel.triggerDeepLink(DeepLinkAction.OpenProfile)
         }
         NotificationType.SYSTEM -> {
             // No navigation needed for system notifications

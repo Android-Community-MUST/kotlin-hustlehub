@@ -15,6 +15,7 @@ import timber.log.Timber
 
 object NotificationHelper {
     const val CHANNEL_MESSAGES = "messages"
+    const val CHANNEL_PAYMENTS = "payments"
     const val CHANNEL_REVIEWS = "reviews"
     const val CHANNEL_INQUIRIES = "inquiries"
 
@@ -26,17 +27,66 @@ object NotificationHelper {
             val channels = listOf(
                 NotificationChannel(CHANNEL_MESSAGES, "Messages", NotificationManager.IMPORTANCE_HIGH).apply {
                     description = "Incoming chat message notifications"
+                    enableLights(true)
+                    enableVibration(true)
+                },
+                NotificationChannel(CHANNEL_PAYMENTS, "Payments & Transactions", NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = "Payment confirmations and subscription updates"
+                    enableLights(true)
+                    enableVibration(true)
                 },
                 NotificationChannel(CHANNEL_REVIEWS, "Reviews", NotificationManager.IMPORTANCE_DEFAULT).apply {
                     description = "Reviews and feedback notifications"
                 },
                 NotificationChannel(CHANNEL_INQUIRIES, "Inquiries", NotificationManager.IMPORTANCE_HIGH).apply {
                     description = "Service inquiry notifications"
+                    enableLights(true)
+                    enableVibration(true)
                 },
             )
             manager.createNotificationChannels(channels)
         } catch (e: Exception) {
             Timber.e(e, "Failed to create notification channels")
+        }
+    }
+
+    fun postPaymentNotification(
+        context: Context,
+        title: String,
+        body: String,
+        isSuccess: Boolean = true,
+        deepLinkUri: String = "hustlehub://notifications",
+    ) {
+        try {
+            createChannel(context)
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                data = Uri.parse(deepLinkUri)
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                (System.currentTimeMillis() % 10000).toInt(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+
+            val notification = NotificationCompat
+                .Builder(context, CHANNEL_PAYMENTS)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .build()
+
+            val notificationId = if (isSuccess) 400 else 401
+            NotificationManagerCompat.from(context).notify(notificationId, notification)
+        } catch (e: SecurityException) {
+            Timber.w(e, "POST_NOTIFICATIONS permission not granted; skipping notification")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to post payment notification")
         }
     }
 
@@ -47,6 +97,7 @@ object NotificationHelper {
         messagePreview: String,
     ) {
         try {
+            createChannel(context)
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 data = Uri.parse("hustlehub://chat/$conversationId")
@@ -60,9 +111,10 @@ object NotificationHelper {
 
             val notification = NotificationCompat
                 .Builder(context, CHANNEL_MESSAGES)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(senderName)
                 .setContentText(messagePreview)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(messagePreview))
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
@@ -83,6 +135,7 @@ object NotificationHelper {
         deepLinkUri: String = "hustlehub://notifications",
     ) {
         try {
+            createChannel(context)
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 data = Uri.parse(deepLinkUri)
@@ -96,9 +149,10 @@ object NotificationHelper {
 
             val notification = NotificationCompat
                 .Builder(context, CHANNEL_REVIEWS)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(title)
                 .setContentText(body)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(pendingIntent)
@@ -119,6 +173,7 @@ object NotificationHelper {
         deepLinkUri: String = "hustlehub://notifications",
     ) {
         try {
+            createChannel(context)
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 data = Uri.parse(deepLinkUri)
@@ -132,9 +187,10 @@ object NotificationHelper {
 
             val notification = NotificationCompat
                 .Builder(context, CHANNEL_INQUIRIES)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(title)
                 .setContentText(body)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)

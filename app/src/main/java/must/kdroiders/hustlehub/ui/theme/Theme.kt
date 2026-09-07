@@ -3,6 +3,7 @@ package must.kdroiders.hustlehub.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
@@ -18,6 +19,14 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+
+val ColorScheme.success: Color
+    @Composable
+    get() = if (isSystemInDarkTheme()) Color(0xFF81C784) else HustleSuccess
+
+val ColorScheme.successContainer: Color
+    @Composable
+    get() = if (isSystemInDarkTheme()) Color(0xFF1B5E20).copy(alpha = 0.35f) else Color(0xFFE8F5E9)
 
 private val LightColorScheme = lightColorScheme(
     primary = HustlePrimaryBlue,
