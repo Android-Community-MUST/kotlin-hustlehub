@@ -103,8 +103,9 @@ class CryptoManagerTest {
         val text = "Confidential financial transaction"
         val payload = cryptoManager.encrypt(text, secretKey)
 
-        val tamperedCiphertext = "X" + payload.ciphertext.substring(1)
-        val tamperedPayload = payload.copy(ciphertext = tamperedCiphertext)
+        val ctBytes = Base64Util.decode(payload.ciphertext)
+        ctBytes[0] = (ctBytes[0].toInt() xor 0xFF).toByte()
+        val tamperedPayload = payload.copy(ciphertext = Base64Util.encodeToString(ctBytes))
 
         cryptoManager.decrypt(tamperedPayload, secretKey)
     }
@@ -118,8 +119,9 @@ class CryptoManagerTest {
         val text = "Confidential financial transaction"
         val payload = cryptoManager.encrypt(text, secretKey)
 
-        val tamperedAuthTag = "Y" + payload.authTag.substring(1)
-        val tamperedPayload = payload.copy(authTag = tamperedAuthTag)
+        val tagBytes = Base64Util.decode(payload.authTag)
+        tagBytes[0] = (tagBytes[0].toInt() xor 0xFF).toByte()
+        val tamperedPayload = payload.copy(authTag = Base64Util.encodeToString(tagBytes))
 
         cryptoManager.decrypt(tamperedPayload, secretKey)
     }
