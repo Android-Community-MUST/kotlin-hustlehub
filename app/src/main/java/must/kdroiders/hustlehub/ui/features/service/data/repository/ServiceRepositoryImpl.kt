@@ -142,7 +142,9 @@ class ServiceRepositoryImpl
             withContext(Dispatchers.IO) {
                 runCatching {
                     val response = apiService.deleteService(serviceId)
-                    check(response.success) { response.message ?: "Failed to delete service" }
+                    if (response != null) {
+                        check(response.success) { response.message ?: "Failed to delete service" }
+                    }
                     serviceDao.deleteById(serviceId)
                 }.onFailure { e ->
                     if (e is CancellationException) throw e

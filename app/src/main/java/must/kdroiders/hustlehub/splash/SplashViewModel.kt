@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
@@ -42,6 +43,7 @@ class SplashViewModel
         private val userPreferences: UserPreferences,
         private val userRepository: UserRepository,
         private val appDatabase: AppDatabase,
+        private val keyExchangeHandler: KeyExchangeHandler,
     ) : ViewModel() {
         private val _destination =
             MutableStateFlow<SplashDestination?>(null)
@@ -65,6 +67,17 @@ class SplashViewModel
                     Timber.d("Successfully updated FCM token on splash")
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to retrieve/upload FCM token on splash")
+                }
+            }
+        }
+
+        private fun syncUserPublicKey() {
+            viewModelScope.launch {
+                try {
+                    keyExchangeHandler.syncUserPublicKey()
+                    Timber.d("Successfully triggered identity public key sync on splash")
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to sync user public key on splash")
                 }
             }
         }
@@ -148,6 +161,7 @@ class SplashViewModel
                                         }
                                     if (targetDestination == SplashDestination.Home) {
                                         uploadFcmToken()
+                                        syncUserPublicKey()
                                     }
                                     targetDestination
                                 } else {
