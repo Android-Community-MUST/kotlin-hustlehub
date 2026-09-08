@@ -4,6 +4,8 @@ enum class NotificationType {
     NEW_MESSAGE,
     NEW_REVIEW,
     SERVICE_INQUIRY,
+    PAYMENT_SUCCESS,
+    PAYMENT_FAILED,
     SYSTEM,
 }
 

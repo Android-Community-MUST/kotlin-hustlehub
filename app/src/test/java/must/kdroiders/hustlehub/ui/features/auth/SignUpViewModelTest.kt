@@ -35,6 +35,7 @@ class MainDispatcherRule : TestWatcher() {
     }
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SignUpViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()

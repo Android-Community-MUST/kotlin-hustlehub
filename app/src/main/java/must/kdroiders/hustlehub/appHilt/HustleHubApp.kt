@@ -43,6 +43,8 @@ class HustleHubApp : Application(), ImageLoaderFactory, Configuration.Provider {
             FirebaseApp.initializeApp(this)
             hustleAnalytics.setCollectionEnabled(!BuildConfig.DEBUG)
             hustleCrashlytics.setScreen("HustleHubApp")
+            must.kdroiders.hustlehub.core.notification.NotificationHelper
+                .createChannel(this)
         } catch (e: Exception) {
             Timber.e(e, "Firebase initialization failed")
         }

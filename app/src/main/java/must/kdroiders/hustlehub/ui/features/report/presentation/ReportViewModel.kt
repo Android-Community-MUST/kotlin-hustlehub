@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.ui.features.report.domain.repository.ReportRepository
 import javax.inject.Inject
 
@@ -40,7 +41,7 @@ class ReportViewModel
                         _uiState.update { it.copy(isSubmitting = false, isSuccess = true) }
                     },
                     onFailure = { e ->
-                        _uiState.update { it.copy(isSubmitting = false, error = e.message ?: "Failed to submit report") }
+                        _uiState.update { it.copy(isSubmitting = false, error = e.userFriendlyMessage("Failed to submit report")) }
                     },
                 )
             }

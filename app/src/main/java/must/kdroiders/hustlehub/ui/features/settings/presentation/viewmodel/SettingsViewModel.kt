@@ -3,6 +3,7 @@ package must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.BuildConfig
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.AppTheme
@@ -94,6 +96,8 @@ class SettingsViewModel
         private val chatRepository: ChatRepository,
         private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
+        internal var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+
         private val _uiState = MutableStateFlow(SettingsUiState())
         val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
@@ -199,7 +203,7 @@ class SettingsViewModel
                     runCatching { chatRepository.disconnectWebSocket() }
                     signOutUseCase()
                     userPreferences.clearUser()
-                    withContext(Dispatchers.IO) {
+                    withContext(ioDispatcher) {
                         appDatabase.clearAllTables()
                     }
                     _events.send(SettingsEvent.LoggedOut)
@@ -282,7 +286,7 @@ class SettingsViewModel
                         runCatching { chatRepository.disconnectWebSocket() }
                         runCatching { signOutUseCase() }
                         runCatching { userPreferences.clearUser() }
-                        withContext(Dispatchers.IO) {
+                        withContext(ioDispatcher) {
                             runCatching { appDatabase.clearAllTables() }
                         }
                         _uiState.update { state -> state.copy(isDeletingAccount = false) }
@@ -290,7 +294,7 @@ class SettingsViewModel
                     },
                     onFailure = { throwable ->
                         Timber.e(throwable, "Account deletion failed")
-                        val errorMessage = throwable.message ?: "Failed to delete account."
+                        val errorMessage = throwable.userFriendlyMessage("Failed to delete account.")
                         _uiState.update { state ->
                             state.copy(
                                 isDeletingAccount = false,

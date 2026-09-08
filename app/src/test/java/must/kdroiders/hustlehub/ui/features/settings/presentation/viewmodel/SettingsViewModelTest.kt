@@ -31,18 +31,25 @@ import org.junit.Test
 class SettingsViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
 
-    private val authRepository: AuthRepository = mockk(relaxed = true)
-    private val signOutUseCase: SignOutUseCase = mockk(relaxed = true)
-    private val deleteAccountUseCase: must.kdroiders.hustlehub.ui.features.auth.domain.usecase.DeleteAccountUseCase = mockk(relaxed = true)
-    private val userPreferences: UserPreferences = mockk(relaxed = true)
-    private val appDatabase: AppDatabase = mockk(relaxed = true)
-    private val chatRepository: ChatRepository = mockk(relaxed = true)
+    private lateinit var authRepository: AuthRepository
+    private lateinit var signOutUseCase: SignOutUseCase
+    private lateinit var deleteAccountUseCase: must.kdroiders.hustlehub.ui.features.auth.domain.usecase.DeleteAccountUseCase
+    private lateinit var userPreferences: UserPreferences
+    private lateinit var appDatabase: AppDatabase
+    private lateinit var chatRepository: ChatRepository
 
     private lateinit var viewModel: SettingsViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+
+        authRepository = mockk(relaxed = true)
+        signOutUseCase = mockk(relaxed = true)
+        deleteAccountUseCase = mockk(relaxed = true)
+        userPreferences = mockk(relaxed = true)
+        appDatabase = mockk(relaxed = true)
+        chatRepository = mockk(relaxed = true)
 
         val mockUserInfo: com.google.firebase.auth.UserInfo = mockk {
             every { providerId } returns "password"
@@ -65,7 +72,9 @@ class SettingsViewModelTest {
             appDatabase = appDatabase,
             chatRepository = chatRepository,
             hustleCrashlytics = HustleCrashlytics(null),
-        )
+        ).apply {
+            ioDispatcher = testDispatcher
+        }
     }
 
     @After

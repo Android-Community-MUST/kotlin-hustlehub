@@ -289,6 +289,7 @@ Built and maintained with ❤️ by the **Android Community MUST** engineering t
 - **Vertigo** — [@vertigo0628](https://github.com/vertigo0628) — *Android Developer*
 - **Botmaster Kenya** — [@Botmasterkenya](https://github.com/Botmasterkenya) — *Android Developer*
 - **Nancy** — [@NancyN00](https://github.com/NancyN00) — *Android & KMP Developer*
+- **Rose** — [@Rose-Apex](https://github.com/Rose-Apex) — *Android Developer*
 
 ---
 

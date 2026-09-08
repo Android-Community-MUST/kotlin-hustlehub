@@ -59,7 +59,10 @@ class KeyExchangeHandler
                 val ourIdentityKeyPair = cryptoManager.getOrCreateUserIdentityKeyPair()
                 val ourKeyPair = cryptoManager.getOrCreateKeyPair(conversationId)
 
-                // 1. Upload our conversation public key
+                // 1. Ensure our user identity key is synchronized
+                syncUserPublicKey()
+
+                // 2. Also upload our conversation public key for backward-compatibility
                 val encodedPublicKey = cryptoManager.encodePublicKey(ourKeyPair.public)
                 try {
                     keyExchangeApiService.uploadPublicKey(
@@ -70,24 +73,34 @@ class KeyExchangeHandler
                     Timber.w(e, "Could not upload conversation key for: %s", conversationId)
                 }
 
-                // 2. Ensure our user identity key is synchronized
-                syncUserPublicKey()
-
-                // 3. Fetch peer's public key (try conversation key first, fallback to user identity key)
+                // 3. Fetch peer key: If otherUserId is known, prioritize the deterministic user identity key.
                 var rawPeerKey: String? = null
-                try {
-                    val peerResponse = keyExchangeApiService.getPeerPublicKey(conversationId)
-                    rawPeerKey = peerResponse.data?.publicKey
-                } catch (e: Exception) {
-                    Timber.d("Conversation peer key not available: %s", e.message)
-                }
+                var isIdentityKey = false
 
-                if (rawPeerKey.isNullOrBlank() && !otherUserId.isNullOrBlank()) {
+                if (!otherUserId.isNullOrBlank()) {
                     try {
                         val userPeerResponse = keyExchangeApiService.getUserPublicKey(otherUserId)
-                        rawPeerKey = userPeerResponse.data?.publicKey
+                        val userKey = userPeerResponse.data?.publicKey
+                        if (!userKey.isNullOrBlank()) {
+                            rawPeerKey = userKey
+                            isIdentityKey = true
+                        }
                     } catch (e: Exception) {
                         Timber.d("User peer key not available for user %s: %s", otherUserId, e.message)
+                    }
+                }
+
+                // Fallback to conversation peer key if identity key wasn't retrieved
+                if (rawPeerKey.isNullOrBlank()) {
+                    try {
+                        val peerResponse = keyExchangeApiService.getPeerPublicKey(conversationId)
+                        val convKey = peerResponse.data?.publicKey
+                        if (!convKey.isNullOrBlank()) {
+                            rawPeerKey = convKey
+                            isIdentityKey = false
+                        }
+                    } catch (e: Exception) {
+                        Timber.d("Conversation peer key not available: %s", e.message)
                     }
                 }
 
@@ -96,22 +109,22 @@ class KeyExchangeHandler
                     return null
                 }
 
-                // 4. Derive + cache shared secret
+                // 4. Derive + cache shared secret using the MATCHING private key
                 val peerPublicKey = cryptoManager.decodePublicKey(rawPeerKey)
-                val sharedSecret = try {
-                    cryptoManager.deriveSharedSecret(
-                        privateKey = ourKeyPair.private,
-                        peerPublicKey = peerPublicKey,
-                    )
-                } catch (e: Exception) {
-                    cryptoManager.deriveSharedSecret(
-                        privateKey = ourIdentityKeyPair.private,
-                        peerPublicKey = peerPublicKey,
-                    )
+                val privateKeyToUse = if (isIdentityKey) {
+                    ourIdentityKeyPair.private
+                } else {
+                    ourKeyPair.private
                 }
 
+                val sharedSecret = cryptoManager.deriveSharedSecret(
+                    privateKey = privateKeyToUse,
+                    peerPublicKey = peerPublicKey,
+                    conversationId = conversationId,
+                )
+
                 cacheSecret(conversationId, sharedSecret)
-                Timber.d("Key exchange complete for: %s", conversationId)
+                Timber.d("Key exchange complete for: %s (identityKey=%s)", conversationId, isIdentityKey)
                 sharedSecret
             } catch (e: Exception) {
                 Timber.e(e, "Key exchange failed for: %s", conversationId)

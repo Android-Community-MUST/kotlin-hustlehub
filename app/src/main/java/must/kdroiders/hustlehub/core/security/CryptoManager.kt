@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.core.security
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import androidx.annotation.Keep
 import timber.log.Timber
 import java.security.KeyFactory
 import java.security.KeyPair
@@ -21,6 +22,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /** All fields are Base64-encoded. */
+@Keep
 data class EncryptedPayload(
     val ciphertext: String,
     val iv: String,
@@ -161,17 +163,23 @@ class CryptoManager
             return KeyFactory.getInstance("EC").generatePublic(keySpec)
         }
 
-        /** Derives a 256-bit AES key via ECDH + SHA-256. */
+        /** Derives a 256-bit AES key via ECDH + SHA-256 (optionally salted with conversationId). */
         fun deriveSharedSecret(
             privateKey: PrivateKey,
             peerPublicKey: PublicKey,
+            conversationId: String? = null,
         ): SecretKey {
             val keyAgreement = KeyAgreement.getInstance(KEY_AGREEMENT_ALGORITHM)
             keyAgreement.init(privateKey)
             keyAgreement.doPhase(peerPublicKey, true)
 
             val rawSecret = keyAgreement.generateSecret()
-            val hashedSecret = MessageDigest.getInstance("SHA-256").digest(rawSecret)
+            val md = MessageDigest.getInstance("SHA-256")
+            md.update(rawSecret)
+            if (!conversationId.isNullOrBlank()) {
+                md.update(conversationId.toByteArray(Charsets.UTF_8))
+            }
+            val hashedSecret = md.digest()
 
             return SecretKeySpec(hashedSecret.copyOf(AES_KEY_LENGTH_BYTES), "AES")
         }

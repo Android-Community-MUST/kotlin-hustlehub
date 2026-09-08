@@ -85,6 +85,8 @@ class NotificationRepositoryImpl
                 "NEW_MESSAGE" -> NotificationType.NEW_MESSAGE
                 "NEW_REVIEW" -> NotificationType.NEW_REVIEW
                 "SERVICE_INQUIRY" -> NotificationType.SERVICE_INQUIRY
+                "PAYMENT_SUCCESS", "PAYMENT_COMPLETED" -> NotificationType.PAYMENT_SUCCESS
+                "PAYMENT_FAILED" -> NotificationType.PAYMENT_FAILED
                 else -> NotificationType.SYSTEM
             }
             return Notification(

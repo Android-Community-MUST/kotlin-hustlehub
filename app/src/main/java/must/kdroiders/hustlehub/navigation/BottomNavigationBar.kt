@@ -67,8 +67,8 @@ private val bottomTabs = listOf(
     BottomTabItem(
         key = BottomBookmarks,
         label = "saved",
-        selectedIcon = Icons.Outlined.BookmarkBorder,
-        unselectedIcon = Icons.Default.Bookmark,
+        selectedIcon = Icons.Default.Bookmark,
+        unselectedIcon = Icons.Outlined.BookmarkBorder,
     ),
     BottomTabItem(
         key = BottomProfile,
