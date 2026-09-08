@@ -61,12 +61,12 @@ fun MessageEntity.toDecryptedDomain(
     val cipherText = this.content
     val ivStr = this.iv
     val tagStr = this.authTag
-    if (!this.isEncrypted || ivStr.isNullOrBlank() || tagStr.isNullOrBlank() || cipherText.isNullOrBlank()) {
+    if (!this.isEncrypted || ivStr.isNullOrBlank() || tagStr.isNullOrBlank() || cipherText.isNullOrBlank() || cipherText == "[Encrypted message]") {
         return rawDomain
     }
 
     val secretKey = keyExchangeHandler.getCachedSecret(this.conversationId)
-        ?: return rawDomain.copy(content = "[Decryption key unavailable — open chat to restore]")
+        ?: return rawDomain
 
     val decryptedContent = runCatching {
         cryptoManager.decrypt(
@@ -79,7 +79,7 @@ fun MessageEntity.toDecryptedDomain(
         )
     }.getOrElse { e ->
         timber.log.Timber.w(e, "Failed to decrypt Room message %s", this.id)
-        "[Encrypted message]"
+        cipherText
     }
 
     return rawDomain.copy(content = decryptedContent)
@@ -119,7 +119,7 @@ fun Message.toEncryptedEntity(
     cachedAt: Long = System.currentTimeMillis(),
 ): MessageEntity {
     val secretKey = keyExchangeHandler.getCachedSecret(conversationId)
-    return if (secretKey != null && !this.content.isNullOrBlank()) {
+    return if (secretKey != null && !this.content.isNullOrBlank() && this.content != "[Encrypted message]") {
         val encrypted =
             runCatching {
                 cryptoManager.encrypt(this.content, secretKey)
