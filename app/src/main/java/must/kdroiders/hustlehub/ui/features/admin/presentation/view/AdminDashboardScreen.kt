@@ -23,9 +23,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
@@ -66,9 +70,10 @@ fun AdminDashboardScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "🛡️ Admin Center",
+                        text = stringResource(R.string.admin_center_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() },
                     )
                 },
                 navigationIcon = {
@@ -76,7 +81,10 @@ fun AdminDashboardScreen(
                 },
                 actions = {
                     IconButton(onClick = viewModel::refresh) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh Data")
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = stringResource(R.string.cd_refresh_data),
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -93,11 +101,14 @@ fun AdminDashboardScreen(
                 .padding(innerPadding),
         ) {
             val tabs = listOf(
-                AdminTab.OVERVIEW to "Overview",
-                AdminTab.REPORTS to "Reports (${state.reports.count { it.status == "OPEN" }})",
-                AdminTab.USERS to "Users",
-                AdminTab.SERVICES to "Services",
-                AdminTab.AUDIT_LOGS to "Audit Logs",
+                AdminTab.OVERVIEW to stringResource(R.string.admin_tab_overview),
+                AdminTab.REPORTS to stringResource(
+                    R.string.admin_tab_reports_format,
+                    state.reports.count { it.status == "OPEN" },
+                ),
+                AdminTab.USERS to stringResource(R.string.admin_tab_users),
+                AdminTab.SERVICES to stringResource(R.string.admin_tab_services),
+                AdminTab.AUDIT_LOGS to stringResource(R.string.admin_tab_audit_logs),
             )
 
             PrimaryScrollableTabRow(

@@ -18,9 +18,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminAuditLogItem
 
 @Composable
@@ -37,12 +40,13 @@ fun AdminAuditLogsTab(
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
-                text = "No audit activity recorded yet",
+                text = stringResource(R.string.admin_audit_logs_empty_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() },
             )
             Text(
-                text = "All administrative actions will be tracked and displayed here.",
+                text = stringResource(R.string.admin_audit_logs_empty_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -55,7 +59,9 @@ fun AdminAuditLogsTab(
         ) {
             items(logs, key = { it.id }) { log ->
                 ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics(mergeDescendants = true) {},
                     colors = CardDefaults.elevatedCardColors(
                         containerColor = MaterialTheme.colorScheme.surface,
                     ),
@@ -70,7 +76,7 @@ fun AdminAuditLogsTab(
                                 text = log.action,
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF2196F3),
+                                color = MaterialTheme.colorScheme.primary,
                             )
                             if (!log.createdAt.isNullOrBlank()) {
                                 Text(
@@ -82,13 +88,17 @@ fun AdminAuditLogsTab(
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Target: ${log.targetType} (${log.targetId})",
+                            text = stringResource(
+                                R.string.admin_audit_log_target_format,
+                                log.targetType,
+                                log.targetId,
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                         )
                         if (!log.reason.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Reason: ${log.reason}",
+                                text = stringResource(R.string.admin_audit_log_reason_format, log.reason),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

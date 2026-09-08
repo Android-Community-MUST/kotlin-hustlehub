@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -232,7 +233,8 @@ private fun ProfileContent(
                 if (isAdmin) {
                     Spacer(Modifier.height(10.dp))
                     HustleButton(
-                        text = "🛡️ Admin Center",
+                        text = stringResource(R.string.admin_center_title),
+                        icon = Icons.Default.AdminPanelSettings,
                         variant = HustleButtonVariant.Primary,
                         onClick = onNavigateToAdminDashboard,
                         modifier = Modifier

@@ -9,23 +9,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminReportItem
 import must.kdroiders.hustlehub.ui.features.admin.presentation.viewmodel.AdminActionTarget
 
@@ -46,28 +49,28 @@ fun AdminReportsTab(
                 FilterChip(
                     selected = selectedStatus == null,
                     onClick = { onStatusSelect(null) },
-                    label = { Text("All Reports") },
+                    label = { Text(stringResource(R.string.admin_reports_filter_all)) },
                 )
             }
             item {
                 FilterChip(
                     selected = selectedStatus == "OPEN",
                     onClick = { onStatusSelect("OPEN") },
-                    label = { Text("Open (Pending)") },
+                    label = { Text(stringResource(R.string.admin_reports_filter_open)) },
                 )
             }
             item {
                 FilterChip(
                     selected = selectedStatus == "RESOLVED",
                     onClick = { onStatusSelect("RESOLVED") },
-                    label = { Text("Resolved") },
+                    label = { Text(stringResource(R.string.admin_reports_filter_resolved)) },
                 )
             }
             item {
                 FilterChip(
                     selected = selectedStatus == "DISMISSED",
                     onClick = { onStatusSelect("DISMISSED") },
-                    label = { Text("Dismissed") },
+                    label = { Text(stringResource(R.string.admin_reports_filter_dismissed)) },
                 )
             }
         }
@@ -81,12 +84,13 @@ fun AdminReportsTab(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    text = "No reports found",
+                    text = stringResource(R.string.admin_reports_empty_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics { heading() },
                 )
                 Text(
-                    text = "All student reports under this filter are clean.",
+                    text = stringResource(R.string.admin_reports_empty_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -110,7 +114,9 @@ private fun ReportCard(
     onActionClick: (AdminActionTarget) -> Unit,
 ) {
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) {},
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
@@ -122,14 +128,14 @@ private fun ReportCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Reporter: ${report.reporterName}",
+                    text = stringResource(R.string.admin_report_reporter_format, report.reporterName),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                 )
                 val statusColor = when (report.status) {
-                    "OPEN" -> Color(0xFFFF1744)
-                    "RESOLVED" -> Color(0xFF00C853)
-                    else -> Color(0xFF757575)
+                    "OPEN" -> MaterialTheme.colorScheme.error
+                    "RESOLVED" -> MaterialTheme.colorScheme.tertiary
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
                 Text(
                     text = report.status,
@@ -141,7 +147,7 @@ private fun ReportCard(
 
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Reason: ${report.reason}",
+                text = stringResource(R.string.admin_report_reason_format, report.reason),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -156,9 +162,9 @@ private fun ReportCard(
             if (!report.adminNotes.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Admin Note: ${report.adminNotes}",
+                    text = stringResource(R.string.admin_report_admin_note_format, report.adminNotes),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF2196F3),
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
 
@@ -169,24 +175,23 @@ private fun ReportCard(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    OutlinedButton(
+                    HustleButton(
+                        text = stringResource(R.string.admin_report_action_dismiss),
                         onClick = {
                             onActionClick(AdminActionTarget.DismissReport(report.id, report.reason))
                         },
-                        modifier = Modifier.padding(end = 8.dp),
-                    ) {
-                        Text("Dismiss")
-                    }
-                    TextButton(
+                        variant = HustleButtonVariant.Outlined,
+                        modifier = Modifier.height(36.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    HustleButton(
+                        text = stringResource(R.string.admin_report_action_resolve),
                         onClick = {
                             onActionClick(AdminActionTarget.ResolveReport(report.id, report.reason))
                         },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color(0xFF00C853),
-                        ),
-                    ) {
-                        Text("Resolve")
-                    }
+                        variant = HustleButtonVariant.Primary,
+                        modifier = Modifier.height(36.dp),
+                    )
                 }
             }
         }

@@ -26,21 +26,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminAnalytics
-import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 fun AdminOverviewTab(
     analytics: AdminAnalytics,
     modifier: Modifier = Modifier,
 ) {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "KE")).apply {
-        maximumFractionDigits = 0
-    }
-
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -48,13 +46,14 @@ fun AdminOverviewTab(
     ) {
         item {
             Text(
-                text = "Campus Operations Summary",
+                text = stringResource(R.string.admin_overview_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.semantics { heading() },
             )
             Text(
-                text = "Real-time metrics aggregated across all active MUST students & services.",
+                text = stringResource(R.string.admin_overview_subtitle),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -66,17 +65,17 @@ fun AdminOverviewTab(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 MetricCard(
-                    title = "Total Students",
+                    title = stringResource(R.string.admin_metric_total_students),
                     value = analytics.totalUsers.toString(),
                     icon = Icons.Default.People,
-                    tint = Color(0xFF2196F3),
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
                 )
                 MetricCard(
-                    title = "Live Services",
+                    title = stringResource(R.string.admin_metric_live_services),
                     value = analytics.totalServices.toString(),
                     icon = Icons.Default.Work,
-                    tint = Color(0xFF00C853),
+                    tint = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -88,17 +87,21 @@ fun AdminOverviewTab(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 MetricCard(
-                    title = "Pro Verified",
+                    title = stringResource(R.string.admin_metric_pro_verified),
                     value = analytics.totalProSubscribers.toString(),
                     icon = Icons.Default.Star,
-                    tint = Color(0xFFFFB300),
+                    tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.weight(1f),
                 )
                 MetricCard(
-                    title = "Open Reports",
+                    title = stringResource(R.string.admin_metric_open_reports),
                     value = analytics.openReportsCount.toString(),
                     icon = Icons.Default.Flag,
-                    tint = if (analytics.openReportsCount > 0) Color(0xFFFF1744) else Color(0xFF757575),
+                    tint = if (analytics.openReportsCount > 0) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -106,10 +109,10 @@ fun AdminOverviewTab(
 
         item {
             MetricCard(
-                title = "Monthly M-Pesa Volume",
-                value = "KES ${analytics.monthlyRevenue}",
+                title = stringResource(R.string.admin_metric_monthly_revenue),
+                value = stringResource(R.string.admin_metric_currency_kes_format, analytics.monthlyRevenue),
                 icon = Icons.Default.AttachMoney,
-                tint = Color(0xFF00BFA5),
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -125,7 +128,7 @@ private fun MetricCard(
     modifier: Modifier = Modifier,
 ) {
     ElevatedCard(
-        modifier = modifier,
+        modifier = modifier.semantics(mergeDescendants = true) {},
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),

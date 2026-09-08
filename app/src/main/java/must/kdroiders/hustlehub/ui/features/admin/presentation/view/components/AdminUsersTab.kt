@@ -9,29 +9,32 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
+import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.sharedComposables.ProBadge
 import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminUserItem
 import must.kdroiders.hustlehub.ui.features.admin.presentation.viewmodel.AdminActionTarget
@@ -61,18 +64,23 @@ fun AdminUsersTab(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
-        // Search bar
-        OutlinedTextField(
+        // Search bar using HustleTextField
+        HustleTextField(
             value = searchQuery,
             onValueChange = onSearchChange,
-            placeholder = { Text("Search by student name or email...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            trailingIcon = {
-                if (searchQuery.isNotBlank()) {
+            placeholder = stringResource(R.string.admin_users_search_placeholder),
+            leadingIcon = Icons.Default.Search,
+            trailingIcon = if (searchQuery.isNotBlank()) {
+                {
                     IconButton(onClick = { onSearchChange("") }) {
-                        Icon(Icons.Default.Clear, contentDescription = "Clear")
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = stringResource(R.string.action_clear),
+                        )
                     }
                 }
+            } else {
+                null
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -89,28 +97,28 @@ fun AdminUsersTab(
                 FilterChip(
                     selected = filter == AdminUserFilter.ALL,
                     onClick = { onFilterSelect(AdminUserFilter.ALL) },
-                    label = { Text("All (${users.size})") },
+                    label = { Text(stringResource(R.string.admin_users_filter_all_format, users.size)) },
                 )
             }
             item {
                 FilterChip(
                     selected = filter == AdminUserFilter.ACTIVE,
                     onClick = { onFilterSelect(AdminUserFilter.ACTIVE) },
-                    label = { Text("Active") },
+                    label = { Text(stringResource(R.string.admin_users_filter_active)) },
                 )
             }
             item {
                 FilterChip(
                     selected = filter == AdminUserFilter.PRO,
                     onClick = { onFilterSelect(AdminUserFilter.PRO) },
-                    label = { Text("PRO Verified") },
+                    label = { Text(stringResource(R.string.admin_users_filter_pro)) },
                 )
             }
             item {
                 FilterChip(
                     selected = filter == AdminUserFilter.SUSPENDED,
                     onClick = { onFilterSelect(AdminUserFilter.SUSPENDED) },
-                    label = { Text("Suspended") },
+                    label = { Text(stringResource(R.string.admin_users_filter_suspended)) },
                 )
             }
         }
@@ -124,12 +132,13 @@ fun AdminUsersTab(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    text = "No users found",
+                    text = stringResource(R.string.admin_users_empty_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics { heading() },
                 )
                 Text(
-                    text = "Try adjusting your search query or filter.",
+                    text = stringResource(R.string.admin_users_empty_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -153,7 +162,9 @@ private fun UserAdminCard(
     onActionClick: (AdminActionTarget) -> Unit,
 ) {
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) {},
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
@@ -182,17 +193,17 @@ private fun UserAdminCard(
 
                 if (user.isSuspended) {
                     Text(
-                        text = "SUSPENDED",
+                        text = stringResource(R.string.admin_user_status_suspended),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFF1744),
+                        color = MaterialTheme.colorScheme.error,
                     )
                 } else {
                     Text(
-                        text = "ACTIVE",
+                        text = stringResource(R.string.admin_user_status_active),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF00C853),
+                        color = MaterialTheme.colorScheme.tertiary,
                     )
                 }
             }
@@ -200,9 +211,9 @@ private fun UserAdminCard(
             if (!user.suspendedReason.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Suspension Reason: ${user.suspendedReason}",
+                    text = stringResource(R.string.admin_user_suspension_reason_format, user.suspendedReason),
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFFF1744),
+                    color = MaterialTheme.colorScheme.error,
                 )
             }
 
@@ -214,45 +225,46 @@ private fun UserAdminCard(
             ) {
                 // Pro Badge Toggle
                 if (user.isVerifiedPro) {
-                    TextButton(
+                    HustleButton(
+                        text = stringResource(R.string.admin_user_action_revoke_pro),
                         onClick = {
                             onActionClick(AdminActionTarget.RevokePro(user.id, user.name))
                         },
-                        modifier = Modifier.padding(end = 8.dp),
-                    ) {
-                        Text("Revoke Pro", color = Color(0xFFFFB300))
-                    }
+                        variant = HustleButtonVariant.Secondary,
+                        modifier = Modifier.height(36.dp),
+                    )
                 } else {
-                    TextButton(
+                    HustleButton(
+                        text = stringResource(R.string.admin_user_action_grant_pro),
                         onClick = {
                             onActionClick(AdminActionTarget.VerifyPro(user.id, user.name))
                         },
-                        modifier = Modifier.padding(end = 8.dp),
-                    ) {
-                        Text("Grant Pro", color = Color(0xFF00C853))
-                    }
+                        variant = HustleButtonVariant.Primary,
+                        modifier = Modifier.height(36.dp),
+                    )
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 // Suspend / Unsuspend
                 if (user.isSuspended) {
-                    OutlinedButton(
+                    HustleButton(
+                        text = stringResource(R.string.admin_user_action_unsuspend),
                         onClick = {
                             onActionClick(AdminActionTarget.UnsuspendUser(user.id, user.name))
                         },
-                    ) {
-                        Text("Unsuspend", color = Color(0xFF00C853))
-                    }
+                        variant = HustleButtonVariant.Primary,
+                        modifier = Modifier.height(36.dp),
+                    )
                 } else {
-                    OutlinedButton(
+                    HustleButton(
+                        text = stringResource(R.string.admin_user_action_suspend),
                         onClick = {
                             onActionClick(AdminActionTarget.SuspendUser(user.id, user.name))
                         },
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color(0xFFFF1744),
-                        ),
-                    ) {
-                        Text("Suspend")
-                    }
+                        variant = HustleButtonVariant.Outlined,
+                        modifier = Modifier.height(36.dp),
+                    )
                 }
             }
         }
