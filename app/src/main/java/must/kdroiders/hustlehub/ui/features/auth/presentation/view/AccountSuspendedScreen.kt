@@ -279,8 +279,9 @@ private fun formatSuspensionDetails(suspendedUntil: String?): SuspensionDetails 
         val duration = Duration.between(now, until)
         val hours = duration.toHours()
 
-        val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-            .withZone(ZoneId.systemDefault())
+        val formatter =
+            DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                .withZone(ZoneId.systemDefault())
         val dateStr = formatter.format(until)
 
         when {
@@ -297,7 +298,7 @@ private fun formatSuspensionDetails(suspendedUntil: String?): SuspensionDetails 
             else -> {
                 val days = (hours + 23) / 24
                 SuspensionDetails(
-                    headline = "Temporary Suspension (${days} days remaining)",
+                    headline = "Temporary Suspension ($days days remaining)",
                     subline = "Suspended until $dateStr",
                     isPermanent = false,
                 )

@@ -70,7 +70,10 @@ class AdminViewModel
             _uiState.update { it.copy(activeActionTarget = null, isActionLoading = false) }
         }
 
-        fun executeAction(reason: String, durationHours: Long? = null) {
+        fun executeAction(
+            reason: String,
+            durationHours: Long? = null,
+        ) {
             val target = _uiState.value.activeActionTarget ?: return
             if (reason.isBlank()) {
                 _uiState.update { it.copy(error = "A reason is required for admin moderation actions.") }

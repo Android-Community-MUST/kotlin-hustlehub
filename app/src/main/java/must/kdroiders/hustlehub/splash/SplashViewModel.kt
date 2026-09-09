@@ -147,8 +147,7 @@ class SplashViewModel
                                                     userRepository.saveUserProfile(basicUser)
                                                 }
                                             }
-                                        }
-                                        .onFailure { e ->
+                                        }.onFailure { e ->
                                             if (e is retrofit2.HttpException && e.code() == 403) {
                                                 // Structured suspension response from FirebaseJwtFilter:
                                                 // {"success":false,"message":"...","suspendedReason":"...","suspendedUntil":"ISO or null","isPermanent":bool}
@@ -160,7 +159,9 @@ class SplashViewModel
                                                     val untilMatch = Regex("\"suspendedUntil\"\\s*:\\s*\"([^\"]*)\"").find(body)
                                                     if (reasonMatch != null) suspendedReason = reasonMatch.groupValues[1]
                                                     if (untilMatch != null) suspendedUntil = untilMatch.groupValues[1].takeIf { it.isNotBlank() && it != "null" }
-                                                } catch (_: Exception) { /* keep defaults */ }
+                                                } catch (_: Exception) {
+                                                    /* keep defaults */
+                                                }
                                                 targetDestination = SplashDestination.AccountSuspended(
                                                     reason = suspendedReason,
                                                     suspendedUntil = suspendedUntil,
