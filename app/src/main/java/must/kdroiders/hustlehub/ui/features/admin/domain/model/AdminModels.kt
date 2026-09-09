@@ -17,6 +17,7 @@ data class AdminUserItem(
     val userRole: String,
     val isSuspended: Boolean,
     val suspendedReason: String? = null,
+    val suspendedUntil: String? = null,
     val isVerifiedPro: Boolean = false,
     val reportCount: Long = 0,
     val createdAt: String? = null,

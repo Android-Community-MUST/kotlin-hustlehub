@@ -699,4 +699,15 @@
     <string name="admin_dialog_dismiss_title">Dismiss Report</string>
     <string name="admin_dialog_dismiss_desc">Dismiss this report if no violation occurred. Add an explanation note:</string>
     <string name="admin_dialog_dismiss_confirm">Dismiss</string>
+    <!-- Suspension Duration & Appeal Strings -->
+    <string name="admin_dialog_duration_label">Suspension Duration</string>
+    <string name="admin_dialog_duration_24h">24 Hours</string>
+    <string name="admin_dialog_duration_3d">3 Days</string>
+    <string name="admin_dialog_duration_7d">7 Days</string>
+    <string name="admin_dialog_duration_30d">30 Days</string>
+    <string name="admin_dialog_duration_permanent">Permanent</string>
+    <string name="auth_account_suspended_appeal_action">Appeal Suspension</string>
+    <string name="auth_account_suspended_temporary_format">Temporary Suspension (%1$s)</string>
+    <string name="auth_account_suspended_permanent">Indefinite / Permanent Suspension</string>
+    <string name="auth_account_suspended_appeal_instructions">If you believe this suspension is in error or would like to submit an appeal with additional context, tap below to contact the moderation team.</string>
 </resources>

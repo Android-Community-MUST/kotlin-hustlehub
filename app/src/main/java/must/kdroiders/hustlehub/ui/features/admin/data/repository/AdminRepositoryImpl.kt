@@ -42,6 +42,7 @@ class AdminRepositoryImpl
                         userRole = dto.userRole,
                         isSuspended = dto.isSuspended,
                         suspendedReason = dto.suspendedReason,
+                        suspendedUntil = dto.suspendedUntil,
                         isVerifiedPro = dto.isVerifiedPro,
                         reportCount = dto.reportCount,
                         createdAt = dto.createdAt,
@@ -52,9 +53,10 @@ class AdminRepositoryImpl
         override suspend fun suspendUser(
             id: String,
             reason: String,
+            durationHours: Long?,
         ): Result<Unit> =
             runCatching {
-                val response = apiService.suspendUser(id, AdminActionRequestDto(reason))
+                val response = apiService.suspendUser(id, AdminActionRequestDto(reason, durationHours))
                 if (!response.success) throw IllegalStateException(response.message)
             }
 

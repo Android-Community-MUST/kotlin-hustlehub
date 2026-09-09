@@ -189,6 +189,10 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                         SplashDestination.Login -> Login()
                                         SplashDestination.Onboarding -> Onboarding
                                         SplashDestination.ProfileSetup -> ProfileSetup
+                                        is SplashDestination.AccountSuspended -> AccountSuspendedKey(
+                                            reason = destination.reason,
+                                            suspendedUntil = destination.suspendedUntil,
+                                        )
                                     }
                                     backstack.clear()
                                     backstack.add(key)
@@ -276,6 +280,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         entry<AccountSuspendedKey> { key ->
                             AccountSuspendedScreen(
                                 reason = key.reason.ifBlank { "Violation of terms of service." },
+                                suspendedUntil = key.suspendedUntil,
                                 onLogout = {
                                     backstack.clear()
                                     backstack.add(Login())

@@ -14,6 +14,7 @@ interface AdminRepository {
     suspend fun suspendUser(
         id: String,
         reason: String,
+        durationHours: Long? = null,
     ): Result<Unit>
     suspend fun unsuspendUser(
         id: String,

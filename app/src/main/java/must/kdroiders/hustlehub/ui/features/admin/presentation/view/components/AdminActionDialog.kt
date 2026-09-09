@@ -1,10 +1,15 @@
 package must.kdroiders.hustlehub.ui.features.admin.presentation.view.components
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -17,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
@@ -26,10 +32,19 @@ import must.kdroiders.hustlehub.ui.features.admin.presentation.viewmodel.AdminAc
 fun AdminActionDialog(
     target: AdminActionTarget,
     isLoading: Boolean,
-    onConfirm: (reason: String) -> Unit,
+    onConfirm: (reason: String, durationHours: Long?) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var reason by remember { mutableStateOf("") }
+    var selectedDurationHours by remember { mutableStateOf<Long?>(72L) } // default 3 days
+
+    val durationPresets = listOf(
+        24L to stringResource(R.string.admin_dialog_duration_24h),
+        72L to stringResource(R.string.admin_dialog_duration_3d),
+        168L to stringResource(R.string.admin_dialog_duration_7d),
+        720L to stringResource(R.string.admin_dialog_duration_30d),
+        null to stringResource(R.string.admin_dialog_duration_permanent),
+    )
 
     val (title, description, confirmText) = when (target) {
         is AdminActionTarget.SuspendUser -> Triple(
@@ -90,6 +105,30 @@ fun AdminActionDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+
+                if (target is AdminActionTarget.SuspendUser) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.admin_dialog_duration_label),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(vertical = 2.dp),
+                    ) {
+                        items(durationPresets) { (duration, label) ->
+                            FilterChip(
+                                selected = selectedDurationHours == duration,
+                                onClick = { selectedDurationHours = duration },
+                                label = { Text(label) },
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 HustleTextField(
                     value = reason,
@@ -105,7 +144,12 @@ fun AdminActionDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { onConfirm(reason) },
+                onClick = {
+                    onConfirm(
+                        reason,
+                        if (target is AdminActionTarget.SuspendUser) selectedDurationHours else null,
+                    )
+                },
                 enabled = reason.isNotBlank() && !isLoading,
             ) {
                 Text(if (isLoading) stringResource(R.string.admin_dialog_processing) else confirmText)

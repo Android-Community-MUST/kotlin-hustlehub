@@ -70,7 +70,10 @@ class AdminViewModel
             _uiState.update { it.copy(activeActionTarget = null, isActionLoading = false) }
         }
 
-        fun executeAction(reason: String) {
+        fun executeAction(
+            reason: String,
+            durationHours: Long? = null,
+        ) {
             val target = _uiState.value.activeActionTarget ?: return
             if (reason.isBlank()) {
                 _uiState.update { it.copy(error = "A reason is required for admin moderation actions.") }
@@ -80,7 +83,7 @@ class AdminViewModel
             _uiState.update { it.copy(isActionLoading = true, error = null) }
             viewModelScope.launch {
                 val result = when (target) {
-                    is AdminActionTarget.SuspendUser -> adminRepository.suspendUser(target.userId, reason)
+                    is AdminActionTarget.SuspendUser -> adminRepository.suspendUser(target.userId, reason, durationHours)
                     is AdminActionTarget.UnsuspendUser -> adminRepository.unsuspendUser(target.userId, reason)
                     is AdminActionTarget.VerifyPro -> adminRepository.verifyPro(target.userId, reason)
                     is AdminActionTarget.RevokePro -> adminRepository.revokePro(target.userId, reason)

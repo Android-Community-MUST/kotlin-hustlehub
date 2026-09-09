@@ -193,7 +193,7 @@ private fun UserAdminCard(
 
                 if (user.isSuspended) {
                     Text(
-                        text = stringResource(R.string.admin_user_status_suspended),
+                        text = formatSuspensionBadge(user.suspendedUntil),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error,
@@ -268,5 +268,25 @@ private fun UserAdminCard(
                 }
             }
         }
+    }
+}
+
+private fun formatSuspensionBadge(suspendedUntil: String?): String {
+    if (suspendedUntil.isNullOrBlank()) return "Suspended (Permanent)"
+    return try {
+        val until = java.time.Instant.parse(suspendedUntil)
+        val now = java.time.Instant.now()
+        val duration = java.time.Duration.between(now, until)
+        val hours = duration.toHours()
+        when {
+            hours <= 0 -> "Suspended (Expiring soon)"
+            hours < 24 -> "Suspended (${hours}h left)"
+            else -> {
+                val days = (hours + 23) / 24
+                "Suspended (${days}d left)"
+            }
+        }
+    } catch (_: Exception) {
+        "Suspended"
     }
 }

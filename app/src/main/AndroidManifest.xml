@@ -44,6 +44,11 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key"/>
 
+        <!-- Disable Firebase Performance on debug to prevent TransportManager crash -->
+        <meta-data
+            android:name="firebase_performance_collection_enabled"
+            android:value="false" />
+
         <uses-library
             android:name="com.google.android.maps"
             android:required="false" />
