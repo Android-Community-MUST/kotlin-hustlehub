@@ -115,7 +115,7 @@ class ChatWebSocketService
                         encryptedContent = encrypted.ciphertext,
                         iv = encrypted.iv,
                         authTag = encrypted.authTag,
-                        content = null,
+                        content = request.content,
                     )
                 }
                 !request.metadata.isNullOrBlank() -> {
@@ -124,7 +124,7 @@ class ChatWebSocketService
                         encryptedContent = encrypted.ciphertext,
                         iv = encrypted.iv,
                         authTag = encrypted.authTag,
-                        metadata = null,
+                        metadata = request.metadata,
                     )
                 }
                 else -> request

@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.core.security.CryptoManager
-import must.kdroiders.hustlehub.core.security.EncryptedPayload
 import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.MessageDao
@@ -134,9 +133,10 @@ class ChatRepositoryImpl
                         localIdsToDelete.forEach { messageDao.deleteById(it) }
                     }
                     val entities = response.data.content.mapNotNull { msgDto ->
-                        val msgDomain = msgDto.toDomainModel(keyExchangeHandler, cryptoManager)
+                        val roomEntity = msgDto.toRoomEntity()
+                        val msgDomain = roomEntity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
                         val processed = applyDeletionStatusToMessage(msgDomain)
-                        processed?.toEncryptedEntity(conversationId, keyExchangeHandler, cryptoManager)
+                        if (processed != null) roomEntity else null
                     }
                     messageDao.upsertAll(entities)
                 }.onFailure { e ->
@@ -245,8 +245,9 @@ class ChatRepositoryImpl
 
                     chatWebSocketService
                         .subscribeToConversation(conversationId)
-                        .map { it.toDomainModel(keyExchangeHandler, cryptoManager) }
-                        .collect { message ->
+                        .collect { msgDto ->
+                            val entity = msgDto.toRoomEntity()
+                            val message = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
                             val processed = withContext(Dispatchers.IO) {
                                 val gson = Gson()
 
@@ -254,12 +255,18 @@ class ChatRepositoryImpl
                                 val isFromOtherUser = cachedConv?.let { message.senderId == it.otherUserId } ?: false
                                 val isFromSelf = !isFromOtherUser
 
+                                var finalMessage = message
                                 if (isFromSelf) {
+                                    var existingLocalContent: String? = null
                                     if (message.metadata != null) {
                                         runCatching {
                                             val metaObj = gson.fromJson(message.metadata, JsonObject::class.java)
                                             if (metaObj.has("localId")) {
                                                 val localId = metaObj.get("localId").asString
+                                                val localMsg = messageDao.getById(localId)
+                                                if (localMsg != null && !localMsg.content.isNullOrBlank() && localMsg.content != "[Encrypted message]") {
+                                                    existingLocalContent = localMsg.content
+                                                }
                                                 messageDao.deleteById(localId)
                                             }
                                         }.onFailure { e ->
@@ -269,11 +276,15 @@ class ChatRepositoryImpl
                                     }
                                     val unsynced = messageDao.getUnsyncedMessages().filter { it.conversationId == conversationId }
                                     unsynced.forEach { messageDao.deleteById(it.id) }
+
+                                    if (existingLocalContent != null && (message.content.isBlank() || message.content == "[Encrypted message]")) {
+                                        finalMessage = message.copy(content = existingLocalContent)
+                                    }
                                 }
 
-                                val proc = applyDeletionStatusToMessage(message)
+                                val proc = applyDeletionStatusToMessage(finalMessage)
                                 if (proc != null) {
-                                    messageDao.upsert(proc.toEncryptedEntity(conversationId, keyExchangeHandler, cryptoManager))
+                                    messageDao.upsert(entity)
                                     if (cachedConv != null) {
                                         val isActive = conversationId == activeConversationId
 
@@ -551,75 +562,61 @@ private fun ConversationResponse.toEntity(
     )
 }
 
-private fun MessageResponse.toDomainModel(
-    keyExchangeHandler: KeyExchangeHandler? = null,
-    cryptoManager: CryptoManager? = null,
-): Message {
+private fun MessageResponse.toRoomEntity(): MessageEntity {
     val gson = Gson()
     var parsedIv: String? = iv
     var parsedAuthTag: String? = authTag
-    var isEncrypted = false
+    var isEncryptedMsg = false
 
     if (!metadata.isNullOrBlank()) {
         runCatching {
             val metaObj = gson.fromJson(metadata, JsonObject::class.java)
             if (metaObj.has("iv")) parsedIv = metaObj.get("iv").asString
             if (metaObj.has("authTag")) parsedAuthTag = metaObj.get("authTag").asString
-            if (metaObj.has("encrypted")) isEncrypted = metaObj.get("encrypted").asBoolean
+            if (metaObj.has("encrypted")) isEncryptedMsg = metaObj.get("encrypted").asBoolean
         }
     }
 
-    val ciphertext = encryptedContent ?: if (isEncrypted || !parsedIv.isNullOrBlank()) content else null
+    val ciphertext = encryptedContent ?: if (isEncryptedMsg || !parsedIv.isNullOrBlank()) content else null
+    val effectiveIsEncrypted = !ciphertext.isNullOrBlank() && !parsedIv.isNullOrBlank()
 
-    val resolvedContent = if (!ciphertext.isNullOrBlank() && !parsedIv.isNullOrBlank() && keyExchangeHandler != null && cryptoManager != null) {
-        val secretKey = keyExchangeHandler.getCachedSecret(conversationId)
-        if (secretKey != null) {
-            runCatching {
-                cryptoManager.decrypt(
-                    EncryptedPayload(
-                        ciphertext = ciphertext,
-                        iv = parsedIv!!,
-                        authTag = parsedAuthTag ?: "",
-                    ),
-                    secretKey,
-                )
-            }.getOrElse { e ->
-                Timber.w(e, "Failed to decrypt network payload for message $id")
-                if (content != null && content != ciphertext) content else "[Encrypted message]"
-            }
-        } else {
-            if (content != null && content != ciphertext) content else "[Encrypted message]"
-        }
-    } else {
-        content ?: ""
-    }
+    val plaintextContent = content?.takeIf { it.isNotBlank() && it != "[Encrypted message]" && it != ciphertext }
+    val finalContent = plaintextContent ?: (if (effectiveIsEncrypted) ciphertext else content)
 
-    return Message(
-        id = id,
-        conversationId = conversationId,
-        senderId = senderId,
-        type = runCatching { MessageType.valueOf(type) }.getOrDefault(MessageType.TEXT),
-        content = resolvedContent,
-        mediaUrl = mediaUrl,
-        thumbnailUrl = thumbnailUrl,
-        metadata = metadata,
-        timestamp = timestamp,
-        deliveredAt = deliveredAt,
-        readAt = readAt,
-    )
-}
-
-private fun MessageResponse.toEntity(): MessageEntity =
-    MessageEntity(
+    return MessageEntity(
         id = id,
         conversationId = conversationId,
         senderId = senderId,
         type = type,
-        content = content,
+        content = finalContent,
         mediaUrl = mediaUrl,
         thumbnailUrl = thumbnailUrl,
         metadata = metadata,
         timestamp = timestamp,
         deliveredAt = deliveredAt,
         readAt = readAt,
+        isSynced = true,
+        isFailed = false,
+        isEncrypted = effectiveIsEncrypted,
+        iv = parsedIv,
+        authTag = parsedAuthTag,
     )
+}
+
+private fun MessageResponse.toDomainModel(
+    keyExchangeHandler: KeyExchangeHandler? = null,
+    cryptoManager: CryptoManager? = null,
+): Message {
+    val entity = this.toRoomEntity()
+    return if (keyExchangeHandler != null && cryptoManager != null) {
+        val decrypted = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+        if (decrypted.content.isBlank() && !this.content.isNullOrBlank()) {
+            decrypted.copy(content = this.content)
+        } else {
+            decrypted
+        }
+    } else {
+        @Suppress("DEPRECATION")
+        entity.toDomain()
+    }
+}

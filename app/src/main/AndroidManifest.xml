@@ -44,6 +44,11 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key"/>
 
+        <!-- Disable Firebase Performance on debug to prevent TransportManager crash -->
+        <meta-data
+            android:name="firebase_performance_collection_enabled"
+            android:value="false" />
+
         <uses-library
             android:name="com.google.android.maps"
             android:required="false" />
@@ -75,6 +80,13 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="messages" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
 
         <!--
             FileProvider used to share temporary camera JPEG URIs with

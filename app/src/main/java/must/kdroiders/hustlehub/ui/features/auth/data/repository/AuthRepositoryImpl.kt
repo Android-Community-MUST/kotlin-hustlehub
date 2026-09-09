@@ -334,7 +334,7 @@ class AuthRepositoryImpl
                         throw Exception("For security reasons, please log out and log back in before deleting your account.")
                     is FirebaseAuthInvalidUserException -> throw Exception("User account is disabled or deleted.")
                     is FirebaseAuthInvalidCredentialsException -> throw Exception("Incorrect password. Please try again.")
-                    else -> throw Exception(e.message ?: "Account deletion failed. Try again.", e)
+                    else -> throw Exception(FirebaseAuthErrorMapper.map(e), e)
                 }
             }
     }

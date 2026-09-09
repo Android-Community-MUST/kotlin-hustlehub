@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
@@ -447,7 +448,7 @@ class CreateServiceViewModel
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                error = e.message ?: "Failed to save service. Please try again.",
+                                error = e.userFriendlyMessage("Failed to save service. Please try again."),
                             )
                         }
                     }

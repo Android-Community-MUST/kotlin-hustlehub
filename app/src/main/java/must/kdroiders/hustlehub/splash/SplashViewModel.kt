@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
@@ -32,6 +33,10 @@ sealed interface SplashDestination {
     data object Login : SplashDestination
     data object Onboarding : SplashDestination
     data object ProfileSetup : SplashDestination
+    data class AccountSuspended(
+        val reason: String = "",
+        val suspendedUntil: String? = null,
+    ) : SplashDestination
 }
 
 @HiltViewModel
@@ -42,6 +47,7 @@ class SplashViewModel
         private val userPreferences: UserPreferences,
         private val userRepository: UserRepository,
         private val appDatabase: AppDatabase,
+        private val keyExchangeHandler: KeyExchangeHandler,
     ) : ViewModel() {
         private val _destination =
             MutableStateFlow<SplashDestination?>(null)
@@ -65,6 +71,17 @@ class SplashViewModel
                     Timber.d("Successfully updated FCM token on splash")
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to retrieve/upload FCM token on splash")
+                }
+            }
+        }
+
+        private fun syncUserPublicKey() {
+            viewModelScope.launch {
+                try {
+                    keyExchangeHandler.syncUserPublicKey()
+                    Timber.d("Successfully triggered identity public key sync on splash")
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to sync user public key on splash")
                 }
             }
         }
@@ -131,7 +148,25 @@ class SplashViewModel
                                                 }
                                             }
                                         }.onFailure { e ->
-                                            if (e is retrofit2.HttpException && (e.code() == 401 || e.code() == 403)) {
+                                            if (e is retrofit2.HttpException && e.code() == 403) {
+                                                // Structured suspension response from FirebaseJwtFilter:
+                                                // {"success":false,"message":"...","suspendedReason":"...","suspendedUntil":"ISO or null","isPermanent":bool}
+                                                var suspendedReason = "Violation of terms of service."
+                                                var suspendedUntil: String? = null
+                                                try {
+                                                    val body = e.response()?.errorBody()?.string() ?: ""
+                                                    val reasonMatch = Regex("\"suspendedReason\"\\s*:\\s*\"([^\"]*)\"").find(body)
+                                                    val untilMatch = Regex("\"suspendedUntil\"\\s*:\\s*\"([^\"]*)\"").find(body)
+                                                    if (reasonMatch != null) suspendedReason = reasonMatch.groupValues[1]
+                                                    if (untilMatch != null) suspendedUntil = untilMatch.groupValues[1].takeIf { it.isNotBlank() && it != "null" }
+                                                } catch (_: Exception) {
+                                                    // keep defaults
+                                                }
+                                                targetDestination = SplashDestination.AccountSuspended(
+                                                    reason = suspendedReason,
+                                                    suspendedUntil = suspendedUntil,
+                                                )
+                                            } else if (e is retrofit2.HttpException && e.code() == 401) {
                                                 firebaseAuth.signOut()
                                                 targetDestination = SplashDestination.Login
                                             } else {
@@ -148,6 +183,7 @@ class SplashViewModel
                                         }
                                     if (targetDestination == SplashDestination.Home) {
                                         uploadFcmToken()
+                                        syncUserPublicKey()
                                     }
                                     targetDestination
                                 } else {
