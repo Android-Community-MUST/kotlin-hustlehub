@@ -61,6 +61,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
+import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.CategoryChipRow
@@ -166,6 +167,7 @@ fun HomeScreen(
                     state = gridState,
                     modifier = Modifier
                         .fillMaxSize()
+                        .testTag(TestTags.SERVICE_GRID)
                         .testTag("home_service_grid"),
                     contentPadding = PaddingValues(
                         start = dimensions.horizontalPadding,
@@ -209,7 +211,8 @@ fun HomeScreen(
                             onAiSearchClick = onNavigateToAiSearch,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 4.dp),
+                                .padding(horizontal = 4.dp)
+                                .testTag(TestTags.SEARCH_BAR),
                         )
                     }
 
@@ -218,6 +221,7 @@ fun HomeScreen(
                         CategoryChipRow(
                             selected = state.selectedCategory,
                             onSelected = homeViewModel::onCategorySelected,
+                            modifier = Modifier.testTag(TestTags.CATEGORY_CHIPS),
                         )
                     }
 
@@ -337,7 +341,9 @@ fun HomeScreen(
                             ServiceCard(
                                 service = service,
                                 onClick = { stableOnNavigateToServiceDetail(service.id) },
-                                modifier = Modifier.testTag("service_card_${service.id}"),
+                                modifier = Modifier
+                                    .testTag(TestTags.SERVICE_CARD)
+                                    .testTag("service_card_${service.id}"),
                             )
                         }
                     }

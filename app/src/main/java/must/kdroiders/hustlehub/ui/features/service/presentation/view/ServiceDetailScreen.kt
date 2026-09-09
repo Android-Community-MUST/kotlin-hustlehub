@@ -64,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -76,6 +77,7 @@ import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
+import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.ErrorView
@@ -114,6 +116,7 @@ fun ServiceDetailScreen(
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit = { _, _ -> },
     onNavigateToAllReviews: (serviceId: String) -> Unit = {},
     onNavigateToEditService: (serviceId: String) -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     val state by serviceDetailViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -152,6 +155,9 @@ fun ServiceDetailScreen(
     }
 
     Scaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(TestTags.SERVICE_DETAIL_SCREEN),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (!state.isLoading && state.error == null) {
@@ -510,6 +516,7 @@ private fun ServiceDetailContent(
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
                     .clickable(onClick = onProviderClick)
+                    .testTag(TestTags.VIEW_PROFILE_BUTTON)
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),

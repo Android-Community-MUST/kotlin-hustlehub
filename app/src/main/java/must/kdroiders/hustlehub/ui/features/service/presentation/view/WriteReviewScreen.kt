@@ -55,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -64,6 +65,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
@@ -235,6 +237,7 @@ fun WriteReviewScreen(
                     rating = state.rating,
                     starSize = 44.dp,
                     onRatingChanged = viewModel::onRatingChanged,
+                    modifier = Modifier.testTag(TestTags.REVIEW_RATING_BAR),
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -280,7 +283,9 @@ fun WriteReviewScreen(
                     value = state.comment,
                     onValueChange = viewModel::onCommentChanged,
                     placeholder = stringResource(R.string.review_comment_placeholder, providerFirstName),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(TestTags.REVIEW_CONTENT_INPUT),
                     singleLine = false,
                     minLines = 5,
                     maxLines = 5,
@@ -363,7 +368,8 @@ fun WriteReviewScreen(
                     enabled = state.canSubmit,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
+                        .height(56.dp)
+                        .testTag(TestTags.SUBMIT_REVIEW_BUTTON),
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,

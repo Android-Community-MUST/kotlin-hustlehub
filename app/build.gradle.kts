@@ -34,7 +34,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "must.kdroiders.hustlehub.HiltTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -185,6 +185,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
     // Baseline Profile generator — run on rooted emulator to regenerate baseline-prof.txt
     androidTestImplementation(libs.androidx.benchmark.macro.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
