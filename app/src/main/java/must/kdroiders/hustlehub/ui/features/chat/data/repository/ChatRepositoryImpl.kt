@@ -580,12 +580,15 @@ private fun MessageResponse.toRoomEntity(): MessageEntity {
     val ciphertext = encryptedContent ?: if (isEncryptedMsg || !parsedIv.isNullOrBlank()) content else null
     val effectiveIsEncrypted = !ciphertext.isNullOrBlank() && !parsedIv.isNullOrBlank()
 
+    val plaintextContent = content?.takeIf { it.isNotBlank() && it != "[Encrypted message]" && it != ciphertext }
+    val finalContent = plaintextContent ?: (if (effectiveIsEncrypted) ciphertext else content)
+
     return MessageEntity(
         id = id,
         conversationId = conversationId,
         senderId = senderId,
         type = type,
-        content = if (effectiveIsEncrypted) ciphertext else content,
+        content = finalContent,
         mediaUrl = mediaUrl,
         thumbnailUrl = thumbnailUrl,
         metadata = metadata,
@@ -606,7 +609,12 @@ private fun MessageResponse.toDomainModel(
 ): Message {
     val entity = this.toRoomEntity()
     return if (keyExchangeHandler != null && cryptoManager != null) {
-        entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+        val decrypted = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+        if (decrypted.content.isBlank() && !this.content.isNullOrBlank()) {
+            decrypted.copy(content = this.content)
+        } else {
+            decrypted
+        }
     } else {
         @Suppress("DEPRECATION")
         entity.toDomain()

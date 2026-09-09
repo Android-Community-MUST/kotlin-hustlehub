@@ -16,9 +16,10 @@ data class UserAdminViewDto(
     @SerializedName("name") val name: String,
     @SerializedName("email") val email: String,
     @SerializedName("userRole") val userRole: String,
-    @SerializedName("isSuspended") val isSuspended: Boolean,
-    @SerializedName("suspendedReason") val suspendedReason: String? = null,
-    @SerializedName("isVerifiedPro") val isVerifiedPro: Boolean = false,
+    @SerializedName("isSuspended", alternate = ["suspended"]) val isSuspended: Boolean = false,
+    @SerializedName("suspendedReason", alternate = ["reason", "suspensionReason"]) val suspendedReason: String? = null,
+    @SerializedName("suspendedUntil", alternate = ["until", "suspensionUntil"]) val suspendedUntil: String? = null,
+    @SerializedName("isVerifiedPro", alternate = ["verifiedPro"]) val isVerifiedPro: Boolean = false,
     @SerializedName("reportCount") val reportCount: Long = 0,
     @SerializedName("createdAt") val createdAt: String? = null,
 )
@@ -47,4 +48,5 @@ data class AuditLogResponseDto(
 
 data class AdminActionRequestDto(
     @SerializedName("reason") val reason: String,
+    @SerializedName("durationHours") val durationHours: Long? = null,
 )

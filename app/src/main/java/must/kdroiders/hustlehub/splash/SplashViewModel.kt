@@ -33,6 +33,10 @@ sealed interface SplashDestination {
     data object Login : SplashDestination
     data object Onboarding : SplashDestination
     data object ProfileSetup : SplashDestination
+    data class AccountSuspended(
+        val reason: String = "",
+        val suspendedUntil: String? = null,
+    ) : SplashDestination
 }
 
 @HiltViewModel
@@ -143,8 +147,25 @@ class SplashViewModel
                                                     userRepository.saveUserProfile(basicUser)
                                                 }
                                             }
-                                        }.onFailure { e ->
-                                            if (e is retrofit2.HttpException && (e.code() == 401 || e.code() == 403)) {
+                                        }
+                                        .onFailure { e ->
+                                            if (e is retrofit2.HttpException && e.code() == 403) {
+                                                // Structured suspension response from FirebaseJwtFilter:
+                                                // {"success":false,"message":"...","suspendedReason":"...","suspendedUntil":"ISO or null","isPermanent":bool}
+                                                var suspendedReason = "Violation of terms of service."
+                                                var suspendedUntil: String? = null
+                                                try {
+                                                    val body = e.response()?.errorBody()?.string() ?: ""
+                                                    val reasonMatch = Regex("\"suspendedReason\"\\s*:\\s*\"([^\"]*)\"").find(body)
+                                                    val untilMatch = Regex("\"suspendedUntil\"\\s*:\\s*\"([^\"]*)\"").find(body)
+                                                    if (reasonMatch != null) suspendedReason = reasonMatch.groupValues[1]
+                                                    if (untilMatch != null) suspendedUntil = untilMatch.groupValues[1].takeIf { it.isNotBlank() && it != "null" }
+                                                } catch (_: Exception) { /* keep defaults */ }
+                                                targetDestination = SplashDestination.AccountSuspended(
+                                                    reason = suspendedReason,
+                                                    suspendedUntil = suspendedUntil,
+                                                )
+                                            } else if (e is retrofit2.HttpException && e.code() == 401) {
                                                 firebaseAuth.signOut()
                                                 targetDestination = SplashDestination.Login
                                             } else {

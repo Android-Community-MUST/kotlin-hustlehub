@@ -192,7 +192,17 @@ fun ServiceDetailScreen(
                             HustleButton(
                                 text = stringResource(R.string.action_dm_provider),
                                 onClick = {
-                                    showQuickContactModal = true
+                                    val svc = state.service
+                                    if (svc != null) {
+                                        onNavigateToChat(
+                                            svc.providerId,
+                                            svc.id,
+                                            svc.title,
+                                            svc.category.name,
+                                            svc.priceRange,
+                                            state.provider?.name ?: "",
+                                        )
+                                    }
                                 },
                                 modifier = Modifier.width(200.dp),
                             )

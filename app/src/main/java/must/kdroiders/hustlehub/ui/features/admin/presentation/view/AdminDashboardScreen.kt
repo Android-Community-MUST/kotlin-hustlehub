@@ -169,7 +169,7 @@ fun AdminDashboardScreen(
         AdminActionDialog(
             target = target,
             isLoading = state.isActionLoading,
-            onConfirm = viewModel::executeAction,
+            onConfirm = { reason, durationHours -> viewModel.executeAction(reason, durationHours) },
             onDismiss = viewModel::dismissActionDialog,
         )
     }

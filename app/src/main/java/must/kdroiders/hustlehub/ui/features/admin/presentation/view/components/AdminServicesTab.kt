@@ -57,9 +57,7 @@ fun AdminServicesTab(
         Spacer(modifier = Modifier.height(16.dp))
 
         ElevatedCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics(mergeDescendants = true) {},
+            modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.surface,
             ),
