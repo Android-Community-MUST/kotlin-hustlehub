@@ -32,6 +32,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.sharedComposables.ProBadge
 import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminUserItem
@@ -160,7 +162,9 @@ private fun UserAdminCard(
     onActionClick: (AdminActionTarget) -> Unit,
 ) {
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) {},
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
@@ -221,42 +225,46 @@ private fun UserAdminCard(
             ) {
                 // Pro Badge Toggle
                 if (user.isVerifiedPro) {
-                    androidx.compose.material3.OutlinedButton(
+                    HustleButton(
+                        text = stringResource(R.string.admin_user_action_revoke_pro),
                         onClick = {
                             onActionClick(AdminActionTarget.RevokePro(user.id, user.name))
                         },
-                    ) {
-                        Text(stringResource(R.string.admin_user_action_revoke_pro))
-                    }
+                        variant = HustleButtonVariant.Secondary,
+                        modifier = Modifier.height(36.dp),
+                    )
                 } else {
-                    androidx.compose.material3.Button(
+                    HustleButton(
+                        text = stringResource(R.string.admin_user_action_grant_pro),
                         onClick = {
                             onActionClick(AdminActionTarget.VerifyPro(user.id, user.name))
                         },
-                    ) {
-                        Text(stringResource(R.string.admin_user_action_grant_pro))
-                    }
+                        variant = HustleButtonVariant.Primary,
+                        modifier = Modifier.height(36.dp),
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // Suspend / Unsuspend
                 if (user.isSuspended) {
-                    androidx.compose.material3.Button(
+                    HustleButton(
+                        text = stringResource(R.string.admin_user_action_unsuspend),
                         onClick = {
                             onActionClick(AdminActionTarget.UnsuspendUser(user.id, user.name))
                         },
-                    ) {
-                        Text(stringResource(R.string.admin_user_action_unsuspend))
-                    }
+                        variant = HustleButtonVariant.Primary,
+                        modifier = Modifier.height(36.dp),
+                    )
                 } else {
-                    androidx.compose.material3.OutlinedButton(
+                    HustleButton(
+                        text = stringResource(R.string.admin_user_action_suspend),
                         onClick = {
                             onActionClick(AdminActionTarget.SuspendUser(user.id, user.name))
                         },
-                    ) {
-                        Text(stringResource(R.string.admin_user_action_suspend))
-                    }
+                        variant = HustleButtonVariant.Outlined,
+                        modifier = Modifier.height(36.dp),
+                    )
                 }
             }
         }
@@ -264,21 +272,21 @@ private fun UserAdminCard(
 }
 
 private fun formatSuspensionBadge(suspendedUntil: String?): String {
-    if (suspendedUntil.isNullOrBlank()) return "⛔ Suspended (Permanent)"
+    if (suspendedUntil.isNullOrBlank()) return "Suspended (Permanent)"
     return try {
         val until = java.time.Instant.parse(suspendedUntil)
         val now = java.time.Instant.now()
         val duration = java.time.Duration.between(now, until)
         val hours = duration.toHours()
         when {
-            hours <= 0 -> "⏳ Suspended (Expiring soon)"
-            hours < 24 -> "⏳ Suspended (${hours}h left)"
+            hours <= 0 -> "Suspended (Expiring soon)"
+            hours < 24 -> "Suspended (${hours}h left)"
             else -> {
                 val days = (hours + 23) / 24
-                "⏳ Suspended (${days}d left)"
+                "Suspended (${days}d left)"
             }
         }
     } catch (_: Exception) {
-        "⏳ Suspended"
+        "Suspended"
     }
 }
