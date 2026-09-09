@@ -160,7 +160,7 @@ class SplashViewModel
                                                     if (reasonMatch != null) suspendedReason = reasonMatch.groupValues[1]
                                                     if (untilMatch != null) suspendedUntil = untilMatch.groupValues[1].takeIf { it.isNotBlank() && it != "null" }
                                                 } catch (_: Exception) {
-                                                    /* keep defaults */
+                                                    // keep defaults
                                                 }
                                                 targetDestination = SplashDestination.AccountSuspended(
                                                     reason = suspendedReason,

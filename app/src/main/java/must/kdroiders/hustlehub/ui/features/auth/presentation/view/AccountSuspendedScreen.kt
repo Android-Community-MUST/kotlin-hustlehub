@@ -280,7 +280,8 @@ private fun formatSuspensionDetails(suspendedUntil: String?): SuspensionDetails 
         val hours = duration.toHours()
 
         val formatter =
-            DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+            DateTimeFormatter
+                .ofLocalizedDate(FormatStyle.MEDIUM)
                 .withZone(ZoneId.systemDefault())
         val dateStr = formatter.format(until)
 
