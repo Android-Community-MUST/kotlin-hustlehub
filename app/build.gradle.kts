@@ -61,6 +61,22 @@ android {
     }
 
     buildTypes {
+        create("beta") {
+            initWith(getByName("debug"))
+            versionNameSuffix = "-beta"
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+            val keystoreFile = keysProperty("KEYSTORE_FILE").ifEmpty { System.getenv("KEYSTORE_FILE") ?: "" }
+            if (keystoreFile.isNotEmpty() && file(keystoreFile).exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -69,7 +85,7 @@ android {
                 "proguard-rules.pro",
             )
             val keystoreFile = keysProperty("KEYSTORE_FILE").ifEmpty { System.getenv("KEYSTORE_FILE") ?: "" }
-            if (keystoreFile.isNotEmpty()) {
+            if (keystoreFile.isNotEmpty() && file(keystoreFile).exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
         }

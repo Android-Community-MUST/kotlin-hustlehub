@@ -28,6 +28,20 @@ To run tests automatically inside the emulator lifecycle:
 firebase emulators:exec "./gradlew connectedAndroidTest"
 ```
 
+### Notification Testing via ADB Broadcast
+
+Because HustleHub's production backend is Spring Boot (sending FCM messages via Firebase Admin SDK), push notification delivery and routing can be tested directly on an emulator or physical device using ADB broadcasts without needing Cloud Functions:
+
+```bash
+adb shell am broadcast \
+  -a com.google.android.c2dm.intent.RECEIVE \
+  -c must.kdroiders.hustlehub \
+  --es "type" "chat_message" \
+  --es "title" "Alice" \
+  --es "body" "Hey, is this service available?" \
+  --es "deepLink" "hustlehub://chat/test-conversation-123"
+```
+
 ---
 
 ## 2. Compose UI & Integration Tests
@@ -84,7 +98,7 @@ Maestro test definitions are stored in `.maestro/`:
 
 Install the Maestro CLI:
 ```bash
-curl -FsSL "https://get.mobile.dev" | bash
+curl -fsSL "https://get.maestro.mobile.dev" | bash
 ```
 
 ### Running Maestro Flows
