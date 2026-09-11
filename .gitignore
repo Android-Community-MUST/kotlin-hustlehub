@@ -14,6 +14,9 @@ bin/
 gen/
 out/
 release/
+beta/
+app/beta/
+mapping.txt
 deps.txt
 
 # Gradle files
