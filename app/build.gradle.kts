@@ -63,6 +63,7 @@ android {
     buildTypes {
         create("beta") {
             initWith(getByName("debug"))
+            isDebuggable = false
             versionNameSuffix = "-beta"
             isMinifyEnabled = true
             isShrinkResources = true
