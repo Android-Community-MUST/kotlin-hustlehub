@@ -606,4 +606,108 @@
     <string name="blocked_users_empty_desc">Users you block will appear here. They won\'t be able to message you or see your profile.</string>
     <string name="action_unblock">Unblock</string>
     <string name="label_user">User</string>
+
+    <!-- Admin Dashboard & Moderation -->
+    <string name="admin_center_title">Admin Center</string>
+    <string name="cd_refresh_data">Refresh Data</string>
+    <string name="admin_tab_overview">Overview</string>
+    <string name="admin_tab_reports_format">Reports (%1$d)</string>
+    <string name="admin_tab_users">Users</string>
+    <string name="admin_tab_services">Services</string>
+    <string name="admin_tab_audit_logs">Audit Logs</string>
+
+    <!-- Admin Overview Tab -->
+    <string name="admin_overview_title">Campus Operations Summary</string>
+    <string name="admin_overview_subtitle">Real-time metrics aggregated across all active MUST students &amp; services.</string>
+    <string name="admin_metric_total_students">Total Students</string>
+    <string name="admin_metric_live_services">Live Services</string>
+    <string name="admin_metric_pro_verified">Pro Verified</string>
+    <string name="admin_metric_open_reports">Open Reports</string>
+    <string name="admin_metric_monthly_revenue">Monthly M-Pesa Volume</string>
+    <string name="admin_metric_currency_kes_format">KES %1$s</string>
+
+    <!-- Admin Reports Tab -->
+    <string name="admin_reports_filter_all">All Reports</string>
+    <string name="admin_reports_filter_open">Open (Pending)</string>
+    <string name="admin_reports_filter_resolved">Resolved</string>
+    <string name="admin_reports_filter_dismissed">Dismissed</string>
+    <string name="admin_reports_empty_title">No reports found</string>
+    <string name="admin_reports_empty_desc">All student reports under this filter are clean.</string>
+    <string name="admin_report_reporter_format">Reporter: %1$s</string>
+    <string name="admin_report_reason_format">Reason: %1$s</string>
+    <string name="admin_report_admin_note_format">Admin Note: %1$s</string>
+    <string name="admin_report_action_dismiss">Dismiss</string>
+    <string name="admin_report_action_resolve">Resolve</string>
+
+    <!-- Admin Users Tab -->
+    <string name="admin_users_search_placeholder">Search by student name or email…</string>
+    <string name="admin_users_filter_all_format">All (%1$d)</string>
+    <string name="admin_users_filter_active">Active</string>
+    <string name="admin_users_filter_pro">PRO Verified</string>
+    <string name="admin_users_filter_suspended">Suspended</string>
+    <string name="admin_users_empty_title">No users found</string>
+    <string name="admin_users_empty_desc">Try adjusting your search query or filter.</string>
+    <string name="admin_user_status_suspended">SUSPENDED</string>
+    <string name="admin_user_status_active">ACTIVE</string>
+    <string name="admin_user_suspension_reason_format">Suspension Reason: %1$s</string>
+    <string name="admin_user_action_revoke_pro">Revoke Pro</string>
+    <string name="admin_user_action_grant_pro">Grant Pro</string>
+    <string name="admin_user_action_unsuspend">Unsuspend</string>
+    <string name="admin_user_action_suspend">Suspend</string>
+
+    <!-- Admin Services Tab -->
+    <string name="admin_services_title">Service Moderation &amp; Delisting</string>
+    <string name="admin_services_subtitle">Delist spam, inappropriate, or prohibited campus listings immediately.</string>
+    <string name="admin_services_card_title">Quick Delist by Service ID</string>
+    <string name="admin_services_id_label">Service ID / UUID</string>
+    <string name="admin_services_id_placeholder">Enter Service UUID…</string>
+    <string name="admin_services_action_relist">Relist</string>
+    <string name="admin_services_action_delist">Delist Now</string>
+    <string name="admin_services_target_format">Service #%1$s</string>
+
+    <!-- Admin Audit Logs Tab -->
+    <string name="admin_audit_logs_empty_title">No audit activity recorded yet</string>
+    <string name="admin_audit_logs_empty_desc">All administrative actions will be tracked and displayed here.</string>
+    <string name="admin_audit_log_target_format">Target: %1$s (%2$s)</string>
+    <string name="admin_audit_log_reason_format">Reason: %1$s</string>
+
+    <!-- Admin Action Dialog -->
+    <string name="admin_dialog_reason_label">Admin reason note (Required)</string>
+    <string name="admin_dialog_reason_placeholder">e.g., Terms violation, Spam, Verified credential</string>
+    <string name="admin_dialog_processing">Processing…</string>
+    <string name="admin_dialog_suspend_title">Suspend User</string>
+    <string name="admin_dialog_suspend_desc">Are you sure you want to suspend \"%1$s\"? They will be immediately blocked from logging in and accessing features.</string>
+    <string name="admin_dialog_suspend_confirm">Suspend</string>
+    <string name="admin_dialog_unsuspend_title">Unsuspend User</string>
+    <string name="admin_dialog_unsuspend_desc">Are you sure you want to restore access for \"%1$s\"?</string>
+    <string name="admin_dialog_unsuspend_confirm">Unsuspend</string>
+    <string name="admin_dialog_verify_pro_title">Grant Verified Pro Badge</string>
+    <string name="admin_dialog_verify_pro_desc">Grant the official HustleHub Verified PRO badge to \"%1$s\"?</string>
+    <string name="admin_dialog_verify_pro_confirm">Grant Pro</string>
+    <string name="admin_dialog_revoke_pro_title">Revoke Verified Pro Badge</string>
+    <string name="admin_dialog_revoke_pro_desc">Revoke the Pro badge from \"%1$s\"?</string>
+    <string name="admin_dialog_revoke_pro_confirm">Revoke Pro</string>
+    <string name="admin_dialog_delist_title">Delist Service Listing</string>
+    <string name="admin_dialog_delist_desc">Delist service \"%1$s\"? It will be hidden from search and discovery immediately.</string>
+    <string name="admin_dialog_delist_confirm">Delist</string>
+    <string name="admin_dialog_relist_title">Relist Service</string>
+    <string name="admin_dialog_relist_desc">Restore service \"%1$s\" back to search and discovery?</string>
+    <string name="admin_dialog_relist_confirm">Relist</string>
+    <string name="admin_dialog_resolve_title">Resolve Report</string>
+    <string name="admin_dialog_resolve_desc">Mark this report as resolved. Add an administrative note explaining the resolution:</string>
+    <string name="admin_dialog_resolve_confirm">Resolve</string>
+    <string name="admin_dialog_dismiss_title">Dismiss Report</string>
+    <string name="admin_dialog_dismiss_desc">Dismiss this report if no violation occurred. Add an explanation note:</string>
+    <string name="admin_dialog_dismiss_confirm">Dismiss</string>
+    <!-- Suspension Duration & Appeal Strings -->
+    <string name="admin_dialog_duration_label">Suspension Duration</string>
+    <string name="admin_dialog_duration_24h">24 Hours</string>
+    <string name="admin_dialog_duration_3d">3 Days</string>
+    <string name="admin_dialog_duration_7d">7 Days</string>
+    <string name="admin_dialog_duration_30d">30 Days</string>
+    <string name="admin_dialog_duration_permanent">Permanent</string>
+    <string name="auth_account_suspended_appeal_action">Appeal Suspension</string>
+    <string name="auth_account_suspended_temporary_format">Temporary Suspension (%1$s)</string>
+    <string name="auth_account_suspended_permanent">Indefinite / Permanent Suspension</string>
+    <string name="auth_account_suspended_appeal_instructions">If you believe this suspension is in error or would like to submit an appeal with additional context, tap below to contact the moderation team.</string>
 </resources>

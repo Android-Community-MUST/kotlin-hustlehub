@@ -255,12 +255,18 @@ class ChatRepositoryImpl
                                 val isFromOtherUser = cachedConv?.let { message.senderId == it.otherUserId } ?: false
                                 val isFromSelf = !isFromOtherUser
 
+                                var finalMessage = message
                                 if (isFromSelf) {
+                                    var existingLocalContent: String? = null
                                     if (message.metadata != null) {
                                         runCatching {
                                             val metaObj = gson.fromJson(message.metadata, JsonObject::class.java)
                                             if (metaObj.has("localId")) {
                                                 val localId = metaObj.get("localId").asString
+                                                val localMsg = messageDao.getById(localId)
+                                                if (localMsg != null && !localMsg.content.isNullOrBlank() && localMsg.content != "[Encrypted message]") {
+                                                    existingLocalContent = localMsg.content
+                                                }
                                                 messageDao.deleteById(localId)
                                             }
                                         }.onFailure { e ->
@@ -270,9 +276,13 @@ class ChatRepositoryImpl
                                     }
                                     val unsynced = messageDao.getUnsyncedMessages().filter { it.conversationId == conversationId }
                                     unsynced.forEach { messageDao.deleteById(it.id) }
+
+                                    if (existingLocalContent != null && (message.content.isBlank() || message.content == "[Encrypted message]")) {
+                                        finalMessage = message.copy(content = existingLocalContent)
+                                    }
                                 }
 
-                                val proc = applyDeletionStatusToMessage(message)
+                                val proc = applyDeletionStatusToMessage(finalMessage)
                                 if (proc != null) {
                                     messageDao.upsert(entity)
                                     if (cachedConv != null) {
@@ -570,12 +580,15 @@ private fun MessageResponse.toRoomEntity(): MessageEntity {
     val ciphertext = encryptedContent ?: if (isEncryptedMsg || !parsedIv.isNullOrBlank()) content else null
     val effectiveIsEncrypted = !ciphertext.isNullOrBlank() && !parsedIv.isNullOrBlank()
 
+    val plaintextContent = content?.takeIf { it.isNotBlank() && it != "[Encrypted message]" && it != ciphertext }
+    val finalContent = plaintextContent ?: (if (effectiveIsEncrypted) ciphertext else content)
+
     return MessageEntity(
         id = id,
         conversationId = conversationId,
         senderId = senderId,
         type = type,
-        content = if (effectiveIsEncrypted) ciphertext else content,
+        content = finalContent,
         mediaUrl = mediaUrl,
         thumbnailUrl = thumbnailUrl,
         metadata = metadata,
@@ -596,7 +609,12 @@ private fun MessageResponse.toDomainModel(
 ): Message {
     val entity = this.toRoomEntity()
     return if (keyExchangeHandler != null && cryptoManager != null) {
-        entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+        val decrypted = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+        if (decrypted.content.isBlank() && !this.content.isNullOrBlank()) {
+            decrypted.copy(content = this.content)
+        } else {
+            decrypted
+        }
     } else {
         @Suppress("DEPRECATION")
         entity.toDomain()

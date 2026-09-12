@@ -33,6 +33,7 @@ import must.kdroiders.hustlehub.core.notification.InAppNotificationBanner
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
+import must.kdroiders.hustlehub.ui.features.admin.presentation.view.AdminDashboardScreen
 import must.kdroiders.hustlehub.ui.features.analytics.presentation.view.AnalyticsScreen
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthState
 import must.kdroiders.hustlehub.ui.features.auth.presentation.view.AccountSuspendedScreen
@@ -188,6 +189,10 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                         SplashDestination.Login -> Login()
                                         SplashDestination.Onboarding -> Onboarding
                                         SplashDestination.ProfileSetup -> ProfileSetup
+                                        is SplashDestination.AccountSuspended -> AccountSuspendedKey(
+                                            reason = destination.reason,
+                                            suspendedUntil = destination.suspendedUntil,
+                                        )
                                     }
                                     backstack.clear()
                                     backstack.add(key)
@@ -275,6 +280,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         entry<AccountSuspendedKey> { key ->
                             AccountSuspendedScreen(
                                 reason = key.reason.ifBlank { "Violation of terms of service." },
+                                suspendedUntil = key.suspendedUntil,
                                 onLogout = {
                                     backstack.clear()
                                     backstack.add(Login())
@@ -320,6 +326,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onNavigateToNotifications = { backstack.add(Notifications) },
                                 onNavigateToSubscription = { backstack.add(Subscription) },
                                 onNavigateToAnalytics = { tab -> backstack.add(Analytics(initialTab = tab)) },
+                                onNavigateToAdminDashboard = { backstack.add(AdminDashboard) },
                             )
                         }
 
@@ -573,6 +580,13 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onBack = {
                                     if (backstack.size > 1) backstack.remove(backstack.last())
                                 },
+                            )
+                        }
+
+                        // In-app Admin Dashboard
+                        entry<AdminDashboard> {
+                            AdminDashboardScreen(
+                                onNavigateBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                             )
                         }
                     },

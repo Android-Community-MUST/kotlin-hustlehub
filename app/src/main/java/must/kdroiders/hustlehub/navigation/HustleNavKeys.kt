@@ -23,7 +23,10 @@ data object SignUp : NavKey
 
 /** Account suspended error screen. */
 @Serializable
-data class AccountSuspendedKey(val reason: String = "") : NavKey
+data class AccountSuspendedKey(
+    val reason: String = "",
+    val suspendedUntil: String? = null,
+) : NavKey
 
 /**
  * Email OTP verification screen.
@@ -182,3 +185,7 @@ data class PaymentStatus(val checkoutRequestId: String) : NavKey
 /** Pro Analytics dashboard screen — pushed from Profile screen. */
 @Serializable
 data class Analytics(val initialTab: String = "OVERVIEW") : NavKey
+
+/** In-app Admin Dashboard screen for authorized campus administrators. */
+@Serializable
+data object AdminDashboard : NavKey
