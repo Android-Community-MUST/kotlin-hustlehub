@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.home.presentation.components
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,8 +27,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -39,7 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.R
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonPurple
+import must.kdroiders.hustlehub.ui.theme.LocalIsDarkTheme
 
 @Composable
 fun HomeTopBar(
@@ -65,23 +66,16 @@ fun HomeTopBar(
                 heading()
             },
         ) {
-            Box(
+            val isDarkTheme = LocalIsDarkTheme.current
+            val logoResId = if (isDarkTheme) R.drawable.dark_logo else R.drawable.light_logo
+            Image(
+                painter = painterResource(id = logoResId),
+                contentDescription = null,
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(MaterialTheme.colorScheme.primary, CategoryNeonPurple),
-                        ),
-                    ).clearAndSetSemantics { }, // Hides "Capital H" from TalkBack,
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "H",
-                    fontSize = 18.sp,
-                )
-            }
-            Spacer(Modifier.width(10.dp))
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(6.dp)),
+            )
+            Spacer(Modifier.width(8.dp))
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.titleLarge,
@@ -136,19 +130,17 @@ fun HomeTopBar(
                 }
             }
 
-            // User avatar with gradient ring
+            // User avatar with primaryContainer styling
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
                     .border(
-                        width = 2.dp,
-                        brush = Brush.linearGradient(
-                            colors = listOf(MaterialTheme.colorScheme.primary, CategoryNeonPurple),
-                        ),
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                         shape = CircleShape,
-                    ).background(MaterialTheme.colorScheme.surfaceVariant)
-                    .semantics {
+                    ).semantics {
                         role = Role.Button
                         contentDescription = profileCd
                     }.clickable {
@@ -164,7 +156,7 @@ fun HomeTopBar(
                     text = initials,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.clearAndSetSemantics { }, // Suppresses raw text reading
                 )
             }

@@ -14,19 +14,26 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
+/**
+ * CompositionLocal providing whether the active theme is dark mode.
+ * Reflects in-app theme selection across all Android versions (including pre-Android 10).
+ */
+val LocalIsDarkTheme = staticCompositionLocalOf { false }
+
 val ColorScheme.success: Color
     @Composable
-    get() = if (isSystemInDarkTheme()) Color(0xFF81C784) else HustleSuccess
+    get() = if (LocalIsDarkTheme.current) Color(0xFF81C784) else HustleSuccess
 
 val ColorScheme.successContainer: Color
     @Composable
-    get() = if (isSystemInDarkTheme()) Color(0xFF1B5E20).copy(alpha = 0.35f) else Color(0xFFE8F5E9)
+    get() = if (LocalIsDarkTheme.current) Color(0xFF1B5E20).copy(alpha = 0.35f) else Color(0xFFE8F5E9)
 
 private val LightColorScheme = lightColorScheme(
     primary = HustlePrimaryBlue,
@@ -137,7 +144,10 @@ fun HustleHubTheme(
         }
     }
 
-    CompositionLocalProvider(LocalDimensions provides dimensions) {
+    CompositionLocalProvider(
+        LocalDimensions provides dimensions,
+        LocalIsDarkTheme provides darkTheme,
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,
