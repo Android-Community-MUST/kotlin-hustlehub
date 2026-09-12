@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -62,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
@@ -211,6 +213,9 @@ fun CreateServiceScreen(
                     value = state.title,
                     onValueChange = createServiceViewModel::onTitleChange,
                     placeholder = stringResource(R.string.service_title_placeholder),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(TestTags.CREATE_SERVICE_TITLE),
                     isError = state.titleError != null,
                     errorText = state.titleError,
                     keyboardOptions = KeyboardOptions(
@@ -236,6 +241,9 @@ fun CreateServiceScreen(
                     value = state.description,
                     onValueChange = createServiceViewModel::onDescriptionChange,
                     placeholder = stringResource(R.string.service_desc_placeholder),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(TestTags.CREATE_SERVICE_DESCRIPTION),
                     isError = state.descriptionError != null,
                     errorText = state.descriptionError,
                     singleLine = false,
@@ -271,7 +279,9 @@ fun CreateServiceScreen(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Next,
                         ),
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(TestTags.CREATE_SERVICE_PRICE),
                     )
                     HustleTextField(
                         value = state.maxPrice,
@@ -458,7 +468,9 @@ fun CreateServiceScreen(
                         createServiceViewModel.publish()
                     },
                     enabled = !state.isLoading,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(TestTags.PUBLISH_SERVICE_BUTTON),
                 )
 
                 Spacer(Modifier.height(32.dp))

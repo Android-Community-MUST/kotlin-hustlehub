@@ -16,7 +16,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -112,6 +111,7 @@ import must.kdroiders.hustlehub.ui.features.map.presentation.view.components.*
 import must.kdroiders.hustlehub.ui.features.map.presentation.viewmodel.MapViewModel
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.theme.LocalIsDarkTheme
 import timber.log.Timber
 
 private object MapDefaults {
@@ -183,7 +183,7 @@ fun MapScreen(
     // Client to fetch user location for recentering
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    val isSystemInDark = isSystemInDarkTheme()
+    val isSystemInDark = LocalIsDarkTheme.current
 
     // Map Properties & UI settings
     val mapProperties = remember(mapType, isLocationPermissionGranted, isSystemInDark) {

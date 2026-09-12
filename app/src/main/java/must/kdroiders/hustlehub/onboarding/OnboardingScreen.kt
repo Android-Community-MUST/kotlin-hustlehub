@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -165,7 +166,7 @@ fun OnboardingScreen(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(0.50f),
+                    .weight(0.48f),
             ) { page ->
                 HeroSection(slide = slides[page])
             }
@@ -174,15 +175,16 @@ fun OnboardingScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(0.50f)
+                    .weight(0.52f)
                     .background(
                         MaterialTheme.colorScheme.surface,
                         RoundedCornerShape(
                             topStart = 28.dp,
                             topEnd = 28.dp,
                         ),
-                    ).padding(horizontal = 28.dp)
-                    .padding(top = 32.dp, bottom = 16.dp),
+                    ).navigationBarsPadding()
+                    .padding(horizontal = 28.dp)
+                    .padding(top = 28.dp, bottom = 16.dp),
             ) {
                 // title + description
                 Crossfade(
@@ -225,7 +227,7 @@ fun OnboardingScreen(
                     pageCount = slides.size,
                 )
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(20.dp))
 
                 // next / get started
                 HustleButton(
@@ -382,14 +384,14 @@ private fun OnboardingPreview() {
         ) {
             Column(Modifier.fillMaxSize()) {
                 Box(
-                    Modifier.weight(0.50f),
+                    Modifier.weight(0.48f),
                     contentAlignment = Alignment.Center,
                 ) {
                     HeroSection(slide = slide)
                 }
                 Column(
                     modifier = Modifier
-                        .weight(0.50f)
+                        .weight(0.52f)
                         .fillMaxWidth()
                         .background(
                             MaterialTheme.colorScheme.surface,
@@ -397,10 +399,9 @@ private fun OnboardingPreview() {
                                 topStart = 28.dp,
                                 topEnd = 28.dp,
                             ),
-                        ).padding(
-                            horizontal = 28.dp,
-                            vertical = 32.dp,
-                        ),
+                        ).navigationBarsPadding()
+                        .padding(horizontal = 28.dp)
+                        .padding(top = 28.dp, bottom = 16.dp),
                 ) {
                     Text(
                         stringResource(slide.titleTopRes),
@@ -433,7 +434,7 @@ private fun OnboardingPreview() {
                         pagerState = pagerState,
                         pageCount = 3,
                     )
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(20.dp))
                     HustleButton(
                         text = "Next",
                         icon = Icons.AutoMirrored.Filled

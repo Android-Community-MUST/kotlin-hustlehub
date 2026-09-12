@@ -101,6 +101,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -119,6 +120,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.notification.ActiveConversationTracker
+import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.core.utils.createTempCameraFile
 import must.kdroiders.hustlehub.core.utils.saveImageToGallery
@@ -737,6 +739,7 @@ fun ChatDetailScreen(
                                 currentUserLocation = currentUserLocation,
                                 onVoicePlayClick = chatDetailViewModel::playVoice,
                                 onVoiceSpeedToggle = chatDetailViewModel::toggleVoicePlaybackSpeed,
+                                modifier = Modifier.testTag(TestTags.MESSAGE_BUBBLE),
                                 onLocationClick = { lat, lng, label ->
                                     val mapUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng($label)")
                                     val intent = Intent(Intent.ACTION_VIEW, mapUri)
@@ -1065,7 +1068,8 @@ fun ChatDetailScreen(
                         placeholder = { Text(stringResource(R.string.chat_type_message_hint)) },
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(24.dp)),
+                            .clip(RoundedCornerShape(24.dp))
+                            .testTag(TestTags.CHAT_INPUT_FIELD),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
@@ -1129,7 +1133,8 @@ fun ChatDetailScreen(
                             ),
                             modifier = Modifier
                                 .size(48.dp)
-                                .scale(sendScale),
+                                .scale(sendScale)
+                                .testTag(TestTags.SEND_MESSAGE_BUTTON),
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Send,
