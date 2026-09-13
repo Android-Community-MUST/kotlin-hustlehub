@@ -20,7 +20,7 @@ import java.security.KeyPairGenerator
 
 @RunWith(RobolectricTestRunner::class)
 class KeyExchangeHandlerTest {
-    private val cryptoManager = CryptoManager()
+    private lateinit var cryptoManager: CryptoManager
     private val keyExchangeApiService = mockk<KeyExchangeApiService>()
     private lateinit var keyExchangeHandler: KeyExchangeHandler
 
@@ -30,6 +30,7 @@ class KeyExchangeHandlerTest {
         val prefs = context.getSharedPreferences("test_e2ee_prefs", Context.MODE_PRIVATE)
         prefs.edit().clear().commit()
 
+        cryptoManager = CryptoManager(prefs)
         keyExchangeHandler = KeyExchangeHandler(
             cryptoManager = cryptoManager,
             keyExchangeApiService = keyExchangeApiService,
@@ -196,5 +197,45 @@ class KeyExchangeHandlerTest {
             val encryptedByBob = cryptoManager.encrypt(plaintextFromBob, bobDerivedSecret)
             val decryptedByAlice = cryptoManager.decrypt(encryptedByBob, aliceDerivedSecret)
             assertEquals(plaintextFromBob, decryptedByAlice)
+        }
+
+    @Test
+    fun `getCandidateSecrets returns multiple candidate keys and can decrypt message with working key`() =
+        runTest {
+            val conversationId = "conv_candidate_test"
+            val ecKeyGen = KeyPairGenerator.getInstance("EC")
+            ecKeyGen.initialize(256)
+            val peerKeyPair = ecKeyGen.generateKeyPair()
+            val peerEncodedKey = cryptoManager.encodePublicKey(peerKeyPair.public)
+
+            coEvery { keyExchangeApiService.uploadPublicKey(any(), any()) } returns ApiResponse(true, "Success", Unit)
+            coEvery { keyExchangeApiService.getPeerPublicKey(conversationId) } returns ApiResponse(
+                success = true,
+                data = PeerKeyResponse(publicKey = peerEncodedKey, userId = "peer_user"),
+                message = "Success",
+            )
+
+            // Perform exchange
+            val secretKey = keyExchangeHandler.ensureKeysExchanged(conversationId)
+            assertNotNull(secretKey)
+
+            // Verify candidates list includes working secret
+            val candidates = keyExchangeHandler.getCandidateSecrets(conversationId)
+            assert(candidates.isNotEmpty())
+
+            // Encrypt with peer key derivation
+            val ourIdentityKey = cryptoManager.getOrCreateUserIdentityKeyPair()
+            val peerSharedSecret = cryptoManager.deriveSharedSecret(
+                privateKey = peerKeyPair.private,
+                peerPublicKey = ourIdentityKey.public,
+                conversationId = conversationId,
+            )
+            val encrypted = cryptoManager.encrypt("Hello Candidate", peerSharedSecret)
+
+            // Verify at least one candidate decrypts it successfully
+            val decrypted = candidates.firstNotNullOfOrNull { candidate ->
+                runCatching { cryptoManager.decrypt(encrypted, candidate) }.getOrNull()
+            }
+            assertEquals("Hello Candidate", decrypted)
         }
 }

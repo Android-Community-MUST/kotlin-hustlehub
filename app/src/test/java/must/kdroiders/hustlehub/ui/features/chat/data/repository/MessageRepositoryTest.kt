@@ -50,6 +50,7 @@ class MessageRepositoryTest {
         val testSecret = keyGen.generateKey()
         every { keyExchangeHandler.getOrGenerateLocalSecret(any()) } returns testSecret
         every { keyExchangeHandler.getCachedSecret(any()) } returns testSecret
+        every { keyExchangeHandler.getCandidateSecrets(any()) } returns listOf(testSecret)
 
         repository = ChatRepositoryImpl(
             context = context,

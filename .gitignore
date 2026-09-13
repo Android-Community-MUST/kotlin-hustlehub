@@ -16,6 +16,8 @@ out/
 release/
 beta/
 app/beta/
+debug/
+app/debug/
 mapping.txt
 deps.txt
 

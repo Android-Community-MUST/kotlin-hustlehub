@@ -156,9 +156,13 @@ class ChatRepositoryImpl
                         Timber.tag("CHAT_HISTORY").d("[CHAT_HISTORY] Deleting local optimistic messages: %s", localIdsToDelete)
                         localIdsToDelete.forEach { messageDao.deleteById(it) }
                     }
+                    var hadDecryptionFailure = false
                     val entities = response.data.content.mapNotNull { msgDto ->
                         val roomEntity = msgDto.toRoomEntity()
                         val msgDomain = roomEntity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                        if (roomEntity.isEncrypted && msgDomain.content == roomEntity.content) {
+                            hadDecryptionFailure = true
+                        }
                         Timber.tag("CHAT_HISTORY").d(
                             "[CHAT_HISTORY] History msg %s: isEncrypted=%b, rawContent='%s', decryptedContent='%s'",
                             msgDto.id,
@@ -168,6 +172,12 @@ class ChatRepositoryImpl
                         )
                         val processed = applyDeletionStatusToMessage(msgDomain)
                         if (processed != null) roomEntity else null
+                    }
+                    if (hadDecryptionFailure) {
+                        Timber.tag("CHAT_HISTORY").w("[CHAT_HISTORY] One or more messages failed local decryption; force-refreshing peer keys from backend...")
+                        runCatching {
+                            keyExchangeHandler.ensureKeysExchanged(conversationId, cachedConv?.otherUserId, forceRefresh = true)
+                        }
                     }
                     messageDao.upsertAll(entities)
                     Timber.tag("CHAT_HISTORY").d("[CHAT_HISTORY] Upserted %d history messages into Room for convId=%s", entities.size, conversationId)
@@ -347,7 +357,15 @@ class ChatRepositoryImpl
                                 entity.authTag,
                                 entity.content,
                             )
-                            val message = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                            var message = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                            if (entity.isEncrypted && message.content == entity.content) {
+                                Timber.tag("CHAT_RECEIVE").w("[CHAT_RECEIVE] Live message %s failed local decryption; force-refreshing peer keys...", msgDto.id)
+                                val cachedConv = conversationDao.getById(conversationId)
+                                runCatching {
+                                    keyExchangeHandler.ensureKeysExchanged(conversationId, cachedConv?.otherUserId, forceRefresh = true)
+                                }
+                                message = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                            }
                             Timber.tag("CHAT_RECEIVE").d(
                                 "[CHAT_RECEIVE] Decrypted domain result: id=%s, content='%s'",
                                 message.id,

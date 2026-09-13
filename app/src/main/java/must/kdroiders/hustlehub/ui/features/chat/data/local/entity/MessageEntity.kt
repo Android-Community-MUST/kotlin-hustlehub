@@ -9,6 +9,7 @@ import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import timber.log.Timber
+import javax.crypto.SecretKey
 
 @Entity(tableName = "messages")
 data class MessageEntity(
@@ -89,14 +90,16 @@ fun MessageEntity.toDecryptedDomain(
         return rawDomain
     }
 
-    val secretKey = keyExchangeHandler.getCachedSecret(this.conversationId)
     val ourIdentityPubKey = runCatching { keyExchangeHandler.getOurIdentityPublicKey() }.getOrDefault("<unknown>")
     val ourConvPubKey = runCatching { keyExchangeHandler.getOurConversationPublicKey(this.conversationId) }.getOrDefault("<unknown>")
     val peerPubKey = keyExchangeHandler.getCachedPeerPublicKey(this.conversationId) ?: "<none cached>"
 
-    if (secretKey == null) {
+    val candidates = keyExchangeHandler.getCandidateSecrets(this.conversationId).ifEmpty {
+        listOfNotNull(keyExchangeHandler.getCachedSecret(this.conversationId))
+    }
+    if (candidates.isEmpty()) {
         Timber.tag("CHAT_DECRYPT").e(
-            "[CHAT_DECRYPT_FAILURE] NO CACHED SECRET KEY for convId=%s (msgId=%s)! OurIdentityPubKey: %s, OurConvPubKey: %s, PeerPubKey: %s",
+            "[CHAT_DECRYPT_FAILURE] NO CANDIDATE SECRET KEYS for convId=%s (msgId=%s)! OurIdentityPubKey: %s, OurConvPubKey: %s, PeerPubKey: %s",
             this.conversationId,
             this.id,
             ourIdentityPubKey,
@@ -106,36 +109,58 @@ fun MessageEntity.toDecryptedDomain(
         return rawDomain
     }
 
-    val secretKeyBase64 = runCatching { Base64Util.encodeToString(secretKey.encoded) }.getOrDefault("<unknown>")
+    var decryptedContent: String? = null
+    var workingKey: SecretKey? = null
 
-    val decryptedContent = runCatching {
-        cryptoManager.decrypt(
-            EncryptedPayload(
-                ciphertext = cipherText,
-                iv = ivStr,
-                authTag = tagStr,
-            ),
-            secretKey,
-        )
-    }.getOrElse { e ->
+    for (candidate in candidates) {
+        val result = runCatching {
+            cryptoManager.decrypt(
+                EncryptedPayload(
+                    ciphertext = cipherText,
+                    iv = ivStr,
+                    authTag = tagStr,
+                ),
+                candidate,
+            )
+        }
+        if (result.isSuccess) {
+            decryptedContent = result.getOrNull()
+            workingKey = candidate
+            break
+        }
+    }
+
+    if (workingKey != null && decryptedContent != null) {
+        val cached = keyExchangeHandler.getCachedSecret(this.conversationId)
+        if (cached == null || !cached.encoded.contentEquals(workingKey.encoded)) {
+            val keyBase64 = runCatching { Base64Util.encodeToString(workingKey.encoded) }.getOrDefault("<unknown>")
+            Timber.tag("CHAT_DECRYPT").i(
+                "[CHAT_DECRYPT_RECOVERED] Successfully decrypted msgId=%s using candidate key: %s! Updating cached secret for convId=%s",
+                this.id,
+                keyBase64,
+                this.conversationId,
+            )
+            keyExchangeHandler.cacheSecret(this.conversationId, workingKey)
+        }
+    } else {
+        val firstKeyBase64 = candidates.firstOrNull()?.let { runCatching { Base64Util.encodeToString(it.encoded) }.getOrDefault("<unknown>") } ?: "<none>"
         Timber.tag("CHAT_DECRYPT").e(
-            e,
-            "[CHAT_DECRYPT_FAILURE] Decryption exception on msgId=%s! Reason: %s (%s)\n" +
+            "[CHAT_DECRYPT_FAILURE] All %d candidate secret keys failed decryption on msgId=%s!\n" +
                 "  -> convId: %s\n" +
                 "  -> senderId: %s\n" +
-                "  -> SecretKey: %s\n" +
+                "  -> TestedKeyCount: %d (first: %s)\n" +
                 "  -> OurIdentityPubKey: %s\n" +
                 "  -> OurConvPubKey: %s\n" +
                 "  -> PeerPubKey: %s\n" +
                 "  -> IV: %s\n" +
                 "  -> AuthTag: %s\n" +
                 "  -> Ciphertext: %s",
+            candidates.size,
             this.id,
-            e.message,
-            e.javaClass.simpleName,
             this.conversationId,
             this.senderId,
-            secretKeyBase64,
+            candidates.size,
+            firstKeyBase64,
             ourIdentityPubKey,
             ourConvPubKey,
             peerPubKey,
@@ -143,7 +168,7 @@ fun MessageEntity.toDecryptedDomain(
             tagStr,
             cipherText,
         )
-        cipherText
+        decryptedContent = cipherText
     }
 
     Timber.tag("CHAT_DECRYPT").d(

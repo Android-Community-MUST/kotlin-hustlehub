@@ -72,28 +72,46 @@ class KeyExchangeHandler
         suspend fun ensureKeysExchanged(
             conversationId: String,
             otherUserId: String? = null,
+            forceRefresh: Boolean = false,
         ): SecretKey? {
             Timber.tag("CHAT_KEY_EXCHANGE").d(
-                "[CHAT_KEY_EXCHANGE] ensureKeysExchanged initiated for convId=%s, otherUserId=%s",
+                "[CHAT_KEY_EXCHANGE] ensureKeysExchanged initiated for convId=%s, otherUserId=%s, forceRefresh=%b",
                 conversationId,
                 otherUserId,
+                forceRefresh,
             )
-            getCachedSecret(conversationId)?.let {
-                val encoded = runCatching { Base64Util.encodeToString(it.encoded) }.getOrDefault("<unknown>")
-                Timber.tag("CHAT_KEY_EXCHANGE").d(
-                    "[CHAT_KEY_EXCHANGE] Found existing cached SecretKey for convId=%s: %s",
+
+            val ourIdentityKeyPair = cryptoManager.getOrCreateUserIdentityKeyPair()
+            val ourIdentityPubKey = cryptoManager.encodePublicKey(ourIdentityKeyPair.public)
+
+            val ourKeyPair = cryptoManager.getOrCreateKeyPair(conversationId)
+            val ourConvPubKey = cryptoManager.encodePublicKey(ourKeyPair.public)
+
+            // Invalidate cached secret if our identity key changed
+            val derivedWithOurKey = encryptedPrefs.getString("${SECRET_KEY_PREFIX}our_pub_$conversationId", null)
+            if (derivedWithOurKey != null && derivedWithOurKey != ourIdentityPubKey && derivedWithOurKey != ourConvPubKey) {
+                Timber.tag("CHAT_KEY_EXCHANGE").w(
+                    "[CHAT_KEY_EXCHANGE] Stale cached secret detected for convId=%s! (Derived with key %s, current identity is %s). Clearing.",
                     conversationId,
-                    encoded,
+                    derivedWithOurKey,
+                    ourIdentityPubKey,
                 )
-                return it
+                clearCachedSecret(conversationId)
+            }
+
+            if (!forceRefresh) {
+                getCachedSecret(conversationId)?.let {
+                    val encoded = runCatching { Base64Util.encodeToString(it.encoded) }.getOrDefault("<unknown>")
+                    Timber.tag("CHAT_KEY_EXCHANGE").d(
+                        "[CHAT_KEY_EXCHANGE] Found existing cached SecretKey for convId=%s: %s",
+                        conversationId,
+                        encoded,
+                    )
+                    return it
+                }
             }
 
             return try {
-                val ourIdentityKeyPair = cryptoManager.getOrCreateUserIdentityKeyPair()
-                val ourKeyPair = cryptoManager.getOrCreateKeyPair(conversationId)
-
-                val ourIdentityPubKey = cryptoManager.encodePublicKey(ourIdentityKeyPair.public)
-                val ourConvPubKey = cryptoManager.encodePublicKey(ourKeyPair.public)
                 Timber.tag("CHAT_KEY_EXCHANGE").d(
                     "[CHAT_KEY_EXCHANGE] Our Identity PublicKey: %s, Our Conversation PublicKey: %s",
                     ourIdentityPubKey,
@@ -132,6 +150,7 @@ class KeyExchangeHandler
                         if (!userKey.isNullOrBlank()) {
                             rawPeerKey = userKey
                             isIdentityKey = true
+                            encryptedPrefs.edit().putString("${PEER_PUBLIC_KEY_PREFIX}identity_$conversationId", rawPeerKey).apply()
                             Timber.tag("CHAT_KEY_EXCHANGE").d(
                                 "[CHAT_KEY_EXCHANGE] Fetched peer user identity public key for user %s: %s",
                                 otherUserId,
@@ -153,34 +172,30 @@ class KeyExchangeHandler
                 }
 
                 // Fallback to conversation peer key if identity key wasn't retrieved
-                if (rawPeerKey.isNullOrBlank()) {
-                    try {
-                        Timber.tag("CHAT_KEY_EXCHANGE").d(
-                            "[CHAT_KEY_EXCHANGE] Fetching conversation peer public key for convId=%s...",
-                            conversationId,
-                        )
-                        val peerResponse = keyExchangeApiService.getPeerPublicKey(conversationId)
-                        val convKey = peerResponse.data?.publicKey
-                        if (!convKey.isNullOrBlank()) {
+                try {
+                    Timber.tag("CHAT_KEY_EXCHANGE").d(
+                        "[CHAT_KEY_EXCHANGE] Fetching conversation peer public key for convId=%s...",
+                        conversationId,
+                    )
+                    val peerResponse = keyExchangeApiService.getPeerPublicKey(conversationId)
+                    val convKey = peerResponse.data?.publicKey
+                    if (!convKey.isNullOrBlank()) {
+                        encryptedPrefs.edit().putString("${PEER_PUBLIC_KEY_PREFIX}conv_$conversationId", convKey).apply()
+                        if (rawPeerKey.isNullOrBlank()) {
                             rawPeerKey = convKey
                             isIdentityKey = false
-                            Timber.tag("CHAT_KEY_EXCHANGE").d(
-                                "[CHAT_KEY_EXCHANGE] Fetched conversation peer public key: %s",
-                                rawPeerKey,
-                            )
-                        } else {
-                            Timber.tag("CHAT_KEY_EXCHANGE").d(
-                                "[CHAT_KEY_EXCHANGE] Conversation peer public key is empty for convId=%s",
-                                conversationId,
-                            )
                         }
-                    } catch (e: Exception) {
                         Timber.tag("CHAT_KEY_EXCHANGE").d(
-                            "[CHAT_KEY_EXCHANGE] Conversation peer key not available for convId=%s: %s",
-                            conversationId,
-                            e.message,
+                            "[CHAT_KEY_EXCHANGE] Fetched conversation peer public key: %s",
+                            convKey,
                         )
                     }
+                } catch (e: Exception) {
+                    Timber.tag("CHAT_KEY_EXCHANGE").d(
+                        "[CHAT_KEY_EXCHANGE] Conversation peer key not available for convId=%s: %s",
+                        conversationId,
+                        e.message,
+                    )
                 }
 
                 if (rawPeerKey.isNullOrBlank()) {
@@ -202,6 +217,7 @@ class KeyExchangeHandler
                 } else {
                     ourKeyPair.private
                 }
+                val ourPubKeyUsed = if (isIdentityKey) ourIdentityPubKey else ourConvPubKey
 
                 Timber.tag("CHAT_KEY_EXCHANGE").d(
                     "[CHAT_KEY_EXCHANGE] Deriving shared secret using %s private key and peer public key (%s)",
@@ -215,7 +231,7 @@ class KeyExchangeHandler
                     conversationId = conversationId,
                 )
 
-                cacheSecret(conversationId, sharedSecret)
+                cacheSecret(conversationId, sharedSecret, ourPubKey = ourPubKeyUsed, peerPubKey = rawPeerKey)
                 Timber.tag("CHAT_KEY_EXCHANGE").d(
                     "[CHAT_KEY_EXCHANGE] Key exchange SUCCESS for convId=%s. SecretKey: %s (isIdentityKey=%b)",
                     conversationId,
@@ -247,6 +263,54 @@ class KeyExchangeHandler
             }
         }
 
+        /** Returns all candidate shared secret keys (cached, identity, conv, salted, unsalted) for message decryption resilience. */
+        fun getCandidateSecrets(conversationId: String): List<SecretKey> {
+            val candidates = mutableListOf<SecretKey>()
+
+            // 1. Current cached secret first
+            getCachedSecret(conversationId)?.let { candidates.add(it) }
+
+            // 2. Gather our private keys
+            val ourIdentityPriv = runCatching { cryptoManager.getOrCreateUserIdentityKeyPair().private }.getOrNull()
+            val ourConvPriv = runCatching { cryptoManager.getOrCreateKeyPair(conversationId).private }.getOrNull()
+            val ourPrivateKeys = listOfNotNull(ourIdentityPriv, ourConvPriv)
+
+            // 3. Gather known peer public keys
+            val peerKeyStrings = mutableListOf<String>()
+            getCachedPeerPublicKey(conversationId)?.let { peerKeyStrings.add(it) }
+            encryptedPrefs.getString("${PEER_PUBLIC_KEY_PREFIX}identity_$conversationId", null)?.let {
+                if (!peerKeyStrings.contains(it)) peerKeyStrings.add(it)
+            }
+            encryptedPrefs.getString("${PEER_PUBLIC_KEY_PREFIX}conv_$conversationId", null)?.let {
+                if (!peerKeyStrings.contains(it)) peerKeyStrings.add(it)
+            }
+
+            // 4. Derive candidate keys
+            for (rawPeerKey in peerKeyStrings) {
+                val peerPubKey = runCatching { cryptoManager.decodePublicKey(rawPeerKey) }.getOrNull() ?: continue
+                for (privKey in ourPrivateKeys) {
+                    // With conversationId salt
+                    runCatching {
+                        cryptoManager.deriveSharedSecret(privKey, peerPubKey, conversationId)
+                    }.getOrNull()?.let { key ->
+                        if (candidates.none { it.encoded.contentEquals(key.encoded) }) {
+                            candidates.add(key)
+                        }
+                    }
+                    // Without conversationId salt
+                    runCatching {
+                        cryptoManager.deriveSharedSecret(privKey, peerPubKey, null)
+                    }.getOrNull()?.let { key ->
+                        if (candidates.none { it.encoded.contentEquals(key.encoded) }) {
+                            candidates.add(key)
+                        }
+                    }
+                }
+            }
+
+            return candidates
+        }
+
         /** Returns local master device secret for local key management. */
         fun getOrGenerateLocalSecret(conversationId: String): SecretKey {
             val masterAlias = "$MASTER_DEVICE_KEY_PREFIX$conversationId"
@@ -263,23 +327,36 @@ class KeyExchangeHandler
             return secretKey
         }
 
-        private fun cacheSecret(
+        fun cacheSecret(
             conversationId: String,
             secretKey: SecretKey,
+            ourPubKey: String? = null,
+            peerPubKey: String? = null,
         ) {
             val encoded = Base64Util.encodeToString(secretKey.encoded)
-            encryptedPrefs
-                .edit()
-                .putString("$SECRET_KEY_PREFIX$conversationId", encoded)
-                .apply()
+            val editor =
+                encryptedPrefs
+                    .edit()
+                    .putString("$SECRET_KEY_PREFIX$conversationId", encoded)
+            if (ourPubKey != null) {
+                editor.putString("${SECRET_KEY_PREFIX}our_pub_$conversationId", ourPubKey)
+            }
+            if (peerPubKey != null) {
+                editor.putString("${SECRET_KEY_PREFIX}peer_pub_$conversationId", peerPubKey)
+            }
+            editor.apply()
         }
 
         fun clearCachedSecret(conversationId: String) {
             encryptedPrefs
                 .edit()
                 .remove("$SECRET_KEY_PREFIX$conversationId")
+                .remove("${SECRET_KEY_PREFIX}our_pub_$conversationId")
+                .remove("${SECRET_KEY_PREFIX}peer_pub_$conversationId")
                 .remove("$MASTER_DEVICE_KEY_PREFIX$conversationId")
                 .remove("$PEER_PUBLIC_KEY_PREFIX$conversationId")
+                .remove("${PEER_PUBLIC_KEY_PREFIX}identity_$conversationId")
+                .remove("${PEER_PUBLIC_KEY_PREFIX}conv_$conversationId")
                 .apply()
         }
     }
