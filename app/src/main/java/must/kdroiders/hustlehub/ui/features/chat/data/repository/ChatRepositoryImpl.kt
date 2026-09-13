@@ -735,7 +735,9 @@ private fun MessageResponse.toRoomEntity(): MessageEntity {
     val ciphertext = encryptedContent ?: if (isEncryptedMsg || !parsedIv.isNullOrBlank()) content else null
     val effectiveIsEncrypted = !ciphertext.isNullOrBlank() && !parsedIv.isNullOrBlank()
 
-    val plaintextContent = content?.takeIf { it.isNotBlank() && it != "[Encrypted message]" && it != ciphertext }
+    val plaintextContent = content?.takeIf {
+        it.isNotBlank() && it != "[Encrypted message]" && it != ciphertext && !it.trim().startsWith("{\"localId\"")
+    }
     val finalContent = plaintextContent ?: (if (effectiveIsEncrypted) ciphertext else content)
 
     return MessageEntity(

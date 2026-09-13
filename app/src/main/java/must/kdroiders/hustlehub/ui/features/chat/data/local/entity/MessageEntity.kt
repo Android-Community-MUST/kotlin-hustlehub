@@ -43,7 +43,7 @@ fun MessageEntity.toDomain(): Message =
         conversationId = conversationId,
         senderId = senderId,
         type = runCatching { MessageType.valueOf(type) }.getOrDefault(MessageType.TEXT),
-        content = content ?: "",
+        content = if (content?.trim()?.startsWith("{\"localId\"") == true) "" else (content ?: ""),
         mediaUrl = mediaUrl,
         thumbnailUrl = thumbnailUrl,
         metadata = metadata,
@@ -171,14 +171,20 @@ fun MessageEntity.toDecryptedDomain(
         decryptedContent = cipherText
     }
 
+    val cleanContent = if (decryptedContent.trim().startsWith("{\"localId\"")) {
+        ""
+    } else {
+        decryptedContent
+    }
+
     Timber.tag("CHAT_DECRYPT").d(
         "[CHAT_DECRYPT] Message %s decrypted result: '%s' (isDecrypted=%b)",
         this.id,
-        decryptedContent,
-        decryptedContent != cipherText,
+        cleanContent,
+        cleanContent != cipherText,
     )
 
-    return rawDomain.copy(content = decryptedContent)
+    return rawDomain.copy(content = cleanContent)
 }
 
 fun Message.toEntity(
@@ -223,7 +229,7 @@ fun Message.toEncryptedEntity(
         this.content,
         keyBase64,
     )
-    return if (secretKey != null && !this.content.isNullOrBlank() && this.content != "[Encrypted message]") {
+    return if (secretKey != null && !this.content.isNullOrBlank() && this.content != "[Encrypted message]" && !this.content.trim().startsWith("{\"localId\"")) {
         val encrypted =
             runCatching {
                 cryptoManager.encrypt(this.content, secretKey)

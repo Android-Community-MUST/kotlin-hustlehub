@@ -443,10 +443,13 @@ fun MessageBubble(
                                         }
                                     }
 
-                                    if (!message.content.isNullOrBlank()) {
+                                    val caption = message.content.takeIf {
+                                        it.isNotBlank() && !it.trim().startsWith("{\"localId\"")
+                                    }
+                                    if (!caption.isNullOrBlank()) {
                                         Spacer(modifier = Modifier.height(6.dp))
                                         Text(
-                                            text = message.content,
+                                            text = caption,
                                             color = textColor,
                                             style = MaterialTheme.typography.bodyLarge,
                                         )

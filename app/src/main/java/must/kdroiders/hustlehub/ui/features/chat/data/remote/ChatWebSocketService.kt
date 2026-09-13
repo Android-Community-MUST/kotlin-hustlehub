@@ -171,26 +171,16 @@ class ChatWebSocketService
                 keyBase64,
             )
 
-            val finalRequest: SendMessageRequest = when {
-                !request.content.isNullOrBlank() -> {
-                    val encrypted = cryptoManager.encrypt(request.content, secretKey)
-                    request.copy(
-                        encryptedContent = encrypted.ciphertext,
-                        iv = encrypted.iv,
-                        authTag = encrypted.authTag,
-                        content = request.content,
-                    )
-                }
-                !request.metadata.isNullOrBlank() -> {
-                    val encrypted = cryptoManager.encrypt(request.metadata, secretKey)
-                    request.copy(
-                        encryptedContent = encrypted.ciphertext,
-                        iv = encrypted.iv,
-                        authTag = encrypted.authTag,
-                        metadata = request.metadata,
-                    )
-                }
-                else -> request
+            val finalRequest: SendMessageRequest = if (!request.content.isNullOrBlank()) {
+                val encrypted = cryptoManager.encrypt(request.content, secretKey)
+                request.copy(
+                    encryptedContent = encrypted.ciphertext,
+                    iv = encrypted.iv,
+                    authTag = encrypted.authTag,
+                    content = request.content,
+                )
+            } else {
+                request
             }
 
             val payloadJson = gson.toJson(finalRequest)
