@@ -67,6 +67,7 @@ object NetworkModule {
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
+            .pingInterval(20, TimeUnit.SECONDS)
 
         // Certificate pinning — release builds only.
         // In debug, we allow user-installed CAs (Charles/mitmproxy).

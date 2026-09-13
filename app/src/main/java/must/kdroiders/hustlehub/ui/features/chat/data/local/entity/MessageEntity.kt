@@ -2,11 +2,13 @@ package must.kdroiders.hustlehub.ui.features.chat.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import must.kdroiders.hustlehub.core.security.Base64Util
 import must.kdroiders.hustlehub.core.security.CryptoManager
 import must.kdroiders.hustlehub.core.security.EncryptedPayload
 import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
+import timber.log.Timber
 
 @Entity(tableName = "messages")
 data class MessageEntity(
@@ -61,12 +63,50 @@ fun MessageEntity.toDecryptedDomain(
     val cipherText = this.content
     val ivStr = this.iv
     val tagStr = this.authTag
-    if (!this.isEncrypted || ivStr.isNullOrBlank() || tagStr.isNullOrBlank() || cipherText.isNullOrBlank() || cipherText == "[Encrypted message]") {
+
+    if (!this.isEncrypted) {
+        return rawDomain
+    }
+
+    if (cipherText.isNullOrBlank() || cipherText == "[Encrypted message]") {
+        Timber.tag("CHAT_DECRYPT").w(
+            "[CHAT_DECRYPT_FAILURE] Message %s is marked encrypted, but content is blank or placeholder '[Encrypted message]'! convId=%s, sender=%s",
+            this.id,
+            this.conversationId,
+            this.senderId,
+        )
+        return rawDomain
+    }
+
+    if (ivStr.isNullOrBlank() || tagStr.isNullOrBlank()) {
+        Timber.tag("CHAT_DECRYPT").w(
+            "[CHAT_DECRYPT_FAILURE] Message %s is marked encrypted, but missing IV or AuthTag! iv=%s, tag=%s, convId=%s",
+            this.id,
+            ivStr,
+            tagStr,
+            this.conversationId,
+        )
         return rawDomain
     }
 
     val secretKey = keyExchangeHandler.getCachedSecret(this.conversationId)
-        ?: return rawDomain
+    val ourIdentityPubKey = runCatching { keyExchangeHandler.getOurIdentityPublicKey() }.getOrDefault("<unknown>")
+    val ourConvPubKey = runCatching { keyExchangeHandler.getOurConversationPublicKey(this.conversationId) }.getOrDefault("<unknown>")
+    val peerPubKey = keyExchangeHandler.getCachedPeerPublicKey(this.conversationId) ?: "<none cached>"
+
+    if (secretKey == null) {
+        Timber.tag("CHAT_DECRYPT").e(
+            "[CHAT_DECRYPT_FAILURE] NO CACHED SECRET KEY for convId=%s (msgId=%s)! OurIdentityPubKey: %s, OurConvPubKey: %s, PeerPubKey: %s",
+            this.conversationId,
+            this.id,
+            ourIdentityPubKey,
+            ourConvPubKey,
+            peerPubKey,
+        )
+        return rawDomain
+    }
+
+    val secretKeyBase64 = runCatching { Base64Util.encodeToString(secretKey.encoded) }.getOrDefault("<unknown>")
 
     val decryptedContent = runCatching {
         cryptoManager.decrypt(
@@ -78,9 +118,40 @@ fun MessageEntity.toDecryptedDomain(
             secretKey,
         )
     }.getOrElse { e ->
-        timber.log.Timber.w(e, "Failed to decrypt Room message %s", this.id)
+        Timber.tag("CHAT_DECRYPT").e(
+            e,
+            "[CHAT_DECRYPT_FAILURE] Decryption exception on msgId=%s! Reason: %s (%s)\n" +
+                "  -> convId: %s\n" +
+                "  -> senderId: %s\n" +
+                "  -> SecretKey: %s\n" +
+                "  -> OurIdentityPubKey: %s\n" +
+                "  -> OurConvPubKey: %s\n" +
+                "  -> PeerPubKey: %s\n" +
+                "  -> IV: %s\n" +
+                "  -> AuthTag: %s\n" +
+                "  -> Ciphertext: %s",
+            this.id,
+            e.message,
+            e.javaClass.simpleName,
+            this.conversationId,
+            this.senderId,
+            secretKeyBase64,
+            ourIdentityPubKey,
+            ourConvPubKey,
+            peerPubKey,
+            ivStr,
+            tagStr,
+            cipherText,
+        )
         cipherText
     }
+
+    Timber.tag("CHAT_DECRYPT").d(
+        "[CHAT_DECRYPT] Message %s decrypted result: '%s' (isDecrypted=%b)",
+        this.id,
+        decryptedContent,
+        decryptedContent != cipherText,
+    )
 
     return rawDomain.copy(content = decryptedContent)
 }
@@ -119,12 +190,27 @@ fun Message.toEncryptedEntity(
     cachedAt: Long = System.currentTimeMillis(),
 ): MessageEntity {
     val secretKey = keyExchangeHandler.getCachedSecret(conversationId)
+    val keyBase64 = secretKey?.let { runCatching { Base64Util.encodeToString(it.encoded) }.getOrNull() } ?: "<null>"
+    Timber.tag("CHAT_ROOM").d(
+        "[CHAT_ROOM_SAVE] toEncryptedEntity for msgId=%s, convId=%s, content='%s', SecretKey: %s",
+        this.id,
+        conversationId,
+        this.content,
+        keyBase64,
+    )
     return if (secretKey != null && !this.content.isNullOrBlank() && this.content != "[Encrypted message]") {
         val encrypted =
             runCatching {
                 cryptoManager.encrypt(this.content, secretKey)
             }.getOrNull()
         if (encrypted != null) {
+            Timber.tag("CHAT_ROOM").d(
+                "[CHAT_ROOM_SAVE] Message %s encrypted successfully for Room: ciphertext=%s, iv=%s, tag=%s",
+                this.id,
+                encrypted.ciphertext,
+                encrypted.iv,
+                encrypted.authTag,
+            )
             this
                 .toEntity(
                     cachedAt = cachedAt,
@@ -133,10 +219,11 @@ fun Message.toEncryptedEntity(
                     authTag = encrypted.authTag,
                 ).copy(content = encrypted.ciphertext)
         } else {
-            timber.log.Timber.w("Encryption failed for message %s — storing as plaintext", this.id)
+            Timber.tag("CHAT_ROOM").w("[CHAT_ROOM_SAVE] Encryption failed for message %s — storing as plaintext", this.id)
             this.toEntity(cachedAt = cachedAt)
         }
     } else {
+        Timber.tag("CHAT_ROOM").d("[CHAT_ROOM_SAVE] No secretKey or content empty/placeholder for msg %s — storing as plaintext", this.id)
         this.toEntity(cachedAt = cachedAt)
     }
 }

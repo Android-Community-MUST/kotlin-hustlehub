@@ -191,8 +191,9 @@ class MessageRepositoryTest {
 
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) { chatWebSocketService.sendMessage(any()) }
-            coVerify {
-                messageDao.upsert(match { it.id == "temp_123" && it.isSynced && !it.isFailed })
+            // Message stays pending in Room until the server ACK arrives on the WebSocket topic.
+            coVerify(exactly = 0) {
+                messageDao.upsert(match { it.id == "temp_123" && it.isSynced })
             }
         }
 }

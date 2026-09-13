@@ -35,6 +35,8 @@ import must.kdroiders.hustlehub.ui.features.chat.domain.model.UserPresence
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
 import timber.log.Timber
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -53,6 +55,16 @@ class ChatRepositoryImpl
     ) : ChatRepository {
         @Volatile
         private var activeConversationId: String? = null
+
+        private val messageSendAttempts = ConcurrentHashMap<String, AtomicInteger>()
+        private val serverMessageArrivalCounts = ConcurrentHashMap<String, AtomicInteger>()
+
+        // Tracks IDs dispatched to the current WS session but not yet ACK'd by the server.
+        // Prevents resendUnsyncedMessages() from re-sending a message that was just sent
+        // by the normal send path in the same session.
+        private val inFlightIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+        override fun clearInFlightIds() = inFlightIds.clear()
 
         override fun setActiveConversation(conversationId: String?) {
             activeConversationId = conversationId
@@ -111,9 +123,20 @@ class ChatRepositoryImpl
             withContext(Dispatchers.IO) {
                 runCatching {
                     val cachedConv = conversationDao.getById(conversationId)
+                    Timber.tag("CHAT_HISTORY").d(
+                        "[CHAT_HISTORY] loadMessageHistory requested: convId=%s, page=%d, otherUserId=%s",
+                        conversationId,
+                        page,
+                        cachedConv?.otherUserId,
+                    )
                     keyExchangeHandler.ensureKeysExchanged(conversationId, cachedConv?.otherUserId)
                     val response = conversationApiService.getMessages(conversationId, page, 50)
                     check(response.success && response.data != null) { response.message ?: "Failed to load message history" }
+                    Timber.tag("CHAT_HISTORY").d(
+                        "[CHAT_HISTORY] Received %d messages from backend for convId=%s",
+                        response.data.content.size,
+                        conversationId,
+                    )
                     val gson = Gson()
                     val localIdsToDelete = response.data.content.mapNotNull { msg ->
                         if (msg.metadata != null) {
@@ -130,18 +153,27 @@ class ChatRepositoryImpl
                         }
                     }
                     if (localIdsToDelete.isNotEmpty()) {
+                        Timber.tag("CHAT_HISTORY").d("[CHAT_HISTORY] Deleting local optimistic messages: %s", localIdsToDelete)
                         localIdsToDelete.forEach { messageDao.deleteById(it) }
                     }
                     val entities = response.data.content.mapNotNull { msgDto ->
                         val roomEntity = msgDto.toRoomEntity()
                         val msgDomain = roomEntity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                        Timber.tag("CHAT_HISTORY").d(
+                            "[CHAT_HISTORY] History msg %s: isEncrypted=%b, rawContent='%s', decryptedContent='%s'",
+                            msgDto.id,
+                            roomEntity.isEncrypted,
+                            roomEntity.content,
+                            msgDomain.content,
+                        )
                         val processed = applyDeletionStatusToMessage(msgDomain)
                         if (processed != null) roomEntity else null
                     }
                     messageDao.upsertAll(entities)
+                    Timber.tag("CHAT_HISTORY").d("[CHAT_HISTORY] Upserted %d history messages into Room for convId=%s", entities.size, conversationId)
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
-                    Timber.e(e, "Failed to load message history")
+                    Timber.tag("CHAT_HISTORY").e(e, "[CHAT_HISTORY] Failed to load message history for convId=%s", conversationId)
                     if (e is retrofit2.HttpException && e.code() == 404) {
                         conversationDao.deleteById(conversationId)
                         messageDao.deleteByConversation(conversationId)
@@ -165,6 +197,17 @@ class ChatRepositoryImpl
                             .now()
                             .toString()
                     }.getOrDefault(System.currentTimeMillis().toString())
+
+                    val sendAttempt = messageSendAttempts.computeIfAbsent(tempId) { AtomicInteger(0) }.incrementAndGet()
+                    Timber.tag("CHAT_SEND").d(
+                        "[CHAT_SEND_ATTEMPT] Send attempt #%d for message tempId=%s (convId=%s, sender=%s, type=%s, content='%s')",
+                        sendAttempt,
+                        tempId,
+                        conversationId,
+                        currentUserId,
+                        type,
+                        content,
+                    )
 
                     val gson = Gson()
                     val metadataJson = if (metadata != null) {
@@ -196,7 +239,16 @@ class ChatRepositoryImpl
                         isFailed = false,
                     )
 
-                    messageDao.upsert(tempMessage.toEncryptedEntity(conversationId, keyExchangeHandler, cryptoManager))
+                    val encryptedEntity = tempMessage.toEncryptedEntity(conversationId, keyExchangeHandler, cryptoManager)
+                    Timber.tag("CHAT_ROOM").d(
+                        "[CHAT_ROOM_SAVE] Saving temp optimistic message to Room: id=%s, isEncrypted=%b, iv=%s, tag=%s, content='%s'",
+                        encryptedEntity.id,
+                        encryptedEntity.isEncrypted,
+                        encryptedEntity.iv,
+                        encryptedEntity.authTag,
+                        encryptedEntity.content,
+                    )
+                    messageDao.upsert(encryptedEntity)
 
                     val cachedConv = conversationDao.getById(conversationId)
                     val request = SendMessageRequest(
@@ -206,12 +258,18 @@ class ChatRepositoryImpl
                         mediaUrl = mediaUrl,
                         metadata = newMetadataString,
                     )
+                    Timber.tag("CHAT_SEND").d(
+                        "[CHAT_SEND] Connecting and sending message via WebSocket for convId=%s, otherUserId=%s",
+                        conversationId,
+                        cachedConv?.otherUserId,
+                    )
                     chatWebSocketService.connect()
                     chatWebSocketService.sendMessage(request, cachedConv?.otherUserId)
+                    inFlightIds.add(tempId)
                     Unit
                 }.recover { e ->
                     if (e is CancellationException) throw e
-                    Timber.d(e, "Message queued in local database for auto-sync")
+                    Timber.tag("CHAT_SEND").d(e, "[CHAT_SEND] Message queued in local database for auto-sync: convId=%s", conversationId)
                     Unit
                 }
             }
@@ -219,15 +277,17 @@ class ChatRepositoryImpl
         override suspend fun markAsRead(conversationId: String): Result<Unit> =
             withContext(Dispatchers.IO) {
                 runCatching {
+                    Timber.tag("CHAT_READ").d("[CHAT_READ] markAsRead initiated for convId=%s", conversationId)
                     val response = conversationApiService.markAsRead(conversationId)
                     check(response.success) { response.message ?: "Failed to mark conversation as read" }
                     val cached = conversationDao.getById(conversationId)
                     if (cached != null) {
                         conversationDao.upsert(cached.copy(unreadCount = 0))
                     }
+                    Timber.tag("CHAT_READ").d("[CHAT_READ] markAsRead succeeded for convId=%s, unreadCount reset to 0 in Room", conversationId)
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
-                    Timber.e(e, "Failed to mark conversation as read")
+                    Timber.tag("CHAT_READ").e(e, "[CHAT_READ] Failed to mark conversation as read for convId=%s", conversationId)
                     if (e is retrofit2.HttpException && e.code() == 404) {
                         conversationDao.deleteById(conversationId)
                         messageDao.deleteByConversation(conversationId)
@@ -239,6 +299,11 @@ class ChatRepositoryImpl
             flow {
                 try {
                     val cachedConv = conversationDao.getById(conversationId)
+                    Timber.tag("CHAT_WS").d(
+                        "[CHAT_WS] connectWebSocket for convId=%s, otherUserId=%s. Ensuring keys exchanged...",
+                        conversationId,
+                        cachedConv?.otherUserId,
+                    )
                     keyExchangeHandler.ensureKeysExchanged(conversationId, cachedConv?.otherUserId)
                     chatWebSocketService.connect()
                     resendUnsyncedMessages()
@@ -246,8 +311,48 @@ class ChatRepositoryImpl
                     chatWebSocketService
                         .subscribeToConversation(conversationId)
                         .collect { msgDto ->
+                            val arrivalCount = serverMessageArrivalCounts.computeIfAbsent(msgDto.id) { AtomicInteger(0) }.incrementAndGet()
+                            if (arrivalCount > 1) {
+                                Timber.tag("CHAT_RECEIVE").w(
+                                    "[CHAT_DUPLICATE_RECEIVED] Message with serverId=%s has arrived %d times over WebSocket! (convId=%s, senderId=%s)",
+                                    msgDto.id,
+                                    arrivalCount,
+                                    conversationId,
+                                    msgDto.senderId,
+                                )
+                            } else {
+                                Timber.tag("CHAT_RECEIVE").d(
+                                    "[CHAT_RECEIVE_FIRST] First arrival of serverId=%s over WebSocket (convId=%s, senderId=%s)",
+                                    msgDto.id,
+                                    conversationId,
+                                    msgDto.senderId,
+                                )
+                            }
+                            Timber.tag("CHAT_RECEIVE").d(
+                                "[CHAT_RECEIVE] Incoming message from WebSocket frame: id=%s, sender=%s, type=%s, encryptedContent=%s, content='%s', iv=%s, tag=%s",
+                                msgDto.id,
+                                msgDto.senderId,
+                                msgDto.type,
+                                msgDto.encryptedContent,
+                                msgDto.content,
+                                msgDto.iv,
+                                msgDto.authTag,
+                            )
                             val entity = msgDto.toRoomEntity()
+                            Timber.tag("CHAT_RECEIVE").d(
+                                "[CHAT_RECEIVE] toRoomEntity: id=%s, isEncrypted=%b, iv=%s, tag=%s, content='%s'",
+                                entity.id,
+                                entity.isEncrypted,
+                                entity.iv,
+                                entity.authTag,
+                                entity.content,
+                            )
                             val message = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                            Timber.tag("CHAT_RECEIVE").d(
+                                "[CHAT_RECEIVE] Decrypted domain result: id=%s, content='%s'",
+                                message.id,
+                                message.content,
+                            )
                             val processed = withContext(Dispatchers.IO) {
                                 val gson = Gson()
 
@@ -263,11 +368,20 @@ class ChatRepositoryImpl
                                             val metaObj = gson.fromJson(message.metadata, JsonObject::class.java)
                                             if (metaObj.has("localId")) {
                                                 val localId = metaObj.get("localId").asString
+                                                val totalAttempts = messageSendAttempts[localId]?.get() ?: 1
+                                                Timber.tag("CHAT_ACK").d(
+                                                    "[CHAT_ACK] Server ACK matched for localId=%s -> serverId=%s (was sent %d time(s)). Deleting optimistic Room entry.",
+                                                    localId,
+                                                    message.id,
+                                                    totalAttempts,
+                                                )
                                                 val localMsg = messageDao.getById(localId)
                                                 if (localMsg != null && !localMsg.content.isNullOrBlank() && localMsg.content != "[Encrypted message]") {
                                                     existingLocalContent = localMsg.content
                                                 }
                                                 messageDao.deleteById(localId)
+                                                messageSendAttempts.remove(localId)
+                                                inFlightIds.remove(localId)
                                             }
                                         }.onFailure { e ->
                                             if (e is CancellationException) throw e
@@ -275,7 +389,10 @@ class ChatRepositoryImpl
                                         }
                                     }
                                     val unsynced = messageDao.getUnsyncedMessages().filter { it.conversationId == conversationId }
-                                    unsynced.forEach { messageDao.deleteById(it.id) }
+                                    unsynced.forEach {
+                                        messageDao.deleteById(it.id)
+                                        inFlightIds.remove(it.id)
+                                    }
 
                                     if (existingLocalContent != null && (message.content.isBlank() || message.content == "[Encrypted message]")) {
                                         finalMessage = message.copy(content = existingLocalContent)
@@ -498,7 +615,22 @@ class ChatRepositoryImpl
 
                     chatWebSocketService.connect()
                     unsynced.forEach { entity ->
+                        if (inFlightIds.contains(entity.id)) {
+                            Timber.tag("CHAT_SEND").d(
+                                "[CHAT_RESEND_SKIP] Skipping msgId=%s — already in-flight in current session",
+                                entity.id,
+                            )
+                            return@forEach
+                        }
+                        val resendAttempt = messageSendAttempts.computeIfAbsent(entity.id) { AtomicInteger(0) }.incrementAndGet()
                         val decryptedDomain = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                        Timber.tag("CHAT_SEND").w(
+                            "[CHAT_RESEND_ATTEMPT] Resending unsynced message attempt #%d for msgId=%s (convId=%s, content='%s')",
+                            resendAttempt,
+                            entity.id,
+                            entity.conversationId,
+                            decryptedDomain.content,
+                        )
                         val request = SendMessageRequest(
                             conversationId = entity.conversationId,
                             type = entity.type,
@@ -508,14 +640,19 @@ class ChatRepositoryImpl
                         )
                         runCatching {
                             chatWebSocketService.sendMessage(request)
-                            messageDao.upsert(entity.copy(isSynced = true, isFailed = false))
+                            inFlightIds.add(entity.id)
+                            Timber.tag("CHAT_SEND").d(
+                                "[CHAT_RESEND_QUEUED] Message %s re-dispatched on attempt #%d — awaiting server ACK",
+                                entity.id,
+                                resendAttempt,
+                            )
                         }.onFailure { e ->
-                            Timber.e(e, "Failed to sync pending message ${entity.id}")
+                            Timber.tag("CHAT_SEND").e(e, "[CHAT_RESEND_FAILED] Failed to sync pending message %s on attempt #%d", entity.id, resendAttempt)
                         }
                     }
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
-                    Timber.e(e, "Failed to resend unsynced messages")
+                    Timber.tag("CHAT_SEND").e(e, "[CHAT_RESEND_FAILED] Failed to resend unsynced messages")
                 }
             }
     }

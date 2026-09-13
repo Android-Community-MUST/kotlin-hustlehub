@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.core.security
 
+import android.content.SharedPreferences
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import androidx.annotation.Keep
@@ -12,6 +13,7 @@ import java.security.MessageDigest
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.spec.ECGenParameterSpec
+import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 import javax.crypto.KeyAgreement
@@ -29,7 +31,7 @@ data class EncryptedPayload(
     val authTag: String,
 )
 
-internal object Base64Util {
+object Base64Util {
     fun encodeToString(bytes: ByteArray): String {
         return try {
             android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
@@ -58,7 +60,9 @@ internal object Base64Util {
 @Singleton
 class CryptoManager
     @Inject
-    constructor() {
+    constructor(
+        private val encryptedPrefs: SharedPreferences? = null,
+    ) {
         companion object {
             private const val ANDROID_KEYSTORE = "AndroidKeyStore"
             private const val KEY_ALIAS_PREFIX = "hustlehub_e2ee_"
@@ -68,6 +72,8 @@ class CryptoManager
             private const val CIPHER_TRANSFORMATION = "AES/GCM/NoPadding"
             private const val GCM_TAG_LENGTH_BITS = 128
             private const val AES_KEY_LENGTH_BYTES = 32
+            private const val PREF_SUFFIX_PRIVATE = "_priv"
+            private const val PREF_SUFFIX_PUBLIC = "_pub"
         }
 
         private val keyStore: KeyStore? by lazy {
@@ -89,14 +95,14 @@ class CryptoManager
                     if (privateKey != null && publicKey != null) {
                         KeyPair(publicKey, privateKey)
                     } else {
-                        generateKeyPair(IDENTITY_KEY_ALIAS)
+                        loadKeyPairFromPrefs(IDENTITY_KEY_ALIAS) ?: generateKeyPair(IDENTITY_KEY_ALIAS)
                     }
                 } else {
-                    generateKeyPair(IDENTITY_KEY_ALIAS)
+                    loadKeyPairFromPrefs(IDENTITY_KEY_ALIAS) ?: generateKeyPair(IDENTITY_KEY_ALIAS)
                 }
             } catch (e: Exception) {
                 Timber.w(e, "Error retrieving user identity key pair from KeyStore")
-                generateKeyPair(IDENTITY_KEY_ALIAS)
+                loadKeyPairFromPrefs(IDENTITY_KEY_ALIAS) ?: generateKeyPair(IDENTITY_KEY_ALIAS)
             }
         }
 
@@ -111,14 +117,14 @@ class CryptoManager
                     if (privateKey != null && publicKey != null) {
                         KeyPair(publicKey, privateKey)
                     } else {
-                        generateKeyPair(alias)
+                        loadKeyPairFromPrefs(alias) ?: generateKeyPair(alias)
                     }
                 } else {
-                    generateKeyPair(alias)
+                    loadKeyPairFromPrefs(alias) ?: generateKeyPair(alias)
                 }
             } catch (e: Exception) {
                 Timber.w(e, "Error retrieving key pair from KeyStore for alias: %s", alias)
-                generateKeyPair(alias)
+                loadKeyPairFromPrefs(alias) ?: generateKeyPair(alias)
             }
         }
 
@@ -138,18 +144,48 @@ class CryptoManager
                     )
                     keyPairGenerator.initialize(parameterSpec)
                     return keyPairGenerator.generateKeyPair().also {
-                        Timber.d("Generated AndroidKeyStore ECDH key pair for alias: %s", alias)
+                        Timber.tag("CHAT_CRYPTO").d("[CHAT_KEY_GEN] Generated AndroidKeyStore ECDH key pair for alias: %s", alias)
                     }
                 } catch (e: Exception) {
                     Timber.w(e, "Failed to generate AndroidKeyStore key pair for alias %s, falling back to standard EC generator", alias)
                 }
             }
 
-            // Fallback for API < 31 (Android 11 and below), JVM unit tests, or KeyStore failure
+            // Fallback: persist key pair in EncryptedSharedPreferences so it survives restarts on API < 31.
             val keyPairGenerator = KeyPairGenerator.getInstance("EC")
             keyPairGenerator.initialize(ECGenParameterSpec(EC_CURVE))
-            return keyPairGenerator.generateKeyPair().also {
-                Timber.d("Generated standard ECDH key pair for alias: %s", alias)
+            val keyPair = keyPairGenerator.generateKeyPair()
+            Timber.tag("CHAT_CRYPTO").d("[CHAT_KEY_GEN] Generated standard ECDH key pair for alias: %s", alias)
+
+            val prefs = encryptedPrefs
+            if (prefs != null) {
+                val privB64 = Base64Util.encodeToString(keyPair.private.encoded)
+                val pubB64 = Base64Util.encodeToString(keyPair.public.encoded)
+                prefs
+                    .edit()
+                    .putString("$alias$PREF_SUFFIX_PRIVATE", privB64)
+                    .putString("$alias$PREF_SUFFIX_PUBLIC", pubB64)
+                    .apply()
+                Timber.tag("CHAT_CRYPTO").d("[CHAT_KEY_GEN] Persisted software EC key pair to EncryptedPrefs for alias: %s", alias)
+            } else {
+                Timber.tag("CHAT_CRYPTO").w("[CHAT_KEY_GEN] No EncryptedPrefs available — software EC key pair for alias %s is ephemeral (will be lost on restart)", alias)
+            }
+            return keyPair
+        }
+
+        private fun loadKeyPairFromPrefs(alias: String): KeyPair? {
+            val prefs = encryptedPrefs ?: return null
+            val privB64 = prefs.getString("$alias$PREF_SUFFIX_PRIVATE", null) ?: return null
+            val pubB64 = prefs.getString("$alias$PREF_SUFFIX_PUBLIC", null) ?: return null
+            return try {
+                val kf = KeyFactory.getInstance("EC")
+                val privateKey = kf.generatePrivate(PKCS8EncodedKeySpec(Base64Util.decode(privB64)))
+                val publicKey = kf.generatePublic(X509EncodedKeySpec(Base64Util.decode(pubB64)))
+                Timber.tag("CHAT_CRYPTO").d("[CHAT_KEY_GEN] Reloaded persisted software EC key pair from EncryptedPrefs for alias: %s", alias)
+                KeyPair(publicKey, privateKey)
+            } catch (e: Exception) {
+                Timber.tag("CHAT_CRYPTO").w(e, "[CHAT_KEY_GEN] Failed to reload persisted key pair for alias %s — will regenerate", alias)
+                null
             }
         }
 
@@ -169,6 +205,12 @@ class CryptoManager
             peerPublicKey: PublicKey,
             conversationId: String? = null,
         ): SecretKey {
+            val peerKeyBase64 = encodePublicKey(peerPublicKey)
+            Timber.tag("CHAT_CRYPTO").d(
+                "[CHAT_KEY_DERIVE] Deriving shared secret. PeerPublicKey: %s, conversationId salt: %s",
+                peerKeyBase64,
+                conversationId,
+            )
             val keyAgreement = KeyAgreement.getInstance(KEY_AGREEMENT_ALGORITHM)
             keyAgreement.init(privateKey)
             keyAgreement.doPhase(peerPublicKey, true)
@@ -181,7 +223,12 @@ class CryptoManager
             }
             val hashedSecret = md.digest()
 
-            return SecretKeySpec(hashedSecret.copyOf(AES_KEY_LENGTH_BYTES), "AES")
+            val secretKey = SecretKeySpec(hashedSecret.copyOf(AES_KEY_LENGTH_BYTES), "AES")
+            Timber.tag("CHAT_CRYPTO").d(
+                "[CHAT_KEY_DERIVE] Derived AES SecretKey (Base64): %s",
+                Base64Util.encodeToString(secretKey.encoded),
+            )
+            return secretKey
         }
 
         /** Encrypts plaintext with AES-256-GCM. Fresh 12-byte IV per call. */
@@ -189,6 +236,12 @@ class CryptoManager
             plaintext: String,
             secretKey: SecretKey,
         ): EncryptedPayload {
+            val keyBase64 = Base64Util.encodeToString(secretKey.encoded)
+            Timber.tag("CHAT_CRYPTO").d(
+                "[CHAT_ENCRYPT] Encrypting plaintext (length=%d) with SecretKey: %s",
+                plaintext.length,
+                keyBase64,
+            )
             val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
             cipher.init(Cipher.ENCRYPT_MODE, secretKey)
 
@@ -205,11 +258,18 @@ class CryptoManager
                 ciphertextWithTag.size,
             )
 
-            return EncryptedPayload(
+            val payload = EncryptedPayload(
                 ciphertext = Base64Util.encodeToString(ciphertextOnly),
                 iv = Base64Util.encodeToString(iv),
                 authTag = Base64Util.encodeToString(authTag),
             )
+            Timber.tag("CHAT_CRYPTO").d(
+                "[CHAT_ENCRYPT] Encryption success. Ciphertext: %s, IV: %s, AuthTag: %s",
+                payload.ciphertext,
+                payload.iv,
+                payload.authTag,
+            )
+            return payload
         }
 
         /** Decrypts an [EncryptedPayload]. Throws AEADBadTagException on tamper. */
@@ -217,16 +277,43 @@ class CryptoManager
             payload: EncryptedPayload,
             secretKey: SecretKey,
         ): String {
-            val iv = Base64Util.decode(payload.iv)
-            val ciphertextOnly = Base64Util.decode(payload.ciphertext)
-            val authTag = Base64Util.decode(payload.authTag)
+            val keyBase64 = runCatching { Base64Util.encodeToString(secretKey.encoded) }.getOrDefault("<unreadable>")
+            Timber.tag("CHAT_CRYPTO").d(
+                "[CHAT_DECRYPT] Attempting decryption. SecretKey: %s, IV: %s, AuthTag: %s, Ciphertext: %s",
+                keyBase64,
+                payload.iv,
+                payload.authTag,
+                payload.ciphertext,
+            )
+            return try {
+                val iv = Base64Util.decode(payload.iv)
+                val ciphertextOnly = Base64Util.decode(payload.ciphertext)
+                val authTag = Base64Util.decode(payload.authTag)
 
-            val ciphertextWithTag = ciphertextOnly + authTag
+                val ciphertextWithTag = ciphertextOnly + authTag
 
-            val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
+                val cipher = Cipher.getInstance(CIPHER_TRANSFORMATION)
+                cipher.init(Cipher.DECRYPT_MODE, secretKey, GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv))
 
-            return String(cipher.doFinal(ciphertextWithTag), Charsets.UTF_8)
+                val decrypted = String(cipher.doFinal(ciphertextWithTag), Charsets.UTF_8)
+                Timber.tag("CHAT_CRYPTO").d(
+                    "[CHAT_DECRYPT_SUCCESS] Decrypted message successfully: '%s'",
+                    decrypted,
+                )
+                decrypted
+            } catch (e: Exception) {
+                Timber.tag("CHAT_CRYPTO").e(
+                    e,
+                    "[CHAT_DECRYPT_FAILURE] Decryption failed! Reason: %s (Exception: %s). SecretKey used: %s, IV: %s, AuthTag: %s, Ciphertext: %s",
+                    e.message,
+                    e.javaClass.simpleName,
+                    keyBase64,
+                    payload.iv,
+                    payload.authTag,
+                    payload.ciphertext,
+                )
+                throw e
+            }
         }
 
         fun hasKeyPair(conversationId: String): Boolean = keyStore?.containsAlias("$KEY_ALIAS_PREFIX$conversationId") ?: false
