@@ -18,6 +18,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -58,10 +60,13 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -76,6 +81,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -87,6 +93,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -129,6 +136,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoiceRecorder
+import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ChatEncryptionBanner
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ChatLocationPickerSheet
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSeparator
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.MessageBubble
@@ -141,6 +149,11 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+
+private data class MessageDisplayMeta(
+    val showDateSeparator: Boolean,
+    val isGroupedWithNext: Boolean,
+)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -266,11 +279,41 @@ fun ChatDetailScreen(
         }
     }
 
-    // Scroll to bottom when list size changes or typing changes
-    LaunchedEffect(state.messages.size, state.isTyping) {
-        if (state.messages.isNotEmpty()) {
-            listState.animateScrollToItem(0)
+    val reversedMessages = remember(state.messages) { state.messages.reversed() }
+    var prevMessageCount by remember { mutableIntStateOf(0) }
+    var unreadCountWhileScrolledUp by remember { mutableIntStateOf(0) }
+
+    val isNearBottom by remember {
+        derivedStateOf { listState.firstVisibleItemIndex <= 1 }
+    }
+
+    LaunchedEffect(isNearBottom) {
+        if (isNearBottom) {
+            unreadCountWhileScrolledUp = 0
         }
+    }
+
+    // Smart auto-scroll: instantly snap on initial load; smooth scroll if near bottom or sent by current user
+    LaunchedEffect(state.messages.size) {
+        val currentCount = state.messages.size
+        if (currentCount == 0) return@LaunchedEffect
+
+        if (prevMessageCount == 0) {
+            listState.scrollToItem(0)
+        } else if (currentCount > prevMessageCount) {
+            val newCount = currentCount - prevMessageCount
+            val latestMessage = reversedMessages.firstOrNull()
+            val isSentByMe = latestMessage != null &&
+                (latestMessage.senderId != state.otherUserId || latestMessage.id.startsWith("temp_"))
+
+            if (isSentByMe || isNearBottom) {
+                unreadCountWhileScrolledUp = 0
+                listState.animateScrollToItem(0)
+            } else {
+                unreadCountWhileScrolledUp += newCount
+            }
+        }
+        prevMessageCount = currentCount
     }
 
     // Typing indicator: delegate to ViewModel which owns debounce + auto-clear logic
@@ -672,8 +715,44 @@ fun ChatDetailScreen(
             }
 
             // Messages list (reversed so it starts at the bottom)
-            val reversedMessages = state.messages.reversed()
             val cannotOpenMapToast = stringResource(R.string.chat_cannot_open_map)
+
+            // Precompute date separators and grouping once per list update to keep fling scrolling at 120fps
+            val messageDisplayMetaList = remember(reversedMessages) {
+                reversedMessages.mapIndexed { index, message ->
+                    val prevMessage = if (index < reversedMessages.size - 1) reversedMessages[index + 1] else null
+                    val showDateSeparator = if (prevMessage == null) {
+                        true
+                    } else {
+                        try {
+                            val currentInstant = Instant.parse(message.timestamp)
+                            val prevInstant = Instant.parse(prevMessage.timestamp)
+                            val currentDate = currentInstant.atZone(ZoneId.systemDefault()).toLocalDate()
+                            val prevDate = prevInstant.atZone(ZoneId.systemDefault()).toLocalDate()
+                            ChronoUnit.DAYS.between(prevDate, currentDate) > 0
+                        } catch (_: Exception) {
+                            false
+                        }
+                    }
+
+                    val nextMessage = if (index > 0) reversedMessages[index - 1] else null
+                    val isGroupedWithNext = nextMessage != null &&
+                        nextMessage.senderId == message.senderId &&
+                        try {
+                            val currentInstant = Instant.parse(message.timestamp)
+                            val nextInstant = Instant.parse(nextMessage.timestamp)
+                            Duration.between(currentInstant, nextInstant).abs().toMinutes() < 2
+                        } catch (_: Exception) {
+                            false
+                        }
+
+                    MessageDisplayMeta(
+                        showDateSeparator = showDateSeparator,
+                        isGroupedWithNext = isGroupedWithNext,
+                    )
+                }
+            }
+
             Box(modifier = Modifier.weight(1f)) {
                 LazyColumn(
                     state = listState,
@@ -684,46 +763,12 @@ fun ChatDetailScreen(
                     itemsIndexed(
                         items = reversedMessages,
                         key = { _, msg -> msg.id },
+                        contentType = { _, msg -> msg.type },
                     ) { index, message ->
                         val isSelf = message.senderId != state.otherUserId || message.id.startsWith("temp_")
-
-                        // Because messages are reversed (newest first, index 0),
-                        // the previous message chronologically is at index + 1
-                        val prevMessage = if (index < reversedMessages.size - 1) reversedMessages[index + 1] else null
-
-                        var showDateSeparator = false
-                        if (prevMessage == null) {
-                            showDateSeparator = true
-                        } else {
-                            try {
-                                val currentInstant = Instant.parse(message.timestamp)
-                                val prevInstant = Instant.parse(prevMessage.timestamp)
-                                val currentDate = currentInstant.atZone(ZoneId.systemDefault()).toLocalDate()
-                                val prevDate = prevInstant.atZone(ZoneId.systemDefault()).toLocalDate()
-
-                                if (ChronoUnit.DAYS.between(prevDate, currentDate) > 0) {
-                                    showDateSeparator = true
-                                }
-                            } catch (e: Exception) {
-                                // Ignore parse errors
-                            }
-                        }
-
-                        // Determine if this message is grouped with the next message
-                        // (same sender, within 2 minutes)
-                        val nextMessage = if (index > 0) reversedMessages[index - 1] else null
-                        val isGroupedWithNext = nextMessage != null &&
-                            nextMessage.senderId == message.senderId &&
-                            try {
-                                val currentInstant = Instant.parse(message.timestamp)
-                                val nextInstant = Instant.parse(nextMessage.timestamp)
-                                java.time.Duration
-                                    .between(currentInstant, nextInstant)
-                                    .abs()
-                                    .toMinutes() < 2
-                            } catch (_: Exception) {
-                                false
-                            }
+                        val meta = messageDisplayMetaList.getOrNull(index)
+                        val showDateSeparator = meta?.showDateSeparator ?: false
+                        val isGroupedWithNext = meta?.isGroupedWithNext ?: false
 
                         Column(
                             modifier = Modifier.fillMaxWidth(),
@@ -761,6 +806,10 @@ fun ChatDetailScreen(
                             )
                         }
                     }
+
+                    item(key = "chat_e2ee_security_banner") {
+                        ChatEncryptionBanner()
+                    }
                 }
 
                 if (state.isLoading) {
@@ -771,6 +820,58 @@ fun ChatDetailScreen(
                         color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                     )
+                }
+
+                // Floating "Scroll to Bottom" button (WhatsApp / Telegram style)
+                val showScrollToBottom by remember {
+                    derivedStateOf { listState.firstVisibleItemIndex > 1 }
+                }
+
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = showScrollToBottom,
+                    enter = scaleIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + fadeIn(),
+                    exit = scaleOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + fadeOut(),
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = 12.dp),
+                ) {
+                    Box {
+                        Surface(
+                            onClick = {
+                                unreadCountWhileScrolledUp = 0
+                                scope.launch { listState.animateScrollToItem(0) }
+                            },
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.95f),
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            shadowElevation = 3.dp,
+                            modifier = Modifier.size(42.dp),
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = stringResource(R.string.chat_scroll_to_bottom),
+                                    modifier = Modifier.size(24.dp),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+
+                        if (unreadCountWhileScrolledUp > 0) {
+                            Badge(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 1.dp, end = 1.dp),
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                            ) {
+                                Text(
+                                    text = if (unreadCountWhileScrolledUp > 99) "99+" else unreadCountWhileScrolledUp.toString(),
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -1125,6 +1226,7 @@ fun ChatDetailScreen(
                             onClick = {
                                 chatDetailViewModel.sendTextMessage(textInput)
                                 textInput = ""
+                                scope.launch { listState.animateScrollToItem(0) }
                             },
                             interactionSource = sendInteractionSource,
                             colors = IconButtonDefaults.iconButtonColors(

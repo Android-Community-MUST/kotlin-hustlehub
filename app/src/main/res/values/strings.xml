@@ -383,6 +383,8 @@
     <string name="chat_status_sending">Sending</string>
     <string name="chat_status_read">Read</string>
     <string name="chat_status_delivered">Delivered</string>
+    <string name="chat_e2ee_banner_text">Messages are end-to-end encrypted. Only people in this chat can read, listen to, or share them.</string>
+    <string name="chat_scroll_to_bottom">Scroll to bottom</string>
     <string name="chat_status_sent">Sent</string>
     <string name="cd_play">Play</string>
     <string name="cd_pause">Pause</string>

@@ -100,6 +100,7 @@ import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.isDeleted
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.PlayerState
+import must.kdroiders.hustlehub.ui.theme.chatMessageReadTint
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -209,13 +210,23 @@ fun MessageBubble(
             val bubbleBackground = if (isCurrentUser) {
                 MaterialTheme.colorScheme.primary
             } else {
-                MaterialTheme.colorScheme.surfaceVariant
+                MaterialTheme.colorScheme.surface
             }
 
             val textColor = if (isCurrentUser) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                MaterialTheme.colorScheme.onSurface
+            }
+
+            val bubbleBorder = if (!isCurrentUser) {
+                Modifier.border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    shape = bubbleShape,
+                )
+            } else {
+                Modifier
             }
 
             val alignment = if (isCurrentUser) Alignment.End else Alignment.Start
@@ -248,6 +259,7 @@ fun MessageBubble(
                         .widthIn(max = 300.dp)
                         .clip(bubbleShape)
                         .background(bubbleBackground)
+                        .then(bubbleBorder)
                         .combinedClickable(
                             enabled = !message.isDeleted,
                             onClick = { /* Child views handle their own click events */ },
@@ -378,6 +390,41 @@ fun MessageBubble(
                             }
                         }
 
+                        val caption = remember(message.content) {
+                            message.content.takeIf {
+                                it.isNotBlank() && !it.trim().startsWith("{\"localId\"")
+                            }
+                        }
+                        val hasCaption = !caption.isNullOrBlank()
+
+                        val formattedTime = remember(message.timestamp) { formatTimestamp(message.timestamp) }
+                        val isFailed = message.isFailed
+                        val isPending = message.id.startsWith("temp_") || (!message.isSynced && !isFailed)
+                        val isRead = message.readAt != null
+                        val isDelivered = message.deliveredAt != null || (message.isSynced && !isPending && !isFailed)
+
+                        val receiptIcon = when {
+                            isFailed -> Icons.Default.Error
+                            isPending -> Icons.Default.Schedule
+                            isRead || isDelivered -> Icons.Default.DoneAll
+                            else -> Icons.Default.Done
+                        }
+
+                        val receiptTint = when {
+                            isFailed -> MaterialTheme.colorScheme.error
+                            isRead -> MaterialTheme.colorScheme.chatMessageReadTint
+                            isCurrentUser -> MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                        }
+
+                        val receiptDescription = when {
+                            isFailed -> stringResource(R.string.chat_status_failed)
+                            isPending -> stringResource(R.string.chat_status_sending)
+                            isRead -> stringResource(R.string.chat_status_read)
+                            isDelivered -> stringResource(R.string.chat_status_delivered)
+                            else -> stringResource(R.string.chat_status_sent)
+                        }
+
                         if (message.isDeleted) {
                             Text(
                                 text = if (isCurrentUser) {
@@ -408,7 +455,7 @@ fun MessageBubble(
                                         modifier = Modifier
                                             .fillMaxWidth(0.72f)
                                             .heightIn(min = 120.dp, max = 320.dp)
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(RoundedCornerShape(12.dp))
                                             .run {
                                                 if (isUploading) {
                                                     this
@@ -441,17 +488,43 @@ fun MessageBubble(
                                                 contentScale = ContentScale.FillWidth,
                                             )
                                         }
+
+                                        if (!hasCaption) {
+                                            // Floating timestamp & status badge in bottom-right corner of image
+                                            Row(
+                                                modifier = Modifier
+                                                    .align(Alignment.BottomEnd)
+                                                    .padding(6.dp)
+                                                    .clip(RoundedCornerShape(10.dp))
+                                                    .background(MaterialTheme.colorScheme.scrim)
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Text(
+                                                    text = formattedTime,
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.95f),
+                                                )
+                                                if (isCurrentUser) {
+                                                    Spacer(modifier = Modifier.width(3.dp))
+                                                    Icon(
+                                                        imageVector = receiptIcon,
+                                                        contentDescription = receiptDescription,
+                                                        modifier = Modifier.size(13.dp),
+                                                        tint = if (isRead) MaterialTheme.colorScheme.chatMessageReadTint else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.95f),
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
 
-                                    val caption = message.content.takeIf {
-                                        it.isNotBlank() && !it.trim().startsWith("{\"localId\"")
-                                    }
-                                    if (!caption.isNullOrBlank()) {
+                                    if (hasCaption && caption != null) {
                                         Spacer(modifier = Modifier.height(6.dp))
                                         Text(
                                             text = caption,
                                             color = textColor,
                                             style = MaterialTheme.typography.bodyLarge,
+                                            modifier = Modifier.padding(horizontal = 4.dp),
                                         )
                                     }
                                 }
@@ -493,56 +566,35 @@ fun MessageBubble(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                        if (message.isDeleted || message.type != MessageType.IMAGE || hasCaption) {
+                            Spacer(modifier = Modifier.height(4.dp))
 
-                        // Time and read receipt
-                        // States: pending (clock) -> sent (single check) -> delivered (double check, dim)
-                        //         -> read (double check, highlighted)
-                        Row(
-                            modifier = Modifier.align(Alignment.End),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            val formattedTime = formatTimestamp(message.timestamp)
-                            Text(
-                                text = formattedTime,
-                                fontSize = 10.sp,
-                                color = textColor.copy(alpha = 0.7f),
-                            )
-
-                            if (isCurrentUser) {
-                                Spacer(modifier = Modifier.width(4.dp))
-                                val isFailed = message.isFailed
-                                val isPending = message.id.startsWith("temp_") || (!message.isSynced && !isFailed)
-                                val isRead = message.readAt != null
-                                val isDelivered = message.deliveredAt != null || (message.isSynced && !isPending && !isFailed)
-
-                                val receiptIcon = when {
-                                    isFailed -> Icons.Default.Error
-                                    isPending -> Icons.Default.Schedule
-                                    isRead || isDelivered -> Icons.Default.DoneAll
-                                    else -> Icons.Default.Done
-                                }
-
-                                val receiptTint = when {
-                                    isFailed -> MaterialTheme.colorScheme.error
-                                    isRead -> MaterialTheme.colorScheme.tertiary
-                                    else -> textColor.copy(alpha = 0.6f)
-                                }
-
-                                val receiptDescription = when {
-                                    isFailed -> stringResource(R.string.chat_status_failed)
-                                    isPending -> stringResource(R.string.chat_status_sending)
-                                    isRead -> stringResource(R.string.chat_status_read)
-                                    isDelivered -> stringResource(R.string.chat_status_delivered)
-                                    else -> stringResource(R.string.chat_status_sent)
-                                }
-
-                                Icon(
-                                    imageVector = receiptIcon,
-                                    contentDescription = receiptDescription,
-                                    modifier = Modifier.size(12.dp),
-                                    tint = receiptTint,
+                            // Time and read receipt
+                            // States: pending (clock) -> sent (single check) -> delivered (double check, dim)
+                            //         -> read (double check, highlighted)
+                            Row(
+                                modifier = Modifier.align(Alignment.End),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = formattedTime,
+                                    fontSize = 11.sp,
+                                    color = if (isCurrentUser) {
+                                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.88f)
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
+                                    },
                                 )
+
+                                if (isCurrentUser) {
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Icon(
+                                        imageVector = receiptIcon,
+                                        contentDescription = receiptDescription,
+                                        modifier = Modifier.size(13.dp),
+                                        tint = receiptTint,
+                                    )
+                                }
                             }
                         }
                     }
