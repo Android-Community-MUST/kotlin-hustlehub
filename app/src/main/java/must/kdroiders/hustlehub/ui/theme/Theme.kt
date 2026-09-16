@@ -34,7 +34,7 @@ val ColorScheme.success: Color
 /** Teal tint used on the read-receipt double-check icon in chat message bubbles. */
 val ColorScheme.chatMessageReadTint: Color
     @Composable
-    get() = MaterialTheme.colorScheme.onTertiaryContainer
+    get() = if (LocalIsDarkTheme.current) Color(0xFF80DEEA) else Color(0xFF00E5FF)
 
 val ColorScheme.successContainer: Color
     @Composable

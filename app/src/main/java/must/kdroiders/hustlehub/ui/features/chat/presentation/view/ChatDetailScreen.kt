@@ -50,6 +50,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
@@ -339,6 +345,16 @@ fun ChatDetailScreen(
         }
     }
 
+    val searchFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(state.isSearchActive) {
+        if (state.isSearchActive) {
+            searchFocusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
+
     // Typing indicator: delegate to ViewModel which owns debounce + auto-clear logic
     // (no LaunchedEffect needed — the screen just forwards raw onChange events)
 
@@ -504,9 +520,29 @@ fun ChatDetailScreen(
                                 Text(
                                     text = stringResource(R.string.chat_search_in_conversation),
                                     style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 )
                             },
                             singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(
+                                onSearch = {
+                                    if (state.searchResults.isNotEmpty()) {
+                                        chatDetailViewModel.searchNavigate(1)
+                                    }
+                                },
+                            ),
+                            trailingIcon = {
+                                if (state.searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { chatDetailViewModel.onChatSearchQueryChanged("") }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = stringResource(R.string.cd_close_search),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                            },
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
@@ -514,7 +550,9 @@ fun ChatDetailScreen(
                                 unfocusedIndicatorColor = Color.Transparent,
                             ),
                             textStyle = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(searchFocusRequester),
                         )
                     } else {
                         Row(
@@ -895,10 +933,12 @@ fun ChatDetailScreen(
                                 onDeleteForMe = { msg -> chatDetailViewModel.deleteMessageForMe(msg.id) },
                                 onDeleteForEveryone = { msg -> chatDetailViewModel.deleteMessageForEveryone(msg.id) },
                                 onReportMessage = { msg -> messageToReport = msg },
+                                onRetry = { msgId -> chatDetailViewModel.onRetryMessage(msgId) },
                                 isOtherUserOnline = state.isOtherUserOnline,
                                 isGroupedWithNext = isGroupedWithNext,
                                 isSearchMatch = isSearchMatch,
                             )
+
                         }
                     }
 
@@ -1379,7 +1419,10 @@ private fun AttachmentOption(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(role = Role.Button, onClick = onClick),
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(8.dp),
     ) {
         Box(
             modifier = Modifier

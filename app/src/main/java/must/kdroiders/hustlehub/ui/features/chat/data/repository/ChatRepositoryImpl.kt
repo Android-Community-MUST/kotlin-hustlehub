@@ -650,13 +650,21 @@ class ChatRepositoryImpl
                             return@forEach
                         }
                         val resendAttempt = messageSendAttempts.computeIfAbsent(entity.id) { AtomicInteger(0) }.incrementAndGet()
+                        if (resendAttempt > 3) {
+                            Timber.tag("CHAT_SEND").w(
+                                "[CHAT_RESEND_GIVE_UP] msgId=%s exceeded max retries — marking failed",
+                                entity.id,
+                            )
+                            messageDao.markFailed(entity.id)
+                            messageSendAttempts.remove(entity.id)
+                            return@forEach
+                        }
                         val decryptedDomain = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
                         Timber.tag("CHAT_SEND").w(
-                            "[CHAT_RESEND_ATTEMPT] Resending unsynced message attempt #%d for msgId=%s (convId=%s, content='%s')",
+                            "[CHAT_RESEND_ATTEMPT] Resending unsynced message attempt #%d for msgId=%s (convId=%s)",
                             resendAttempt,
                             entity.id,
                             entity.conversationId,
-                            decryptedDomain.content,
                         )
                         val request = SendMessageRequest(
                             conversationId = entity.conversationId,
@@ -668,18 +676,39 @@ class ChatRepositoryImpl
                         runCatching {
                             chatWebSocketService.sendMessage(request)
                             inFlightIds.add(entity.id)
-                            Timber.tag("CHAT_SEND").d(
-                                "[CHAT_RESEND_QUEUED] Message %s re-dispatched on attempt #%d — awaiting server ACK",
-                                entity.id,
-                                resendAttempt,
-                            )
                         }.onFailure { e ->
                             Timber.tag("CHAT_SEND").e(e, "[CHAT_RESEND_FAILED] Failed to sync pending message %s on attempt #%d", entity.id, resendAttempt)
+                            if (resendAttempt >= 3) {
+                                messageDao.markFailed(entity.id)
+                                messageSendAttempts.remove(entity.id)
+                            }
                         }
                     }
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
                     Timber.tag("CHAT_SEND").e(e, "[CHAT_RESEND_FAILED] Failed to resend unsynced messages")
+                }
+            }
+
+        override suspend fun retryMessage(messageId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val entity = messageDao.getById(messageId) ?: return@runCatching
+                    messageDao.markPendingRetry(messageId)
+                    messageSendAttempts.remove(messageId)
+                    inFlightIds.remove(messageId)
+                    Timber.tag("CHAT_SEND").d("[CHAT_RETRY] Manual retry triggered for msgId=%s", messageId)
+                    sendMessage(
+                        conversationId = entity.conversationId,
+                        type = runCatching { MessageType.valueOf(entity.type) }.getOrDefault(MessageType.TEXT),
+                        content = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager).content,
+                        mediaUrl = entity.mediaUrl,
+                        metadata = entity.metadata,
+                    )
+                    Unit
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.tag("CHAT_SEND").e(e, "[CHAT_RETRY] Manual retry failed for msgId=%s", messageId)
                 }
             }
     }

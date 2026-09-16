@@ -117,6 +117,13 @@ class ChatDetailViewModel
             }
         }
 
+        fun onRetryMessage(messageId: String) {
+            viewModelScope.launch {
+                chatRepository.retryMessage(messageId)
+            }
+        }
+
+
         private var conversationId: String? = null
         private val voicePlayer = VoicePlayer(context)
         private val gson = Gson()

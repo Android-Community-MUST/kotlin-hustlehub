@@ -117,6 +117,7 @@ fun MessageBubble(
     onDeleteForMe: (Message) -> Unit = {},
     onDeleteForEveryone: (Message) -> Unit = {},
     onReportMessage: (Message) -> Unit = {},
+    onRetry: ((messageId: String) -> Unit)? = null,
     modifier: Modifier = Modifier,
     currentUserLocation: android.location.Location? = null,
     isOtherUserOnline: Boolean = false,
@@ -384,7 +385,7 @@ fun MessageBubble(
                         val isFailed = message.isFailed
                         val isPending = message.id.startsWith("temp_") || (!message.isSynced && !isFailed)
                         val isRead = message.readAt != null
-                        val isDelivered = message.deliveredAt != null || (message.isSynced && !isPending && !isFailed)
+                        val isDelivered = message.deliveredAt != null
 
                         val receiptIcon = when {
                             isFailed -> Icons.Default.Error
@@ -571,12 +572,23 @@ fun MessageBubble(
 
                                 if (isCurrentUser) {
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Icon(
-                                        imageVector = receiptIcon,
-                                        contentDescription = receiptDescription,
-                                        modifier = Modifier.size(13.dp),
-                                        tint = receiptTint,
-                                    )
+                                    if (isFailed && onRetry != null) {
+                                        Icon(
+                                            imageVector = receiptIcon,
+                                            contentDescription = receiptDescription,
+                                            modifier = Modifier
+                                                .size(16.dp)
+                                                .clickable(role = Role.Button) { onRetry(message.id) },
+                                            tint = receiptTint,
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = receiptIcon,
+                                            contentDescription = receiptDescription,
+                                            modifier = Modifier.size(13.dp),
+                                            tint = receiptTint,
+                                        )
+                                    }
                                 }
                             }
                         }
