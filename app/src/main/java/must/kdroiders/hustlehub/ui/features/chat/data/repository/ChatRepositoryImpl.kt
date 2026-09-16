@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.core.notification.AppBadgeHelper
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
 import must.kdroiders.hustlehub.core.security.CryptoManager
 import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
@@ -303,7 +304,9 @@ class ChatRepositoryImpl
                     if (cached != null) {
                         conversationDao.upsert(cached.copy(unreadCount = 0))
                     }
-                    Timber.tag("CHAT_READ").d("[CHAT_READ] markAsRead succeeded for convId=%s, unreadCount reset to 0 in Room", conversationId)
+                    val remaining = conversationDao.getTotalUnreadCountSync()
+                    AppBadgeHelper.applyBadgeCount(context, remaining)
+                    Timber.tag("CHAT_READ").d("[CHAT_READ] markAsRead succeeded for convId=%s, unreadCount reset to 0 in Room, remaining=%d", conversationId, remaining)
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
                     Timber.tag("CHAT_READ").e(e, "[CHAT_READ] Failed to mark conversation as read for convId=%s", conversationId)
@@ -453,11 +456,13 @@ class ChatRepositoryImpl
                                                 "LOCATION" -> "Shared a location"
                                                 else -> proc.content.take(80)
                                             }
+                                            val totalUnread = conversationDao.getTotalUnreadCountSync()
                                             NotificationHelper.postMessageNotification(
                                                 context = context,
                                                 conversationId = conversationId,
                                                 senderName = senderName,
                                                 messagePreview = preview,
+                                                unreadCount = if (totalUnread > 0) totalUnread else 1,
                                             )
                                         } else if (isFromOtherUser && isActive) {
                                             markAsRead(conversationId)

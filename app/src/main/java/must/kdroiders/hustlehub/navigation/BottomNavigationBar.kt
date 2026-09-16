@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.NavKey
 
 /**
@@ -122,9 +123,16 @@ fun HustleBottomBar(
                     if (isChatTab && unreadMessageCount > 0) {
                         BadgedBox(
                             badge = {
-                                Badge {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                                ) {
                                     Text(
                                         text = if (unreadMessageCount > 99) "99+" else unreadMessageCount.toString(),
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 10.sp,
+                                        ),
                                     )
                                 }
                             },
