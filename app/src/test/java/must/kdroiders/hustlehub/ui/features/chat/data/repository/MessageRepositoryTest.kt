@@ -100,7 +100,31 @@ class MessageRepositoryTest {
             val result = repository.loadMessageHistory("conv-1", 0)
 
             assertTrue(result.isSuccess)
+            assertEquals(true, result.getOrNull())
             coVerify(exactly = 1) { messageDao.upsertAll(any()) }
+        }
+
+    @Test
+    fun `loadMessageHistory returns false when content is empty`() =
+        runTest {
+            coEvery {
+                conversationApiService.getMessages("conv-1", 1, 50)
+            } returns ApiResponse(
+                success = true,
+                message = "Success",
+                data = PageResponse(
+                    content = emptyList(),
+                    page = 1,
+                    size = 50,
+                    totalElements = 0L,
+                    totalPages = 1,
+                ),
+            )
+
+            val result = repository.loadMessageHistory("conv-1", 1)
+
+            assertTrue(result.isSuccess)
+            assertEquals(false, result.getOrNull())
         }
 
     @Test

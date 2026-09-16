@@ -70,6 +70,13 @@ data class ChatDetailUiState(
     val isServiceCompleted: Boolean = false,
     val hasReviewedService: Boolean = false,
     val isEncryptionReady: Boolean = false,
+    val currentHistoryPage: Int = 0,
+    val isLoadingOlderMessages: Boolean = false,
+    val hasMoreHistory: Boolean = true,
+    val isSearchActive: Boolean = false,
+    val searchQuery: String = "",
+    val searchResults: List<Int> = emptyList(),
+    val searchResultIndex: Int = 0,
 )
 
 @OptIn(kotlinx.coroutines.FlowPreview::class)
@@ -410,6 +417,24 @@ class ChatDetailViewModel
             loadHistoryAndAutoCard()
         }
 
+        fun loadOlderMessages() {
+            val state = _uiState.value
+            if (state.isLoadingOlderMessages || !state.hasMoreHistory) return
+            val id = conversationId ?: return
+            val nextPage = state.currentHistoryPage + 1
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoadingOlderMessages = true) }
+                val result = chatRepository.loadMessageHistory(id, nextPage)
+                _uiState.update { s ->
+                    s.copy(
+                        isLoadingOlderMessages = false,
+                        currentHistoryPage = if (result.isSuccess) nextPage else s.currentHistoryPage,
+                        hasMoreHistory = result.getOrDefault(true),
+                    )
+                }
+            }
+        }
+
         private fun markAsRead() {
             val id = conversationId ?: return
             viewModelScope.launch {
@@ -701,6 +726,48 @@ class ChatDetailViewModel
                 voicePlayer.release()
             } catch (e: Throwable) {
                 // Ignore in test environment
+            }
+        }
+
+        fun toggleSearch() {
+            _uiState.update { state ->
+                if (state.isSearchActive) {
+                    state.copy(
+                        isSearchActive = false,
+                        searchQuery = "",
+                        searchResults = emptyList(),
+                        searchResultIndex = 0,
+                    )
+                } else {
+                    state.copy(isSearchActive = true)
+                }
+            }
+        }
+
+        fun onChatSearchQueryChanged(query: String) {
+            _uiState.update { state ->
+                val trimmed = query.trim()
+                val results = if (trimmed.isBlank()) {
+                    emptyList()
+                } else {
+                    state.messages.reversed().mapIndexedNotNull { idx, msg ->
+                        if (msg.content.contains(trimmed, ignoreCase = true)) idx else null
+                    }
+                }
+                state.copy(
+                    searchQuery = query,
+                    searchResults = results,
+                    searchResultIndex = 0,
+                )
+            }
+        }
+
+        fun searchNavigate(direction: Int) {
+            _uiState.update { state ->
+                if (state.searchResults.isEmpty()) return@update state
+                val newIdx = (state.searchResultIndex + direction)
+                    .coerceIn(0, state.searchResults.size - 1)
+                state.copy(searchResultIndex = newIdx)
             }
         }
 

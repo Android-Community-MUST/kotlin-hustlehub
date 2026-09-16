@@ -65,6 +65,8 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -316,6 +318,27 @@ fun ChatDetailScreen(
         prevMessageCount = currentCount
     }
 
+    val shouldLoadOlderMessages by remember {
+        derivedStateOf {
+            val totalItems = listState.layoutInfo.totalItemsCount
+            val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            totalItems > 0 && lastVisible >= totalItems - 5 && state.hasMoreHistory && !state.isLoadingOlderMessages
+        }
+    }
+
+    LaunchedEffect(shouldLoadOlderMessages) {
+        if (shouldLoadOlderMessages) {
+            chatDetailViewModel.loadOlderMessages()
+        }
+    }
+
+    LaunchedEffect(state.searchResultIndex, state.searchResults) {
+        val targetIdx = state.searchResults.getOrNull(state.searchResultIndex)
+        if (targetIdx != null) {
+            listState.animateScrollToItem(targetIdx)
+        }
+    }
+
     // Typing indicator: delegate to ViewModel which owns debounce + auto-clear logic
     // (no LaunchedEffect needed — the screen just forwards raw onChange events)
 
@@ -473,7 +496,28 @@ fun ChatDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(
+                    if (state.isSearchActive) {
+                        TextField(
+                            value = state.searchQuery,
+                            onValueChange = chatDetailViewModel::onChatSearchQueryChanged,
+                            placeholder = {
+                                Text(
+                                    text = stringResource(R.string.chat_search_in_conversation),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            },
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                            ),
+                            textStyle = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    } else {
+                        Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -559,12 +603,60 @@ fun ChatDetailScreen(
                             )
                         }
                     }
-                },
+                }
+            },
                 navigationIcon = {
-                    HustleBackButton(onClick = onBackClick)
+                    if (state.isSearchActive) {
+                        IconButton(onClick = { chatDetailViewModel.toggleSearch() }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.cd_close_search),
+                            )
+                        }
+                    } else {
+                        HustleBackButton(onClick = onBackClick)
+                    }
                 },
                 actions = {
-                    if (state.isCurrentUserProvider && !state.isServiceCompleted) {
+                    if (!state.isSearchActive) {
+                        IconButton(onClick = { chatDetailViewModel.toggleSearch() }) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = stringResource(R.string.cd_open_search),
+                            )
+                        }
+                    } else if (state.searchResults.isNotEmpty()) {
+                        Text(
+                            text = stringResource(
+                                R.string.chat_search_result_format,
+                                state.searchResultIndex + 1,
+                                state.searchResults.size,
+                            ),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        IconButton(
+                            onClick = { chatDetailViewModel.searchNavigate(-1) },
+                            enabled = state.searchResultIndex > 0,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = stringResource(R.string.cd_search_prev_result),
+                            )
+                        }
+                        IconButton(
+                            onClick = { chatDetailViewModel.searchNavigate(1) },
+                            enabled = state.searchResultIndex < state.searchResults.size - 1,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = stringResource(R.string.cd_search_next_result),
+                                modifier = Modifier.scale(-1f),
+                            )
+                        }
+                    }
+
+                    if (!state.isSearchActive && state.isCurrentUserProvider && !state.isServiceCompleted) {
                         IconButton(onClick = { chatDetailViewModel.markServiceCompleted() }) {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
@@ -769,6 +861,8 @@ fun ChatDetailScreen(
                         val meta = messageDisplayMetaList.getOrNull(index)
                         val showDateSeparator = meta?.showDateSeparator ?: false
                         val isGroupedWithNext = meta?.isGroupedWithNext ?: false
+                        val currentMatchIndex = state.searchResults.getOrNull(state.searchResultIndex)
+                        val isSearchMatch = state.isSearchActive && currentMatchIndex == index
 
                         Column(
                             modifier = Modifier.fillMaxWidth(),
@@ -803,7 +897,24 @@ fun ChatDetailScreen(
                                 onReportMessage = { msg -> messageToReport = msg },
                                 isOtherUserOnline = state.isOtherUserOnline,
                                 isGroupedWithNext = isGroupedWithNext,
+                                isSearchMatch = isSearchMatch,
                             )
+                        }
+                    }
+
+                    if (state.isLoadingOlderMessages) {
+                        item(key = "load_older_indicator") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                LinearProgressIndicator(
+                                    modifier = Modifier.fillMaxWidth(0.35f),
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
                         }
                     }
 

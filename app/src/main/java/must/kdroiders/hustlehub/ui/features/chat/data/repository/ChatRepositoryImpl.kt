@@ -9,6 +9,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
@@ -64,6 +65,8 @@ class ChatRepositoryImpl
         // by the normal send path in the same session.
         private val inFlightIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
+        private val decryptionCache = androidx.collection.LruCache<String, Message>(500)
+
         override fun clearInFlightIds() = inFlightIds.clear()
 
         override fun setActiveConversation(conversationId: String?) {
@@ -110,16 +113,21 @@ class ChatRepositoryImpl
                 }
             }
 
-        override fun getMessages(conversationId: String): Flow<List<Message>> {
-            return messageDao.getByConversation(conversationId).map { entities ->
-                entities.map { it.toDecryptedDomain(keyExchangeHandler, cryptoManager) }
-            }
-        }
+        override fun getMessages(conversationId: String): Flow<List<Message>> =
+            messageDao.getByConversation(conversationId)
+                .map { entities ->
+                    entities.map { entity ->
+                        decryptionCache.get(entity.id)
+                            ?: entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                                .also { decryptionCache.put(entity.id, it) }
+                    }
+                }
+                .flowOn(Dispatchers.Default)
 
         override suspend fun loadMessageHistory(
             conversationId: String,
             page: Int,
-        ): Result<Unit> =
+        ): Result<Boolean> =
             withContext(Dispatchers.IO) {
                 runCatching {
                     val cachedConv = conversationDao.getById(conversationId)
@@ -181,6 +189,7 @@ class ChatRepositoryImpl
                     }
                     messageDao.upsertAll(entities)
                     Timber.tag("CHAT_HISTORY").d("[CHAT_HISTORY] Upserted %d history messages into Room for convId=%s", entities.size, conversationId)
+                    response.data.content.isNotEmpty()
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
                     Timber.tag("CHAT_HISTORY").e(e, "[CHAT_HISTORY] Failed to load message history for convId=%s", conversationId)

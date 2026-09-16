@@ -26,6 +26,7 @@ import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserReposi
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicateReviewUseCase
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -60,7 +61,7 @@ class ChatDetailViewModelTest {
 
         context = mockk(relaxed = true)
         chatRepository = mockk(relaxed = true)
-        coEvery { chatRepository.loadMessageHistory(any(), any()) } returns Result.success(Unit)
+        coEvery { chatRepository.loadMessageHistory(any(), any()) } returns Result.success(true)
         coEvery { chatRepository.getOrCreateConversation(any(), any()) } returns Result.failure(RuntimeException("Not stubbed"))
         chatWebSocketService = mockk(relaxed = true)
         mediaApiService = mockk(relaxed = true)
@@ -137,5 +138,46 @@ class ChatDetailViewModelTest {
 
             coVerify { userRepository.blockUser("conv-1") }
             assertTrue(callbackCalled)
+        }
+
+    @Test
+    fun `loadOlderMessages updates currentHistoryPage and hasMoreHistory`() =
+        runTest {
+            coEvery { chatRepository.loadMessageHistory("conv-1", 1) } returns Result.success(true)
+
+            viewModel.initialize(conversationId = "conv-1")
+            viewModel.loadOlderMessages()
+            testScheduler.advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertEquals(1, state.currentHistoryPage)
+            assertTrue(state.hasMoreHistory)
+            assertFalse(state.isLoadingOlderMessages)
+        }
+
+    @Test
+    fun `toggleSearch toggles search state and resets search fields`() =
+        runTest {
+            assertFalse(viewModel.uiState.value.isSearchActive)
+
+            viewModel.toggleSearch()
+            assertTrue(viewModel.uiState.value.isSearchActive)
+
+            viewModel.onChatSearchQueryChanged("hello")
+            assertEquals("hello", viewModel.uiState.value.searchQuery)
+
+            viewModel.toggleSearch()
+            assertFalse(viewModel.uiState.value.isSearchActive)
+            assertEquals("", viewModel.uiState.value.searchQuery)
+            assertTrue(viewModel.uiState.value.searchResults.isEmpty())
+        }
+
+    @Test
+    fun `searchNavigate clamps index within search results bounds`() =
+        runTest {
+            viewModel.toggleSearch()
+            // When results are empty, searchNavigate does not crash
+            viewModel.searchNavigate(1)
+            assertEquals(0, viewModel.uiState.value.searchResultIndex)
         }
 }

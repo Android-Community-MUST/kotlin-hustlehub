@@ -21,7 +21,7 @@ interface ChatRepository {
     suspend fun loadMessageHistory(
         conversationId: String,
         page: Int = 0,
-    ): Result<Unit>
+    ): Result<Boolean>
 
     suspend fun sendMessage(
         conversationId: String,

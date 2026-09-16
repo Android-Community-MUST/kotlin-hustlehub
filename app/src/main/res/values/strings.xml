@@ -393,6 +393,15 @@
     <string name="chat_shared_location">Shared Location</string>
     <string name="chat_shared_location_pin">Shared Location Pin</string>
     <string name="chat_tap_view_maps">Tap to view in Maps</string>
+
+    <!-- In-chat search -->
+    <string name="chat_search_in_conversation">Search in conversation</string>
+    <string name="chat_search_result_format">%1$d of %2$d</string>
+    <string name="chat_search_no_results">No messages found</string>
+    <string name="cd_search_next_result">Next result</string>
+    <string name="cd_search_prev_result">Previous result</string>
+    <string name="cd_close_search">Close search</string>
+    <string name="cd_open_search">Search messages</string>
     <string name="chat_service_request">SERVICE REQUEST</string>
     <string name="chat_view_service">View Service</string>
 

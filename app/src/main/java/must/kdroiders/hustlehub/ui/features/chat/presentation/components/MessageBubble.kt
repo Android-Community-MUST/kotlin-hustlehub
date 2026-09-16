@@ -1,13 +1,8 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.components
 
 import android.location.Location
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -53,7 +48,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,7 +59,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.TransformOrigin
+
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -126,37 +121,19 @@ fun MessageBubble(
     currentUserLocation: android.location.Location? = null,
     isOtherUserOnline: Boolean = false,
     isGroupedWithNext: Boolean = false,
+    isSearchMatch: Boolean = false,
 ) {
     val haptic = LocalHapticFeedback.current
     var dragAmountX by remember { mutableStateOf(0f) }
     var replyThreshold by remember { mutableStateOf(0f) }
     var showMenu by remember { mutableStateOf(false) }
 
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { visible = true }
-
-    AnimatedVisibility(
-        visible = visible,
-        enter = run {
-            val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-            val scaleSpec = spring<Float>(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow,
-            )
-            scaleIn(
-                initialScale = 0.5f,
-                transformOrigin = TransformOrigin(if (isCurrentUser) 1f else 0f, 1f),
-                animationSpec = scaleSpec,
-            ) + fadeIn(fadeInSpec)
-        },
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = if (isGroupedWithNext) 1.dp else 4.dp),
+        contentAlignment = Alignment.CenterStart,
     ) {
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.CenterStart,
-        ) {
             // Background layer: Reply Icon (only shown if dragging)
             if (dragAmountX > 0f) {
                 val scale = (dragAmountX / replyThreshold).coerceIn(0f, 1.2f)
@@ -219,7 +196,13 @@ fun MessageBubble(
                 MaterialTheme.colorScheme.onSurface
             }
 
-            val bubbleBorder = if (!isCurrentUser) {
+            val bubbleBorder = if (isSearchMatch) {
+                Modifier.border(
+                    width = 2.dp,
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = bubbleShape,
+                )
+            } else if (!isCurrentUser) {
                 Modifier.border(
                     width = 1.dp,
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
@@ -602,7 +585,6 @@ fun MessageBubble(
             }
         }
     }
-}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
