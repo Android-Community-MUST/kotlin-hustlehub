@@ -39,6 +39,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import must.kdroiders.hustlehub.sharedComposables.FeaturedBadge
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 
@@ -52,6 +55,7 @@ fun ServiceManagementCard(
     onDeleteClick: () -> Unit,
     onAvailabilityChange: (ServiceAvailability) -> Unit,
     modifier: Modifier = Modifier,
+    onBoostClick: () -> Unit = {},
 ) {
     Box(
         modifier = modifier
@@ -230,6 +234,53 @@ fun ServiceManagementCard(
                             .align(Alignment.CenterEnd),
                         strokeWidth = 2.dp,
                         color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Spacer(Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                if (service.isFeatured) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        FeaturedBadge()
+                        Text(
+                            text = "Featured Active",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    Text(
+                        text = "Extend Boost",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clickable(onClick = onBoostClick)
+                            .padding(vertical = 4.dp, horizontal = 8.dp),
+                    )
+                } else {
+                    Text(
+                        text = "Pin to top of discovery",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    HustleButton(
+                        text = "⚡ Boost (50/-)",
+                        onClick = onBoostClick,
+                        variant = HustleButtonVariant.Secondary,
                     )
                 }
             }

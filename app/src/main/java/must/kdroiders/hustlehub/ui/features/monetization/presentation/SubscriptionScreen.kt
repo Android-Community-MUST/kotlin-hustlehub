@@ -110,8 +110,20 @@ fun SubscriptionScreen(
         ) {
             Spacer(Modifier.height(8.dp))
 
-            var selectedPlanType by rememberSaveable { mutableStateOf("PRO") }
+            val userServices by viewModel.userServices.collectAsState()
+            var selectedPlanType by rememberSaveable(serviceId) {
+                mutableStateOf(if (serviceId != null) "FEATURED" else "PRO")
+            }
+            var selectedServiceId by rememberSaveable(serviceId) {
+                mutableStateOf(serviceId)
+            }
             var showExtendOptions by rememberSaveable { mutableStateOf(false) }
+
+            LaunchedEffect(userServices, selectedServiceId) {
+                if (selectedServiceId == null && userServices.size == 1) {
+                    selectedServiceId = userServices.first().id
+                }
+            }
 
             val activeSub = (subscriptionState as? SubscriptionUiState.Success)?.data
             val hasActivePro = activeSub != null && (activeSub.isActive || activeSub.status == "ACTIVE")
@@ -301,6 +313,88 @@ fun SubscriptionScreen(
                     }
                 }
 
+                // If FEATURED is selected, display service selection
+                if (selectedPlanType == "FEATURED") {
+                    val currentSelectedService = userServices.find { it.id == selectedServiceId }
+                    if (serviceId != null || currentSelectedService != null) {
+                        val titleToDisplay = currentSelectedService?.title ?: "Selected Service"
+                        HustleCard(variant = HustleCardVariant.Tonal) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Featuring Service",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    Text(
+                                        text = titleToDisplay,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+                        }
+                    } else if (userServices.isEmpty()) {
+                        HustleCard(variant = HustleCardVariant.Outlined) {
+                            Text(
+                                text = "You do not have any active services. Please create a service first before boosting it.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Choose service to boost:",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            userServices.forEach { s ->
+                                val isChosen = s.id == selectedServiceId
+                                HustleCard(
+                                    variant = if (isChosen) HustleCardVariant.Elevated else HustleCardVariant.Outlined,
+                                    onClick = { selectedServiceId = s.id },
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = s.title,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = if (isChosen) FontWeight.Bold else FontWeight.Normal,
+                                            )
+                                            Text(
+                                                text = s.priceRange,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                        if (isChosen) {
+                                            Icon(
+                                                imageVector = Icons.Default.CheckCircle,
+                                                contentDescription = "Selected",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // M-Pesa payment section
                 Text(
                     text = "Pay with M-Pesa",
@@ -326,10 +420,18 @@ fun SubscriptionScreen(
                 }
 
                 val isPaymentBusy = paymentState is PaymentUiState.Submitting
+                val selectedServiceName = userServices.find { it.id == selectedServiceId }?.title
+                val isServiceNeeded = selectedPlanType == "FEATURED" && selectedServiceId == null
 
                 val buttonText = when (selectedPlanType) {
                     "PRO_QUARTERLY" -> "Upgrade to Pro (3 Months) — KES 400"
-                    "FEATURED" -> "Boost Listing (3 Days) — KES 50"
+                    "FEATURED" -> {
+                        if (!selectedServiceName.isNullOrBlank()) {
+                            "Boost \"$selectedServiceName\" (3 Days) — KES 50"
+                        } else {
+                            "Boost Listing (3 Days) — KES 50"
+                        }
+                    }
                     else -> "Upgrade to Pro (1 Month) — KES 150"
                 }
 
@@ -340,11 +442,11 @@ fun SubscriptionScreen(
                         viewModel.triggerPayment(
                             rawPhone = phoneNumber,
                             planType = selectedPlanType,
-                            serviceId = serviceId,
+                            serviceId = if (selectedPlanType == "FEATURED") selectedServiceId else null,
                         )
                     },
                     loading = isPaymentBusy,
-                    enabled = phoneNumber.isNotBlank() && !isPaymentBusy,
+                    enabled = phoneNumber.isNotBlank() && !isPaymentBusy && !isServiceNeeded,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
