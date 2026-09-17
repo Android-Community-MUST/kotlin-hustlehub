@@ -1,15 +1,11 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view
 
 import android.content.Intent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,14 +16,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AdminPanelSettings
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,9 +42,11 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.LoadingState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileAvatar
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileBadges
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileBadgesEmptyState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileBottomTabs
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileHeader
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileInfo
+import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileSegmentedTabs
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProfileStatsRow
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ProviderOnboardingCard
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ServiceCard
@@ -57,9 +55,6 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.Profi
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
-/**
- * Alias for ProfileScreen to satisfy MyProfileScreen naming convention.
- */
 @Composable
 fun MyProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
@@ -103,13 +98,14 @@ fun ProfileScreen(
     val shareSubject = stringResource(R.string.profile_share_subject)
     val shareTextFormat = stringResource(R.string.profile_share_text_format)
     val shareChooserTitle = stringResource(R.string.profile_share_chooser_title)
+    val defaultErrorMsg = stringResource(R.string.error_default_title)
 
     HustleScaffold(
         topBar = {
             ProfileHeader(
                 onSettingsClick = onSettingsClick,
                 onShareClick = {
-                    val userId = state.user?.id ?: ""
+                    val userId = state.user?.id.orEmpty()
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_SUBJECT, shareSubject)
@@ -122,15 +118,6 @@ fun ProfileScreen(
                 },
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddNewServiceClick,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_new_service))
-            }
-        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -139,7 +126,7 @@ fun ProfileScreen(
             when {
                 state.isLoading && !state.isRefreshing -> LoadingState()
                 state.error != null -> ErrorState(
-                    message = state.error ?: "Unknown error",
+                    message = state.error ?: defaultErrorMsg,
                     onRetry = profileViewModel::retry,
                 )
                 else -> {
@@ -168,8 +155,6 @@ fun ProfileScreen(
     }
 }
 
-// Main content — LazyColumn for performance
-
 @Composable
 private fun ProfileContent(
     state: ProfileUiState,
@@ -190,25 +175,29 @@ private fun ProfileContent(
     val isAdmin = must.kdroiders.hustlehub.core.auth.AdminAuthUtils
         .isAuthorizedAdmin(user.email, user.role.name)
 
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            top = 16.dp,
-            bottom = 80.dp, // FAB clearance
+            top = 8.dp,
+            bottom = 40.dp,
         ),
     ) {
-        item(key = "avatar") {
+        item(key = "hero_profile") {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .padding(top = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 ProfileAvatar(
                     photoUrl = user.profilePhotoUrl,
                     isVerified = user.isVerified,
+                    avatarSize = 96.dp,
+                    onEditPhotoClick = onEditClick,
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(10.dp))
                 ProfileInfo(
                     name = user.name,
                     phone = user.phone,
@@ -221,15 +210,30 @@ private fun ProfileContent(
                     isVerifiedPro = user.isVerifiedPro,
                     onAvailabilityToggle = onToggleOverallAvailability,
                 )
-                Spacer(Modifier.height(16.dp))
-                HustleButton(
-                    text = stringResource(R.string.profile_edit_button),
-                    variant = HustleButtonVariant.Secondary,
-                    onClick = onEditClick,
+                Spacer(Modifier.height(14.dp))
+
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = horizontalPadding),
-                )
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    HustleButton(
+                        text = stringResource(R.string.profile_edit_button),
+                        icon = Icons.Default.Edit,
+                        variant = HustleButtonVariant.Secondary,
+                        onClick = onEditClick,
+                        modifier = Modifier.weight(1f),
+                    )
+                    HustleButton(
+                        text = stringResource(R.string.action_add_service),
+                        icon = Icons.Default.Add,
+                        variant = HustleButtonVariant.Primary,
+                        onClick = onAddNewServiceClick,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+
                 if (isAdmin) {
                     Spacer(Modifier.height(10.dp))
                     HustleButton(
@@ -245,84 +249,101 @@ private fun ProfileContent(
             }
         }
 
-        item(key = "stats") {
-            Spacer(Modifier.height(20.dp))
+        item(key = "stats_dashboard") {
+            Spacer(Modifier.height(16.dp))
             ProfileStatsRow(
                 hustleScore = state.hustleScore,
                 serviceCount = state.services.size,
                 reviewCount = state.reviewCount,
                 onReviewsClick = onNavigateToMyServices,
+                onServicesClick = { selectedTabIndex = 0 },
                 modifier = Modifier.padding(horizontal = horizontalPadding),
             )
         }
 
-        item(key = "badges") {
-            Spacer(Modifier.height(16.dp))
-            ProfileBadges(
-                badges = state.badges,
-                modifier = Modifier.padding(horizontal = horizontalPadding),
-            )
-        }
-
-        item(key = "services_header") {
-            Spacer(Modifier.height(24.dp))
-            ServicesHeader(
-                onAddNewServiceClick = onAddNewServiceClick,
-                onManageServicesClick = onNavigateToMyServices,
+        item(key = "segmented_tabs") {
+            Spacer(Modifier.height(20.dp))
+            ProfileSegmentedTabs(
+                selectedIndex = selectedTabIndex,
+                onTabSelected = { selectedTabIndex = it },
+                serviceCount = state.services.size,
+                badgeCount = state.badges.size,
                 modifier = Modifier.padding(horizontal = horizontalPadding),
             )
             Spacer(Modifier.height(12.dp))
         }
 
-        item(key = "provider_onboarding") {
-            AnimatedVisibility(
-                visible = state.services.isEmpty(),
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut(),
-            ) {
-                ProviderOnboardingCard(
-                    onCreateServiceClick = onAddNewServiceClick,
-                    modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 4.dp),
-                )
+        when (selectedTabIndex) {
+            0 -> {
+                if (state.services.isEmpty()) {
+                    item(key = "provider_onboarding") {
+                        ProviderOnboardingCard(
+                            onCreateServiceClick = onAddNewServiceClick,
+                            modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 4.dp),
+                        )
+                    }
+                } else {
+                    item(key = "services_header") {
+                        ServicesHeader(
+                            onAddNewServiceClick = onAddNewServiceClick,
+                            onManageServicesClick = onNavigateToMyServices,
+                            modifier = Modifier.padding(horizontal = horizontalPadding),
+                        )
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    items(
+                        items = state.services,
+                        key = { it.id },
+                    ) { service ->
+                        ServiceCard(
+                            service = service,
+                            onClick = { onServiceClick(service.id) },
+                            onToggle = { onToggleService(service.id) },
+                            modifier = Modifier.padding(
+                                horizontal = horizontalPadding,
+                                vertical = 6.dp,
+                            ),
+                        )
+                    }
+                }
             }
-        }
-
-        items(
-            items = state.services,
-            key = { it.id },
-        ) { service ->
-            ServiceCard(
-                service = service,
-                onClick = { onServiceClick(service.id) },
-                onToggle = {
-                    onToggleService(service.id)
-                },
-                modifier = Modifier.padding(
-                    horizontal = horizontalPadding,
-                    vertical = 6.dp,
-                ),
-            )
-        }
-
-        item(key = "bottom_tabs") {
-            Spacer(Modifier.height(20.dp))
-            ProfileBottomTabs(
-                modifier = Modifier.padding(horizontal = horizontalPadding),
-                onAnalyticsClick = {
-                    if (user.isVerifiedPro) {
-                        onNavigateToAnalytics("OVERVIEW")
-                    } else {
-                        onNavigateToSubscription()
+            1 -> {
+                if (state.badges.isEmpty()) {
+                    item(key = "badges_empty") {
+                        ProfileBadgesEmptyState(
+                            modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 8.dp),
+                        )
                     }
-                },
-                onEarningsClick = {
-                    if (user.isVerifiedPro) {
-                        onNavigateToAnalytics("PAYMENTS")
-                    } else {
-                        onNavigateToSubscription()
+                } else {
+                    item(key = "badges_list") {
+                        ProfileBadges(
+                            badges = state.badges,
+                            modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 8.dp),
+                        )
                     }
-                },
-            )
+                }
+            }
+            2 -> {
+                item(key = "insights_tab") {
+                    ProfileBottomTabs(
+                        modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 8.dp),
+                        onAnalyticsClick = {
+                            if (user.isVerifiedPro) {
+                                onNavigateToAnalytics("OVERVIEW")
+                            } else {
+                                onNavigateToSubscription()
+                            }
+                        },
+                        onEarningsClick = {
+                            if (user.isVerifiedPro) {
+                                onNavigateToAnalytics("PAYMENTS")
+                            } else {
+                                onNavigateToSubscription()
+                            }
+                        },
+                    )
+                }
+            }
         }
     }
 }
