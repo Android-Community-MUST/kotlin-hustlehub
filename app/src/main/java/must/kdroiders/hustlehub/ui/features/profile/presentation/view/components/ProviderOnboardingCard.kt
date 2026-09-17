@@ -38,7 +38,7 @@ fun ProviderOnboardingCard(
     modifier: Modifier = Modifier,
 ) {
     HustleCard(
-        variant = HustleCardVariant.Glass,
+        variant = HustleCardVariant.Elevated,
         modifier = modifier,
     ) {
         Column(
@@ -49,10 +49,10 @@ fun ProviderOnboardingCard(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .background(MaterialTheme.colorScheme.surface)
                     .border(
                         width = 1.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(16.dp),
                     ),
                 contentAlignment = Alignment.Center,
@@ -70,7 +70,7 @@ fun ProviderOnboardingCard(
             Text(
                 text = stringResource(R.string.profile_provider_cta_title),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.semantics { heading() },
             )
 
@@ -79,7 +79,7 @@ fun ProviderOnboardingCard(
             Text(
                 text = stringResource(R.string.profile_provider_cta_body),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 8.dp),
             )

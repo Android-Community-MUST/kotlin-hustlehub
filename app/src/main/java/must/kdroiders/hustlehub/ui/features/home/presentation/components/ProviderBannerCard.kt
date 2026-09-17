@@ -39,7 +39,7 @@ fun ProviderBannerCard(
     modifier: Modifier = Modifier,
 ) {
     HustleCard(
-        variant = HustleCardVariant.Glass,
+        variant = HustleCardVariant.Secondary,
         modifier = modifier,
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -47,10 +47,10 @@ fun ProviderBannerCard(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        .background(MaterialTheme.colorScheme.surface)
                         .border(
                             width = 1.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                             shape = RoundedCornerShape(8.dp),
                         ).padding(horizontal = 10.dp, vertical = 6.dp),
                 ) {
@@ -77,7 +77,7 @@ fun ProviderBannerCard(
                     text = stringResource(R.string.banner_provider_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
 
                 Spacer(Modifier.height(4.dp))
@@ -85,7 +85,7 @@ fun ProviderBannerCard(
                 Text(
                     text = stringResource(R.string.banner_provider_subtitle),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f),
                 )
 
                 Spacer(Modifier.height(14.dp))
@@ -105,7 +105,7 @@ fun ProviderBannerCard(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = stringResource(R.string.banner_provider_dismiss),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
                     modifier = Modifier.size(18.dp),
                 )
             }
