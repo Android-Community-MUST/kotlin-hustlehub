@@ -100,8 +100,11 @@ fun extractAreaName(fullAddress: String): String {
                 ?.replace(Regex("\\d+"), "")
                 ?.trim()
                 ?.takeIf { it.isNotBlank() && it != "Kenya" }
-            if (city != null && locality != null && city != locality) "$locality, $city"
-            else locality ?: parts[0]
+            if (city != null && locality != null && city != locality) {
+                "$locality, $city"
+            } else {
+                locality ?: parts[0]
+            }
         }
         parts.size == 2 -> "${parts[0]}, ${parts[1]}"
         else -> parts.firstOrNull() ?: fullAddress
@@ -124,8 +127,11 @@ fun HustleMapLocationPicker(
     val scope = rememberCoroutineScope()
 
     val startLatLng = remember {
-        if (initialLat == 0.0 && initialLng == 0.0) NCHIRU_LATLNG
-        else LatLng(initialLat, initialLng)
+        if (initialLat == 0.0 && initialLng == 0.0) {
+            NCHIRU_LATLNG
+        } else {
+            LatLng(initialLat, initialLng)
+        }
     }
 
     val cameraPositionState = rememberCameraPositionState {
@@ -172,6 +178,7 @@ fun HustleMapLocationPicker(
             try {
                 withTimeoutOrNull(2500L) {
                     val geocoder = Geocoder(context, Locale.getDefault())
+
                     @Suppress("DEPRECATION")
                     val addresses = geocoder.getFromLocation(targetLat, targetLng, 1)
                     if (!addresses.isNullOrEmpty()) {
@@ -191,8 +198,11 @@ fun HustleMapLocationPicker(
 
     val customLocFormat = stringResource(R.string.map_custom_location_format)
     val displayAreaName = remember(geocodedAddress, confirmedLat, confirmedLng, customLocFormat) {
-        if (geocodedAddress.isNotBlank()) extractAreaName(geocodedAddress)
-        else String.format(customLocFormat, confirmedLat, confirmedLng)
+        if (geocodedAddress.isNotBlank()) {
+            extractAreaName(geocodedAddress)
+        } else {
+            String.format(customLocFormat, confirmedLat, confirmedLng)
+        }
     }
 
     Dialog(
@@ -340,7 +350,8 @@ fun HustleMapLocationPicker(
                                             }
                                         }
                                     }
-                                } catch (_: SecurityException) {}
+                                } catch (_: SecurityException) {
+                                }
                             },
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
@@ -387,8 +398,7 @@ fun HustleMapLocationPicker(
                                         .background(
                                             color = MaterialTheme.colorScheme.primaryContainer,
                                             shape = RoundedCornerShape(8.dp),
-                                        )
-                                        .padding(8.dp),
+                                        ).padding(8.dp),
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.LocationOn,

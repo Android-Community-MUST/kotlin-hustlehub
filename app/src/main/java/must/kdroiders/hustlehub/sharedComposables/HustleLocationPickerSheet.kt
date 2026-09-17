@@ -136,6 +136,7 @@ fun HustleLocationPickerSheet(
                         try {
                             withTimeoutOrNull(2500L) {
                                 val geocoder = Geocoder(context, Locale.getDefault())
+
                                 @Suppress("DEPRECATION")
                                 val addresses = geocoder.getFromLocation(gpsLat, gpsLng, 1)
                                 if (!addresses.isNullOrEmpty()) {
@@ -430,7 +431,10 @@ private fun AccuracyDot(accuracy: Float) {
 }
 
 @Composable
-private fun LandmarkChip(label: String, onClick: () -> Unit) {
+private fun LandmarkChip(
+    label: String,
+    onClick: () -> Unit,
+) {
     SuggestionChip(
         onClick = onClick,
         label = {

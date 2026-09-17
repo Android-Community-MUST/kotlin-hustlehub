@@ -70,7 +70,8 @@ class HustleHubApp : Application(), ImageLoaderFactory, Configuration.Provider {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val count = conversationDaoProvider.get().getTotalUnreadCountSync()
-                must.kdroiders.hustlehub.core.notification.AppBadgeHelper.applyBadgeCount(applicationContext, count)
+                must.kdroiders.hustlehub.core.notification.AppBadgeHelper
+                    .applyBadgeCount(applicationContext, count)
             } catch (e: Exception) {
                 Timber.w(e, "Failed to restore app launcher badge count on cold start")
             }

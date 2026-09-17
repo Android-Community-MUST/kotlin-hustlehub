@@ -169,7 +169,10 @@ class ChatDetailViewModelTest {
             viewModel.toggleSearch()
             assertFalse(viewModel.uiState.value.isSearchActive)
             assertEquals("", viewModel.uiState.value.searchQuery)
-            assertTrue(viewModel.uiState.value.searchResults.isEmpty())
+            assertTrue(
+                viewModel.uiState.value.searchResults
+                    .isEmpty(),
+            )
         }
 
     @Test

@@ -85,4 +85,3 @@ val HustleE2EeBannerContainerDark = Color(0xFF182229)
 val HustleE2EeBannerContainerLight = Color(0xFFFFF4CC)
 val HustleE2EeBannerContentDark = Color(0xFFFFD56B)
 val HustleE2EeBannerContentLight = Color(0xFF7A5C00)
-

@@ -123,7 +123,6 @@ class ChatDetailViewModel
             }
         }
 
-
         private var conversationId: String? = null
         private val voicePlayer = VoicePlayer(context)
         private val gson = Gson()

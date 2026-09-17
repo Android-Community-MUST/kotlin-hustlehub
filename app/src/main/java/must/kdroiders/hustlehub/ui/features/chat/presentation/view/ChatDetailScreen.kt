@@ -52,10 +52,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
@@ -69,10 +65,8 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -83,6 +77,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHost
@@ -112,10 +107,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -123,6 +121,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -327,7 +326,9 @@ fun ChatDetailScreen(
     val shouldLoadOlderMessages by remember {
         derivedStateOf {
             val totalItems = listState.layoutInfo.totalItemsCount
-            val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val lastVisible = listState.layoutInfo.visibleItemsInfo
+                .lastOrNull()
+                ?.index ?: 0
             totalItems > 0 && lastVisible >= totalItems - 5 && state.hasMoreHistory && !state.isLoadingOlderMessages
         }
     }
@@ -556,93 +557,93 @@ fun ChatDetailScreen(
                         )
                     } else {
                         Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics { heading() },
-                    ) {
-                        // User Avatar with online indicator dot
-                        Box {
-                            if (!state.otherUserAvatar.isNullOrBlank()) {
-                                AsyncImage(
-                                    model = state.otherUserAvatar,
-                                    contentDescription = stringResource(R.string.cd_avatar_format, state.otherUserName),
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop,
-                                )
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primaryContainer)
-                                        .clearAndSetSemantics { },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    val firstLetter = state.otherUserName.firstOrNull()?.uppercase() ?: "?"
-                                    Text(
-                                        text = firstLetter,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        fontWeight = FontWeight.Bold,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .semantics { heading() },
+                        ) {
+                            // User Avatar with online indicator dot
+                            Box {
+                                if (!state.otherUserAvatar.isNullOrBlank()) {
+                                    AsyncImage(
+                                        model = state.otherUserAvatar,
+                                        contentDescription = stringResource(R.string.cd_avatar_format, state.otherUserName),
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop,
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primaryContainer)
+                                            .clearAndSetSemantics { },
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        val firstLetter = state.otherUserName.firstOrNull()?.uppercase() ?: "?"
+                                        Text(
+                                            text = firstLetter,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                    }
+                                }
+
+                                // Online presence dot
+                                if (state.isOtherUserOnline) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .size(12.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.background)
+                                            .padding(2.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.tertiary),
                                     )
                                 }
                             }
 
-                            // Online presence dot
-                            if (state.isOtherUserOnline) {
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomEnd)
-                                        .size(12.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.background)
-                                        .padding(2.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.tertiary),
-                                )
-                            }
-                        }
+                            Spacer(modifier = Modifier.width(12.dp))
 
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        // Name and typing/presence status line
-                        Column {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
+                            // Name and typing/presence status line
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = state.otherUserName,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false),
+                                    )
+                                }
+                                val lastSeenAt = state.otherUserLastSeenAt
+                                val subtitle = when {
+                                    state.isTyping -> stringResource(R.string.chat_status_typing)
+                                    state.isOtherUserOnline -> stringResource(R.string.chat_status_online)
+                                    lastSeenAt != null ->
+                                        stringResource(R.string.chat_status_last_seen_format, formatLastSeen(lastSeenAt))
+                                    else -> stringResource(R.string.chat_status_offline)
+                                }
                                 Text(
-                                    text = state.otherUserName,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f, fill = false),
+                                    text = subtitle,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (state.isTyping || state.isOtherUserOnline) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                    },
+                                    fontWeight = if (state.isTyping || state.isOtherUserOnline) FontWeight.Bold else FontWeight.Normal,
                                 )
                             }
-                            val lastSeenAt = state.otherUserLastSeenAt
-                            val subtitle = when {
-                                state.isTyping -> stringResource(R.string.chat_status_typing)
-                                state.isOtherUserOnline -> stringResource(R.string.chat_status_online)
-                                lastSeenAt != null ->
-                                    stringResource(R.string.chat_status_last_seen_format, formatLastSeen(lastSeenAt))
-                                else -> stringResource(R.string.chat_status_offline)
-                            }
-                            Text(
-                                text = subtitle,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (state.isTyping || state.isOtherUserOnline) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                                },
-                                fontWeight = if (state.isTyping || state.isOtherUserOnline) FontWeight.Bold else FontWeight.Normal,
-                            )
                         }
                     }
-                }
-            },
+                },
                 navigationIcon = {
                     if (state.isSearchActive) {
                         IconButton(onClick = { chatDetailViewModel.toggleSearch() }) {
@@ -938,7 +939,6 @@ fun ChatDetailScreen(
                                 isGroupedWithNext = isGroupedWithNext,
                                 isSearchMatch = isSearchMatch,
                             )
-
                         }
                     }
 

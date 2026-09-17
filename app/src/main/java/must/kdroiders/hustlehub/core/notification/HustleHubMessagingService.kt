@@ -97,7 +97,9 @@ class HustleHubMessagingService : FirebaseMessagingService() {
                         if (cachedConv != null) {
                             val msgTimestamp = remoteMessage.data["timestamp"]
                                 ?: remoteMessage.data["createdAt"]
-                                ?: java.time.Instant.now().toString()
+                                ?: java.time.Instant
+                                    .now()
+                                    .toString()
                             conversationDao.upsert(
                                 cachedConv.copy(
                                     lastMessage = content,

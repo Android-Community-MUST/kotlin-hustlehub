@@ -48,7 +48,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,7 +58,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -135,460 +133,459 @@ fun MessageBubble(
             .padding(horizontal = 16.dp, vertical = if (isGroupedWithNext) 1.dp else 4.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
-            // Background layer: Reply Icon (only shown if dragging)
-            if (dragAmountX > 0f) {
-                val scale = (dragAmountX / replyThreshold).coerceIn(0f, 1.2f)
-                val alpha = (dragAmountX / replyThreshold).coerceIn(0f, 1f)
-                val iconTint = if (dragAmountX >= replyThreshold) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                }
-
-                Box(
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Reply,
-                        contentDescription = stringResource(R.string.cd_reply),
-                        tint = iconTint,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .graphicsLayer(
-                                scaleX = scale,
-                                scaleY = scale,
-                                alpha = alpha,
-                            ),
-                    )
-                }
-            }
-
-            val tailRadius = if (isGroupedWithNext) 20.dp else 4.dp
-            val bubbleShape = if (isCurrentUser) {
-                RoundedCornerShape(
-                    topStart = 20.dp,
-                    topEnd = 20.dp,
-                    bottomStart = 20.dp,
-                    bottomEnd = tailRadius,
-                )
-            } else {
-                RoundedCornerShape(
-                    topStart = 20.dp,
-                    topEnd = 20.dp,
-                    bottomStart = tailRadius,
-                    bottomEnd = 20.dp,
-                )
-            }
-
-            val bubbleBackground = if (isCurrentUser) {
+        // Background layer: Reply Icon (only shown if dragging)
+        if (dragAmountX > 0f) {
+            val scale = (dragAmountX / replyThreshold).coerceIn(0f, 1.2f)
+            val alpha = (dragAmountX / replyThreshold).coerceIn(0f, 1f)
+            val iconTint = if (dragAmountX >= replyThreshold) {
                 MaterialTheme.colorScheme.primary
             } else {
-                MaterialTheme.colorScheme.surface
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             }
 
-            val textColor = if (isCurrentUser) {
-                MaterialTheme.colorScheme.onPrimary
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            }
-
-            val bubbleBorder = if (isSearchMatch) {
-                Modifier.border(
-                    width = 2.dp,
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = bubbleShape,
-                )
-            } else if (!isCurrentUser) {
-                Modifier.border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                    shape = bubbleShape,
-                )
-            } else {
-                Modifier
-            }
-
-            val alignment = if (isCurrentUser) Alignment.End else Alignment.Start
-
-            Column(
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics(mergeDescendants = true) {}
-                    .then(
-                        if (message.isDeleted) {
-                            Modifier
-                        } else {
-                            Modifier.swipeToReply(
-                                haptic = haptic,
-                                onReply = { onReply(message) },
-                                onDragStateChanged = { dragX, thresh ->
-                                    dragAmountX = dragX
-                                    replyThreshold = thresh
-                                },
-                            )
-                        },
-                    ),
-                horizontalAlignment = alignment,
+                    .padding(start = 8.dp)
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center,
             ) {
-                val isImageMessage = message.type == MessageType.IMAGE
-                val bubblePadding = if (isImageMessage) 4.dp else 14.dp
-
-                Box(
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Reply,
+                    contentDescription = stringResource(R.string.cd_reply),
+                    tint = iconTint,
                     modifier = Modifier
-                        .widthIn(max = 300.dp)
-                        .clip(bubbleShape)
-                        .background(bubbleBackground)
-                        .then(bubbleBorder)
-                        .combinedClickable(
-                            enabled = !message.isDeleted,
-                            onClick = { /* Child views handle their own click events */ },
-                            onLongClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                showMenu = true
-                            },
-                        ).padding(bubblePadding),
-                ) {
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false },
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_delete_for_me)) },
-                            onClick = {
-                                showMenu = false
-                                onDeleteForMe(message)
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_report_message)) },
-                            onClick = {
-                                showMenu = false
-                                onReportMessage(message)
-                            },
-                        )
-                        if (isCurrentUser) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.action_delete_for_everyone)) },
-                                onClick = {
-                                    showMenu = false
-                                    onDeleteForEveryone(message)
-                                },
-                            )
-                        }
-                        if (message.type == MessageType.IMAGE && !message.mediaUrl.isNullOrBlank()) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.action_save_image)) },
-                                onClick = {
-                                    showMenu = false
-                                    onImageLongClick(message.mediaUrl)
-                                },
-                            )
-                        }
-                    }
+                        .size(20.dp)
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            alpha = alpha,
+                        ),
+                )
+            }
+        }
 
-                    Column {
-                        // Render Reply Quote Box if message has reply details in metadata
-                        val replyData = remember(message.metadata) {
-                            try {
-                                if (message.metadata != null && !message.isDeleted) {
-                                    val gson = Gson()
-                                    val obj = gson.fromJson(message.metadata, JsonObject::class.java)
-                                    if (obj.has("replyToId")) {
-                                        ReplyMetadata(
-                                            replyToId = obj.get("replyToId")?.asString,
-                                            replyToContent = obj.get("replyToContent")?.asString,
-                                            replyToSenderName = obj.get("replyToSenderName")?.asString,
-                                        )
-                                    } else {
-                                        null
-                                    }
+        val tailRadius = if (isGroupedWithNext) 20.dp else 4.dp
+        val bubbleShape = if (isCurrentUser) {
+            RoundedCornerShape(
+                topStart = 20.dp,
+                topEnd = 20.dp,
+                bottomStart = 20.dp,
+                bottomEnd = tailRadius,
+            )
+        } else {
+            RoundedCornerShape(
+                topStart = 20.dp,
+                topEnd = 20.dp,
+                bottomStart = tailRadius,
+                bottomEnd = 20.dp,
+            )
+        }
+
+        val bubbleBackground = if (isCurrentUser) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.surface
+        }
+
+        val textColor = if (isCurrentUser) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
+
+        val bubbleBorder = if (isSearchMatch) {
+            Modifier.border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.primary,
+                shape = bubbleShape,
+            )
+        } else if (!isCurrentUser) {
+            Modifier.border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                shape = bubbleShape,
+            )
+        } else {
+            Modifier
+        }
+
+        val alignment = if (isCurrentUser) Alignment.End else Alignment.Start
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics(mergeDescendants = true) {}
+                .then(
+                    if (message.isDeleted) {
+                        Modifier
+                    } else {
+                        Modifier.swipeToReply(
+                            haptic = haptic,
+                            onReply = { onReply(message) },
+                            onDragStateChanged = { dragX, thresh ->
+                                dragAmountX = dragX
+                                replyThreshold = thresh
+                            },
+                        )
+                    },
+                ),
+            horizontalAlignment = alignment,
+        ) {
+            val isImageMessage = message.type == MessageType.IMAGE
+            val bubblePadding = if (isImageMessage) 4.dp else 14.dp
+
+            Box(
+                modifier = Modifier
+                    .widthIn(max = 300.dp)
+                    .clip(bubbleShape)
+                    .background(bubbleBackground)
+                    .then(bubbleBorder)
+                    .combinedClickable(
+                        enabled = !message.isDeleted,
+                        onClick = { /* Child views handle their own click events */ },
+                        onLongClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            showMenu = true
+                        },
+                    ).padding(bubblePadding),
+            ) {
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_delete_for_me)) },
+                        onClick = {
+                            showMenu = false
+                            onDeleteForMe(message)
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_report_message)) },
+                        onClick = {
+                            showMenu = false
+                            onReportMessage(message)
+                        },
+                    )
+                    if (isCurrentUser) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_delete_for_everyone)) },
+                            onClick = {
+                                showMenu = false
+                                onDeleteForEveryone(message)
+                            },
+                        )
+                    }
+                    if (message.type == MessageType.IMAGE && !message.mediaUrl.isNullOrBlank()) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_save_image)) },
+                            onClick = {
+                                showMenu = false
+                                onImageLongClick(message.mediaUrl)
+                            },
+                        )
+                    }
+                }
+
+                Column {
+                    // Render Reply Quote Box if message has reply details in metadata
+                    val replyData = remember(message.metadata) {
+                        try {
+                            if (message.metadata != null && !message.isDeleted) {
+                                val gson = Gson()
+                                val obj = gson.fromJson(message.metadata, JsonObject::class.java)
+                                if (obj.has("replyToId")) {
+                                    ReplyMetadata(
+                                        replyToId = obj.get("replyToId")?.asString,
+                                        replyToContent = obj.get("replyToContent")?.asString,
+                                        replyToSenderName = obj.get("replyToSenderName")?.asString,
+                                    )
                                 } else {
                                     null
                                 }
-                            } catch (e: Exception) {
+                            } else {
                                 null
                             }
+                        } catch (e: Exception) {
+                            null
                         }
+                    }
 
-                        if (replyData != null) {
-                            val barColor = if (isCurrentUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
-                            val quoteBg = if (isCurrentUser) {
-                                MaterialTheme.colorScheme.onPrimary.copy(
-                                    alpha = 0.15f,
-                                )
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f)
-                            }
-                            val replyTextColor = if (isCurrentUser) {
-                                MaterialTheme.colorScheme.onPrimary.copy(
-                                    alpha = 0.9f,
-                                )
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-
-                            Row(
-                                modifier = Modifier
-                                    .padding(bottom = 8.dp)
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(quoteBg),
-                            ) {
-                                // Vertical accent bar on the left
-                                Box(
-                                    modifier = Modifier
-                                        .width(4.dp)
-                                        .height(42.dp)
-                                        .background(barColor),
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column(
-                                    modifier = Modifier
-                                        .padding(vertical = 4.dp, horizontal = 8.dp)
-                                        .align(Alignment.CenterVertically),
-                                ) {
-                                    Text(
-                                        text = replyData.replyToSenderName ?: "User",
-                                        fontWeight = FontWeight.Bold,
-                                        color = barColor,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontSize = 11.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = replyData.replyToContent ?: "",
-                                        color = replyTextColor,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontSize = 11.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                }
-                            }
-                        }
-
-                        val caption = remember(message.content) {
-                            message.content.takeIf {
-                                it.isNotBlank() && !it.trim().startsWith("{\"localId\"")
-                            }
-                        }
-                        val hasCaption = !caption.isNullOrBlank()
-
-                        val formattedTime = remember(message.timestamp) { formatTimestamp(message.timestamp) }
-                        val isFailed = message.isFailed
-                        val isPending = message.id.startsWith("temp_") || (!message.isSynced && !isFailed)
-                        val isRead = message.readAt != null
-                        val isDelivered = message.deliveredAt != null
-
-                        val receiptIcon = when {
-                            isFailed -> Icons.Default.Error
-                            isPending -> Icons.Default.Schedule
-                            isRead || isDelivered -> Icons.Default.DoneAll
-                            else -> Icons.Default.Done
-                        }
-
-                        val receiptTint = when {
-                            isFailed -> MaterialTheme.colorScheme.error
-                            isRead -> MaterialTheme.colorScheme.chatMessageReadTint
-                            isCurrentUser -> MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        }
-
-                        val receiptDescription = when {
-                            isFailed -> stringResource(R.string.chat_status_failed)
-                            isPending -> stringResource(R.string.chat_status_sending)
-                            isRead -> stringResource(R.string.chat_status_read)
-                            isDelivered -> stringResource(R.string.chat_status_delivered)
-                            else -> stringResource(R.string.chat_status_sent)
-                        }
-
-                        if (message.isDeleted) {
-                            Text(
-                                text = if (isCurrentUser) {
-                                    stringResource(R.string.chat_msg_deleted_self)
-                                } else {
-                                    stringResource(R.string.chat_msg_deleted_other)
-                                },
-                                color = textColor.copy(alpha = 0.65f),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontStyle = FontStyle.Italic,
-                                ),
+                    if (replyData != null) {
+                        val barColor = if (isCurrentUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                        val quoteBg = if (isCurrentUser) {
+                            MaterialTheme.colorScheme.onPrimary.copy(
+                                alpha = 0.15f,
                             )
                         } else {
-                            when (message.type) {
-                                MessageType.TEXT -> {
-                                    Text(
-                                        text = message.content,
-                                        color = textColor,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                    )
-                                }
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f)
+                        }
+                        val replyTextColor = if (isCurrentUser) {
+                            MaterialTheme.colorScheme.onPrimary.copy(
+                                alpha = 0.9f,
+                            )
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
 
-                                MessageType.IMAGE -> {
-                                    val imageUrl = message.mediaUrl ?: ""
-                                    val isUploading = message.id.startsWith("temp_") || imageUrl.isBlank()
+                        Row(
+                            modifier = Modifier
+                                .padding(bottom = 8.dp)
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(quoteBg),
+                        ) {
+                            // Vertical accent bar on the left
+                            Box(
+                                modifier = Modifier
+                                    .width(4.dp)
+                                    .height(42.dp)
+                                    .background(barColor),
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(
+                                modifier = Modifier
+                                    .padding(vertical = 4.dp, horizontal = 8.dp)
+                                    .align(Alignment.CenterVertically),
+                            ) {
+                                Text(
+                                    text = replyData.replyToSenderName ?: "User",
+                                    fontWeight = FontWeight.Bold,
+                                    color = barColor,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = replyData.replyToContent ?: "",
+                                    color = replyTextColor,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
 
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth(0.72f)
-                                            .heightIn(min = 120.dp, max = 320.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .run {
-                                                if (isUploading) {
-                                                    this
-                                                } else {
-                                                    clickable(role = Role.Button) { onImageClick(imageUrl) }
-                                                }
-                                            },
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        if (isUploading) {
-                                            // Uploading placeholder
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(180.dp)
-                                                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                                                contentAlignment = Alignment.Center,
-                                            ) {
-                                                CircularWavyProgressIndicator(
-                                                    modifier = Modifier.size(36.dp),
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                                                )
+                    val caption = remember(message.content) {
+                        message.content.takeIf {
+                            it.isNotBlank() && !it.trim().startsWith("{\"localId\"")
+                        }
+                    }
+                    val hasCaption = !caption.isNullOrBlank()
+
+                    val formattedTime = remember(message.timestamp) { formatTimestamp(message.timestamp) }
+                    val isFailed = message.isFailed
+                    val isPending = message.id.startsWith("temp_") || (!message.isSynced && !isFailed)
+                    val isRead = message.readAt != null
+                    val isDelivered = message.deliveredAt != null
+
+                    val receiptIcon = when {
+                        isFailed -> Icons.Default.Error
+                        isPending -> Icons.Default.Schedule
+                        isRead || isDelivered -> Icons.Default.DoneAll
+                        else -> Icons.Default.Done
+                    }
+
+                    val receiptTint = when {
+                        isFailed -> MaterialTheme.colorScheme.error
+                        isRead -> MaterialTheme.colorScheme.chatMessageReadTint
+                        isCurrentUser -> MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                    }
+
+                    val receiptDescription = when {
+                        isFailed -> stringResource(R.string.chat_status_failed)
+                        isPending -> stringResource(R.string.chat_status_sending)
+                        isRead -> stringResource(R.string.chat_status_read)
+                        isDelivered -> stringResource(R.string.chat_status_delivered)
+                        else -> stringResource(R.string.chat_status_sent)
+                    }
+
+                    if (message.isDeleted) {
+                        Text(
+                            text = if (isCurrentUser) {
+                                stringResource(R.string.chat_msg_deleted_self)
+                            } else {
+                                stringResource(R.string.chat_msg_deleted_other)
+                            },
+                            color = textColor.copy(alpha = 0.65f),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontStyle = FontStyle.Italic,
+                            ),
+                        )
+                    } else {
+                        when (message.type) {
+                            MessageType.TEXT -> {
+                                Text(
+                                    text = message.content,
+                                    color = textColor,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            }
+
+                            MessageType.IMAGE -> {
+                                val imageUrl = message.mediaUrl ?: ""
+                                val isUploading = message.id.startsWith("temp_") || imageUrl.isBlank()
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.72f)
+                                        .heightIn(min = 120.dp, max = 320.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .run {
+                                            if (isUploading) {
+                                                this
+                                            } else {
+                                                clickable(role = Role.Button) { onImageClick(imageUrl) }
                                             }
-                                        } else {
-                                            AsyncImage(
-                                                model = imageUrl,
-                                                contentDescription = stringResource(R.string.cd_shared_image),
-                                                modifier = Modifier.fillMaxWidth(),
-                                                contentScale = ContentScale.FillWidth,
+                                        },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (isUploading) {
+                                        // Uploading placeholder
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(180.dp)
+                                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            CircularWavyProgressIndicator(
+                                                modifier = Modifier.size(36.dp),
+                                                color = MaterialTheme.colorScheme.primary,
+                                                trackColor = MaterialTheme.colorScheme.surfaceVariant,
                                             )
                                         }
+                                    } else {
+                                        AsyncImage(
+                                            model = imageUrl,
+                                            contentDescription = stringResource(R.string.cd_shared_image),
+                                            modifier = Modifier.fillMaxWidth(),
+                                            contentScale = ContentScale.FillWidth,
+                                        )
+                                    }
 
-                                        if (!hasCaption) {
-                                            // Floating timestamp & status badge in bottom-right corner of image
-                                            Row(
-                                                modifier = Modifier
-                                                    .align(Alignment.BottomEnd)
-                                                    .padding(6.dp)
-                                                    .clip(RoundedCornerShape(10.dp))
-                                                    .background(MaterialTheme.colorScheme.scrim)
-                                                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                            ) {
-                                                Text(
-                                                    text = formattedTime,
-                                                    fontSize = 11.sp,
-                                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.95f),
+                                    if (!hasCaption) {
+                                        // Floating timestamp & status badge in bottom-right corner of image
+                                        Row(
+                                            modifier = Modifier
+                                                .align(Alignment.BottomEnd)
+                                                .padding(6.dp)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(MaterialTheme.colorScheme.scrim)
+                                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Text(
+                                                text = formattedTime,
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.95f),
+                                            )
+                                            if (isCurrentUser) {
+                                                Spacer(modifier = Modifier.width(3.dp))
+                                                Icon(
+                                                    imageVector = receiptIcon,
+                                                    contentDescription = receiptDescription,
+                                                    modifier = Modifier.size(13.dp),
+                                                    tint = if (isRead) MaterialTheme.colorScheme.chatMessageReadTint else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.95f),
                                                 )
-                                                if (isCurrentUser) {
-                                                    Spacer(modifier = Modifier.width(3.dp))
-                                                    Icon(
-                                                        imageVector = receiptIcon,
-                                                        contentDescription = receiptDescription,
-                                                        modifier = Modifier.size(13.dp),
-                                                        tint = if (isRead) MaterialTheme.colorScheme.chatMessageReadTint else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.95f),
-                                                    )
-                                                }
                                             }
                                         }
                                     }
-
-                                    if (hasCaption && caption != null) {
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        Text(
-                                            text = caption,
-                                            color = textColor,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            modifier = Modifier.padding(horizontal = 4.dp),
-                                        )
-                                    }
                                 }
 
-                                MessageType.VOICE -> {
-                                    VoiceMessageContent(
-                                        message = message,
-                                        textColor = textColor,
-                                        playerState = playerState,
-                                        onPlayClick = onVoicePlayClick,
-                                        onSpeedToggle = onVoiceSpeedToggle,
-                                    )
-                                }
-
-                                MessageType.LOCATION -> {
-                                    LocationMessageContent(
-                                        message = message,
-                                        textColor = textColor,
-                                        currentUserLocation = currentUserLocation,
-                                        onClick = onLocationClick,
-                                    )
-                                }
-
-                                MessageType.SERVICE_CARD -> {
-                                    ServiceCardMessageContent(
-                                        message = message,
-                                        onClick = onServiceCardClick,
-                                    )
-                                }
-
-                                MessageType.SYSTEM, MessageType.SERVICE_COMPLETED -> {
+                                if (hasCaption && caption != null) {
+                                    Spacer(modifier = Modifier.height(6.dp))
                                     Text(
-                                        text = message.content,
+                                        text = caption,
                                         color = textColor,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier.padding(horizontal = 4.dp),
                                     )
                                 }
                             }
-                        }
 
-                        if (message.isDeleted || message.type != MessageType.IMAGE || hasCaption) {
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            // Time and read receipt
-                            // States: pending (clock) -> sent (single check) -> delivered (double check, dim)
-                            //         -> read (double check, highlighted)
-                            Row(
-                                modifier = Modifier.align(Alignment.End),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = formattedTime,
-                                    fontSize = 11.sp,
-                                    color = if (isCurrentUser) {
-                                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.88f)
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
-                                    },
+                            MessageType.VOICE -> {
+                                VoiceMessageContent(
+                                    message = message,
+                                    textColor = textColor,
+                                    playerState = playerState,
+                                    onPlayClick = onVoicePlayClick,
+                                    onSpeedToggle = onVoiceSpeedToggle,
                                 )
+                            }
 
-                                if (isCurrentUser) {
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    if (isFailed && onRetry != null) {
-                                        Icon(
-                                            imageVector = receiptIcon,
-                                            contentDescription = receiptDescription,
-                                            modifier = Modifier
-                                                .size(16.dp)
-                                                .clickable(role = Role.Button) { onRetry(message.id) },
-                                            tint = receiptTint,
-                                        )
-                                    } else {
-                                        Icon(
-                                            imageVector = receiptIcon,
-                                            contentDescription = receiptDescription,
-                                            modifier = Modifier.size(13.dp),
-                                            tint = receiptTint,
-                                        )
-                                    }
+                            MessageType.LOCATION -> {
+                                LocationMessageContent(
+                                    message = message,
+                                    textColor = textColor,
+                                    currentUserLocation = currentUserLocation,
+                                    onClick = onLocationClick,
+                                )
+                            }
+
+                            MessageType.SERVICE_CARD -> {
+                                ServiceCardMessageContent(
+                                    message = message,
+                                    onClick = onServiceCardClick,
+                                )
+                            }
+
+                            MessageType.SYSTEM, MessageType.SERVICE_COMPLETED -> {
+                                Text(
+                                    text = message.content,
+                                    color = textColor,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
+                        }
+                    }
+
+                    if (message.isDeleted || message.type != MessageType.IMAGE || hasCaption) {
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // Time and read receipt
+                        // States: pending (clock) -> sent (single check) -> delivered (double check, dim)
+                        //         -> read (double check, highlighted)
+                        Row(
+                            modifier = Modifier.align(Alignment.End),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = formattedTime,
+                                fontSize = 11.sp,
+                                color = if (isCurrentUser) {
+                                    MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.88f)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
+                                },
+                            )
+
+                            if (isCurrentUser) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                if (isFailed && onRetry != null) {
+                                    Icon(
+                                        imageVector = receiptIcon,
+                                        contentDescription = receiptDescription,
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .clickable(role = Role.Button) { onRetry(message.id) },
+                                        tint = receiptTint,
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = receiptIcon,
+                                        contentDescription = receiptDescription,
+                                        modifier = Modifier.size(13.dp),
+                                        tint = receiptTint,
+                                    )
                                 }
                             }
                         }
@@ -597,6 +594,7 @@ fun MessageBubble(
             }
         }
     }
+}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

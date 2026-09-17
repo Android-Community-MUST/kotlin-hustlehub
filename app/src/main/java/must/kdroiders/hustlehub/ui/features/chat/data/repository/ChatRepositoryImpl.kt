@@ -115,15 +115,16 @@ class ChatRepositoryImpl
             }
 
         override fun getMessages(conversationId: String): Flow<List<Message>> =
-            messageDao.getByConversation(conversationId)
+            messageDao
+                .getByConversation(conversationId)
                 .map { entities ->
                     entities.map { entity ->
                         decryptionCache.get(entity.id)
-                            ?: entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                            ?: entity
+                                .toDecryptedDomain(keyExchangeHandler, cryptoManager)
                                 .also { decryptionCache.put(entity.id, it) }
                     }
-                }
-                .flowOn(Dispatchers.Default)
+                }.flowOn(Dispatchers.Default)
 
         override suspend fun loadMessageHistory(
             conversationId: String,
