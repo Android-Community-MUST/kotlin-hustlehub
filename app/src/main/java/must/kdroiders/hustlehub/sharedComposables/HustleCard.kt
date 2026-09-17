@@ -56,6 +56,7 @@ fun HustleCard(
     onClick: (() -> Unit)? = null,
     contentPadding: PaddingValues? = null,
     containerColor: Color? = null,
+    border: BorderStroke? = null,
     content: @Composable () -> Unit,
 ) {
     val dimensions = LocalDimensions.current
@@ -82,10 +83,10 @@ fun HustleCard(
             }
         }
 
-    val glassBackground = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+    val glassBackground = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
     val glassBorder = BorderStroke(
         width = 1.dp,
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
     )
 
     when (variant) {
@@ -96,6 +97,7 @@ fun HustleCard(
                 modifier = cardModifier,
                 shape = cardShape,
                 interactionSource = interactionSource,
+                border = border,
                 colors = CardDefaults.cardColors(
                     containerColor = containerColor ?: MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.onSurface,
@@ -113,6 +115,7 @@ fun HustleCard(
                 modifier = cardModifier,
                 shape = cardShape,
                 interactionSource = interactionSource,
+                border = border,
                 colors = CardDefaults.cardColors(
                     containerColor = containerColor ?: MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.onSurface,
@@ -134,7 +137,7 @@ fun HustleCard(
                 modifier = cardModifier,
                 shape = cardShape,
                 interactionSource = interactionSource,
-                border = BorderStroke(
+                border = border ?: BorderStroke(
                     width = 1.dp,
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
                 ),
@@ -155,7 +158,7 @@ fun HustleCard(
                 modifier = cardModifier,
                 shape = cardShape,
                 interactionSource = interactionSource,
-                border = glassBorder,
+                border = border ?: glassBorder,
                 colors = CardDefaults.cardColors(
                     containerColor = containerColor ?: glassBackground,
                     contentColor = MaterialTheme.colorScheme.onSurface,
