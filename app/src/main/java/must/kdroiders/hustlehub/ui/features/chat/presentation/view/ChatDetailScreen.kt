@@ -77,7 +77,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHost
@@ -950,7 +950,7 @@ fun ChatDetailScreen(
                                     .padding(8.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                LinearProgressIndicator(
+                                LinearWavyProgressIndicator(
                                     modifier = Modifier.fillMaxWidth(0.35f),
                                     color = MaterialTheme.colorScheme.primary,
                                 )

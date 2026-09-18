@@ -579,6 +579,9 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onBack = {
                                     if (backstack.size > 1) backstack.remove(backstack.last())
                                 },
+                                onItemClick = { serviceId ->
+                                    backstack.add(ServiceDetail(serviceId))
+                                },
                             )
                         }
 
