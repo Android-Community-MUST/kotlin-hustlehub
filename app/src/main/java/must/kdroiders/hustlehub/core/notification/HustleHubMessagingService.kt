@@ -17,6 +17,9 @@ class HustleHubMessagingService : FirebaseMessagingService() {
     @Inject
     lateinit var userRepository: UserRepository
 
+    @Inject
+    lateinit var conversationDao: must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
+
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         CoroutineScope(Dispatchers.IO).launch {
@@ -84,7 +87,49 @@ class HustleHubMessagingService : FirebaseMessagingService() {
                 val content = remoteMessage.data["content"] ?: body
 
                 if (conversationId == ActiveConversationTracker.activeConversationId) return
-                NotificationHelper.postMessageNotification(this, conversationId, senderName, content)
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val cachedConv = conversationDao.getById(conversationId)
+                        val payloadUnread = remoteMessage.data["unreadCount"]?.toIntOrNull()
+                        val newUnread = payloadUnread ?: ((cachedConv?.unreadCount ?: 0) + 1)
+
+                        if (cachedConv != null) {
+                            val msgTimestamp = remoteMessage.data["timestamp"]
+                                ?: remoteMessage.data["createdAt"]
+                                ?: java.time.Instant
+                                    .now()
+                                    .toString()
+                            conversationDao.upsert(
+                                cachedConv.copy(
+                                    lastMessage = content,
+                                    lastMessageAt = msgTimestamp,
+                                    unreadCount = newUnread,
+                                ),
+                            )
+                        }
+
+                        val totalUnread = conversationDao.getTotalUnreadCountSync()
+                        val badgeCount = if (totalUnread > 0) totalUnread else newUnread
+
+                        NotificationHelper.postMessageNotification(
+                            context = this@HustleHubMessagingService,
+                            conversationId = conversationId,
+                            senderName = senderName,
+                            messagePreview = content,
+                            unreadCount = badgeCount,
+                        )
+                    } catch (e: Exception) {
+                        Timber.w(e, "Failed to update Room or post notification with badge count in FCM service")
+                        NotificationHelper.postMessageNotification(
+                            context = this@HustleHubMessagingService,
+                            conversationId = conversationId,
+                            senderName = senderName,
+                            messagePreview = content,
+                        )
+                    }
+                }
+
                 InAppBannerManager.postBanner(
                     InAppBannerData(
                         title = senderName,

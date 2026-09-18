@@ -21,7 +21,7 @@ interface ChatRepository {
     suspend fun loadMessageHistory(
         conversationId: String,
         page: Int = 0,
-    ): Result<Unit>
+    ): Result<Boolean>
 
     suspend fun sendMessage(
         conversationId: String,
@@ -48,4 +48,8 @@ interface ChatRepository {
     suspend fun deleteMessageForEveryone(messageId: String): Result<Unit>
 
     suspend fun resendUnsyncedMessages(): Result<Unit>
+
+    suspend fun retryMessage(messageId: String): Result<Unit>
+
+    fun clearInFlightIds()
 }

@@ -31,9 +31,24 @@ val ColorScheme.success: Color
     @Composable
     get() = if (LocalIsDarkTheme.current) Color(0xFF81C784) else HustleSuccess
 
+/** Teal tint used on the read-receipt double-check icon in chat message bubbles. */
+val ColorScheme.chatMessageReadTint: Color
+    @Composable
+    get() = if (LocalIsDarkTheme.current) Color(0xFF80DEEA) else Color(0xFF00E5FF)
+
 val ColorScheme.successContainer: Color
     @Composable
     get() = if (LocalIsDarkTheme.current) Color(0xFF1B5E20).copy(alpha = 0.35f) else Color(0xFFE8F5E9)
+
+/** Container background for the WhatsApp-style E2EE security notice banner. */
+val ColorScheme.chatE2EeBannerContainer: Color
+    @Composable
+    get() = if (LocalIsDarkTheme.current) HustleE2EeBannerContainerDark else HustleE2EeBannerContainerLight
+
+/** Text and icon color for the WhatsApp-style E2EE security notice banner. */
+val ColorScheme.chatE2EeBannerContent: Color
+    @Composable
+    get() = if (LocalIsDarkTheme.current) HustleE2EeBannerContentDark else HustleE2EeBannerContentLight
 
 private val LightColorScheme = lightColorScheme(
     primary = HustlePrimaryBlue,

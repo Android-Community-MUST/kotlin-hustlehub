@@ -32,12 +32,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
@@ -84,7 +86,7 @@ fun SubscriptionScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "HustleHub Pro",
+                        text = stringResource(R.string.sub_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.semantics { heading() },
@@ -110,8 +112,20 @@ fun SubscriptionScreen(
         ) {
             Spacer(Modifier.height(8.dp))
 
-            var selectedPlanType by rememberSaveable { mutableStateOf("PRO") }
+            val userServices by viewModel.userServices.collectAsState()
+            var selectedPlanType by rememberSaveable(serviceId) {
+                mutableStateOf(if (serviceId != null) "FEATURED" else "PRO")
+            }
+            var selectedServiceId by rememberSaveable(serviceId) {
+                mutableStateOf(serviceId)
+            }
             var showExtendOptions by rememberSaveable { mutableStateOf(false) }
+
+            LaunchedEffect(userServices, selectedServiceId) {
+                if (selectedServiceId == null && userServices.size == 1) {
+                    selectedServiceId = userServices.first().id
+                }
+            }
 
             val activeSub = (subscriptionState as? SubscriptionUiState.Success)?.data
             val hasActivePro = activeSub != null && (activeSub.isActive || activeSub.status == "ACTIVE")
@@ -129,7 +143,7 @@ fun SubscriptionScreen(
                         )
                         if (!showExtendOptions) {
                             HustleButton(
-                                text = "Extend / Renew Subscription",
+                                text = stringResource(R.string.sub_extend_renew),
                                 onClick = { showExtendOptions = true },
                                 variant = HustleButtonVariant.Outlined,
                                 modifier = Modifier.fillMaxWidth(),
@@ -144,15 +158,15 @@ fun SubscriptionScreen(
             HustleCard(variant = HustleCardVariant.Tonal) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "What you get with Pro",
+                        text = stringResource(R.string.sub_benefits_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
-                    ProBenefitRow("Priority listing in discovery feed")
-                    ProBenefitRow("Up to 15 portfolio photos (Free: 3)")
-                    ProBenefitRow("Video pitch upload")
-                    ProBenefitRow("Verified PRO badge on profile")
-                    ProBenefitRow("Featured campus map pin")
+                    ProBenefitRow(stringResource(R.string.sub_benefit_priority_listing))
+                    ProBenefitRow(stringResource(R.string.sub_benefit_portfolio_photos))
+                    ProBenefitRow(stringResource(R.string.sub_benefit_video_pitch))
+                    ProBenefitRow(stringResource(R.string.sub_benefit_pro_badge))
+                    ProBenefitRow(stringResource(R.string.sub_benefit_map_pin))
                 }
             }
 
@@ -164,30 +178,50 @@ fun SubscriptionScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            "Feature",
+                            text = stringResource(R.string.sub_feature),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f),
                         )
                         Text(
-                            "Free",
+                            text = stringResource(R.string.sub_free),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f),
                         )
                         Text(
-                            "Pro",
+                            text = stringResource(R.string.sub_pro),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.tertiary,
                             modifier = Modifier.weight(1f),
                         )
                     }
-                    ComparisonRow(label = "Photos", free = "3", pro = "15")
-                    ComparisonRow(label = "Video pitch", free = "No", pro = "Yes")
-                    ComparisonRow(label = "Featured listing", free = "No", pro = "Yes")
-                    ComparisonRow(label = "PRO badge", free = "No", pro = "Yes")
-                    ComparisonRow(label = "Price", free = "Free", pro = "KES 150/mo")
+                    ComparisonRow(
+                        label = stringResource(R.string.sub_comparison_photos),
+                        free = stringResource(R.string.sub_comparison_free_photos_val),
+                        pro = stringResource(R.string.sub_comparison_pro_photos_val),
+                    )
+                    ComparisonRow(
+                        label = stringResource(R.string.sub_comparison_video_pitch),
+                        free = stringResource(R.string.sub_comparison_no),
+                        pro = stringResource(R.string.sub_comparison_yes),
+                    )
+                    ComparisonRow(
+                        label = stringResource(R.string.sub_comparison_featured),
+                        free = stringResource(R.string.sub_comparison_no),
+                        pro = stringResource(R.string.sub_comparison_yes),
+                    )
+                    ComparisonRow(
+                        label = stringResource(R.string.sub_comparison_badge),
+                        free = stringResource(R.string.sub_comparison_no),
+                        pro = stringResource(R.string.sub_comparison_yes),
+                    )
+                    ComparisonRow(
+                        label = stringResource(R.string.sub_comparison_price),
+                        free = stringResource(R.string.sub_free),
+                        pro = stringResource(R.string.sub_comparison_price_pro),
+                    )
                 }
             }
 
@@ -195,14 +229,22 @@ fun SubscriptionScreen(
             if (!hasActivePro || showExtendOptions) {
                 // Selectable Plans Section
                 Text(
-                    text = if (hasActivePro) "Extend Subscription" else "Select Subscription Plan",
+                    text = if (hasActivePro) {
+                        stringResource(R.string.sub_section_extend_plan)
+                    } else {
+                        stringResource(R.string.sub_section_select_plan)
+                    },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
 
                 // 1. Pro Monthly Card
                 HustleCard(
-                    variant = if (selectedPlanType == "PRO") HustleCardVariant.Elevated else HustleCardVariant.Outlined,
+                    variant = if (selectedPlanType == "PRO") {
+                        HustleCardVariant.Elevated
+                    } else {
+                        HustleCardVariant.Outlined
+                    },
                     onClick = { selectedPlanType = "PRO" },
                 ) {
                     Row(
@@ -212,18 +254,18 @@ fun SubscriptionScreen(
                     ) {
                         Column {
                             Text(
-                                text = "HustleHub Pro (1 Month)",
+                                text = stringResource(R.string.sub_plan_monthly_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
-                                text = "Full Pro benefits & badge for 30 days",
+                                text = stringResource(R.string.sub_plan_monthly_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         Text(
-                            text = "KES 150",
+                            text = stringResource(R.string.sub_plan_monthly_price),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.tertiary,
@@ -233,7 +275,11 @@ fun SubscriptionScreen(
 
                 // 2. Pro Quarterly Card (Save KES 50!)
                 HustleCard(
-                    variant = if (selectedPlanType == "PRO_QUARTERLY") HustleCardVariant.Elevated else HustleCardVariant.Outlined,
+                    variant = if (selectedPlanType == "PRO_QUARTERLY") {
+                        HustleCardVariant.Elevated
+                    } else {
+                        HustleCardVariant.Outlined
+                    },
                     onClick = { selectedPlanType = "PRO_QUARTERLY" },
                 ) {
                     Row(
@@ -242,27 +288,30 @@ fun SubscriptionScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
                                 Text(
-                                    text = "HustleHub Pro (3 Months)",
+                                    text = stringResource(R.string.sub_plan_quarterly_title),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                 )
                                 Text(
-                                    text = "SAVE KES 50",
+                                    text = stringResource(R.string.sub_plan_quarterly_save),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = MaterialTheme.colorScheme.tertiary,
                                 )
                             }
                             Text(
-                                text = "Full Pro benefits & badge for 90 days",
+                                text = stringResource(R.string.sub_plan_quarterly_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         Text(
-                            text = "KES 400",
+                            text = stringResource(R.string.sub_plan_quarterly_price),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.tertiary,
@@ -272,7 +321,11 @@ fun SubscriptionScreen(
 
                 // 3. Featured Boost
                 HustleCard(
-                    variant = if (selectedPlanType == "FEATURED") HustleCardVariant.Elevated else HustleCardVariant.Outlined,
+                    variant = if (selectedPlanType == "FEATURED") {
+                        HustleCardVariant.Elevated
+                    } else {
+                        HustleCardVariant.Outlined
+                    },
                     onClick = { selectedPlanType = "FEATURED" },
                 ) {
                     Row(
@@ -282,18 +335,18 @@ fun SubscriptionScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Featured Listing Boost",
+                                text = stringResource(R.string.sub_plan_featured_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
-                                text = "Boost service to top of search for 3 days",
+                                text = stringResource(R.string.sub_plan_featured_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         Text(
-                            text = "KES 50",
+                            text = stringResource(R.string.sub_plan_featured_price),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.tertiary,
@@ -301,17 +354,104 @@ fun SubscriptionScreen(
                     }
                 }
 
+                // If FEATURED is selected, display service selection
+                if (selectedPlanType == "FEATURED") {
+                    val currentSelectedService = userServices.find { it.id == selectedServiceId }
+                    if (serviceId != null || currentSelectedService != null) {
+                        val titleToDisplay = currentSelectedService?.title
+                            ?: stringResource(R.string.sub_selected_service)
+                        HustleCard(variant = HustleCardVariant.Tonal) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.sub_featuring_service),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    Text(
+                                        text = titleToDisplay,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+                        }
+                    } else if (userServices.isEmpty()) {
+                        HustleCard(variant = HustleCardVariant.Outlined) {
+                            Text(
+                                text = stringResource(R.string.sub_no_services_error),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(R.string.sub_choose_service_to_boost),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            userServices.forEach { s ->
+                                val isChosen = s.id == selectedServiceId
+                                HustleCard(
+                                    variant = if (isChosen) {
+                                        HustleCardVariant.Elevated
+                                    } else {
+                                        HustleCardVariant.Outlined
+                                    },
+                                    onClick = { selectedServiceId = s.id },
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = s.title,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = if (isChosen) FontWeight.Bold else FontWeight.Normal,
+                                            )
+                                            Text(
+                                                text = s.priceRange,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                        if (isChosen) {
+                                            Icon(
+                                                imageVector = Icons.Default.CheckCircle,
+                                                contentDescription = stringResource(R.string.sub_selected_cd),
+                                                tint = MaterialTheme.colorScheme.primary,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // M-Pesa payment section
                 Text(
-                    text = "Pay with M-Pesa",
+                    text = stringResource(R.string.sub_pay_with_mpesa),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
                 HustleTextField(
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it },
-                    label = "Phone Number",
-                    placeholder = "e.g. 0712345678",
+                    label = stringResource(R.string.sub_phone_label),
+                    placeholder = stringResource(R.string.sub_phone_placeholder),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -326,11 +466,19 @@ fun SubscriptionScreen(
                 }
 
                 val isPaymentBusy = paymentState is PaymentUiState.Submitting
+                val selectedServiceName = userServices.find { it.id == selectedServiceId }?.title
+                val isServiceNeeded = selectedPlanType == "FEATURED" && selectedServiceId == null
 
                 val buttonText = when (selectedPlanType) {
-                    "PRO_QUARTERLY" -> "Upgrade to Pro (3 Months) — KES 400"
-                    "FEATURED" -> "Boost Listing (3 Days) — KES 50"
-                    else -> "Upgrade to Pro (1 Month) — KES 150"
+                    "PRO_QUARTERLY" -> stringResource(R.string.sub_btn_upgrade_quarterly)
+                    "FEATURED" -> {
+                        if (!selectedServiceName.isNullOrBlank()) {
+                            stringResource(R.string.sub_btn_boost_service_format, selectedServiceName)
+                        } else {
+                            stringResource(R.string.sub_btn_boost_listing)
+                        }
+                    }
+                    else -> stringResource(R.string.sub_btn_upgrade_monthly)
                 }
 
                 // Action button
@@ -340,11 +488,11 @@ fun SubscriptionScreen(
                         viewModel.triggerPayment(
                             rawPhone = phoneNumber,
                             planType = selectedPlanType,
-                            serviceId = serviceId,
+                            serviceId = if (selectedPlanType == "FEATURED") selectedServiceId else null,
                         )
                     },
                     loading = isPaymentBusy,
-                    enabled = phoneNumber.isNotBlank() && !isPaymentBusy,
+                    enabled = phoneNumber.isNotBlank() && !isPaymentBusy && !isServiceNeeded,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -378,13 +526,13 @@ private fun ActiveSubscriptionCard(
                     )
                     Column {
                         Text(
-                            text = "ACTIVE PRO MEMBER",
+                            text = stringResource(R.string.sub_active_pro_member),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.tertiary,
                         )
                         Text(
-                            text = "Plan: $planType",
+                            text = stringResource(R.string.sub_plan_format, planType),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -399,7 +547,7 @@ private fun ActiveSubscriptionCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Time Remaining:",
+                    text = stringResource(R.string.sub_time_remaining),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Medium,
                 )
@@ -414,22 +562,34 @@ private fun ActiveSubscriptionCard(
     }
 }
 
+@Composable
 private fun formatRemainingTime(expiresAtString: String): String {
     val expiryInstant = runCatching { java.time.Instant.parse(expiresAtString) }.getOrNull()
-        ?: return "Expires: $expiresAtString"
+        ?: return stringResource(R.string.sub_expires_format, expiresAtString)
     val now = java.time.Instant.now()
     val totalSeconds = java.time.Duration
         .between(now, expiryInstant)
         .seconds
-    if (totalSeconds <= 0) return "Subscription Expired"
+    if (totalSeconds <= 0) return stringResource(R.string.sub_expired)
 
     val days = totalSeconds / (24 * 3600)
     val hours = (totalSeconds % (24 * 3600)) / 3600
 
+    val dayUnit = if (days == 1L) {
+        stringResource(R.string.sub_day_singular)
+    } else {
+        stringResource(R.string.sub_day_plural)
+    }
+    val hourUnit = if (hours == 1L) {
+        stringResource(R.string.sub_hour_singular)
+    } else {
+        stringResource(R.string.sub_hour_plural)
+    }
+
     return when {
-        days > 0 -> "$days ${if (days == 1L) "day" else "days"}, $hours ${if (hours == 1L) "hour" else "hours"} left"
-        hours > 0 -> "$hours ${if (hours == 1L) "hour" else "hours"} left"
-        else -> "< 1 hour left"
+        days > 0 -> stringResource(R.string.sub_time_days_hours, days, dayUnit, hours, hourUnit)
+        hours > 0 -> stringResource(R.string.sub_time_hours, hours, hourUnit)
+        else -> stringResource(R.string.sub_time_less_than_hour)
     }
 }
 

@@ -13,6 +13,7 @@ import must.kdroiders.hustlehub.core.api.TokenAuthenticator
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.ui.features.analytics.data.remote.AnalyticsApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
+import must.kdroiders.hustlehub.ui.features.bookmarks.data.remote.BookmarkApiService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiService
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.KeyExchangeApiService
 import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
@@ -67,6 +68,7 @@ object NetworkModule {
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
+            .pingInterval(20, TimeUnit.SECONDS)
 
         // Certificate pinning — release builds only.
         // In debug, we allow user-installed CAs (Charles/mitmproxy).
@@ -180,5 +182,11 @@ object NetworkModule {
     @Singleton
     fun provideAdminApiService(retrofit: Retrofit): must.kdroiders.hustlehub.ui.features.admin.data.remote.AdminApiService {
         return retrofit.create(must.kdroiders.hustlehub.ui.features.admin.data.remote.AdminApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBookmarkApiService(retrofit: Retrofit): BookmarkApiService {
+        return retrofit.create(BookmarkApiService::class.java)
     }
 }

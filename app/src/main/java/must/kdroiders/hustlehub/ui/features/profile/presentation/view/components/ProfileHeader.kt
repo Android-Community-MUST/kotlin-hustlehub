@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,16 +27,9 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import must.kdroiders.hustlehub.R
 
-/**
- * Profile screen top bar.
- *
- * Shows "My Profile" title, an edit icon (opens profile edit),
- * and a settings gear icon (navigates to Settings screen).
- */
-
+/** Top app bar for the profile screen with share and settings actions. */
 @Composable
 fun ProfileHeader(
     onSettingsClick: () -> Unit = {},
@@ -53,8 +47,7 @@ fun ProfileHeader(
     ) {
         Text(
             text = stringResource(R.string.profile_my_profile_title),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.semantics { heading() },
         )
@@ -63,10 +56,14 @@ fun ProfileHeader(
             IconButton(
                 onClick = onShareClick,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .semantics {
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                        CircleShape,
+                    ).semantics {
                         role = Role.Button
                         contentDescription = shareProfileCd
                     },
@@ -81,10 +78,14 @@ fun ProfileHeader(
             IconButton(
                 onClick = onSettingsClick,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .semantics {
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                        CircleShape,
+                    ).semantics {
                         role = Role.Button
                         contentDescription = settingsCd
                     },

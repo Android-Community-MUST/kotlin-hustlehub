@@ -24,6 +24,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 private const val PAGE_SIZE = 10
+private const val MAX_FEATURED_COUNT = 5
 
 data class HomeUiState(
     val selectedCategory: ServiceCategory = ServiceCategory.ALL,
@@ -141,14 +142,22 @@ class HomeViewModel
                                 (current.services + pageResponse.content).distinctBy { it.id }
                             }
 
-                            // Derive Featured services for the carousel.
+                            // Derive Featured services for the carousel (Featured Hustlers).
                             // Priority 1: Paid featured listings (isFeatured == true)
                             // Priority 2: High rated services fallback (averageRating > 0f)
-                            val paidFeatured = merged.filter { it.isFeatured }.sortedByDescending { it.createdAt }
+                            // Priority 3: Fallback active services so Featured Hustlers is never blank
+                            val paidFeatured = merged
+                                .filter { it.isFeatured }
+                                .sortedByDescending { it.createdAt }
                             val ratedFallback = merged
                                 .filter { !it.isFeatured && it.averageRating > 0f }
                                 .sortedByDescending { HustleScoreCalculator.calculateForService(it) }
-                            val featured = (paidFeatured + ratedFallback).distinctBy { it.id }.take(5)
+                            val unratedFallback = merged
+                                .filter { !it.isFeatured && it.averageRating <= 0f }
+                                .sortedByDescending { it.createdAt }
+                            val featured = (paidFeatured + ratedFallback + unratedFallback)
+                                .distinctBy { it.id }
+                                .take(MAX_FEATURED_COUNT)
 
                             current.copy(
                                 services = merged,

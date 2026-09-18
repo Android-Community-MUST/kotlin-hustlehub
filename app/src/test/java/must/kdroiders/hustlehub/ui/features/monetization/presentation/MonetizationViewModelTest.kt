@@ -16,6 +16,10 @@ import must.kdroiders.hustlehub.ui.features.monetization.domain.usecase.GetSubsc
 import must.kdroiders.hustlehub.ui.features.monetization.domain.usecase.InitiateStkPushUseCase
 import must.kdroiders.hustlehub.ui.features.monetization.domain.usecase.PaymentPollState
 import must.kdroiders.hustlehub.ui.features.monetization.domain.usecase.PollPaymentStatusUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -30,6 +34,7 @@ class MonetizationViewModelTest {
     private val initiateStkPushUseCase: InitiateStkPushUseCase = mockk()
     private val pollPaymentStatusUseCase: PollPaymentStatusUseCase = mockk()
     private val getSubscriptionUseCase: GetSubscriptionUseCase = mockk()
+    private val getMyServicesUseCase: GetMyServicesUseCase = mockk()
 
     private lateinit var viewModel: MonetizationViewModel
 
@@ -37,10 +42,12 @@ class MonetizationViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         coEvery { getSubscriptionUseCase() } returns Result.success(null)
+        coEvery { getMyServicesUseCase() } returns Result.success(emptyList())
         viewModel = MonetizationViewModel(
             initiateStkPushUseCase,
             pollPaymentStatusUseCase,
             getSubscriptionUseCase,
+            getMyServicesUseCase,
         )
     }
 
@@ -97,5 +104,38 @@ class MonetizationViewModelTest {
 
             assertEquals(PaymentUiState.Idle, viewModel.paymentState.value)
             assertNull(viewModel.pendingCheckoutId.value)
+        }
+
+    @Test
+    fun triggerPayment_withServiceId_passesServiceIdToUseCase() =
+        runTest {
+            val rawPhone = "0712345678"
+            val targetServiceId = "service-uuid-123"
+            val stkResponse = StkPushResponseDto("checkout_feat_123", "Accept")
+            coEvery { initiateStkPushUseCase(rawPhone, "FEATURED", targetServiceId) } returns Result.success(stkResponse)
+
+            viewModel.triggerPayment(rawPhone, "FEATURED", targetServiceId)
+
+            assertEquals("checkout_feat_123", viewModel.pendingCheckoutId.value)
+            coVerify { initiateStkPushUseCase(rawPhone, "FEATURED", targetServiceId) }
+        }
+
+    @Test
+    fun loadUserServices_successUpdatesUserServicesState() =
+        runTest {
+            val testService = Service(
+                id = "service-1",
+                providerId = "provider-1",
+                title = "Design Studio",
+                category = ServiceCategory.DESIGN,
+                description = "Graphic Design",
+                priceRange = "KES 500",
+                availability = ServiceAvailability.AVAILABLE,
+            )
+            coEvery { getMyServicesUseCase() } returns Result.success(listOf(testService))
+
+            viewModel.loadUserServices()
+
+            assertEquals(listOf(testService), viewModel.userServices.value)
         }
 }

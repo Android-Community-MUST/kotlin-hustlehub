@@ -173,7 +173,7 @@ data object NotificationPreferences : NavKey
 
 /** Subscription & Pro upgrade screen — navigable from Profile, Settings, and service creation. */
 @Serializable
-data object Subscription : NavKey
+data class Subscription(val serviceId: String? = null) : NavKey
 
 /**
  * Payment status polling screen — pushed after a successful STK push trigger.

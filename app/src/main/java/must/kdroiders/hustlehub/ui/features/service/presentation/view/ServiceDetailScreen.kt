@@ -282,7 +282,7 @@ fun ServiceDetailScreen(
                             ) {
                                 Icon(Icons.Default.Share, contentDescription = stringResource(R.string.action_share), tint = Color.White, modifier = Modifier.size(22.dp))
                             }
-                            var isBookmarked by remember { mutableStateOf(false) }
+                            val isBookmarked by serviceDetailViewModel.isBookmarked.collectAsStateWithLifecycle()
                             val bookmarkInteractionSource = remember { MutableInteractionSource() }
                             val isBookmarkPressed by bookmarkInteractionSource.collectIsPressedAsState()
                             val bookmarkScale by animateFloatAsState(
@@ -303,10 +303,10 @@ fun ServiceDetailScreen(
 
                             IconButton(
                                 onClick = {
-                                    isBookmarked = !isBookmarked
-                                    scope.launch {
-                                        val msg = if (isBookmarked) bookmarkSavedMsg else bookmarkRemovedMsg
-                                        snackbarHostState.showSnackbar(msg)
+                                    serviceDetailViewModel.toggleBookmark { _, msg ->
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(msg)
+                                        }
                                     }
                                 },
                                 interactionSource = bookmarkInteractionSource,

@@ -12,6 +12,7 @@ import must.kdroiders.hustlehub.core.api.PageResponse
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.bookmarks.domain.repository.BookmarkRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
@@ -23,6 +24,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -35,6 +37,7 @@ class ServiceDetailViewModelTest {
     private val getServiceReviewsUseCase: GetServiceReviewsUseCase = mockk(relaxed = true)
     private val authRepository: AuthRepository = mockk(relaxed = true)
     private val userRepository: UserRepository = mockk(relaxed = true)
+    private val bookmarkRepository: BookmarkRepository = mockk(relaxed = true)
     private val hustleAnalytics: HustleAnalytics = mockk(relaxed = true)
     private val hustleCrashlytics: HustleCrashlytics = mockk(relaxed = true)
 
@@ -50,6 +53,7 @@ class ServiceDetailViewModelTest {
             getServiceReviewsUseCase = getServiceReviewsUseCase,
             authRepository = authRepository,
             userRepository = userRepository,
+            bookmarkRepository = bookmarkRepository,
             hustleAnalytics = hustleAnalytics,
             hustleCrashlytics = hustleCrashlytics,
         )
@@ -108,5 +112,42 @@ class ServiceDetailViewModelTest {
             assertEquals("Prof. John", state.provider?.name)
             assertEquals(1, state.reviews.size)
             assertEquals("Great tutor!", state.reviews[0].comment)
+        }
+
+    @Test
+    fun `toggleBookmark calls repository toggle and triggers callback`() =
+        runTest {
+            val mockService = Service(
+                id = "srv-10",
+                providerId = "prov-10",
+                title = "Math Tutoring",
+                priceRange = "KES 500",
+            )
+            val mockProvider = User(id = "prov-10", email = "john@example.com", name = "Prof. John")
+            val mockReviewsPage = PageResponse<Review>(
+                content = emptyList(),
+                page = 0,
+                size = 5,
+                totalElements = 0,
+                totalPages = 0,
+            )
+            coEvery { getServiceByIdUseCase("srv-10") } returns Result.success(mockService)
+            coEvery { getProviderProfileUseCase("prov-10") } returns Result.success(mockProvider)
+            coEvery { getServiceReviewsUseCase("srv-10", 0, 5) } returns Result.success(mockReviewsPage)
+            coEvery {
+                bookmarkRepository.toggleBookmark("srv-10", any(), any(), any(), any(), any())
+            } returns Result.success(true)
+
+            viewModel.initialize("srv-10")
+
+            var callbackCalled = false
+            var isSaved = false
+            viewModel.toggleBookmark { bookmarked, _ ->
+                callbackCalled = true
+                isSaved = bookmarked
+            }
+
+            assertTrue(callbackCalled)
+            assertTrue(isSaved)
         }
 }

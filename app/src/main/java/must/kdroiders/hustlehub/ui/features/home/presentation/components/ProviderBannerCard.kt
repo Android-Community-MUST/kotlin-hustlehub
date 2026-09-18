@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.home.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,15 +38,8 @@ fun ProviderBannerCard(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val gradientBrush = Brush.horizontalGradient(
-        colors = listOf(
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.secondary,
-        ),
-    )
-
     HustleCard(
-        variant = HustleCardVariant.Glass,
+        variant = HustleCardVariant.Secondary,
         modifier = modifier,
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -54,14 +47,18 @@ fun ProviderBannerCard(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(gradientBrush)
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(8.dp),
+                        ).padding(horizontal = 10.dp, vertical = 6.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Outlined.Storefront,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimary,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp),
                         )
                         Spacer(Modifier.width(6.dp))
@@ -69,7 +66,7 @@ fun ProviderBannerCard(
                             text = stringResource(R.string.banner_provider_label),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
@@ -80,7 +77,7 @@ fun ProviderBannerCard(
                     text = stringResource(R.string.banner_provider_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
 
                 Spacer(Modifier.height(4.dp))
@@ -88,7 +85,7 @@ fun ProviderBannerCard(
                 Text(
                     text = stringResource(R.string.banner_provider_subtitle),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f),
                 )
 
                 Spacer(Modifier.height(14.dp))
@@ -108,7 +105,7 @@ fun ProviderBannerCard(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = stringResource(R.string.banner_provider_dismiss),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
                     modifier = Modifier.size(18.dp),
                 )
             }

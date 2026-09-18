@@ -32,6 +32,12 @@ interface MessageDao {
     @Query("DELETE FROM messages WHERE cachedAt < :threshold")
     suspend fun deleteStaleEntries(threshold: Long)
 
-    @Query("SELECT * FROM messages WHERE isSynced = 0 OR isFailed = 1")
+    @Query("SELECT * FROM messages WHERE isSynced = 0 AND isFailed = 0")
     suspend fun getUnsyncedMessages(): List<MessageEntity>
+
+    @Query("UPDATE messages SET isFailed = 1 WHERE id = :id")
+    suspend fun markFailed(id: String)
+
+    @Query("UPDATE messages SET isFailed = 0, isSynced = 0 WHERE id = :id")
+    suspend fun markPendingRetry(id: String)
 }

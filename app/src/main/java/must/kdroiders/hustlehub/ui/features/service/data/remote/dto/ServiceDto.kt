@@ -27,7 +27,7 @@ data class ServiceResponse(
     val reviewCount: Int,
     @SerializedName("openToBarter")
     val openToBarter: Boolean,
-    @SerializedName("isFeatured")
+    @SerializedName("isFeatured", alternate = ["featured", "is_featured"])
     val isFeatured: Boolean? = false,
     @SerializedName("tags")
     val tags: List<String>?,
