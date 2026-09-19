@@ -53,3 +53,9 @@ data class TransactionSummaryDto(
     @SerializedName("date")
     val date: String,
 )
+
+@Keep
+data class TrackViewRequest(
+    @SerializedName("serviceId")
+    val serviceId: String,
+)
