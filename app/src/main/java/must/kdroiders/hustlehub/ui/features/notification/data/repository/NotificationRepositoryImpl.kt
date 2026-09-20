@@ -55,6 +55,11 @@ class NotificationRepositoryImpl
                 apiService.markAllRead()
             }.map { }
 
+        override suspend fun restoreNotification(notification: Notification): Result<Unit> =
+            runCatching {
+                notificationDao.upsert(notification.toEntity())
+            }.map { }
+
         override suspend fun getUnreadCount(): Result<Int> =
             runCatching {
                 val response = apiService.getUnreadCount()

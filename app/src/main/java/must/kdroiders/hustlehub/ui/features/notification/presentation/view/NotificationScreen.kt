@@ -30,11 +30,17 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Work
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -45,10 +51,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -70,6 +81,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,6 +103,10 @@ fun NotificationScreen(
     } else {
         null
     }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    var selectedPaymentReceipt by remember { mutableStateOf<Notification?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.markAllAsRead()
@@ -137,10 +153,28 @@ fun NotificationScreen(
                                     notification = notification,
                                     onClick = {
                                         viewModel.markAsRead(notification.id)
-                                        handleNotificationTap(notification, onBack, mainNavigationViewModel)
+                                        if (notification.type == NotificationType.PAYMENT_SUCCESS ||
+                                            notification.type == NotificationType.PAYMENT_FAILED
+                                        ) {
+                                            selectedPaymentReceipt = notification
+                                        } else {
+                                            handleNotificationTap(notification, onBack, mainNavigationViewModel)
+                                        }
                                     },
                                     onDelete = {
-                                        viewModel.deleteNotification(notification.id)
+                                        val deletedItem = notification
+                                        viewModel.deleteNotification(deletedItem.id)
+                                        coroutineScope.launch {
+                                            snackbarHostState.currentSnackbarData?.dismiss()
+                                            val result = snackbarHostState.showSnackbar(
+                                                message = "Notification deleted",
+                                                actionLabel = "Undo",
+                                                duration = SnackbarDuration.Short,
+                                            )
+                                            if (result == SnackbarResult.ActionPerformed) {
+                                                viewModel.restoreNotification(deletedItem)
+                                            }
+                                        }
                                     },
                                 )
                             }
@@ -148,6 +182,28 @@ fun NotificationScreen(
                     }
                 }
             }
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp),
+        )
+
+        selectedPaymentReceipt?.let { receipt ->
+            PaymentReceiptDialog(
+                notification = receipt,
+                onDismiss = { selectedPaymentReceipt = null },
+                onNavigateToService = { serviceId ->
+                    onBack()
+                    mainNavigationViewModel?.triggerDeepLink(DeepLinkAction.OpenServiceDetail(serviceId))
+                },
+                onNavigateToSubscription = {
+                    onBack()
+                    mainNavigationViewModel?.triggerDeepLink(DeepLinkAction.OpenSubscription())
+                },
+            )
         }
     }
 }
@@ -236,7 +292,7 @@ fun SwipeableNotificationItem(
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { dismissValue ->
-            if (dismissValue == SwipeToDismissBoxValue.EndToStart || dismissValue == SwipeToDismissBoxValue.StartToEnd) {
+            if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
                 onDelete()
                 true
             } else {
@@ -248,10 +304,15 @@ fun SwipeableNotificationItem(
     SwipeToDismissBox(
         state = dismissState,
         modifier = Modifier.padding(horizontal = 16.dp),
+        enableDismissFromStartToEnd = false,
         backgroundContent = {
-            val color = when (dismissState.targetValue) {
-                SwipeToDismissBoxValue.EndToStart, SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.errorContainer
-                else -> Color.Transparent
+            val isSwiping = dismissState.targetValue != SwipeToDismissBoxValue.Settled ||
+                dismissState.currentValue != SwipeToDismissBoxValue.Settled
+
+            val color = if (isSwiping) {
+                MaterialTheme.colorScheme.errorContainer
+            } else {
+                Color.Transparent
             }
             Box(
                 modifier = Modifier
@@ -261,11 +322,13 @@ fun SwipeableNotificationItem(
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.CenterEnd,
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete notification",
-                    tint = MaterialTheme.colorScheme.onErrorContainer,
-                )
+                if (isSwiping) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete notification",
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
             }
         },
     ) {
@@ -278,10 +341,11 @@ fun NotificationItem(
     notification: Notification,
     onClick: () -> Unit,
 ) {
+    val surfaceColor = MaterialTheme.colorScheme.surface
     val containerColor = if (notification.isRead) {
-        MaterialTheme.colorScheme.surface
+        surfaceColor
     } else {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f).compositeOver(surfaceColor)
     }
 
     val iconInfo = when (notification.type) {
@@ -488,3 +552,147 @@ private fun handleNotificationTap(
         }
     }
 }
+
+@Composable
+fun PaymentReceiptDialog(
+    notification: Notification,
+    onDismiss: () -> Unit,
+    onNavigateToService: (String) -> Unit,
+    onNavigateToSubscription: () -> Unit,
+) {
+    val isSuccess = notification.type == NotificationType.PAYMENT_SUCCESS
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isSuccess) MaterialTheme.colorScheme.successContainer
+                        else MaterialTheme.colorScheme.errorContainer,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = if (isSuccess) Icons.Default.CheckCircle else Icons.Default.Error,
+                    contentDescription = null,
+                    tint = if (isSuccess) MaterialTheme.colorScheme.success else MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(32.dp),
+                )
+            }
+        },
+        title = {
+            Text(
+                text = if (isSuccess) "Payment Receipt" else "Payment Failed",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    text = notification.body,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        val receiptNumber = notification.data?.get("receiptNumber")
+                        if (!receiptNumber.isNullOrBlank()) {
+                            ReceiptRow(label = "M-Pesa Receipt", value = receiptNumber)
+                        }
+                        val amount = notification.data?.get("amount")
+                        if (!amount.isNullOrBlank()) {
+                            ReceiptRow(label = "Amount", value = "KES $amount")
+                        }
+                        val statusText = if (isSuccess) "Completed" else "Failed"
+                        ReceiptRow(label = "Status", value = statusText)
+                        ReceiptRow(label = "Date", value = formatRelativeTime(notification.sentAt))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            val serviceId = notification.data?.get("serviceId")
+            if (isSuccess && !serviceId.isNullOrBlank()) {
+                Button(
+                    onClick = {
+                        onDismiss()
+                        onNavigateToService(serviceId)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("View Featured Service")
+                }
+            } else if (isSuccess) {
+                Button(
+                    onClick = {
+                        onDismiss()
+                        onNavigateToSubscription()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("View Subscriptions")
+                }
+            } else {
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Dismiss")
+                }
+            }
+        },
+        dismissButton = {
+            if (isSuccess) {
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Close")
+                }
+            }
+        },
+    )
+}
+
+@Composable
+private fun ReceiptRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
