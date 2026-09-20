@@ -59,6 +59,36 @@ class HomeViewModel
         private val _uiState = MutableStateFlow(HomeUiState())
         val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+        companion object {
+            private val featuredComparator = Comparator<Service> { a, b ->
+                val tierA = when {
+                    a.isFeatured -> 3
+                    a.averageRating > 0f -> 2
+                    else -> 1
+                }
+                val tierB = when {
+                    b.isFeatured -> 3
+                    b.averageRating > 0f -> 2
+                    else -> 1
+                }
+                if (tierA != tierB) {
+                    tierA.compareTo(tierB)
+                } else when (tierA) {
+                    3 -> {
+                        val c = a.createdAt.compareTo(b.createdAt)
+                        if (c != 0) c else a.averageRating.compareTo(b.averageRating)
+                    }
+                    2 -> {
+                        val r = a.averageRating.compareTo(b.averageRating)
+                        if (r != 0) r else a.createdAt.compareTo(b.createdAt)
+                    }
+                    else -> {
+                        a.createdAt.compareTo(b.createdAt)
+                    }
+                }
+            }
+        }
+
         private var searchJob: Job? = null
         private val serviceCache = LruServiceCache(maxSize = 100)
 
@@ -219,23 +249,16 @@ class HomeViewModel
             merged: List<Service>,
             k: Int = MAX_FEATURED_COUNT,
         ): List<Service> {
-            if (merged.size <= k) return merged
-            val heap = PriorityQueue<Service>(k, compareBy { featuredScore(it) })
+            if (merged.size <= k) return merged.sortedWith(featuredComparator.reversed())
+            val heap = PriorityQueue<Service>(k, featuredComparator)
             for (service in merged) {
                 if (heap.size < k) {
                     heap.add(service)
-                } else if (featuredScore(service) > featuredScore(heap.peek()!!)) {
+                } else if (featuredComparator.compare(service, heap.peek()!!) > 0) {
                     heap.poll()
                     heap.add(service)
                 }
             }
-            return heap.sortedByDescending { featuredScore(it) }
+            return heap.sortedWith(featuredComparator.reversed())
         }
-
-        private fun featuredScore(s: Service): Float =
-            when {
-                s.isFeatured -> 2.0f + s.averageRating
-                s.averageRating > 0f -> 1.0f + s.averageRating
-                else -> s.averageRating
-            }
     }
