@@ -370,6 +370,7 @@ private fun ReviewResponse.toDomain(): Review =
         rating = rating,
         comment = comment,
         isAnonymous = isAnonymous,
+        isVerified = isVerified,
         createdAt = runCatching {
             Instant.parse(createdAt).toEpochMilli()
         }.getOrDefault(0L),

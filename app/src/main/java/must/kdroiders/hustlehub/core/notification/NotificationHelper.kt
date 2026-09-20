@@ -60,6 +60,7 @@ object NotificationHelper {
         body: String,
         isSuccess: Boolean = true,
         deepLinkUri: String = "hustlehub://notifications",
+        unreadCount: Int = 1,
     ) {
         try {
             createChannel(context)
@@ -81,12 +82,14 @@ object NotificationHelper {
                 .setContentText(body)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                 .setAutoCancel(true)
+                .setNumber(unreadCount)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .build()
 
             val notificationId = if (isSuccess) 400 else 401
             NotificationManagerCompat.from(context).notify(notificationId, notification)
+            AppBadgeHelper.applyBadgeCount(context, unreadCount)
         } catch (e: SecurityException) {
             Timber.w(e, "POST_NOTIFICATIONS permission not granted; skipping notification")
         } catch (e: Exception) {
@@ -141,6 +144,7 @@ object NotificationHelper {
         title: String,
         body: String,
         deepLinkUri: String = "hustlehub://notifications",
+        unreadCount: Int = 1,
     ) {
         try {
             createChannel(context)
@@ -162,11 +166,13 @@ object NotificationHelper {
                 .setContentText(body)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                 .setAutoCancel(true)
+                .setNumber(unreadCount)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(pendingIntent)
                 .build()
 
             NotificationManagerCompat.from(context).notify(200, notification)
+            AppBadgeHelper.applyBadgeCount(context, unreadCount)
         } catch (e: SecurityException) {
             Timber.w(e, "POST_NOTIFICATIONS permission not granted; skipping notification")
         } catch (e: Exception) {
@@ -179,6 +185,7 @@ object NotificationHelper {
         title: String,
         body: String,
         deepLinkUri: String = "hustlehub://notifications",
+        unreadCount: Int = 1,
     ) {
         try {
             createChannel(context)
@@ -200,11 +207,13 @@ object NotificationHelper {
                 .setContentText(body)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                 .setAutoCancel(true)
+                .setNumber(unreadCount)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .build()
 
             NotificationManagerCompat.from(context).notify(300, notification)
+            AppBadgeHelper.applyBadgeCount(context, unreadCount)
         } catch (e: SecurityException) {
             Timber.w(e, "POST_NOTIFICATIONS permission not granted; skipping notification")
         } catch (e: Exception) {

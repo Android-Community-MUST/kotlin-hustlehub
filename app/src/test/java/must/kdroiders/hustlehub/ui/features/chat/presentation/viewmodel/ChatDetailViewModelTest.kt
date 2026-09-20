@@ -183,4 +183,29 @@ class ChatDetailViewModelTest {
             viewModel.searchNavigate(1)
             assertEquals(0, viewModel.uiState.value.searchResultIndex)
         }
+
+    @Test
+    fun `markServiceCompleted calls completeService on repository and updates state`() =
+        runTest {
+            io.mockk.coEvery { chatRepository.completeService("conv-123") } returns Result.success(Unit)
+            io.mockk.coEvery {
+                chatRepository.sendMessage(any(), any(), any(), any(), any())
+            } returns Result.success(Unit)
+
+            viewModel.initialize(conversationId = "conv-123")
+            testScheduler.advanceUntilIdle()
+
+            viewModel.markServiceCompleted()
+            testScheduler.advanceUntilIdle()
+
+            io.mockk.coVerify(exactly = 1) { chatRepository.completeService("conv-123") }
+            io.mockk.coVerify(exactly = 1) {
+                chatRepository.sendMessage(
+                    conversationId = "conv-123",
+                    type = must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType.SERVICE_COMPLETED,
+                    content = any(),
+                )
+            }
+            assertTrue(viewModel.uiState.value.isServiceCompleted)
+        }
 }

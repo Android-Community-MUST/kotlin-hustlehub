@@ -554,6 +554,7 @@ class ChatDetailViewModel
         fun markServiceCompleted() {
             val id = conversationId ?: return
             viewModelScope.launch {
+                chatRepository.completeService(id)
                 chatRepository.sendMessage(
                     conversationId = id,
                     type = MessageType.SERVICE_COMPLETED,

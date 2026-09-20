@@ -14,4 +14,5 @@ interface NotificationRepository {
     suspend fun getUnreadCount(): Result<Int>
     suspend fun getPreferences(): Result<NotificationPreferences>
     suspend fun updatePreferences(preferences: NotificationPreferences): Result<NotificationPreferences>
+    suspend fun restoreNotification(notification: Notification): Result<Unit>
 }

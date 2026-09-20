@@ -154,6 +154,9 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         backstack.add(Notifications)
                     }
                 }
+                is DeepLinkAction.OpenSubscription -> {
+                    backstack.add(Subscription(serviceId = action.serviceId))
+                }
                 is DeepLinkAction.OpenProfile, is DeepLinkAction.OpenChatList -> {
                     while (backstack.size > 1 && backstack.last() != MainShell) {
                         backstack.remove(backstack.last())

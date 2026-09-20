@@ -64,10 +64,10 @@ import must.kdroiders.hustlehub.ui.features.settings.presentation.components.Set
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsSectionLabel
 import timber.log.Timber
 
-private const val SUPPORT_EMAIL = "kdroiders.hustlehub@gmail.com"
-private const val BUG_EMAIL = "kdroiders.hustlehub@gmail.com"
-private const val TERMS_URL = "https://hustlehub.app/terms"
-private const val PRIVACY_URL = "https://hustlehub.app/privacy"
+private const val SUPPORT_EMAIL = "kotlin.hustlehub@gmail.com"
+private const val BUG_EMAIL = "kotlin.hustlehub@gmail.com"
+private const val TERMS_URL = "https://hustlehub-legal.vercel.app/terms"
+private const val PRIVACY_URL = "https://hustlehub-legal.vercel.app/privacy"
 
 private data class FaqItem(val question: String, val answer: String)
 

@@ -185,10 +185,9 @@ class MapViewModel
                 category = currentState.selectedCategory,
                 availability = currentState.availability,
             ).onSuccess { rawPins ->
-                // Compute distance for each pin and sort nearest-first (nulls last)
                 val enriched = rawPins
                     .map { pin ->
-                        val dist = if (userLoc != null) {
+                        val dist = pin.distanceMeters ?: if (userLoc != null) {
                             haversineDistance(userLoc.latitude, userLoc.longitude, pin.lat, pin.lng)
                         } else {
                             null

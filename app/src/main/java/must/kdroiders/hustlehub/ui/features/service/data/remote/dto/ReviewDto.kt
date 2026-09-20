@@ -28,6 +28,8 @@ data class ReviewResponse(
     val comment: String? = null,
     @SerializedName("isAnonymous")
     val isAnonymous: Boolean = false,
+    @SerializedName("isVerified")
+    val isVerified: Boolean = false,
     @SerializedName("createdAt")
     val createdAt: String,
 )

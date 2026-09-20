@@ -13,5 +13,6 @@ data class Review(
     /** Optional review text. Null when the user submitted a star-only review. */
     val comment: String?,
     val isAnonymous: Boolean,
+    val isVerified: Boolean = false,
     val createdAt: Long,
 )
