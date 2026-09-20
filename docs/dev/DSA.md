@@ -120,6 +120,31 @@ The `+2.0` and `+1.0` offsets ensure that a paid-featured service with a 0-star 
 
 ---
 
+## 6. Map Pin Distance Offload — Client CPU & Battery Preservation
+
+**Where**: `MapViewModel.fetchPins()`, `MapRepositoryImpl.kt`, `DiscoveryApiService.kt`
+
+### The Problem
+When displaying campus and nearby providers on the map, `MapViewModel` previously fetched all pins and ran `haversineDistance()` on every single pin in Kotlin on the main device thread. For 100+ pins, this performed hundreds of trigonometric calculations (`sin`, `cos`, `atan2`, `sqrt`) unnecessarily on mobile hardware.
+
+### The Solution
+The backend (PostGIS) already computes geographic distance via `ST_Distance` during spatial indexing and returns `distanceMeters` in `MapPinResponseDto`.
+- **Primary path**: `MapViewModel` checks `pin.distanceMeters`. If present, the calculation is skipped entirely — O(1) assignment.
+- **Offline fallback**: If loading from Room cache without precomputed distance, `haversineDistance()` is executed as a fallback.
+- **Result**: Significant CPU and battery savings during map interaction and continuous polling.
+
+---
+
+## 7. Spatial k-NN and Trending Endpoints
+
+**Where**: `DiscoveryApiService.kt`
+
+Exposes:
+- `GET /discovery/nearest?lat=&lng=&limit=`: True nearest-first discovery powered by PostGIS `<->` operator on the GiST index.
+- `GET /discovery/trending?category=&page=&size=`: Dynamic trending discovery powered by exponential time-decay scoring.
+
+---
+
 ## Adding a New DSA Decision
 
 When you introduce a non-trivial data structure or algorithm, document it here:

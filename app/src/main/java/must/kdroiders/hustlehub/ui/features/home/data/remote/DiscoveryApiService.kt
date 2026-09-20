@@ -3,6 +3,8 @@ package must.kdroiders.hustlehub.ui.features.home.data.remote
 import androidx.annotation.Keep
 import com.google.gson.annotations.SerializedName
 import must.kdroiders.hustlehub.core.api.ApiResponse
+import must.kdroiders.hustlehub.core.api.PageResponse
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ServiceResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -38,6 +40,23 @@ interface DiscoveryApiService {
         @Query("category") category: String?,
         @Query("availability") availability: String?,
     ): ApiResponse<List<MapPinResponseDto>>
+
+    @GET("discovery/nearest")
+    suspend fun getNearestServices(
+        @Query("lat") lat: Double,
+        @Query("lng") lng: Double,
+        @Query("category") category: String? = null,
+        @Query("availability") availability: String? = null,
+        @Query("limit") limit: Int = 20,
+    ): ApiResponse<List<ServiceResponse>>
+
+    @GET("discovery/trending")
+    suspend fun getTrendingServices(
+        @Query("category") category: String? = null,
+        @Query("availability") availability: String? = null,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20,
+    ): ApiResponse<PageResponse<ServiceResponse>>
 }
 
 @Keep
@@ -62,6 +81,8 @@ data class MapPinResponseDto(
     val lat: Double,
     @SerializedName("lng")
     val lng: Double,
+    @SerializedName("distanceMeters")
+    val distanceMeters: Double? = null,
 )
 
 /** @property query Natural language query from the user, max 500 chars. */
