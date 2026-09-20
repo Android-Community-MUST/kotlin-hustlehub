@@ -105,7 +105,11 @@ class NotificationRepositoryImpl
                 body = body,
                 data = data,
                 isRead = isRead,
-                sentAt = sentAt.ifBlank { java.time.Instant.now().toString() },
+                sentAt = sentAt.ifBlank {
+                    java.time.Instant
+                        .now()
+                        .toString()
+                },
             )
         }
 

@@ -49,7 +49,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,6 +68,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.navigation.DeepLinkAction
 import must.kdroiders.hustlehub.navigation.MainNavigationViewModel
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
@@ -82,7 +82,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -201,7 +200,6 @@ fun NotificationScreen(
                 .navigationBarsPadding()
                 .padding(bottom = 16.dp),
         )
-
 
         selectedPaymentReceipt?.let { receipt ->
             PaymentReceiptDialog(
@@ -357,7 +355,9 @@ fun NotificationItem(
     val containerColor = if (notification.isRead) {
         surfaceColor
     } else {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f).compositeOver(surfaceColor)
+        MaterialTheme.colorScheme.primary
+            .copy(alpha = 0.12f)
+            .compositeOver(surfaceColor)
     }
 
     val iconInfo = when (notification.type) {
@@ -582,8 +582,11 @@ fun PaymentReceiptDialog(
                     .size(56.dp)
                     .clip(CircleShape)
                     .background(
-                        if (isSuccess) MaterialTheme.colorScheme.successContainer
-                        else MaterialTheme.colorScheme.errorContainer,
+                        if (isSuccess) {
+                            MaterialTheme.colorScheme.successContainer
+                        } else {
+                            MaterialTheme.colorScheme.errorContainer
+                        },
                     ),
                 contentAlignment = Alignment.Center,
             ) {
@@ -688,7 +691,10 @@ fun PaymentReceiptDialog(
 }
 
 @Composable
-private fun ReceiptRow(label: String, value: String) {
+private fun ReceiptRow(
+    label: String,
+    value: String,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -707,4 +713,3 @@ private fun ReceiptRow(label: String, value: String) {
         )
     }
 }
-

@@ -39,17 +39,23 @@ class HustleHubMessagingService : FirebaseMessagingService() {
         title: String,
         body: String,
     ): Int {
-        val notifId = remoteMessage.data["notificationId"] ?: java.util.UUID.randomUUID().toString()
+        val notifId = remoteMessage.data["notificationId"] ?: java.util.UUID
+            .randomUUID()
+            .toString()
         val timestamp = remoteMessage.data["timestamp"]
             ?: remoteMessage.data["createdAt"]
-            ?: java.time.Instant.now().toString()
+            ?: java.time.Instant
+                .now()
+                .toString()
         val entity = must.kdroiders.hustlehub.ui.features.notification.data.local.entity.NotificationEntity(
             id = notifId,
             userId = remoteMessage.data["userId"] ?: "",
             type = rawType.uppercase(),
             title = title,
             body = body,
-            dataJson = com.google.gson.Gson().toJson(remoteMessage.data),
+            dataJson = com.google.gson
+                .Gson()
+                .toJson(remoteMessage.data),
             isRead = false,
             sentAt = timestamp,
         )

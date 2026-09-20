@@ -11,9 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.PriorityQueue
-import must.kdroiders.hustlehub.core.cache.LruServiceCache
 import must.kdroiders.hustlehub.core.auth.AuthManager
+import must.kdroiders.hustlehub.core.cache.LruServiceCache
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
 import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao
@@ -23,6 +22,7 @@ import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserReposi
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import timber.log.Timber
+import java.util.PriorityQueue
 import javax.inject.Inject
 
 private const val PAGE_SIZE = 10
@@ -215,7 +215,10 @@ class HomeViewModel
         }
 
         // O(n log k) min-heap selection — faster than 3x O(n log n) sort passes
-        private fun selectTopFeatured(merged: List<Service>, k: Int = MAX_FEATURED_COUNT): List<Service> {
+        private fun selectTopFeatured(
+            merged: List<Service>,
+            k: Int = MAX_FEATURED_COUNT,
+        ): List<Service> {
             if (merged.size <= k) return merged
             val heap = PriorityQueue<Service>(k, compareBy { featuredScore(it) })
             for (service in merged) {
@@ -229,9 +232,10 @@ class HomeViewModel
             return heap.sortedByDescending { featuredScore(it) }
         }
 
-        private fun featuredScore(s: Service): Float = when {
-            s.isFeatured         -> 2.0f + s.averageRating
-            s.averageRating > 0f -> 1.0f + s.averageRating
-            else                 -> s.averageRating
-        }
+        private fun featuredScore(s: Service): Float =
+            when {
+                s.isFeatured -> 2.0f + s.averageRating
+                s.averageRating > 0f -> 1.0f + s.averageRating
+                else -> s.averageRating
+            }
     }

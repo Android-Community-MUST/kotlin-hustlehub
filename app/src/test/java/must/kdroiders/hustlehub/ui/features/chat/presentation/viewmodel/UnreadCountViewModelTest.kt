@@ -84,4 +84,3 @@ class UnreadCountViewModelTest {
             coVerify(exactly = 1) { notificationRepository.markAllRead() }
         }
 }
-
