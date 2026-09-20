@@ -101,6 +101,13 @@ class SearchViewModel
             }
         }
 
+        fun onSuggestionSelected(suggestion: String) {
+            suggestionsJob?.cancel()
+            _uiState.update { it.copy(query = suggestion, suggestions = emptyList()) }
+            _queryFlow.value = suggestion
+            fetchPage(query = suggestion, filters = _uiState.value.filters, reset = true)
+        }
+
         fun onDraftFilterChanged(draft: SearchFilters) {
             _uiState.update { it.copy(draftFilters = draft) }
         }

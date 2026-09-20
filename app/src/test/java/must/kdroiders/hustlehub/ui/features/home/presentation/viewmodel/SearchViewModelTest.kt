@@ -103,4 +103,15 @@ class SearchViewModelTest {
             assertEquals(SearchFilters(), state.draftFilters)
             assertFalse(state.isFilterSheetOpen)
         }
+
+    @Test
+    fun `onSuggestionSelected updates query, clears suggestions, and triggers search`() =
+        runTest {
+            viewModel.onSuggestionSelected("Hair Cut")
+
+            val state = viewModel.uiState.value
+            assertEquals("Hair Cut", state.query)
+            assertTrue(state.suggestions.isEmpty())
+            coVerify { searchServicesUseCase("Hair Cut", any(), any(), any()) }
+        }
 }

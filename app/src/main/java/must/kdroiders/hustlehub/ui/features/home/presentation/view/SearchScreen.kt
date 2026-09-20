@@ -210,6 +210,44 @@ fun SearchScreen(
                     }
                 }
 
+                val visibleSuggestions = state.suggestions.filterNot { it.equals(state.query.trim(), ignoreCase = true) }
+                if (state.query.isNotEmpty() && visibleSuggestions.isNotEmpty()) {
+                    item(key = "search_suggestions") {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp, vertical = 4.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .padding(vertical = 4.dp),
+                        ) {
+                            visibleSuggestions.forEach { suggestion ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { searchViewModel.onSuggestionSelected(suggestion) }
+                                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(
+                                        text = suggestion,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Recent searches — shown when query is empty and history exists.
                 if (state.query.isEmpty() && state.recentSearches.isNotEmpty()) {
                     item(key = "recent_header") {
