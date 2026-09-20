@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
+import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
@@ -52,6 +53,7 @@ class HomeViewModel
         private val userRepository: UserRepository,
         private val notificationRepository: NotificationRepository,
         private val userPreferences: UserPreferences,
+        private val notificationDao: NotificationDao? = null,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(HomeUiState())
         val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -63,6 +65,16 @@ class HomeViewModel
             fetchServices(reset = true)
             loadNotificationCount()
             observeProviderBannerVisibility()
+            observeUnreadNotifications()
+        }
+
+        private fun observeUnreadNotifications() {
+            val dao = notificationDao ?: return
+            viewModelScope.launch {
+                dao.getUnreadCountFlow().collect { unread ->
+                    _uiState.update { it.copy(notificationCount = unread) }
+                }
+            }
         }
 
         private fun observeProviderBannerVisibility() {

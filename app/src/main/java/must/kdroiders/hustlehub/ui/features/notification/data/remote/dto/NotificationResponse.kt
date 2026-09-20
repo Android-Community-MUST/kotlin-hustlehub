@@ -10,7 +10,7 @@ data class NotificationResponse(
     @SerializedName("id")
     val id: String,
     @SerializedName("userId")
-    val userId: String = "",
+    val userId: String? = null,
     @SerializedName("type")
     val type: String,
     @SerializedName("title")
