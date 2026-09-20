@@ -19,7 +19,7 @@ data class NotificationResponse(
     val body: String,
     @SerializedName("data")
     val data: Map<String, String>? = null,
-    @SerializedName("isRead")
+    @SerializedName("isRead", alternate = ["read"])
     val isRead: Boolean = false,
     @SerializedName("sentAt", alternate = ["createdAt"])
     val sentAt: String = "",
