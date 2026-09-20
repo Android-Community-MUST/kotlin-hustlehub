@@ -51,5 +51,7 @@ interface ChatRepository {
 
     suspend fun retryMessage(messageId: String): Result<Unit>
 
+    suspend fun completeService(conversationId: String): Result<Unit>
+
     fun clearInFlightIds()
 }

@@ -518,6 +518,18 @@ class ChatRepositoryImpl
                 }
             }
 
+        override suspend fun completeService(conversationId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = conversationApiService.completeService(conversationId)
+                    check(response.success) { response.message ?: "Failed to complete service" }
+                    Unit
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to complete service for conversation $conversationId")
+                }
+            }
+
         override suspend fun deleteMessageForMe(messageId: String): Result<Unit> =
             withContext(Dispatchers.IO) {
                 runCatching {
