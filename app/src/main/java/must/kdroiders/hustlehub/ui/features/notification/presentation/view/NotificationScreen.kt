@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -108,11 +109,6 @@ fun NotificationScreen(
     val coroutineScope = rememberCoroutineScope()
     var selectedPaymentReceipt by remember { mutableStateOf<Notification?>(null) }
 
-    LaunchedEffect(Unit) {
-        viewModel.markAllAsRead()
-        unreadCountViewModel?.clearNotificationsBadge()
-    }
-
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -123,7 +119,10 @@ fun NotificationScreen(
             NotificationHeader(
                 unreadCount = state.unreadCount,
                 onBack = onBack,
-                onMarkAllRead = { viewModel.markAllAsRead() },
+                onMarkAllRead = {
+                    viewModel.markAllAsRead()
+                    unreadCountViewModel?.clearNotificationsBadge()
+                },
             )
 
             // Notifications Content with Date Grouping & Pull-to-refresh
@@ -137,7 +136,9 @@ fun NotificationScreen(
                 } else {
                     val grouped = groupNotificationsByDate(state.notifications)
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .navigationBarsPadding(),
                         contentPadding = PaddingValues(bottom = 24.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
@@ -152,6 +153,9 @@ fun NotificationScreen(
                                 SwipeableNotificationItem(
                                     notification = notification,
                                     onClick = {
+                                        if (!notification.isRead) {
+                                            unreadCountViewModel?.decrementNotificationBadge()
+                                        }
                                         viewModel.markAsRead(notification.id)
                                         if (notification.type == NotificationType.PAYMENT_SUCCESS ||
                                             notification.type == NotificationType.PAYMENT_FAILED
@@ -163,6 +167,9 @@ fun NotificationScreen(
                                     },
                                     onDelete = {
                                         val deletedItem = notification
+                                        if (!deletedItem.isRead) {
+                                            unreadCountViewModel?.decrementNotificationBadge()
+                                        }
                                         viewModel.deleteNotification(deletedItem.id)
                                         coroutineScope.launch {
                                             snackbarHostState.currentSnackbarData?.dismiss()
@@ -173,6 +180,9 @@ fun NotificationScreen(
                                             )
                                             if (result == SnackbarResult.ActionPerformed) {
                                                 viewModel.restoreNotification(deletedItem)
+                                                if (!deletedItem.isRead) {
+                                                    unreadCountViewModel?.refreshUnreadNotifications()
+                                                }
                                             }
                                         }
                                     },
@@ -188,8 +198,10 @@ fun NotificationScreen(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
                 .padding(bottom = 16.dp),
         )
+
 
         selectedPaymentReceipt?.let { receipt ->
             PaymentReceiptDialog(

@@ -69,6 +69,12 @@ class UnreadCountViewModel
             }
         }
 
+        fun decrementNotificationBadge() {
+            if (_unreadNotificationCount.value > 0) {
+                _unreadNotificationCount.value -= 1
+            }
+        }
+
         fun clearNotificationsBadge() {
             viewModelScope.launch {
                 notificationRepository.markAllRead()
@@ -76,3 +82,4 @@ class UnreadCountViewModel
             }
         }
     }
+

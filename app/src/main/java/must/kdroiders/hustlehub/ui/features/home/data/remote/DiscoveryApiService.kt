@@ -24,6 +24,12 @@ interface DiscoveryApiService {
         @Body request: AiSearchRequest,
     ): ApiResponse<AiSearchResponse>
 
+    @GET("discovery/suggestions")
+    suspend fun getSuggestions(
+        @Query("q") query: String,
+        @Query("limit") limit: Int = 5,
+    ): ApiResponse<List<String>>
+
     @GET("discovery/map-pins")
     suspend fun getMapPins(
         @Query("lat") lat: Double?,

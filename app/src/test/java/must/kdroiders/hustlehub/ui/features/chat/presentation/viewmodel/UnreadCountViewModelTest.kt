@@ -64,6 +64,15 @@ class UnreadCountViewModelTest {
         }
 
     @Test
+    fun `decrementNotificationBadge decrements unreadNotificationCount by one`() =
+        runTest {
+            viewModel.decrementNotificationBadge()
+
+            assertEquals(2, viewModel.unreadNotificationCount.value)
+            assertEquals(7, viewModel.totalUnreadCount.value)
+        }
+
+    @Test
     fun `clearNotificationsBadge clears unreadNotificationCount to zero`() =
         runTest {
             coEvery { notificationRepository.markAllRead() } returns Result.success(Unit)
@@ -75,3 +84,4 @@ class UnreadCountViewModelTest {
             coVerify(exactly = 1) { notificationRepository.markAllRead() }
         }
 }
+

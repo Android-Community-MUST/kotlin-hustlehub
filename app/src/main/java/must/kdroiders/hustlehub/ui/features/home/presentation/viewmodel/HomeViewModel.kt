@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.PriorityQueue
+import must.kdroiders.hustlehub.core.cache.LruServiceCache
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
@@ -18,7 +20,6 @@ import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.Notifica
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
-import must.kdroiders.hustlehub.ui.features.profile.domain.util.HustleScoreCalculator
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import timber.log.Timber
@@ -59,6 +60,7 @@ class HomeViewModel
         val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
         private var searchJob: Job? = null
+        private val serviceCache = LruServiceCache(maxSize = 100)
 
         init {
             loadUserInitials()
@@ -148,28 +150,11 @@ class HomeViewModel
                 browseServices(page = page, size = PAGE_SIZE, category = category, query = query)
                     .onSuccess { pageResponse ->
                         _uiState.update { current ->
-                            val merged = if (reset) {
-                                pageResponse.content
-                            } else {
-                                (current.services + pageResponse.content).distinctBy { it.id }
-                            }
+                            if (reset) serviceCache.clear()
+                            serviceCache.putAll(pageResponse.content)
+                            val merged = serviceCache.snapshot()
 
-                            // Derive Featured services for the carousel (Featured Hustlers).
-                            // Priority 1: Paid featured listings (isFeatured == true)
-                            // Priority 2: High rated services fallback (averageRating > 0f)
-                            // Priority 3: Fallback active services so Featured Hustlers is never blank
-                            val paidFeatured = merged
-                                .filter { it.isFeatured }
-                                .sortedByDescending { it.createdAt }
-                            val ratedFallback = merged
-                                .filter { !it.isFeatured && it.averageRating > 0f }
-                                .sortedByDescending { HustleScoreCalculator.calculateForService(it) }
-                            val unratedFallback = merged
-                                .filter { !it.isFeatured && it.averageRating <= 0f }
-                                .sortedByDescending { it.createdAt }
-                            val featured = (paidFeatured + ratedFallback + unratedFallback)
-                                .distinctBy { it.id }
-                                .take(MAX_FEATURED_COUNT)
+                            val featured = selectTopFeatured(merged)
 
                             current.copy(
                                 services = merged,
@@ -227,5 +212,26 @@ class HomeViewModel
         override fun onCleared() {
             super.onCleared()
             searchJob?.cancel()
+        }
+
+        // O(n log k) min-heap selection — faster than 3x O(n log n) sort passes
+        private fun selectTopFeatured(merged: List<Service>, k: Int = MAX_FEATURED_COUNT): List<Service> {
+            if (merged.size <= k) return merged
+            val heap = PriorityQueue<Service>(k, compareBy { featuredScore(it) })
+            for (service in merged) {
+                if (heap.size < k) {
+                    heap.add(service)
+                } else if (featuredScore(service) > featuredScore(heap.peek()!!)) {
+                    heap.poll()
+                    heap.add(service)
+                }
+            }
+            return heap.sortedByDescending { featuredScore(it) }
+        }
+
+        private fun featuredScore(s: Service): Float = when {
+            s.isFeatured         -> 2.0f + s.averageRating
+            s.averageRating > 0f -> 1.0f + s.averageRating
+            else                 -> s.averageRating
         }
     }

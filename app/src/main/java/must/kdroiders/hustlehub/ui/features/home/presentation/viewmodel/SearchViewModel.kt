@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +15,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.search.SearchTrie
 import must.kdroiders.hustlehub.datastore.UserPreferences
+import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SearchFilters
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.SearchServicesUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
@@ -25,11 +28,10 @@ private const val SEARCH_DEBOUNCE_MS = 300L
 
 data class SearchUiState(
     val query: String = "",
-    /** Live applied filters — these drive the active filter chip row. */
     val filters: SearchFilters = SearchFilters(),
-    /** Draft filters held in the bottom sheet before the user taps Apply. */
     val draftFilters: SearchFilters = SearchFilters(),
     val recentSearches: List<String> = emptyList(),
+    val suggestions: List<String> = emptyList(),
     val services: List<Service> = emptyList(),
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
@@ -45,12 +47,14 @@ class SearchViewModel
     constructor(
         private val searchServicesUseCase: SearchServicesUseCase,
         private val userPreferences: UserPreferences,
+        private val discoveryApiService: DiscoveryApiService,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SearchUiState())
         val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
-        // Internal query flow to drive debounced search.
         private val _queryFlow = MutableStateFlow("")
+        private val trie = SearchTrie()
+        private var suggestionsJob: Job? = null
 
         init {
             observeRecentSearches()
@@ -74,8 +78,27 @@ class SearchViewModel
         }
 
         fun onQueryChanged(query: String) {
-            _uiState.update { it.copy(query = query) }
+            // Instant Trie lookup — zero network, O(prefix length)
+            val trieHits = if (query.length >= 2) trie.suggest(query) else emptyList()
+            _uiState.update { it.copy(query = query, suggestions = trieHits) }
             _queryFlow.value = query
+
+            // Fetch full-catalog suggestions from backend (seeds the Trie for next time)
+            suggestionsJob?.cancel()
+            if (query.length >= 2) {
+                suggestionsJob = viewModelScope.launch {
+                    runCatching { discoveryApiService.getSuggestions(query) }
+                        .onSuccess { response ->
+                            val serverSuggestions = response.data ?: emptyList()
+                            serverSuggestions.forEach { trie.insert(it) }
+                            if (_uiState.value.query == query) {
+                                _uiState.update { it.copy(suggestions = serverSuggestions) }
+                            }
+                        }
+                }
+            } else {
+                _uiState.update { it.copy(suggestions = emptyList()) }
+            }
         }
 
         fun onDraftFilterChanged(draft: SearchFilters) {
