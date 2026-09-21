@@ -758,6 +758,12 @@ private fun ConversationResponse.toEntity(
         existingEntity?.lastMessage
     }
 
+    val resolvedUnreadCount = if (existingEntity != null && existingEntity.unreadCount < unreadCount) {
+        existingEntity.unreadCount
+    } else {
+        unreadCount
+    }
+
     return ConversationEntity(
         id = id,
         otherUserId = otherUserId,
@@ -767,7 +773,7 @@ private fun ConversationResponse.toEntity(
         lastMessage = resolvedLastMessage,
         lastMessageType = lastMessageType ?: existingEntity?.lastMessageType,
         lastMessageAt = lastMessageAt ?: existingEntity?.lastMessageAt,
-        unreadCount = unreadCount,
+        unreadCount = resolvedUnreadCount,
         createdAt = createdAt,
         isArchived = isArchived ?: false,
     )

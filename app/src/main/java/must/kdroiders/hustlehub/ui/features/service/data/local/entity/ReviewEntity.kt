@@ -15,6 +15,9 @@ data class ReviewEntity(
     val rating: Int,
     val comment: String?,
     val isAnonymous: Boolean,
+    val isVerified: Boolean = false,
+    val providerReply: String? = null,
+    val providerRepliedAt: Long? = null,
     val createdAt: Long,
     val cachedAt: Long = System.currentTimeMillis(),
 )
@@ -30,6 +33,9 @@ fun ReviewEntity.toDomain(): Review =
         rating = rating,
         comment = comment,
         isAnonymous = isAnonymous,
+        isVerified = isVerified,
+        providerReply = providerReply,
+        providerRepliedAt = providerRepliedAt,
         createdAt = createdAt,
     )
 
@@ -44,6 +50,9 @@ fun Review.toEntity(cachedAt: Long = System.currentTimeMillis()): ReviewEntity =
         rating = rating,
         comment = comment,
         isAnonymous = isAnonymous,
+        isVerified = isVerified,
+        providerReply = providerReply,
+        providerRepliedAt = providerRepliedAt,
         createdAt = createdAt,
         cachedAt = cachedAt,
     )

@@ -10,13 +10,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,6 +42,9 @@ fun ReviewItem(
     review: Review,
     modifier: Modifier = Modifier,
     showDivider: Boolean = true,
+    canReply: Boolean = false,
+    providerName: String? = null,
+    onReplyClick: () -> Unit = {},
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -124,6 +130,34 @@ fun ReviewItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 52.dp),
             )
+        }
+
+        if (!review.providerReply.isNullOrBlank()) {
+            Spacer(Modifier.height(10.dp))
+            ProviderReplyCard(
+                reply = review.providerReply,
+                repliedAt = review.providerRepliedAt,
+                providerName = providerName,
+                modifier = Modifier.padding(start = 52.dp),
+            )
+        } else if (canReply) {
+            Spacer(Modifier.height(4.dp))
+            TextButton(
+                onClick = onReplyClick,
+                modifier = Modifier.padding(start = 44.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Reply,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    text = "Reply",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
         }
 
         if (showDivider) {

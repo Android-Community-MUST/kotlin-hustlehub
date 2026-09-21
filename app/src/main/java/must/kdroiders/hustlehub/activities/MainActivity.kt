@@ -191,8 +191,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Clear all chat notifications and badge when user returns to the app
-        NotificationHelper.cancelAllNotifications(this)
         startLocationUpdates()
     }
 

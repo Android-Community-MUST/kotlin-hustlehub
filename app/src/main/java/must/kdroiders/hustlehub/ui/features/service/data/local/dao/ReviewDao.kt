@@ -11,6 +11,9 @@ interface ReviewDao {
     @Query("SELECT * FROM reviews WHERE serviceId = :serviceId ORDER BY createdAt DESC")
     fun getReviewsForServiceFlow(serviceId: String): Flow<List<ReviewEntity>>
 
+    @Query("SELECT * FROM reviews WHERE serviceId = :serviceId ORDER BY createdAt DESC")
+    suspend fun getReviewsForService(serviceId: String): List<ReviewEntity>
+
     @Upsert
     suspend fun upsertAll(reviews: List<ReviewEntity>)
 
