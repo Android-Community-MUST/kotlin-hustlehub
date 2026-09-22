@@ -18,6 +18,7 @@ data class ReviewEntity(
     val isVerified: Boolean = false,
     val providerReply: String? = null,
     val providerRepliedAt: Long? = null,
+    val updatedAt: Long? = null,
     val createdAt: Long,
     val cachedAt: Long = System.currentTimeMillis(),
 )
@@ -36,6 +37,7 @@ fun ReviewEntity.toDomain(): Review =
         isVerified = isVerified,
         providerReply = providerReply,
         providerRepliedAt = providerRepliedAt,
+        updatedAt = updatedAt,
         createdAt = createdAt,
     )
 
@@ -53,6 +55,7 @@ fun Review.toEntity(cachedAt: Long = System.currentTimeMillis()): ReviewEntity =
         isVerified = isVerified,
         providerReply = providerReply,
         providerRepliedAt = providerRepliedAt,
+        updatedAt = updatedAt,
         createdAt = createdAt,
         cachedAt = cachedAt,
     )

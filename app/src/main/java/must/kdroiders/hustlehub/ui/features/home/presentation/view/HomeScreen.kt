@@ -189,12 +189,8 @@ fun HomeScreen(
                         )
                     }
 
-                    item(key = "provider_banner", span = { GridItemSpan(maxLineSpan) }) {
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = state.showProviderBanner,
-                            enter = expandVertically() + fadeIn(),
-                            exit = shrinkVertically() + fadeOut(),
-                        ) {
+                    if (state.showProviderBanner) {
+                        item(key = "provider_banner", span = { GridItemSpan(maxLineSpan) }) {
                             ProviderBannerCard(
                                 onListServiceClick = onNavigateToCreateService,
                                 onDismiss = homeViewModel::dismissProviderBanner,
@@ -217,7 +213,6 @@ fun HomeScreen(
                     }
 
                     item(key = "categories", span = { GridItemSpan(maxLineSpan) }) {
-                        Spacer(Modifier.height(4.dp))
                         CategoryChipRow(
                             selected = state.selectedCategory,
                             onSelected = homeViewModel::onCategorySelected,
@@ -225,58 +220,52 @@ fun HomeScreen(
                         )
                     }
 
-                    // Featured section — top 5 rated services, conditionally shown.
-
                     if (state.featuredServices.isNotEmpty()) {
-                        item(key = "featured_header", span = { GridItemSpan(maxLineSpan) }) {
+                        item(key = "featured_section", span = { GridItemSpan(maxLineSpan) }) {
                             val comingSoon = stringResource(R.string.home_coming_soon)
-                            Spacer(Modifier.height(4.dp))
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.home_section_featured),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                )
-                                TextButton(
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            snackbarHostState.showSnackbar(comingSoon)
-                                        }
-                                    },
-                                    contentPadding = PaddingValues(0.dp),
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
-                                        text = stringResource(R.string.home_view_all),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontSize = 12.sp,
+                                        text = stringResource(R.string.home_section_featured),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground,
                                     )
+                                    TextButton(
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar(comingSoon)
+                                            }
+                                        },
+                                        modifier = Modifier.height(32.dp),
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.home_view_all),
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 12.sp,
+                                            ),
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                    }
                                 }
+                                Spacer(Modifier.height(8.dp))
+                                FeaturedServicesRow(
+                                    services = state.featuredServices,
+                                    onServiceClick = onNavigateToServiceDetail,
+                                )
                             }
-                            Spacer(Modifier.height(2.dp))
-                        }
-
-                        item(key = "featured_row", span = { GridItemSpan(maxLineSpan) }) {
-                            FeaturedServicesRow(
-                                services = state.featuredServices,
-                                onServiceClick = onNavigateToServiceDetail,
-                                modifier = Modifier,
-                            )
-                            Spacer(Modifier.height(4.dp))
                         }
                     }
 
-                    // Section label for the paginated service grid below.
-
                     item(key = "browse_header", span = { GridItemSpan(maxLineSpan) }) {
-                        Spacer(Modifier.height(8.dp))
                         Row(
                             modifier = Modifier.padding(start = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,

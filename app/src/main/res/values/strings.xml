@@ -601,6 +601,14 @@
     <string name="review_post_anonymously">Post anonymously</string>
     <string name="review_already_reviewed_btn">Already Reviewed</string>
     <string name="review_submit_btn">Submit Review</string>
+    <string name="review_update_btn">Update Review</string>
+    <string name="review_edit_title">Edit Your Review</string>
+    <string name="review_updated_snackbar">Review updated! Thank you.</string>
+    <string name="review_delete_btn">Delete Review</string>
+    <string name="review_deleted_snackbar">Review deleted.</string>
+    <string name="review_delete_dialog_title">Delete Review?</string>
+    <string name="review_delete_dialog_message">Are you sure you want to delete your review? This action cannot be undone.</string>
+    <string name="review_edited_tag">(edited)</string>
     <string name="cd_success">Success</string>
     <string name="review_success_title">Review Submitted!</string>
     <string name="review_success_subtitle">Thank you for sharing your feedback</string>

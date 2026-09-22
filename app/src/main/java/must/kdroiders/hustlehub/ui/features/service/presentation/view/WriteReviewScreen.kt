@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,8 +32,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -41,16 +44,21 @@ import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,7 +66,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -88,7 +99,11 @@ fun WriteReviewScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     val reviewSubmittedMsg = stringResource(R.string.review_submitted_snackbar)
+    val reviewUpdatedMsg = stringResource(R.string.review_updated_snackbar)
+    val reviewDeletedMsg = stringResource(R.string.review_deleted_snackbar)
 
     LaunchedEffect(serviceId) {
         viewModel.initialize(serviceId)
@@ -96,9 +111,18 @@ fun WriteReviewScreen(
 
     LaunchedEffect(state.submitSuccess) {
         if (state.submitSuccess) {
-            snackbarHostState.showSnackbar(reviewSubmittedMsg)
+            val msg = if (state.isEditMode) reviewUpdatedMsg else reviewSubmittedMsg
+            snackbarHostState.showSnackbar(msg)
             delay(1200)
             onSubmitSuccess()
+        }
+    }
+
+    LaunchedEffect(state.deleteSuccess) {
+        if (state.deleteSuccess) {
+            snackbarHostState.showSnackbar(reviewDeletedMsg)
+            delay(1000)
+            onBack()
         }
     }
 
@@ -109,6 +133,45 @@ fun WriteReviewScreen(
         }
     }
 
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.review_delete_dialog_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics { heading() },
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.review_delete_dialog_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteReview()
+                    },
+                ) {
+                    Text(
+                        text = stringResource(R.string.action_delete),
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(text = stringResource(R.string.action_cancel))
+                }
+            },
+        )
+    }
+
     HustleScaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -116,7 +179,11 @@ fun WriteReviewScreen(
                 windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Text(
-                        text = stringResource(R.string.review_write_title),
+                        text = if (state.isEditMode) {
+                            stringResource(R.string.review_edit_title)
+                        } else {
+                            stringResource(R.string.review_write_title)
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.semantics { heading() },
@@ -124,6 +191,20 @@ fun WriteReviewScreen(
                 },
                 navigationIcon = {
                     HustleBackButton(onClick = onBack)
+                },
+                actions = {
+                    if (state.isEditMode) {
+                        IconButton(
+                            onClick = { showDeleteDialog = true },
+                            enabled = !state.isDeleting && !state.isSubmitting,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.review_delete_btn),
+                                tint = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
@@ -210,7 +291,7 @@ fun WriteReviewScreen(
                     }
                 }
 
-                if (state.hasAlreadyReviewed) {
+                if (state.hasAlreadyReviewed && !state.isEditMode) {
                     Spacer(Modifier.height(16.dp))
                     Row(
                         modifier = Modifier
@@ -237,7 +318,6 @@ fun WriteReviewScreen(
 
                 Spacer(Modifier.height(32.dp))
 
-                // Interactive Star Rating (Tap / Drag)
                 StarRatingBar(
                     rating = state.rating,
                     starSize = 44.dp,
@@ -247,7 +327,6 @@ fun WriteReviewScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // Rating Feedback Text
                 val feedbackText = when (state.rating) {
                     5 -> stringResource(R.string.review_rate_5)
                     4 -> stringResource(R.string.review_rate_4)
@@ -277,7 +356,6 @@ fun WriteReviewScreen(
 
                 Spacer(Modifier.height(32.dp))
 
-                // Review Input Area
                 val defaultProviderName = stringResource(R.string.profile_fallback_name)
                 val providerFirstName = state.provider
                     ?.name
@@ -298,7 +376,6 @@ fun WriteReviewScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                // Live Character Count Indicator
                 Text(
                     text = stringResource(R.string.review_char_count_format, state.commentLength, state.maxCommentLength),
                     style = MaterialTheme.typography.labelMedium,
@@ -314,7 +391,6 @@ fun WriteReviewScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                // Predefined Tags
                 val availableTags = listOf("Fast Delivery", "Great Communication", "Creative")
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -337,6 +413,10 @@ fun WriteReviewScreen(
                                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                                     shape = RoundedCornerShape(20.dp),
                                 ).clickable { viewModel.onTagToggled(tag) }
+                                .semantics {
+                                    role = Role.Checkbox
+                                    selected = isSelected
+                                }
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                         ) {
                             Text(
@@ -367,7 +447,6 @@ fun WriteReviewScreen(
 
                 Spacer(Modifier.height(32.dp))
 
-                // Submit Button
                 Button(
                     onClick = viewModel::submit,
                     enabled = state.canSubmit,
@@ -390,10 +469,10 @@ fun WriteReviewScreen(
                             horizontalArrangement = Arrangement.Center,
                         ) {
                             Text(
-                                text = if (state.hasAlreadyReviewed) {
-                                    stringResource(R.string.review_already_reviewed_btn)
-                                } else {
-                                    stringResource(R.string.review_submit_btn)
+                                text = when {
+                                    state.isEditMode -> stringResource(R.string.review_update_btn)
+                                    state.hasAlreadyReviewed -> stringResource(R.string.review_already_reviewed_btn)
+                                    else -> stringResource(R.string.review_submit_btn)
                                 },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
@@ -404,6 +483,46 @@ fun WriteReviewScreen(
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
                             )
+                        }
+                    }
+                }
+
+                if (state.isEditMode) {
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedButton(
+                        onClick = { showDeleteDialog = true },
+                        enabled = !state.isDeleting && !state.isSubmitting,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error,
+                        ),
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                        ),
+                    ) {
+                        if (state.isDeleting) {
+                            LoadingIndicator(modifier = Modifier.size(24.dp))
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.review_delete_btn),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
                         }
                     }
                 }

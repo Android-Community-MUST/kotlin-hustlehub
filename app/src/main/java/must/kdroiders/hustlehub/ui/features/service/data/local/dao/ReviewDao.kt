@@ -22,4 +22,7 @@ interface ReviewDao {
 
     @Query("DELETE FROM reviews WHERE serviceId = :serviceId")
     suspend fun clearForService(serviceId: String)
+
+    @Query("DELETE FROM reviews WHERE id = :id")
+    suspend fun deleteById(id: String)
 }

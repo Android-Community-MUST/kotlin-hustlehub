@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,17 +29,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -48,6 +57,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReplyToReviewBottomSheet
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewItem
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewSummaryCard
@@ -60,10 +70,12 @@ fun AllReviewsScreen(
     serviceId: String,
     viewModel: AllReviewsViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
+    onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit = { _, _ -> },
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
+    var reviewToDelete by remember { mutableStateOf<Review?>(null) }
 
     LaunchedEffect(serviceId) {
         viewModel.initialize(serviceId)
@@ -101,6 +113,7 @@ fun AllReviewsScreen(
                             text = stringResource(R.string.service_reviews_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { heading() },
                         )
                         if (state.service != null) {
                             Text(
@@ -207,6 +220,10 @@ fun AllReviewsScreen(
                                                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                             },
                                         ).clickable { viewModel.onSortOptionSelected(option) }
+                                        .semantics {
+                                            role = Role.RadioButton
+                                            selected = isSelected
+                                        }
                                         .padding(horizontal = 12.dp, vertical = 6.dp),
                                 ) {
                                     Text(
@@ -228,12 +245,23 @@ fun AllReviewsScreen(
                         items = state.reviews,
                         key = { _, review -> review.id },
                     ) { index, review ->
+                        val isAuthor = (state.myReviewId != null && state.myReviewId == review.id) ||
+                            (!state.currentUserUuid.isNullOrBlank() && state.currentUserUuid == review.customerId) ||
+                            (!state.currentUserId.isNullOrBlank() && state.currentUserId == review.customerId)
+
                         ReviewItem(
                             review = review,
                             showDivider = index < state.reviews.size - 1,
                             canReply = state.isOwnService,
                             providerName = state.service?.title,
+                            isAuthor = isAuthor,
                             onReplyClick = { viewModel.onReplyClicked(review) },
+                            onEditClick = {
+                                onNavigateToWriteReview(review.serviceId, state.service?.providerId ?: "")
+                            },
+                            onDeleteClick = {
+                                reviewToDelete = review
+                            },
                         )
                     }
 
@@ -256,6 +284,48 @@ fun AllReviewsScreen(
                 }
             }
         }
+    }
+
+    if (reviewToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { reviewToDelete = null },
+            title = {
+                Text(
+                    text = stringResource(R.string.review_delete_dialog_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics { heading() },
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.review_delete_dialog_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val id = reviewToDelete?.id
+                        reviewToDelete = null
+                        if (id != null) {
+                            viewModel.deleteReview(id)
+                        }
+                    },
+                ) {
+                    Text(
+                        text = stringResource(R.string.action_delete),
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { reviewToDelete = null }) {
+                    Text(text = stringResource(R.string.action_cancel))
+                }
+            },
+        )
     }
 
     state.replyingReview?.let { review ->

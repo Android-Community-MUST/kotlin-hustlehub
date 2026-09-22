@@ -9,6 +9,7 @@ import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ProviderRepl
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.RatingDistributionResponse
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewResponse
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ServiceResponse
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.UpdateReviewRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.UpdateServiceRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -100,4 +101,20 @@ interface ServiceApiService {
         @Path("reviewId") reviewId: String,
         @Body request: ProviderReplyRequest,
     ): ApiResponse<ReviewResponse>
+
+    @PUT("reviews/{reviewId}")
+    suspend fun updateReview(
+        @Path("reviewId") reviewId: String,
+        @Body request: UpdateReviewRequest,
+    ): ApiResponse<ReviewResponse>
+
+    @DELETE("reviews/{reviewId}")
+    suspend fun deleteReview(
+        @Path("reviewId") reviewId: String,
+    ): ApiResponse<Unit>
+
+    @GET("services/{serviceId}/reviews/mine")
+    suspend fun getMyReviewForService(
+        @Path("serviceId") serviceId: String,
+    ): ApiResponse<ReviewResponse?>
 }

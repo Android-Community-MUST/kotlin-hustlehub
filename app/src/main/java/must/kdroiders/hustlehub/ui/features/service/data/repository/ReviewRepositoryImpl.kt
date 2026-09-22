@@ -13,6 +13,7 @@ import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiServic
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateReviewRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ProviderReplyRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewResponse
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.UpdateReviewRequest
 import must.kdroiders.hustlehub.ui.features.service.domain.model.RatingDistribution
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ReviewRepository
@@ -145,6 +146,61 @@ class ReviewRepositoryImpl
                     Timber.w(e, "ReviewRepositoryImpl.replyToReview failed for reviewId='$reviewId'")
                 }
             }
+
+        override suspend fun updateReview(
+            reviewId: String,
+            rating: Int,
+            comment: String?,
+            isAnonymous: Boolean,
+        ): Result<Review> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val request = UpdateReviewRequest(
+                        rating = rating,
+                        comment = comment,
+                        isAnonymous = isAnonymous,
+                    )
+                    val response = apiService.updateReview(reviewId, request)
+                    check(response.success && response.data != null) { response.message }
+                    val review = response.data.toDomain()
+                    reviewDao.upsert(review.toEntity())
+                    review
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.w(e, "ReviewRepositoryImpl.updateReview failed for reviewId='$reviewId'")
+                }
+            }
+
+        override suspend fun deleteReview(reviewId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = apiService.deleteReview(reviewId)
+                    check(response.success) { response.message }
+                    reviewDao.deleteById(reviewId)
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.w(e, "ReviewRepositoryImpl.deleteReview failed for reviewId='$reviewId'")
+                }
+            }
+
+        override suspend fun getMyReviewForService(serviceId: String): Result<Review?> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = apiService.getMyReviewForService(serviceId)
+                    check(response.success) { response.message }
+                    response.data?.toDomain()
+                }.recoverCatching { e ->
+                    if (e is CancellationException) throw e
+                    Timber.w(e, "ReviewRepositoryImpl.getMyReviewForService network miss for serviceId='$serviceId', trying cache")
+                    val currentUser = userPreferences.cachedUser.firstOrNull()
+                    if (currentUser != null && currentUser.id.isNotBlank()) {
+                        val cached = reviewDao.getReviewsForService(serviceId)
+                        cached.find { it.customerId == currentUser.id }?.toDomain()
+                    } else {
+                        null
+                    }
+                }
+            }
     }
 
 private fun ReviewResponse.toDomain(): Review =
@@ -161,6 +217,9 @@ private fun ReviewResponse.toDomain(): Review =
         isVerified = isVerified,
         providerReply = providerReply,
         providerRepliedAt = providerRepliedAt?.let {
+            runCatching { Instant.parse(it).toEpochMilli() }.getOrNull()
+        },
+        updatedAt = updatedAt?.let {
             runCatching { Instant.parse(it).toEpochMilli() }.getOrNull()
         },
         createdAt = runCatching {

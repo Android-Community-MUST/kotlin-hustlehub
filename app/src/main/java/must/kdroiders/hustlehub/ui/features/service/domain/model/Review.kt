@@ -13,6 +13,7 @@ data class Review(
     val isVerified: Boolean = false,
     val providerReply: String? = null,
     val providerRepliedAt: Long? = null,
+    val updatedAt: Long? = null,
     val createdAt: Long,
 )
 

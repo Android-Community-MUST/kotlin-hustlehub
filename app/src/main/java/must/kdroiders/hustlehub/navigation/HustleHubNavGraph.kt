@@ -471,6 +471,9 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             AllReviewsScreen(
                                 serviceId = key.serviceId,
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                                onNavigateToWriteReview = { serviceId, providerId ->
+                                    backstack.add(WriteReview(serviceId = serviceId, providerId = providerId))
+                                },
                             )
                         }
 

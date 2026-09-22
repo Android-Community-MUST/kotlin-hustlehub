@@ -23,5 +23,16 @@ interface ReviewRepository {
     suspend fun getRatingDistribution(serviceId: String): Result<RatingDistribution>
 
     suspend fun replyToReview(reviewId: String, reply: String): Result<Review>
+
+    suspend fun updateReview(
+        reviewId: String,
+        rating: Int,
+        comment: String? = null,
+        isAnonymous: Boolean = false,
+    ): Result<Review>
+
+    suspend fun deleteReview(reviewId: String): Result<Unit>
+
+    suspend fun getMyReviewForService(serviceId: String): Result<Review?>
 }
 

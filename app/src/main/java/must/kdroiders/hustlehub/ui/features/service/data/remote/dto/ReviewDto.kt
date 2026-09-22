@@ -29,6 +29,8 @@ data class ReviewResponse(
     val providerReply: String? = null,
     @SerializedName("providerRepliedAt")
     val providerRepliedAt: String? = null,
+    @SerializedName("updatedAt")
+    val updatedAt: String? = null,
     @SerializedName("createdAt")
     val createdAt: String,
 )
@@ -61,6 +63,16 @@ data class ProviderReplyRequest(
 
 @Keep
 data class CreateReviewRequest(
+    @SerializedName("rating")
+    val rating: Int,
+    @SerializedName("comment")
+    val comment: String? = null,
+    @SerializedName("isAnonymous")
+    val isAnonymous: Boolean = false,
+)
+
+@Keep
+data class UpdateReviewRequest(
     @SerializedName("rating")
     val rating: Int,
     @SerializedName("comment")

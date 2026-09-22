@@ -7,12 +7,16 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ReviewRepository
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.DeleteReviewUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyReviewUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceReviewsUseCase
 import timber.log.Timber
@@ -25,8 +29,11 @@ class AllReviewsViewModel
     constructor(
         private val getServiceReviewsUseCase: GetServiceReviewsUseCase,
         private val getServiceByIdUseCase: GetServiceByIdUseCase,
+        private val getMyReviewUseCase: GetMyReviewUseCase,
+        private val deleteReviewUseCase: DeleteReviewUseCase,
         private val reviewRepository: ReviewRepository,
         private val authRepository: AuthRepository,
+        private val userPreferences: UserPreferences,
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
     ) : ViewModel() {
         private var serviceId: String? = null
@@ -132,13 +139,16 @@ class AllReviewsViewModel
                 }
 
                 val currentUid = authRepository.getCurrentUser()?.uid
+                val cachedUser = userPreferences.cachedUser.firstOrNull()
                 val serviceDeferred = async { getServiceByIdUseCase(sid) }
                 val reviewsDeferred = async { getServiceReviewsUseCase(sid, page = 0, size = 20) }
                 val distDeferred = async { reviewRepository.getRatingDistribution(sid) }
+                val myReviewDeferred = async { getMyReviewUseCase(sid) }
 
                 val serviceResult = serviceDeferred.await()
                 val reviewsResult = reviewsDeferred.await()
                 val distResult = distDeferred.await()
+                val myReview = myReviewDeferred.await().getOrNull()
 
                 val service = serviceResult.getOrNull()
                 val pageResponse = reviewsResult.getOrNull()
@@ -187,9 +197,36 @@ class AllReviewsViewModel
                         hasMore = hasMore,
                         isLoading = false,
                         isRefreshing = false,
+                        currentUserId = cachedUser?.id ?: currentUid,
+                        currentUserUuid = cachedUser?.uuid,
+                        myReviewId = myReview?.id,
                         error = if (serviceResult.isFailure && reviewsResult.isFailure) "Failed to load reviews." else null,
                     )
                 }
+            }
+        }
+
+        fun deleteReview(reviewId: String) {
+            viewModelScope.launch {
+                deleteReviewUseCase(reviewId)
+                    .onSuccess {
+                        rawReviews = rawReviews.filterNot { it.id == reviewId }
+                        val sorted = sortReviews(rawReviews, _uiState.value.sortOption)
+                        val newCount = (_uiState.value.totalReviews - 1).coerceAtLeast(0)
+                        _uiState.update {
+                            it.copy(
+                                reviews = sorted,
+                                totalReviews = newCount,
+                                myReviewId = if (it.myReviewId == reviewId) null else it.myReviewId,
+                            )
+                        }
+                        refresh()
+                    }.onFailure { e ->
+                        Timber.e(e, "AllReviewsViewModel.deleteReview failed for reviewId=$reviewId")
+                        _uiState.update {
+                            it.copy(error = e.message ?: "Failed to delete review. Please try again.")
+                        }
+                    }
             }
         }
 

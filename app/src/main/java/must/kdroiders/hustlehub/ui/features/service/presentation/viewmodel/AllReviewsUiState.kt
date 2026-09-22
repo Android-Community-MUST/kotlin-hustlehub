@@ -26,6 +26,9 @@ data class AllReviewsUiState(
     val error: String? = null,
     val replyingReview: Review? = null,
     val isSubmittingReply: Boolean = false,
+    val currentUserId: String? = null,
+    val currentUserUuid: String? = null,
+    val myReviewId: String? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -49,6 +52,9 @@ data class AllReviewsUiState(
         if (error != other.error) return false
         if (replyingReview != other.replyingReview) return false
         if (isSubmittingReply != other.isSubmittingReply) return false
+        if (currentUserId != other.currentUserId) return false
+        if (currentUserUuid != other.currentUserUuid) return false
+        if (myReviewId != other.myReviewId) return false
 
         return true
     }
@@ -70,7 +76,9 @@ data class AllReviewsUiState(
         result = 31 * result + (error?.hashCode() ?: 0)
         result = 31 * result + (replyingReview?.hashCode() ?: 0)
         result = 31 * result + isSubmittingReply.hashCode()
+        result = 31 * result + (currentUserId?.hashCode() ?: 0)
+        result = 31 * result + (currentUserUuid?.hashCode() ?: 0)
+        result = 31 * result + (myReviewId?.hashCode() ?: 0)
         return result
     }
 }
-
