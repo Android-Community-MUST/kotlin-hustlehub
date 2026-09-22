@@ -90,10 +90,55 @@ class ProfileViewModelTest {
             viewModel.toggleServiceActive("srv-1")
 
             coVerify(exactly = 1) { updateAvailabilityUseCase("srv-1", ServiceAvailability.OFFLINE) }
+            coVerify(exactly = 1) { userRepository.updateOnlineStatus(false) }
             assertEquals(
                 ServiceAvailability.OFFLINE,
-                viewModel.uiState.value.services[0]
-                    .availability,
+                viewModel.uiState.value.services[0].availability,
             )
+            assertEquals(false, viewModel.uiState.value.user?.isOnline)
+        }
+
+    @Test
+    fun `loadProfile derives isOnline as false when all services are OFFLINE`() =
+        runTest {
+            val user = User(id = "uid-100", isOnline = true)
+            val services = listOf(
+                Service(id = "srv-1", availability = ServiceAvailability.OFFLINE),
+            )
+            coEvery { userRepository.getUserProfile("uid-100") } returns Result.success(user)
+            coEvery { getMyServicesUseCase() } returns Result.success(services)
+
+            viewModel.loadProfile()
+
+            val state = viewModel.uiState.value
+            assertEquals(false, state.user?.isOnline)
+        }
+
+    @Test
+    fun `toggleOverallAvailability false closes all services and updates online status`() =
+        runTest {
+            coEvery { updateAvailabilityUseCase("srv-1", ServiceAvailability.OFFLINE) } returns Result.success(Service(id = "srv-1", availability = ServiceAvailability.OFFLINE))
+            coEvery { userRepository.updateOnlineStatus(false) } returns Result.success(Unit)
+
+            viewModel.toggleOverallAvailability(false)
+
+            coVerify(exactly = 1) { userRepository.updateOnlineStatus(false) }
+            coVerify(exactly = 1) { updateAvailabilityUseCase("srv-1", ServiceAvailability.OFFLINE) }
+            assertEquals(false, viewModel.uiState.value.user?.isOnline)
+            assertEquals(ServiceAvailability.OFFLINE, viewModel.uiState.value.services[0].availability)
+        }
+
+    @Test
+    fun `toggleOverallAvailability true opens all services and updates online status`() =
+        runTest {
+            coEvery { updateAvailabilityUseCase("srv-1", ServiceAvailability.AVAILABLE) } returns Result.success(Service(id = "srv-1", availability = ServiceAvailability.AVAILABLE))
+            coEvery { userRepository.updateOnlineStatus(true) } returns Result.success(Unit)
+
+            viewModel.toggleOverallAvailability(true)
+
+            coVerify(exactly = 1) { userRepository.updateOnlineStatus(true) }
+            coVerify(exactly = 1) { updateAvailabilityUseCase("srv-1", ServiceAvailability.AVAILABLE) }
+            assertEquals(true, viewModel.uiState.value.user?.isOnline)
+            assertEquals(ServiceAvailability.AVAILABLE, viewModel.uiState.value.services[0].availability)
         }
 }

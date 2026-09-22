@@ -248,7 +248,8 @@
 
     <!-- Phase 3: Home, Discovery & AI Search -->
     <string name="home_section_featured">Featured Hustlers</string>
-    <string name="home_section_available_now">Available Now</string>
+    <string name="home_section_available_now">Discover Hustles</string>
+    <string name="home_section_discover_hustles">Discover Hustles</string>
     <string name="home_section_top_hustlers">Top Hustlers</string>
     <string name="home_view_all">View All</string>
     <string name="home_coming_soon">Coming soon</string>

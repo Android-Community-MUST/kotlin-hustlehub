@@ -73,7 +73,6 @@ import must.kdroiders.hustlehub.ui.features.home.presentation.components.Provide
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCardShimmer
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.HomeViewModel
-import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
 /** Number of shimmer placeholders shown while the initial page loads. */
@@ -266,24 +265,13 @@ fun HomeScreen(
                     }
 
                     item(key = "browse_header", span = { GridItemSpan(maxLineSpan) }) {
-                        Row(
+                        Text(
+                            text = stringResource(R.string.home_section_discover_hustles),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.padding(start = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(HustleActiveGreen),
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                text = stringResource(R.string.home_section_available_now),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground,
-                            )
-                        }
+                        )
                         Spacer(Modifier.height(12.dp))
                     }
 
