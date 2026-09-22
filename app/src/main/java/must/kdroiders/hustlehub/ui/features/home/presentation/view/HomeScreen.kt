@@ -67,6 +67,7 @@ import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.CategoryChipRow
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.EmptyServicesView
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.FeaturedServicesRow
+import must.kdroiders.hustlehub.ui.features.home.presentation.components.FeaturedServicesRowShimmer
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.HomeSearchBar
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.HomeTopBar
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ProviderBannerCard
@@ -260,6 +261,27 @@ fun HomeScreen(
                                     services = state.featuredServices,
                                     onServiceClick = onNavigateToServiceDetail,
                                 )
+                            }
+                        }
+                    } else if (state.isLoadingServices) {
+                        item(key = "featured_shimmer", span = { GridItemSpan(maxLineSpan) }) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.home_section_featured),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                    )
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                FeaturedServicesRowShimmer()
                             }
                         }
                     }
