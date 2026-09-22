@@ -184,7 +184,7 @@
     <string name="offline_banner_online">Back online</string>
     <string name="offline_retry_cd">Retry connection</string>
     <string name="badge_featured_cd">Featured listing badge</string>
-    <string name="badge_featured_text">&#9889; FEATURED</string>
+    <string name="badge_featured_text">FEATURED</string>
     <string name="badge_pro_cd">HustleHub Pro member</string>
     <string name="badge_pro_text">PRO</string>
     <string name="quick_contact_title">Delivery &amp; Contact Info</string>

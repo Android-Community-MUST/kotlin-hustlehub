@@ -23,6 +23,7 @@ import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -105,17 +106,15 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `initialization populates featuredServices using unrated fallback so it is never blank`() =
+    fun `initialization leaves featuredServices empty when no services are featured`() =
         runTest {
             val state = viewModel.uiState.value
-            // Even though s-1 and s-2 have 0 rating and isFeatured = false,
-            // featuredServices is not empty because of the unrated fallback.
-            assertEquals(2, state.featuredServices.size)
-            assertEquals(listOf("s-1", "s-2"), state.featuredServices.map { it.id })
+            // Since s-1 and s-2 have isFeatured = false, featuredServices is empty.
+            assertTrue(state.featuredServices.isEmpty())
         }
 
     @Test
-    fun `featuredServices prioritizes paid boosted services before high rated and unrated services`() =
+    fun `featuredServices strictly includes only active paid boosted services`() =
         runTest {
             val mixedPage = PageResponse(
                 content = listOf(
@@ -176,15 +175,9 @@ class HomeViewModelTest {
             viewModel.onCategorySelected(ServiceCategory.TECH)
 
             val featured = viewModel.uiState.value.featuredServices
-            // Max 5 items
-            assertEquals(5, featured.size)
-            // Tier 1: paid-2 (400L), paid-1 (300L)
+            // Only paid-1 and paid-2 are featured
+            assertEquals(2, featured.size)
             assertEquals("paid-2", featured[0].id)
             assertEquals("paid-1", featured[1].id)
-            // Tier 2: rated-1 (4.8), rated-2 (4.2)
-            assertEquals("rated-1", featured[2].id)
-            assertEquals("rated-2", featured[3].id)
-            // Tier 3: unrated-1 (100L)
-            assertEquals("unrated-1", featured[4].id)
         }
 }
