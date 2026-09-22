@@ -338,7 +338,7 @@ fun SettingsScreen(
                             Text(
                                 text = license,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.outline,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -387,7 +387,7 @@ fun SettingsScreen(
                     Text(
                         text = stringResource(R.string.settings_about_copyright),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             },
@@ -593,7 +593,7 @@ fun SettingsScreen(
                 Text(
                     text = stringResource(R.string.settings_version_footer_format, state.appVersion),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 11.sp,
                 )
             }
