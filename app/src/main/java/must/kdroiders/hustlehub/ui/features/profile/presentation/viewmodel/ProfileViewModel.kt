@@ -116,8 +116,7 @@ class ProfileViewModel
                 updateAvailabilityUseCase(serviceId, newAvailability)
                     .onSuccess {
                         userRepository.updateOnlineStatus(anyActive)
-                    }
-                    .onFailure { e ->
+                    }.onFailure { e ->
                         Timber.e(e, "Failed to update service availability")
                         _uiState.update { state ->
                             val revertedServices = state.services.map { svc ->

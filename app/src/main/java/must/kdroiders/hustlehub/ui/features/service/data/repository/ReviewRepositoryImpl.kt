@@ -133,7 +133,10 @@ class ReviewRepositoryImpl
                 }
             }
 
-        override suspend fun replyToReview(reviewId: String, reply: String): Result<Review> =
+        override suspend fun replyToReview(
+            reviewId: String,
+            reply: String,
+        ): Result<Review> =
             withContext(Dispatchers.IO) {
                 runCatching {
                     val response = apiService.replyToReview(reviewId, ProviderReplyRequest(reply))
@@ -226,4 +229,3 @@ private fun ReviewResponse.toDomain(): Review =
             Instant.parse(createdAt).toEpochMilli()
         }.getOrDefault(0L),
     )
-

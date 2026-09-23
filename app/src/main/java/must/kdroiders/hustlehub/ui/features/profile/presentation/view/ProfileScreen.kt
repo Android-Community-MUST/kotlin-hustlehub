@@ -57,7 +57,6 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.Profi
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
-
 @Composable
 fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),

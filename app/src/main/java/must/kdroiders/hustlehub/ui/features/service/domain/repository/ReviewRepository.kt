@@ -22,7 +22,10 @@ interface ReviewRepository {
 
     suspend fun getRatingDistribution(serviceId: String): Result<RatingDistribution>
 
-    suspend fun replyToReview(reviewId: String, reply: String): Result<Review>
+    suspend fun replyToReview(
+        reviewId: String,
+        reply: String,
+    ): Result<Review>
 
     suspend fun updateReview(
         reviewId: String,
@@ -35,4 +38,3 @@ interface ReviewRepository {
 
     suspend fun getMyReviewForService(serviceId: String): Result<Review?>
 }
-

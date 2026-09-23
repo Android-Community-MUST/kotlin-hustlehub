@@ -61,25 +61,26 @@ class AllReviewsViewModel
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoadingMore = true) }
                 val result = getServiceReviewsUseCase(sid, page = nextPage, size = 20)
-                result.onSuccess { pageResponse ->
-                    val newItems = pageResponse.content
-                    val existingIds = rawReviews.map { it.id }.toSet()
-                    val filteredNew = newItems.filterNot { it.id in existingIds }
-                    rawReviews = rawReviews + filteredNew
-                    val sortedReviews = sortReviews(rawReviews, _uiState.value.sortOption)
-                    val hasMore = (pageResponse.page + 1) < pageResponse.totalPages
-                    _uiState.update {
-                        it.copy(
-                            reviews = sortedReviews,
-                            currentPage = nextPage,
-                            hasMore = hasMore,
-                            isLoadingMore = false,
-                        )
+                result
+                    .onSuccess { pageResponse ->
+                        val newItems = pageResponse.content
+                        val existingIds = rawReviews.map { it.id }.toSet()
+                        val filteredNew = newItems.filterNot { it.id in existingIds }
+                        rawReviews = rawReviews + filteredNew
+                        val sortedReviews = sortReviews(rawReviews, _uiState.value.sortOption)
+                        val hasMore = (pageResponse.page + 1) < pageResponse.totalPages
+                        _uiState.update {
+                            it.copy(
+                                reviews = sortedReviews,
+                                currentPage = nextPage,
+                                hasMore = hasMore,
+                                isLoadingMore = false,
+                            )
+                        }
+                    }.onFailure { e ->
+                        Timber.w(e, "AllReviewsViewModel.loadNextPage failed for page=$nextPage")
+                        _uiState.update { it.copy(isLoadingMore = false) }
                     }
-                }.onFailure { e ->
-                    Timber.w(e, "AllReviewsViewModel.loadNextPage failed for page=$nextPage")
-                    _uiState.update { it.copy(isLoadingMore = false) }
-                }
             }
         }
 
@@ -98,30 +99,34 @@ class AllReviewsViewModel
             _uiState.update { it.copy(replyingReview = null) }
         }
 
-        fun submitReply(reviewId: String, replyText: String) {
+        fun submitReply(
+            reviewId: String,
+            replyText: String,
+        ) {
             if (replyText.isBlank()) return
             viewModelScope.launch {
                 _uiState.update { it.copy(isSubmittingReply = true) }
                 val result = reviewRepository.replyToReview(reviewId, replyText.trim())
-                result.onSuccess { updatedReview ->
-                    rawReviews = rawReviews.map { if (it.id == reviewId) updatedReview else it }
-                    val sorted = sortReviews(rawReviews, _uiState.value.sortOption)
-                    _uiState.update {
-                        it.copy(
-                            reviews = sorted,
-                            replyingReview = null,
-                            isSubmittingReply = false,
-                        )
+                result
+                    .onSuccess { updatedReview ->
+                        rawReviews = rawReviews.map { if (it.id == reviewId) updatedReview else it }
+                        val sorted = sortReviews(rawReviews, _uiState.value.sortOption)
+                        _uiState.update {
+                            it.copy(
+                                reviews = sorted,
+                                replyingReview = null,
+                                isSubmittingReply = false,
+                            )
+                        }
+                    }.onFailure { e ->
+                        Timber.e(e, "Failed to submit reply to review $reviewId")
+                        _uiState.update {
+                            it.copy(
+                                isSubmittingReply = false,
+                                error = e.message ?: "Failed to post reply. Please try again.",
+                            )
+                        }
                     }
-                }.onFailure { e ->
-                    Timber.e(e, "Failed to submit reply to review $reviewId")
-                    _uiState.update {
-                        it.copy(
-                            isSubmittingReply = false,
-                            error = e.message ?: "Failed to post reply. Please try again.",
-                        )
-                    }
-                }
             }
         }
 
@@ -241,4 +246,3 @@ class AllReviewsViewModel
             }
         }
     }
-

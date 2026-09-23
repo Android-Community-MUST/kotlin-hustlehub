@@ -26,4 +26,3 @@ data class RatingDistribution(
     val averageRating: Float = 0f,
     val totalReviews: Int = 0,
 )
-

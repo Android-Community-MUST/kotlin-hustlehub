@@ -91,8 +91,7 @@ fun FeaturedServiceCardShimmer(
                             Color.Black.copy(alpha = 0.45f),
                         ),
                     ),
-                )
-                .padding(12.dp),
+                ).padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Box(

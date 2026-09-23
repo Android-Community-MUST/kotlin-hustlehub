@@ -36,8 +36,7 @@ fun FeaturedBadge(
             .background(
                 color = MaterialTheme.colorScheme.tertiaryContainer,
                 shape = RoundedCornerShape(12.dp),
-            )
-            .padding(horizontal = 7.dp, vertical = 3.dp),
+            ).padding(horizontal = 7.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {

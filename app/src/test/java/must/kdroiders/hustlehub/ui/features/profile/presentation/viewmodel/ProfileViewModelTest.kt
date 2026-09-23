@@ -93,9 +93,14 @@ class ProfileViewModelTest {
             coVerify(exactly = 1) { userRepository.updateOnlineStatus(false) }
             assertEquals(
                 ServiceAvailability.OFFLINE,
-                viewModel.uiState.value.services[0].availability,
+                viewModel.uiState.value.services[0]
+                    .availability,
             )
-            assertEquals(false, viewModel.uiState.value.user?.isOnline)
+            assertEquals(
+                false,
+                viewModel.uiState.value.user
+                    ?.isOnline,
+            )
         }
 
     @Test
@@ -124,8 +129,16 @@ class ProfileViewModelTest {
 
             coVerify(exactly = 1) { userRepository.updateOnlineStatus(false) }
             coVerify(exactly = 1) { updateAvailabilityUseCase("srv-1", ServiceAvailability.OFFLINE) }
-            assertEquals(false, viewModel.uiState.value.user?.isOnline)
-            assertEquals(ServiceAvailability.OFFLINE, viewModel.uiState.value.services[0].availability)
+            assertEquals(
+                false,
+                viewModel.uiState.value.user
+                    ?.isOnline,
+            )
+            assertEquals(
+                ServiceAvailability.OFFLINE,
+                viewModel.uiState.value.services[0]
+                    .availability,
+            )
         }
 
     @Test
@@ -138,7 +151,15 @@ class ProfileViewModelTest {
 
             coVerify(exactly = 1) { userRepository.updateOnlineStatus(true) }
             coVerify(exactly = 1) { updateAvailabilityUseCase("srv-1", ServiceAvailability.AVAILABLE) }
-            assertEquals(true, viewModel.uiState.value.user?.isOnline)
-            assertEquals(ServiceAvailability.AVAILABLE, viewModel.uiState.value.services[0].availability)
+            assertEquals(
+                true,
+                viewModel.uiState.value.user
+                    ?.isOnline,
+            )
+            assertEquals(
+                ServiceAvailability.AVAILABLE,
+                viewModel.uiState.value.services[0]
+                    .availability,
+            )
         }
 }

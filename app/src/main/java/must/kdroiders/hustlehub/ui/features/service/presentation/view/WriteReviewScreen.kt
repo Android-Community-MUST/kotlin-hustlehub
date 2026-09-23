@@ -416,8 +416,7 @@ fun WriteReviewScreen(
                                 .semantics {
                                     role = Role.Checkbox
                                     selected = isSelected
-                                }
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                }.padding(horizontal = 16.dp, vertical = 8.dp),
                         ) {
                             Text(
                                 text = tag,

@@ -7,13 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -91,7 +89,9 @@ fun AllReviewsScreen(
     val shouldLoadMore = remember {
         derivedStateOf {
             val totalItems = listState.layoutInfo.totalItemsCount
-            val lastVisibleItemIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val lastVisibleItemIndex = listState.layoutInfo.visibleItemsInfo
+                .lastOrNull()
+                ?.index ?: 0
             totalItems > 0 && lastVisibleItemIndex >= totalItems - 3
         }
     }
@@ -223,8 +223,7 @@ fun AllReviewsScreen(
                                         .semantics {
                                             role = Role.RadioButton
                                             selected = isSelected
-                                        }
-                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                        }.padding(horizontal = 12.dp, vertical = 6.dp),
                                 ) {
                                     Text(
                                         text = option.label,
@@ -339,4 +338,3 @@ fun AllReviewsScreen(
         )
     }
 }
-
