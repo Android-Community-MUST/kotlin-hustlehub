@@ -471,8 +471,17 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             AllReviewsScreen(
                                 serviceId = key.serviceId,
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
-                                onNavigateToWriteReview = { serviceId, providerId ->
-                                    backstack.add(WriteReview(serviceId = serviceId, providerId = providerId))
+                                onNavigateToWriteReview = { serviceId, providerId, reviewId, initialRating, initialComment, initialIsAnonymous ->
+                                    backstack.add(
+                                        WriteReview(
+                                            serviceId = serviceId,
+                                            providerId = providerId,
+                                            reviewId = reviewId,
+                                            initialRating = initialRating,
+                                            initialComment = initialComment,
+                                            initialIsAnonymous = initialIsAnonymous,
+                                        ),
+                                    )
                                 },
                             )
                         }
@@ -507,6 +516,10 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         entry<WriteReview> { key ->
                             WriteReviewScreen(
                                 serviceId = key.serviceId,
+                                reviewId = key.reviewId,
+                                initialRating = key.initialRating,
+                                initialComment = key.initialComment,
+                                initialIsAnonymous = key.initialIsAnonymous,
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                                 onSubmitSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                             )

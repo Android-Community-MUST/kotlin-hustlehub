@@ -45,9 +45,29 @@ class WriteReviewViewModel
         private val _uiState = MutableStateFlow(WriteReviewUiState())
         val uiState: StateFlow<WriteReviewUiState> = _uiState.asStateFlow()
 
-        fun initialize(id: String) {
-            if (serviceId == id) return
+        fun initialize(
+            id: String,
+            reviewId: String? = null,
+            initialRating: Int? = null,
+            initialComment: String? = null,
+            initialIsAnonymous: Boolean? = null,
+        ) {
+            val isSameService = serviceId == id
             serviceId = id
+
+            if (reviewId != null || initialRating != null || initialComment != null || initialIsAnonymous != null) {
+                _uiState.update {
+                    it.copy(
+                        isEditMode = reviewId != null,
+                        existingReviewId = reviewId ?: it.existingReviewId,
+                        rating = initialRating ?: it.rating,
+                        comment = initialComment ?: it.comment,
+                        isAnonymous = initialIsAnonymous ?: it.isAnonymous,
+                    )
+                }
+            }
+
+            if (isSameService && _uiState.value.service != null) return
             fetchDetails()
         }
 
@@ -60,20 +80,27 @@ class WriteReviewViewModel
                         getProviderProfileUseCase(service.providerId)
                             .onSuccess { provider ->
                                 val alreadyReviewed = checkDuplicateReviewUseCase(id).getOrDefault(false)
-                                val myReview = if (alreadyReviewed) getMyReviewUseCase(id).getOrNull() else null
+                                val myReview = if (_uiState.value.existingReviewId == null) {
+                                    getMyReviewUseCase(id).getOrNull()
+                                } else null
 
-                                _uiState.update {
-                                    it.copy(
+                                _uiState.update { current ->
+                                    val isEdit = current.isEditMode || myReview != null
+                                    current.copy(
                                         service = service,
                                         provider = provider,
                                         isLoadingInfo = false,
-                                        hasAlreadyReviewed = alreadyReviewed,
-                                        isEditMode = myReview != null,
-                                        existingReviewId = myReview?.id,
-                                        rating = myReview?.rating ?: it.rating,
-                                        comment = myReview?.comment ?: it.comment,
-                                        isAnonymous = myReview?.isAnonymous ?: it.isAnonymous,
-                                        error = if (alreadyReviewed && myReview == null) "You have already reviewed this service." else null,
+                                        hasAlreadyReviewed = alreadyReviewed || isEdit,
+                                        isEditMode = isEdit,
+                                        existingReviewId = current.existingReviewId ?: myReview?.id,
+                                        rating = if (current.rating > 0) current.rating else (myReview?.rating ?: current.rating),
+                                        comment = if (current.comment.isNotBlank()) current.comment else (myReview?.comment ?: current.comment),
+                                        isAnonymous = if (current.isEditMode && current.existingReviewId != null) {
+                                            current.isAnonymous
+                                        } else {
+                                            myReview?.isAnonymous ?: current.isAnonymous
+                                        },
+                                        error = if (alreadyReviewed && !isEdit) "You have already reviewed this service." else null,
                                     )
                                 }
                             }.onFailure {

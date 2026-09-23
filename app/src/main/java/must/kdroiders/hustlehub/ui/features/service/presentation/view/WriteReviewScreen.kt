@@ -93,6 +93,10 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.Write
 @Composable
 fun WriteReviewScreen(
     serviceId: String,
+    reviewId: String? = null,
+    initialRating: Int? = null,
+    initialComment: String? = null,
+    initialIsAnonymous: Boolean? = null,
     viewModel: WriteReviewViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
     onSubmitSuccess: () -> Unit = {},
@@ -105,8 +109,14 @@ fun WriteReviewScreen(
     val reviewUpdatedMsg = stringResource(R.string.review_updated_snackbar)
     val reviewDeletedMsg = stringResource(R.string.review_deleted_snackbar)
 
-    LaunchedEffect(serviceId) {
-        viewModel.initialize(serviceId)
+    LaunchedEffect(serviceId, reviewId) {
+        viewModel.initialize(
+            id = serviceId,
+            reviewId = reviewId,
+            initialRating = initialRating,
+            initialComment = initialComment,
+            initialIsAnonymous = initialIsAnonymous,
+        )
     }
 
     LaunchedEffect(state.submitSuccess) {

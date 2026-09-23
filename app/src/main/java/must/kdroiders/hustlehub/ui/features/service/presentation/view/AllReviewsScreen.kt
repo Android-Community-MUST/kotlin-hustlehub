@@ -68,7 +68,14 @@ fun AllReviewsScreen(
     serviceId: String,
     viewModel: AllReviewsViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
-    onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit = { _, _ -> },
+    onNavigateToWriteReview: (
+        serviceId: String,
+        providerId: String,
+        reviewId: String?,
+        initialRating: Int?,
+        initialComment: String?,
+        initialIsAnonymous: Boolean?,
+    ) -> Unit = { _, _, _, _, _, _ -> },
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -256,7 +263,14 @@ fun AllReviewsScreen(
                             isAuthor = isAuthor,
                             onReplyClick = { viewModel.onReplyClicked(review) },
                             onEditClick = {
-                                onNavigateToWriteReview(review.serviceId, state.service?.providerId ?: "")
+                                onNavigateToWriteReview(
+                                    review.serviceId,
+                                    state.service?.providerId ?: "",
+                                    review.id,
+                                    review.rating,
+                                    review.comment,
+                                    review.isAnonymous,
+                                )
                             },
                             onDeleteClick = {
                                 reviewToDelete = review

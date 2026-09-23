@@ -151,6 +151,33 @@ class WriteReviewViewModelTest {
         }
 
     @Test
+    fun `initialize with initial review params enters edit mode and pre-fills values immediately`() =
+        runTest {
+            val mockService = Service(id = "srv-1", providerId = "prov-1", title = "Haircut")
+            val mockProvider = User(id = "prov-1", name = "Barber Sam")
+
+            coEvery { getServiceByIdUseCase("srv-1") } returns Result.success(mockService)
+            coEvery { getProviderProfileUseCase("prov-1") } returns Result.success(mockProvider)
+            coEvery { checkDuplicateReviewUseCase("srv-1") } returns Result.success(true)
+
+            viewModel.initialize(
+                id = "srv-1",
+                reviewId = "rev-123",
+                initialRating = 5,
+                initialComment = "Great service!",
+                initialIsAnonymous = true,
+            )
+
+            val state = viewModel.uiState.value
+            assertTrue(state.isEditMode)
+            assertTrue(state.hasAlreadyReviewed)
+            assertEquals("rev-123", state.existingReviewId)
+            assertEquals(5, state.rating)
+            assertEquals("Great service!", state.comment)
+            assertTrue(state.isAnonymous)
+        }
+
+    @Test
     fun `submit calls updateReviewUseCase when in edit mode`() =
         runTest {
             val mockService = Service(id = "srv-1", providerId = "prov-1", title = "Haircut")
