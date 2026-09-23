@@ -391,6 +391,7 @@ private fun ServiceDetailContent(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         // Hero Image Header
         item(key = "hero_image") {
@@ -513,7 +514,6 @@ private fun ServiceDetailContent(
                     )
                 }
             }
-            Spacer(Modifier.height(16.dp))
         }
 
         // Provider Card
@@ -605,88 +605,77 @@ private fun ServiceDetailContent(
                     )
                 }
             }
-            Spacer(Modifier.height(24.dp))
         }
 
         // About section
         if (service.description.isNotBlank()) {
-            item(key = "about_header") {
-                SectionHeader(title = stringResource(R.string.service_about_title), modifier = Modifier.padding(horizontal = 20.dp))
-                Spacer(Modifier.height(12.dp))
-            }
-            item(key = "about_body") {
-                Text(
-                    text = service.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                )
-                Spacer(Modifier.height(16.dp))
+            item(key = "about_section") {
+                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    SectionHeader(title = stringResource(R.string.service_about_title))
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = service.description.trim(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
+                    )
+                }
             }
         }
 
         // Portfolio
         if (service.portfolio.isNotEmpty()) {
-            item(key = "portfolio_header") {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    SectionHeader(title = stringResource(R.string.service_portfolio_title))
-                    TextButton(onClick = { /* Full gallery view later */ }) {
-                        Text(stringResource(R.string.home_view_all), style = MaterialTheme.typography.labelLarge)
-                    }
+            item(key = "portfolio_section") {
+                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    SectionHeader(
+                        title = stringResource(R.string.service_portfolio_title),
+                        actionLabel = if (service.portfolio.size > 3) stringResource(R.string.home_view_all) else null,
+                        onAction = { onImageClick(0) },
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    PortfolioGallery(
+                        imageUrls = service.portfolio,
+                        onImageClick = onImageClick,
+                    )
                 }
-                Spacer(Modifier.height(8.dp))
-            }
-            item(key = "portfolio_row") {
-                PortfolioGallery(
-                    imageUrls = service.portfolio,
-                    onImageClick = onImageClick,
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                )
-                Spacer(Modifier.height(32.dp))
             }
         }
 
         // Reviews section
-        item(key = "reviews_header") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.service_reviews_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.semantics { heading() },
-                )
-                if (!state.isOwnService) {
-                    Button(
-                        onClick = { onNavigateToWriteReview(service.id, service.providerId) },
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                        modifier = Modifier.height(32.dp),
-                    ) {
-                        Text(stringResource(R.string.chat_write_review), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+        item(key = "reviews_section") {
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.service_reviews_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                    if (!state.isOwnService) {
+                        Button(
+                            onClick = { onNavigateToWriteReview(service.id, service.providerId) },
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.height(32.dp),
+                        ) {
+                            Text(
+                                stringResource(R.string.chat_write_review),
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelSmall,
+                            )
+                        }
                     }
                 }
+                Spacer(Modifier.height(12.dp))
+                ReviewSummaryCard(
+                    averageRating = service.averageRating,
+                    totalReviews = state.totalReviewCount,
+                )
             }
-            Spacer(Modifier.height(16.dp))
-        }
-
-        item(key = "reviews_summary") {
-            ReviewSummaryCard(
-                averageRating = service.averageRating,
-                totalReviews = state.totalReviewCount,
-                modifier = Modifier.padding(horizontal = 20.dp),
-            )
-            Spacer(Modifier.height(24.dp))
         }
 
         if (state.reviews.isEmpty()) {
