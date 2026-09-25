@@ -189,14 +189,26 @@
     <string name="badge_featured_text">FEATURED</string>
     <string name="badge_pro_cd">HustleHub Pro member</string>
     <string name="badge_pro_text">PRO</string>
-    <string name="quick_contact_title">Delivery &amp; Contact Info</string>
-    <string name="quick_contact_subtitle">Enter your phone number and campus location so the service provider can reach you.</string>
-    <string name="quick_contact_phone_label">Phone Number</string>
-    <string name="quick_contact_phone_hint">e.g. 0712345678</string>
-    <string name="quick_contact_location_label">Campus Residence / Location</string>
-    <string name="quick_contact_location_hint">e.g. Hostel B Room 204 or Mess 2</string>
-    <string name="quick_contact_phone_required">Phone number is required</string>
-    <string name="quick_contact_location_required">Campus location is required</string>
+    <!-- Provider Review Reply -->
+    <string name="reply_to_review_title">Reply to Review</string>
+    <string name="reply_to_review_label">Your Response</string>
+    <string name="reply_to_review_placeholder">Thank the customer or address their feedback…</string>
+    <string name="reply_to_review_submit">Post Reply</string>
+
+    <!-- Report Dialog -->
+    <string name="report_submitted_title">Report Submitted</string>
+    <string name="report_submitted_message">Thank you. Our moderators will review this reported %1$s shortly.</string>
+    <string name="report_target_title">Report %1$s</string>
+    <string name="report_why_prompt">Why are you reporting this?</string>
+    <string name="report_reason_spam">Spam</string>
+    <string name="report_reason_inappropriate">Inappropriate</string>
+    <string name="report_reason_fake">Fake</string>
+    <string name="report_reason_harassment">Harassment</string>
+    <string name="report_reason_other">Other</string>
+    <string name="report_specify_required">Please specify (required)</string>
+    <string name="report_context_optional">Additional context (optional)</string>
+    <string name="report_details_placeholder">Provide details…</string>
+    <string name="report_submit_action">Submit Report</string>
 
     <!-- Authentication & Account -->
     <string name="auth_login_title">Login to your account</string>

@@ -10,15 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -29,8 +24,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.sharedComposables.HustleButton
+import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
+import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.sharedComposables.StarRatingBar
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 
@@ -59,7 +59,7 @@ fun ReplyToReviewBottomSheet(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
         ) {
             Text(
-                text = "Reply to Review",
+                text = stringResource(R.string.reply_to_review_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -104,16 +104,16 @@ fun ReplyToReviewBottomSheet(
 
             Spacer(Modifier.height(16.dp))
 
-            OutlinedTextField(
+            HustleTextField(
                 value = replyText,
                 onValueChange = { replyText = it },
-                label = { Text("Your Response") },
-                placeholder = { Text("Thank the customer or address their feedback...") },
+                label = stringResource(R.string.reply_to_review_label),
+                placeholder = stringResource(R.string.reply_to_review_placeholder),
                 modifier = Modifier.fillMaxWidth(),
+                singleLine = false,
                 minLines = 3,
                 maxLines = 6,
                 enabled = !isSubmitting,
-                shape = RoundedCornerShape(12.dp),
             )
 
             Spacer(Modifier.height(20.dp))
@@ -122,31 +122,21 @@ fun ReplyToReviewBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                OutlinedButton(
+                HustleButton(
+                    text = stringResource(R.string.action_cancel),
                     onClick = onDismiss,
                     enabled = !isSubmitting,
+                    variant = HustleButtonVariant.Outlined,
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                ) {
-                    Text("Cancel")
-                }
+                )
 
-                Button(
+                HustleButton(
+                    text = stringResource(R.string.reply_to_review_submit),
                     onClick = { onSubmitReply(replyText) },
                     enabled = !isSubmitting && replyText.isNotBlank(),
+                    loading = isSubmitting,
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                ) {
-                    if (isSubmitting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp,
-                        )
-                    } else {
-                        Text("Post Reply")
-                    }
-                }
+                )
             }
             Spacer(Modifier.height(8.dp))
         }

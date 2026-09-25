@@ -29,12 +29,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SnackbarDuration
@@ -69,6 +65,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
+import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.LogOutButton
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.ProfileIdentityCard
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsDivider
@@ -206,8 +203,6 @@ fun SettingsScreen(
         }
 
         must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.PASSWORD_INPUT -> {
-            var passwordVisible by remember { mutableStateOf(false) }
-
             AlertDialog(
                 onDismissRequest = settingsViewModel::onDeleteAccountDismissed,
                 title = { Text(stringResource(R.string.settings_delete_confirm_password_title)) },
@@ -219,44 +214,16 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(12.dp))
-                        androidx.compose.material3.OutlinedTextField(
+                        HustleTextField(
                             value = state.deletePasswordInput,
                             onValueChange = settingsViewModel::onDeletePasswordChanged,
-                            label = { Text(stringResource(R.string.label_password)) },
+                            label = stringResource(R.string.label_password),
                             singleLine = true,
+                            isPassword = true,
                             isError = state.deletePasswordError != null,
-                            visualTransformation = if (passwordVisible) {
-                                androidx.compose.ui.text.input.VisualTransformation.None
-                            } else {
-                                androidx.compose.ui.text.input
-                                    .PasswordVisualTransformation()
-                            },
-                            trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(
-                                        imageVector = if (passwordVisible) {
-                                            Icons.Default.Visibility
-                                        } else {
-                                            Icons.Default.VisibilityOff
-                                        },
-                                        contentDescription = if (passwordVisible) {
-                                            stringResource(R.string.cd_hide_password)
-                                        } else {
-                                            stringResource(R.string.cd_show_password)
-                                        },
-                                    )
-                                }
-                            },
+                            errorText = state.deletePasswordError,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        if (state.deletePasswordError != null) {
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = state.deletePasswordError ?: "",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
                     }
                 },
                 confirmButton = {

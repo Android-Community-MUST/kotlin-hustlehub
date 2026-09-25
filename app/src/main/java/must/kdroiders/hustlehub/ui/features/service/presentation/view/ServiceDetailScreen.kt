@@ -127,32 +127,9 @@ fun ServiceDetailScreen(
     }
 
     var fullScreenImageIndex by remember { mutableStateOf<Int?>(null) }
-    var showQuickContactModal by remember { mutableStateOf(false) }
 
     val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
     val isConnected by connectivityViewModel.isConnected.collectAsStateWithLifecycle()
-
-    if (showQuickContactModal) {
-        must.kdroiders.hustlehub.sharedComposables.QuickContactModal(
-            onDismiss = { showQuickContactModal = false },
-            onSaveContactInfo = { phone, location ->
-                showQuickContactModal = false
-                serviceDetailViewModel.updateContactInfo(phone, location) {
-                    val svc = state.service
-                    if (svc != null) {
-                        onNavigateToChat(
-                            svc.providerId,
-                            svc.id,
-                            svc.title,
-                            svc.category.name,
-                            svc.priceRange,
-                            state.provider?.name ?: "",
-                        )
-                    }
-                }
-            },
-        )
-    }
 
     Scaffold(
         modifier = modifier

@@ -219,7 +219,7 @@ fun CreateServiceScreen(
                     isError = state.titleError != null,
                     errorText = state.titleError,
                     keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
+                        capitalization = KeyboardCapitalization.Words,
                         imeAction = ImeAction.Next,
                     ),
                 )
@@ -338,6 +338,7 @@ fun CreateServiceScreen(
                         placeholder = stringResource(R.string.service_tags_placeholder),
                         isError = state.tagError != null,
                         errorText = state.tagError,
+                        capitalization = KeyboardCapitalization.None,
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.None,
                             imeAction = ImeAction.Done,

@@ -14,7 +14,6 @@ import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.bookmarks.domain.repository.BookmarkRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
-import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
@@ -36,7 +35,6 @@ class ServiceDetailViewModelTest {
     private val getProviderProfileUseCase: GetProviderProfileUseCase = mockk(relaxed = true)
     private val getServiceReviewsUseCase: GetServiceReviewsUseCase = mockk(relaxed = true)
     private val authRepository: AuthRepository = mockk(relaxed = true)
-    private val userRepository: UserRepository = mockk(relaxed = true)
     private val bookmarkRepository: BookmarkRepository = mockk(relaxed = true)
     private val hustleAnalytics: HustleAnalytics = mockk(relaxed = true)
     private val hustleCrashlytics: HustleCrashlytics = mockk(relaxed = true)
@@ -52,7 +50,6 @@ class ServiceDetailViewModelTest {
             getProviderProfileUseCase = getProviderProfileUseCase,
             getServiceReviewsUseCase = getServiceReviewsUseCase,
             authRepository = authRepository,
-            userRepository = userRepository,
             bookmarkRepository = bookmarkRepository,
             hustleAnalytics = hustleAnalytics,
             hustleCrashlytics = hustleCrashlytics,

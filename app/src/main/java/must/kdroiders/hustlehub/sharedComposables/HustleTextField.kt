@@ -43,6 +43,8 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -66,14 +68,34 @@ fun HustleTextField(
     leadingIcon: ImageVector? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     isPassword: Boolean = false,
+    capitalization: KeyboardCapitalization? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = true,
     minLines: Int = 1,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    enabled: Boolean = true,
     placeholder: String? = null,
     suffix: @Composable (() -> Unit)? = null,
 ) {
+    val effectiveCapitalization = when {
+        isPassword -> KeyboardCapitalization.None
+        capitalization != null -> capitalization
+        keyboardOptions.capitalization != KeyboardCapitalization.None -> keyboardOptions.capitalization
+        keyboardOptions.keyboardType in listOf(
+            KeyboardType.Email,
+            KeyboardType.Phone,
+            KeyboardType.Number,
+            KeyboardType.NumberPassword,
+            KeyboardType.Decimal,
+            KeyboardType.Password,
+            KeyboardType.Ascii,
+        ) -> KeyboardCapitalization.None
+        singleLine -> KeyboardCapitalization.Words
+        else -> KeyboardCapitalization.Sentences
+    }
+    val effectiveKeyboardOptions = keyboardOptions.copy(capitalization = effectiveCapitalization)
+
     var passwordVisible by remember { mutableStateOf(false) }
 
     val visualTransformation = if (isPassword && !passwordVisible) {
@@ -139,6 +161,7 @@ fun HustleTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
+            enabled = enabled,
             label = label?.let {
                 {
                     Text(
@@ -174,7 +197,7 @@ fun HustleTextField(
                 }
             },
             trailingIcon = actualTrailingIcon,
-            keyboardOptions = keyboardOptions,
+            keyboardOptions = effectiveKeyboardOptions,
             keyboardActions = keyboardActions,
             singleLine = singleLine,
             minLines = minLines,
