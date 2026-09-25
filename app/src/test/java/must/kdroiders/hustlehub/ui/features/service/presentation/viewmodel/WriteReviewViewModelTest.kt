@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import must.kdroiders.hustlehub.core.review.AppReviewManager
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
@@ -41,6 +42,7 @@ class WriteReviewViewModelTest {
     private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase = mockk(relaxed = true)
     private val hustleAnalytics: HustleAnalytics = mockk(relaxed = true)
     private val hustleCrashlytics: HustleCrashlytics = mockk(relaxed = true)
+    private val appReviewManager: AppReviewManager = mockk(relaxed = true)
 
     private lateinit var viewModel: WriteReviewViewModel
 
@@ -60,6 +62,7 @@ class WriteReviewViewModelTest {
             checkDuplicateReviewUseCase = checkDuplicateReviewUseCase,
             hustleAnalytics = hustleAnalytics,
             hustleCrashlytics = hustleCrashlytics,
+            appReviewManager = appReviewManager,
         )
     }
 

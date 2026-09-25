@@ -36,6 +36,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.notification.NotificationHelper
+import must.kdroiders.hustlehub.core.review.AppReviewManager
 import must.kdroiders.hustlehub.datastore.AppTheme
 import must.kdroiders.hustlehub.navigation.DeepLinkAction
 import must.kdroiders.hustlehub.navigation.HustleHubNav
@@ -53,6 +54,9 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userRepository: UserRepository
+
+    @Inject
+    lateinit var appReviewManager: AppReviewManager
 
     private var locationJob: kotlinx.coroutines.Job? = null
 
@@ -87,6 +91,12 @@ class MainActivity : ComponentActivity() {
 
         // Always initialize legacy Google Sign-In as fallback
         initializeLegacyGoogleSignIn()
+
+        if (savedInstanceState == null) {
+            lifecycleScope.launch {
+                appReviewManager.recordAppOpen()
+            }
+        }
 
         val launchCredentialFlow: () -> Unit = {
             when {

@@ -48,6 +48,7 @@ leakcanary = "2.14"
 profileinstaller = "1.4.1"
 benchmark-macro = "1.4.1"
 work = "2.11.2"
+playReview = "2.0.2"
 
 # expressive
 material3 = "1.5.0-alpha27"
@@ -167,6 +168,10 @@ androidx-media3-session = { group = "androidx.media3", name = "media3-session", 
 # Detekt formatting rules
 detekt-formatting = { group = "io.gitlab.arturbosch.detekt", name = "detekt-formatting", version.ref = "detekt" }
 kotlin-metadata-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-metadata-jvm", version.ref = "kotlinMetadataJvm" }
+
+# Google Play In-App Review
+play-review = { group = "com.google.android.play", name = "review", version.ref = "playReview" }
+play-review-ktx = { group = "com.google.android.play", name = "review-ktx", version.ref = "playReview" }
 
 
 [plugins]

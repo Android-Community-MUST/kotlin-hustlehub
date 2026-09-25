@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.view
 
+import android.app.Activity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -64,6 +65,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -77,6 +79,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.core.review.findActivity
 import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
@@ -119,11 +122,16 @@ fun WriteReviewScreen(
         )
     }
 
+    val context = LocalContext.current
+
     LaunchedEffect(state.submitSuccess) {
         if (state.submitSuccess) {
             val msg = if (state.isEditMode) reviewUpdatedMsg else reviewSubmittedMsg
             snackbarHostState.showSnackbar(msg)
             delay(1200)
+            (context as? Activity ?: context.findActivity())?.let { activity ->
+                viewModel.launchReviewIfEligible(activity)
+            }
             onSubmitSuccess()
         }
     }

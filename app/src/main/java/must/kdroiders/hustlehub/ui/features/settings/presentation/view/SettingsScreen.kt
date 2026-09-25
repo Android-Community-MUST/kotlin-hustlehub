@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.settings.presentation.view
 
+import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -62,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.core.review.findActivity
 import must.kdroiders.hustlehub.datastore.AppTheme
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
@@ -122,6 +124,11 @@ fun SettingsScreen(
                 is SettingsEvent.NavigateToReport,
                 -> onNavigateToHelp()
                 is SettingsEvent.NavigateToLicenses -> showLicensesDialog = true
+                is SettingsEvent.TriggerRateApp -> {
+                    (context as? Activity ?: context.findActivity())?.let { activity ->
+                        settingsViewModel.launchReviewFlow(activity)
+                    }
+                }
                 else -> {
                     Toast.makeText(context, featureComingSoonToast, Toast.LENGTH_SHORT).show()
                 }
@@ -554,6 +561,13 @@ fun SettingsScreen(
                     label = stringResource(R.string.settings_app_version),
                     trailing = stringResource(R.string.version_prefix_format, state.appVersion),
                     onClick = { showVersionDialog = true },
+                )
+                SettingsDivider()
+                SettingsRowNavigate(
+                    icon = Icons.Default.Star,
+                    label = stringResource(R.string.settings_rate_app),
+                    subtitle = stringResource(R.string.settings_rate_app_subtitle),
+                    onClick = settingsViewModel::onRateAppClicked,
                 )
                 SettingsDivider()
                 SettingsRowNavigate(

@@ -234,4 +234,8 @@ dependencies {
 
     // Baseline Profile — compiles ART profile on first app launch
     implementation(libs.androidx.profileinstaller)
+
+    // Google Play In-App Review
+    implementation(libs.play.review)
+    implementation(libs.play.review.ktx)
 }

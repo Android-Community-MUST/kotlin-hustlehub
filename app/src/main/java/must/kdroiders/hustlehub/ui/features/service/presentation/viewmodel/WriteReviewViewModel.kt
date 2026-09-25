@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.api.userFriendlyMessage
+import must.kdroiders.hustlehub.core.review.AppReviewManager
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
@@ -35,6 +37,7 @@ class WriteReviewViewModel
         private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase,
         private val hustleAnalytics: HustleAnalytics,
         private val hustleCrashlytics: HustleCrashlytics,
+        private val appReviewManager: AppReviewManager,
     ) : ViewModel() {
         private var serviceId: String? = null
 
@@ -82,7 +85,9 @@ class WriteReviewViewModel
                                 val alreadyReviewed = checkDuplicateReviewUseCase(id).getOrDefault(false)
                                 val myReview = if (_uiState.value.existingReviewId == null) {
                                     getMyReviewUseCase(id).getOrNull()
-                                } else null
+                                } else {
+                                    null
+                                }
 
                                 _uiState.update { current ->
                                     val isEdit = current.isEditMode || myReview != null
@@ -155,6 +160,7 @@ class WriteReviewViewModel
                         comment = commentText,
                         isAnonymous = state.isAnonymous,
                     ).onSuccess {
+                        appReviewManager.recordSignificantAction()
                         _uiState.update { it.copy(isSubmitting = false, submitSuccess = true) }
                     }.onFailure { e ->
                         Timber.e(e, "WriteReviewViewModel: update failed for reviewId=${state.existingReviewId}")
@@ -173,6 +179,7 @@ class WriteReviewViewModel
                         isAnonymous = state.isAnonymous,
                     ).onSuccess {
                         hustleAnalytics.logReviewSubmitted(sid, state.rating.toFloat())
+                        appReviewManager.recordSignificantAction()
                         _uiState.update { it.copy(isSubmitting = false, submitSuccess = true) }
                     }.onFailure { e ->
                         Timber.e(e, "WriteReviewViewModel: submit failed for serviceId=$sid")
@@ -222,6 +229,12 @@ class WriteReviewViewModel
                             )
                         }
                     }
+            }
+        }
+
+        fun launchReviewIfEligible(activity: Activity) {
+            viewModelScope.launch {
+                appReviewManager.launchReviewIfEligible(activity)
             }
         }
     }

@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -80,11 +81,13 @@ sealed interface SettingsEvent {
     data object NavigateToTerms : SettingsEvent
     data object NavigateToPrivacyPolicy : SettingsEvent
     data object NavigateToLicenses : SettingsEvent
+    data object TriggerRateApp : SettingsEvent
 }
 
 // ViewModel
 
 @HiltViewModel
+@Suppress("LongParameterList")
 class SettingsViewModel
     @Inject
     constructor(
@@ -95,6 +98,7 @@ class SettingsViewModel
         private val appDatabase: AppDatabase,
         private val chatRepository: ChatRepository,
         private val hustleCrashlytics: HustleCrashlytics,
+        private val appReviewManager: must.kdroiders.hustlehub.core.review.AppReviewManager,
     ) : ViewModel() {
         internal var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
@@ -188,6 +192,11 @@ class SettingsViewModel
         fun onTermsOfServiceClicked() = emit(SettingsEvent.NavigateToTerms)
         fun onPrivacyPolicyClicked() = emit(SettingsEvent.NavigateToPrivacyPolicy)
         fun onLicensesClicked() = emit(SettingsEvent.NavigateToLicenses)
+        fun onRateAppClicked() = emit(SettingsEvent.TriggerRateApp)
+
+        fun launchReviewFlow(activity: Activity) {
+            appReviewManager.openPlayStorePage(activity)
+        }
 
         // Destructive actions
 

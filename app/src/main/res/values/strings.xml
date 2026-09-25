@@ -63,6 +63,8 @@
     <string name="settings_help_faq_subtitle">FAQs, Contact Support, Bug Reports &amp; Legal</string>
     <string name="settings_app_version">App Version</string>
     <string name="settings_open_source_licenses">Open Source Licenses</string>
+    <string name="settings_rate_app">Rate HustleHub</string>
+    <string name="settings_rate_app_subtitle">Enjoying HustleHub? Leave a review on Google Play</string>
 
     <string name="settings_choose_theme">Choose Theme</string>
     <string name="settings_theme_system">System Default</string>
