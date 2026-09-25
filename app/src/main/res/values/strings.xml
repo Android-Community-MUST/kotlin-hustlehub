@@ -563,7 +563,7 @@
     <string name="profile_fallback_name">Hustler Provider</string>
     <string name="profile_status_available">Available on Campus</string>
     <string name="profile_status_off_duty">Off Duty</string>
-    <string name="profile_fallback_campus_location">MUST Main Campus</string>
+    <string name="profile_fallback_campus_location">Nchiru</string>
     <string name="profile_stat_hustle_score">HUSTLE\nSCORE</string>
     <string name="profile_stat_services">SERVICES</string>
     <string name="profile_stat_reviews">REVIEWS</string>

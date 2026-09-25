@@ -56,11 +56,12 @@ fun ServiceLocationCard(
 
     val presets = remember {
         listOf(
-            Triple("MUST Main Campus (Nchiru)", -0.0076, 37.6534),
-            Triple("Tuition & Admin Block", -0.0075, 37.6535),
-            Triple("MUST Library", -0.0074, 37.6532),
-            Triple("Engineering & Tech Block", -0.0073, 37.6538),
-            Triple("Campus Hostels", -0.0080, 37.6530),
+            Triple("Nchiru", 0.12678026093702657, 37.71798703306698),
+            Triple("Main Gate", 0.1287023, 37.7178652),
+            Triple("MUST Library", 0.13439365178842066, 37.71093074244712),
+            Triple("Student Center (STC)", 0.13682288626766367, 37.71061051468327),
+            Triple("Administration Block", 0.1350753084340695, 37.708471705326545),
+            Triple("Campus Hostels", 0.1368881050837471, 37.71051829497458),
         )
     }
 

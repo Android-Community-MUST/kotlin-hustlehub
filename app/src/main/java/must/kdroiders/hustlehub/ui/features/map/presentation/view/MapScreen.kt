@@ -115,7 +115,7 @@ import must.kdroiders.hustlehub.ui.theme.LocalIsDarkTheme
 import timber.log.Timber
 
 private object MapDefaults {
-    val MERU_UNIVERSITY = LatLng(0.1287003, 37.7098333)
+    val MERU_UNIVERSITY = LatLng(0.12678026093702657, 37.71798703306698)
     const val DEFAULT_ZOOM = 16f
     const val MIN_ZOOM = 12f
     const val MAX_ZOOM = 20f
