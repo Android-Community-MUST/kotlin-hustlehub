@@ -465,20 +465,9 @@ fun MapScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Category Filter Chips
-                val categories = remember {
-                    listOf(
-                        ServiceCategory.ALL to "All",
-                        ServiceCategory.TECH to "Tech",
-                        ServiceCategory.SALON to "Salon",
-                        ServiceCategory.LAUNDRY to "Laundry",
-                        ServiceCategory.TUTORING to "Tutoring",
-                        ServiceCategory.FOOD to "Food",
-                        ServiceCategory.FASHION to "Fashion",
-                        ServiceCategory.PHOTOGRAPHY to "Photo",
-                    )
-                }
+                val categories = remember { ServiceCategory.entries }
 
-                categories.forEach { (category, label) ->
+                categories.forEach { category ->
                     val isSelected = if (category == ServiceCategory.ALL) {
                         uiState.selectedCategory == null
                     } else {
@@ -491,7 +480,7 @@ fun MapScreen(
                             val targetCategory = if (isSelected || category == ServiceCategory.ALL) null else category
                             mapViewModel.selectCategory(targetCategory)
                         },
-                        label = { Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                        label = { Text(category.label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
                         leadingIcon = {
                             if (category != ServiceCategory.ALL) {
                                 val (icon, _) = getCategoryIconAndColor(category)

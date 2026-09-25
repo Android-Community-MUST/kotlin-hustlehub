@@ -444,6 +444,11 @@
     <string name="service_portfolio_free_format">Max %1$d photos • %2$d/%1$d</string>
     <string name="service_portfolio_pro_upgrade_attached">You have %1$d photos attached to this service. Upgrade to PRO to add or swap more photos!</string>
     <string name="service_portfolio_free_limit_upgrade">Free limit reached (3/3 photos). Upgrade to PRO to upload up to 15 portfolio photos!</string>
+    <string name="service_category_placeholder">Select category</string>
+    <string name="service_category_sheet_title">Select Category</string>
+    <string name="service_category_sheet_subtitle">Choose the best fit for your hustle</string>
+    <string name="service_category_search_placeholder">Search categories…</string>
+    <string name="service_category_no_results">No categories found</string>
     <string name="service_title_label">Service Title</string>
     <string name="service_title_placeholder">e.g. Professional Braiding Services</string>
     <string name="service_desc_label">Description</string>
