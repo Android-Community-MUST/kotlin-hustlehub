@@ -21,13 +21,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import must.kdroiders.hustlehub.sharedComposables.shimmerBrush
 
 @Composable
 fun FeaturedServicesRowShimmer(
     modifier: Modifier = Modifier,
 ) {
-    val brush = shimmerBrush()
+    val brush = rememberServiceCardShimmerBrush()
     LazyRow(
         modifier = modifier
             .fillMaxWidth()
@@ -45,14 +44,14 @@ fun FeaturedServicesRowShimmer(
 @Composable
 fun FeaturedServiceCardShimmer(
     modifier: Modifier = Modifier,
-    brush: Brush = shimmerBrush(),
+    brush: Brush = rememberServiceCardShimmerBrush(),
 ) {
     Box(
         modifier = modifier
             .width(160.dp)
             .height(220.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
+            .background(MaterialTheme.colorScheme.surface),
     ) {
         Box(
             modifier = Modifier
@@ -67,7 +66,7 @@ fun FeaturedServiceCardShimmer(
                 .width(48.dp)
                 .height(18.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)),
+                .background(MaterialTheme.colorScheme.surface),
         )
 
         Box(
@@ -77,7 +76,7 @@ fun FeaturedServiceCardShimmer(
                 .width(40.dp)
                 .height(18.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)),
+                .background(MaterialTheme.colorScheme.surface),
         )
 
         Column(
@@ -88,7 +87,8 @@ fun FeaturedServiceCardShimmer(
                     Brush.verticalGradient(
                         colors = listOf(
                             Color.Transparent,
-                            Color.Black.copy(alpha = 0.45f),
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                            MaterialTheme.colorScheme.surface,
                         ),
                     ),
                 ).padding(12.dp),
@@ -99,21 +99,21 @@ fun FeaturedServiceCardShimmer(
                     .width(55.dp)
                     .height(10.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(Color.White.copy(alpha = 0.4f)),
+                    .background(brush),
             )
             Box(
                 modifier = Modifier
                     .width(110.dp)
                     .height(14.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(Color.White.copy(alpha = 0.6f)),
+                    .background(brush),
             )
             Box(
                 modifier = Modifier
                     .width(70.dp)
                     .height(12.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(Color.White.copy(alpha = 0.4f)),
+                    .background(brush),
             )
         }
     }

@@ -27,7 +27,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ServiceCardShimmer(modifier: Modifier = Modifier) {
+fun rememberServiceCardShimmerBrush(): Brush {
     val transition = rememberInfiniteTransition(label = "shimmer")
     val translateX by transition.animateFloat(
         initialValue = -300f,
@@ -45,12 +45,18 @@ fun ServiceCardShimmer(modifier: Modifier = Modifier) {
         MaterialTheme.colorScheme.surfaceVariant,
     )
 
-    val brush = Brush.linearGradient(
+    return Brush.linearGradient(
         colors = shimmerColors,
         start = Offset(translateX, 0f),
         end = Offset(translateX + 300f, 300f),
     )
+}
 
+@Composable
+fun ServiceCardShimmer(
+    modifier: Modifier = Modifier,
+    brush: Brush = rememberServiceCardShimmerBrush(),
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
