@@ -449,6 +449,9 @@
     <string name="service_category_sheet_subtitle">Choose the best fit for your hustle</string>
     <string name="service_category_search_placeholder">Search categories…</string>
     <string name="service_category_no_results">No categories found</string>
+    <string name="cd_choose_category">Choose category</string>
+    <string name="cd_required">required</string>
+    <string name="service_category_required_error">Please select a category</string>
     <string name="service_title_label">Service Title</string>
     <string name="service_title_placeholder">e.g. Professional Braiding Services</string>
     <string name="service_desc_label">Description</string>
@@ -460,6 +463,7 @@
     <string name="service_tags_hint">Max 5 tags • press Enter or + to add</string>
     <string name="service_tags_placeholder">e.g. braids</string>
     <string name="cd_add_tag">Add tag</string>
+    <string name="cd_remove_tag_format">Remove tag %1$s</string>
     <string name="service_open_to_barter">Open to Barter</string>
     <string name="service_barter_desc">Accept service exchanges instead of cash</string>
     <string name="cd_barter_service">Open to Barter Service</string>

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -47,6 +48,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,7 +68,17 @@ fun SectionLabel(
     text: String,
     required: Boolean = false,
 ) {
-    Row(modifier = Modifier.padding(bottom = 6.dp)) {
+    val requiredLabel = stringResource(R.string.cd_required)
+    val labelSemantics = if (required) "$text, $requiredLabel" else text
+
+    Row(
+        modifier = Modifier
+            .padding(bottom = 6.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = labelSemantics
+            },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge,
@@ -71,6 +90,7 @@ fun SectionLabel(
                 text = " *",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.clearAndSetSemantics { },
             )
         }
     }
@@ -83,10 +103,13 @@ fun CategoryDropdown(
     onSelect: (ServiceCategory) -> Unit,
     hasError: Boolean,
     modifier: Modifier = Modifier,
+    errorMessage: String? = null,
 ) {
     var showSheet by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     val categories = remember { ServiceCategory.entries.filter { it != ServiceCategory.ALL } }
+    val chooseCategoryLabel = stringResource(R.string.cd_choose_category)
+    val defaultErrorText = stringResource(R.string.service_category_required_error)
 
     Box(modifier = modifier) {
         Row(
@@ -102,8 +125,15 @@ fun CategoryDropdown(
                         MaterialTheme.colorScheme.outline
                     },
                     shape = RoundedCornerShape(12.dp),
-                ).clickable { showSheet = true }
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                ).clickable(
+                    role = Role.DropdownList,
+                    onClickLabel = chooseCategoryLabel,
+                    onClick = { showSheet = true },
+                ).semantics {
+                    if (hasError) {
+                        error(errorMessage ?: defaultErrorText)
+                    }
+                }.padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -170,6 +200,7 @@ fun CategoryDropdown(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.semantics { heading() },
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
@@ -267,11 +298,15 @@ fun CategoryDropdown(
                                         } else {
                                             Color.Transparent
                                         },
-                                    ).clickable {
-                                        onSelect(category)
-                                        searchQuery = ""
-                                        showSheet = false
-                                    }.padding(horizontal = 12.dp, vertical = 10.dp),
+                                    ).selectable(
+                                        selected = isSelected,
+                                        role = Role.RadioButton,
+                                        onClick = {
+                                            onSelect(category)
+                                            searchQuery = ""
+                                            showSheet = false
+                                        },
+                                    ).padding(horizontal = 12.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Box(
@@ -323,6 +358,7 @@ fun TagChip(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val removeTagCd = stringResource(R.string.cd_remove_tag_format, label)
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
@@ -331,9 +367,9 @@ fun TagChip(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                 shape = RoundedCornerShape(20.dp),
-            ).padding(horizontal = 10.dp, vertical = 6.dp),
+            ).padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = label,
@@ -341,14 +377,25 @@ fun TagChip(
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             fontWeight = FontWeight.Medium,
         )
-        Icon(
-            imageVector = Icons.Default.Close,
-            contentDescription = "Remove tag",
-            tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+        Box(
             modifier = Modifier
-                .size(14.dp)
-                .clickable { onRemove() },
-        )
+                .size(28.dp)
+                .clip(CircleShape)
+                .clickable(
+                    role = Role.Button,
+                    onClick = onRemove,
+                ).semantics {
+                    contentDescription = removeTagCd
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                modifier = Modifier.size(14.dp),
+            )
+        }
     }
 }
 
@@ -364,7 +411,11 @@ fun ErrorText(error: String?) {
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(start = 4.dp, top = 4.dp),
+                modifier = Modifier
+                    .padding(start = 4.dp, top = 4.dp)
+                    .semantics {
+                        liveRegion = LiveRegionMode.Polite
+                    },
             )
         }
     }

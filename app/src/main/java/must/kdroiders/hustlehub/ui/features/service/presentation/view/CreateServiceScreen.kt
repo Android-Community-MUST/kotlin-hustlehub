@@ -231,6 +231,7 @@ fun CreateServiceScreen(
                     selected = state.category,
                     onSelect = createServiceViewModel::onCategoryChange,
                     hasError = state.categoryError != null,
+                    errorMessage = state.categoryError,
                 )
                 ErrorText(state.categoryError)
                 Spacer(Modifier.height(16.dp))
