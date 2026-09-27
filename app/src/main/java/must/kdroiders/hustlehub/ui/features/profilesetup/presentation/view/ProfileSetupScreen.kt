@@ -55,6 +55,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -222,6 +223,10 @@ fun ProfileSetupScreen(
                 label = "Full Name",
                 leadingIcon = Icons.Default.Person,
                 placeholder = "Enter your name",
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Next,
+                ),
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -234,7 +239,10 @@ fun ProfileSetupScreen(
                 label = "Phone Number",
                 leadingIcon = Icons.Default.Phone,
                 placeholder = "e.g. 0712345678",
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Next,
+                ),
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -247,7 +255,13 @@ fun ProfileSetupScreen(
                 label = "Short Bio",
                 leadingIcon = Icons.Default.Info,
                 placeholder = "e.g. Graphic Designer, Electrician",
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                singleLine = false,
+                minLines = 2,
+                maxLines = 4,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    imeAction = ImeAction.Next,
+                ),
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -260,6 +274,10 @@ fun ProfileSetupScreen(
                 label = "Campus Location / Residence",
                 leadingIcon = Icons.Default.Home,
                 placeholder = "e.g. Hostel A, Off-campus",
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Words,
+                    imeAction = ImeAction.Done,
+                ),
                 modifier = Modifier.fillMaxWidth(),
             )
 

@@ -42,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +60,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.ui.features.map.presentation.view.components.getCategoryIconAndColor
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
@@ -181,6 +183,7 @@ fun CategoryDropdown(
 
         if (showSheet) {
             val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            val scope = rememberCoroutineScope()
             ModalBottomSheet(
                 onDismissRequest = {
                     searchQuery = ""
@@ -304,7 +307,10 @@ fun CategoryDropdown(
                                         onClick = {
                                             onSelect(category)
                                             searchQuery = ""
-                                            showSheet = false
+                                            scope.launch {
+                                                sheetState.hide()
+                                                showSheet = false
+                                            }
                                         },
                                     ).padding(horizontal = 12.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,

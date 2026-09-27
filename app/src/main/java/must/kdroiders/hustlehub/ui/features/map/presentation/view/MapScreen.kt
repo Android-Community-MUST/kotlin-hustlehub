@@ -61,7 +61,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -76,9 +75,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -87,10 +83,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.setViewTreeLifecycleOwner
-import androidx.lifecycle.setViewTreeViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -137,28 +129,6 @@ fun MapScreen(
     val scope = rememberCoroutineScope()
     val uiState by mapViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    val currentView = LocalView.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val savedStateRegistryOwner = LocalSavedStateRegistryOwner.current
-    val viewModelStoreOwner = LocalViewModelStoreOwner.current
-
-    DisposableEffect(currentView, lifecycleOwner, savedStateRegistryOwner, viewModelStoreOwner) {
-        val targets = listOfNotNull(
-            currentView,
-            currentView.rootView,
-            (context as? android.app.Activity)?.window?.decorView,
-            (context as? android.app.Activity)?.findViewById(android.R.id.content),
-        )
-        targets.forEach { target ->
-            target.setViewTreeLifecycleOwner(lifecycleOwner)
-            target.setViewTreeSavedStateRegistryOwner(savedStateRegistryOwner)
-            if (viewModelStoreOwner != null) {
-                target.setViewTreeViewModelStoreOwner(viewModelStoreOwner)
-            }
-        }
-        onDispose { }
-    }
 
     val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
     val isConnected by connectivityViewModel.isConnected.collectAsStateWithLifecycle()

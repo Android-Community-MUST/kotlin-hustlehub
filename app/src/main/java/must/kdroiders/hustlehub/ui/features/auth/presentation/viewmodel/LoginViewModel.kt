@@ -71,6 +71,10 @@ class LoginViewModel
             _uiState.update { it.copy(password = password, errorMessage = null) }
         }
 
+        fun setErrorMessage(message: String) {
+            _uiState.update { it.copy(isLoading = false, errorMessage = message) }
+        }
+
         /** Returns true if the backend has a registered profile for [firebaseUser]. */
         private suspend fun hasProfile(firebaseUser: com.google.firebase.auth.FirebaseUser): Boolean = checkUserProfileUseCase(firebaseUser.uid).getOrDefault(false)
 

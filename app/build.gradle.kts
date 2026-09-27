@@ -32,7 +32,7 @@ android {
         minSdk = 24
         targetSdk = 37
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "must.kdroiders.hustlehub.HiltTestRunner"
         vectorDrawables {
@@ -211,8 +211,8 @@ dependencies {
     // LeakCanary — debug-only memory leak detection, never ships in release
     debugImplementation(libs.leakcanary.android)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation("io.mockk:mockk:1.13.10")
-    testImplementation("org.robolectric:robolectric:4.11.1")
+    testImplementation("io.mockk:mockk:1.14.11")
+    testImplementation("org.robolectric:robolectric:4.17")
 
     // Timber for logging
     implementation(libs.timber)

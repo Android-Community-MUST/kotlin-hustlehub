@@ -28,6 +28,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -284,7 +285,7 @@ class MainActivity : ComponentActivity() {
             val account = task.getResult(ApiException::class.java)
             val idToken = account?.idToken
 
-            Timber.d("Legacy GoogleSignIn returned idToken present=${!idToken.isNullOrEmpty()}, email=${account?.email}")
+            Timber.d("Legacy GoogleSignIn returned idToken present=${!idToken.isNullOrEmpty()}")
 
             if (!idToken.isNullOrEmpty()) {
                 loginViewModel.signInWithGoogle(idToken, onSuccess = {
@@ -292,11 +293,21 @@ class MainActivity : ComponentActivity() {
                 })
             } else {
                 Timber.e("Legacy GoogleSignIn returned no idToken")
+                loginViewModel.setErrorMessage("Google Sign-In failed: No ID token returned.")
             }
         } catch (e: ApiException) {
-            Timber.e(e, "Legacy GoogleSignIn failed: ${e.statusCode}")
+            val errorMsg = when (e.statusCode) {
+                CommonStatusCodes.DEVELOPER_ERROR -> "Google Sign-In Developer Error (10): Keystore SHA-1 fingerprint is not registered in Firebase Console."
+                CommonStatusCodes.SIGN_IN_REQUIRED -> "Google Sign-In required. Please select an account."
+                CommonStatusCodes.NETWORK_ERROR -> "Google Sign-In failed: Network error. Check your connection."
+                12500 -> "Google Sign-In failed (12500): Configuration mismatch in Google Play Services."
+                else -> "Google Sign-In failed (${e.statusCode}): ${e.message}"
+            }
+            Timber.e(e, "Legacy GoogleSignIn failed: ${e.statusCode} - $errorMsg")
+            loginViewModel.setErrorMessage(errorMsg)
         } catch (e: Exception) {
             Timber.e(e, "Unexpected error handling legacy GoogleSignIn result")
+            loginViewModel.setErrorMessage("Google Sign-In error: ${e.localizedMessage}")
         }
     }
 
@@ -352,10 +363,13 @@ class MainActivity : ComponentActivity() {
                 }
             } catch (e: GetCredentialException) {
                 Timber.e(e, "CredentialManager GetCredentialException")
+                loginViewModel.setErrorMessage("Google Sign-In failed: ${e.message}")
             } catch (e: GoogleIdTokenParsingException) {
                 Timber.e(e, "CredentialManager GoogleIdTokenParsingException")
+                loginViewModel.setErrorMessage("Google Sign-In failed to parse token.")
             } catch (e: Exception) {
                 Timber.e(e, "Error during modern Google Sign-In")
+                loginViewModel.setErrorMessage("Google Sign-In error: ${e.localizedMessage}")
             }
         }
     }
