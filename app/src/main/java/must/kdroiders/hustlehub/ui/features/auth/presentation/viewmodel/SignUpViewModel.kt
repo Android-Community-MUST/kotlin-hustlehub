@@ -110,7 +110,8 @@ class SignUpViewModel
         }
 
         private fun validateEmail(): Boolean {
-            val email = _uiState.value.email
+            val email = _uiState.value.email.trim()
+            val localPart = email.substringBefore("@")
             return when {
                 email.isBlank() -> {
                     _uiState.update { it.copy(emailError = "Email cannot be empty") }
@@ -119,6 +120,12 @@ class SignUpViewModel
                 !email.endsWith("@must.ac.ke") && !email.endsWith("@students.must.ac.ke") -> {
                     _uiState.update {
                         it.copy(emailError = "Must use a valid @must.ac.ke or @students.must.ac.ke email")
+                    }
+                    false
+                }
+                localPart.isEmpty() || !localPart.all { it.isLetterOrDigit() } -> {
+                    _uiState.update {
+                        it.copy(emailError = "Email username must contain only alphanumeric characters")
                     }
                     false
                 }
