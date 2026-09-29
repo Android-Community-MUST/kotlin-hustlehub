@@ -91,22 +91,23 @@ Every screen must handle all three `UiState` branches.
 must.kdroiders.hustlehub/
 ├── activities/          # MainActivity — hosts HustleHubNav
 ├── appHilt/             # HustleHubApp (@HiltAndroidApp)
+├── core/                # Shared: ApiClient, AuthInterceptor, Gzip, theme, crypto
 ├── data/                # Shared models + repository interfaces/impls
-│   ├── model/           # User, Service data classes
-│   └── repository/      # AuthRepository, UserRepository, StorageRepository
 ├── datastore/           # UserPreferences (DataStore)
-├── di/                  # Hilt modules (AppModule, SupabaseModule)
+├── di/                  # Hilt modules (AppModule, NetworkModule, CoilModule, etc.)
+├── local/               # Room database, DAOs, and entities (offline cache)
 ├── navigation/          # Navigation 3 — NavKeys + NavGraph + MainScaffold
 ├── onboarding/          # OnboardingScreen + OnboardingViewModel
 ├── sharedComposables/   # Design-system components (HustleButton, HustleCard, …)
 ├── splash/              # SplashScreen + SplashViewModel (auth gate)
 ├── ui/
 │   ├── auth/            # Login, SignUp, EmailVerification screens + ViewModels
-│   └── features/        # chat, home, map, profile, profilesetup
+│   └── features/        # Feature slices: admin, analytics, chat, home, map, media, monetization, notification, profile, report, service
+│       └── <feature>/   # Full Clean Architecture sub-split: data/, domain/, presentation/
 └── util/                # ImageUtils
 ```
 
-> The target architecture in `[.agents/rules.md](.agents/rules.md)` places all features under `feature/<name>/` with full `data/domain/presentation` sub-splits. Currently `auth`, `profile`, and `chat` have full domain/data/presentation splits; other features will migrate to this structure as they are built out.
+Every feature follows Clean Architecture with a full `data/domain/presentation` sub-split under `ui/features/<feature>/`.
 
 ---
 

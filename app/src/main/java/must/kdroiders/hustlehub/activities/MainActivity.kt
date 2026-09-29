@@ -5,6 +5,7 @@ import android.credentials.GetCredentialException
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
@@ -15,9 +16,11 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.lifecycleScope
@@ -39,7 +42,9 @@ import must.kdroiders.hustlehub.navigation.HustleHubNav
 import must.kdroiders.hustlehub.navigation.MainNavigationViewModel
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
+import must.kdroiders.hustlehub.ui.theme.HustleDarkBackground
 import must.kdroiders.hustlehub.ui.theme.HustleHubTheme
+import must.kdroiders.hustlehub.ui.theme.HustleLightBackground
 import must.kdroiders.hustlehub.ui.theme.ThemeViewModel
 import timber.log.Timber
 import javax.inject.Inject
@@ -100,6 +105,20 @@ class MainActivity : ComponentActivity() {
                 AppTheme.DARK -> true
                 AppTheme.LIGHT -> false
                 AppTheme.SYSTEM -> isSystemInDarkTheme()
+            }
+
+            DisposableEffect(isDark) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(
+                        android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT,
+                    ) { isDark },
+                    navigationBarStyle = SystemBarStyle.auto(
+                        lightScrim = HustleLightBackground.toArgb(),
+                        darkScrim = HustleDarkBackground.toArgb(),
+                    ) { isDark },
+                )
+                onDispose {}
             }
 
             HustleHubTheme(

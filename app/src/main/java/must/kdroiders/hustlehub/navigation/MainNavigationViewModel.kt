@@ -15,6 +15,7 @@ sealed interface DeepLinkAction {
     data object OpenNotifications : DeepLinkAction
     data object OpenProfile : DeepLinkAction
     data object OpenChatList : DeepLinkAction
+    data class OpenSubscription(val serviceId: String? = null) : DeepLinkAction
 }
 
 @HiltViewModel

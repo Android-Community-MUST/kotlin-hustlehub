@@ -37,8 +37,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -55,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -64,6 +66,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
@@ -71,7 +74,11 @@ import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.sharedComposables.StarRatingBar
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.WriteReviewViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalLayoutApi::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+)
 @Composable
 fun WriteReviewScreen(
     serviceId: String,
@@ -140,7 +147,7 @@ fun WriteReviewScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (state.isLoadingInfo) {
-                    CircularProgressIndicator()
+                    CircularWavyProgressIndicator()
                 } else if (state.provider != null && state.service != null) {
                     // Provider Info Card
                     Row(
@@ -235,6 +242,7 @@ fun WriteReviewScreen(
                     rating = state.rating,
                     starSize = 44.dp,
                     onRatingChanged = viewModel::onRatingChanged,
+                    modifier = Modifier.testTag(TestTags.REVIEW_RATING_BAR),
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -280,7 +288,9 @@ fun WriteReviewScreen(
                     value = state.comment,
                     onValueChange = viewModel::onCommentChanged,
                     placeholder = stringResource(R.string.review_comment_placeholder, providerFirstName),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(TestTags.REVIEW_CONTENT_INPUT),
                     singleLine = false,
                     minLines = 5,
                     maxLines = 5,
@@ -363,7 +373,8 @@ fun WriteReviewScreen(
                     enabled = state.canSubmit,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
+                        .height(56.dp)
+                        .testTag(TestTags.SUBMIT_REVIEW_BUTTON),
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,

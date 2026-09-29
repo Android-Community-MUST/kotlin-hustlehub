@@ -1,0 +1,112 @@
+name: Beta Distribution
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: 'Release notes for beta testers'
+        required: false
+        default: 'Automated beta build with latest updates.'
+
+jobs:
+  distribute-beta:
+    name: Build & Distribute Beta APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: wrapper
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Prepare keys.properties
+        env:
+          KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+          BASE_URL: ${{ secrets.BASE_URL }}
+          WS_BASE_URL: ${{ secrets.WS_BASE_URL }}
+        run: |
+          if [ -f "keys.properties.template" ]; then
+            cp keys.properties.template keys.properties
+          else
+            touch keys.properties
+          fi
+
+          # Decode release keystore if secret is present
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > release.jks
+            echo "KEYSTORE_FILE=$(pwd)/release.jks" >> keys.properties
+            echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> keys.properties
+            echo "KEY_ALIAS=$KEY_ALIAS" >> keys.properties
+            echo "KEY_PASSWORD=$KEY_PASSWORD" >> keys.properties
+          fi
+
+          [ -n "$MAPS_API_KEY" ] && echo "MAPS_API_KEY=$MAPS_API_KEY" >> keys.properties
+          [ -n "$GEMINI_API_KEY" ] && echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> keys.properties
+          [ -n "$GOOGLE_WEB_CLIENT_ID" ] && echo "GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID" >> keys.properties
+          [ -n "$BASE_URL" ] && echo "BASE_URL=$BASE_URL" >> keys.properties
+          [ -n "$WS_BASE_URL" ] && echo "WS_BASE_URL=$WS_BASE_URL" >> keys.properties
+
+      - name: Prepare google-services.json
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
+          elif [ ! -f "app/google-services.json" ]; then
+            cat << 'EOF' > app/google-services.json
+            {
+              "project_info": { "project_number": "123", "project_id": "mock-project" },
+              "client": [
+                {
+                  "client_info": {
+                    "mobilesdk_app_id": "1:123:android:abc",
+                    "android_client_info": { "package_name": "must.kdroiders.hustlehub" }
+                  },
+                  "api_key": [{ "current_key": "mock-key" }]
+                }
+              ]
+            }
+          EOF
+          fi
+
+      - name: Build Beta APK
+        run: ./gradlew assembleBeta --no-daemon
+
+      - name: Upload Beta APK to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hustlehub-beta-apk
+          path: app/build/outputs/apk/beta/*.apk
+          retention-days: 14
+
+      - name: Distribute to Firebase App Distribution
+        if: ${{ env.HAVE_FIREBASE_SECRETS == 'true' }}
+        env:
+          HAVE_FIREBASE_SECRETS: ${{ secrets.FIREBASE_APP_ID != '' && secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: beta-testers, providers, customers
+          file: app/build/outputs/apk/beta/app-beta.apk
+          releaseNotes: ${{ github.event.inputs.release_notes || format('Beta build from commit {0}', github.sha) }}

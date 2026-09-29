@@ -48,7 +48,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
-import kotlin.math.min
 
 data class ChatDetailUiState(
     val messages: List<Message> = emptyList(),
@@ -71,6 +70,13 @@ data class ChatDetailUiState(
     val isServiceCompleted: Boolean = false,
     val hasReviewedService: Boolean = false,
     val isEncryptionReady: Boolean = false,
+    val currentHistoryPage: Int = 0,
+    val isLoadingOlderMessages: Boolean = false,
+    val hasMoreHistory: Boolean = true,
+    val isSearchActive: Boolean = false,
+    val searchQuery: String = "",
+    val searchResults: List<Int> = emptyList(),
+    val searchResultIndex: Int = 0,
 )
 
 @OptIn(kotlinx.coroutines.FlowPreview::class)
@@ -108,6 +114,12 @@ class ChatDetailViewModel
                     }.onFailure { e ->
                         Timber.e(e, "Failed to block user $targetId")
                     }
+            }
+        }
+
+        fun onRetryMessage(messageId: String) {
+            viewModelScope.launch {
+                chatRepository.retryMessage(messageId)
             }
         }
 
@@ -282,6 +294,7 @@ class ChatDetailViewModel
                         try {
                             chatWebSocketService.connect()
                             attempt = 0 // Reset attempt count on successful connection
+                            Timber.tag("CHAT_WS").d("[CHAT_WS] WebSocket connected on attempt #%d for convId=%s", attempt, resolvedId)
 
                             coroutineScope {
                                 chatRepository
@@ -290,8 +303,10 @@ class ChatDetailViewModel
                                         if (msg.senderId == _uiState.value.otherUserId) {
                                             _uiState.update { it.copy(isOtherUserOnline = true, otherUserLastSeenAt = null) }
                                         }
-                                    }.catch { e -> Timber.e(e, "Error in WebSocket messages flow") }
-                                    .launchIn(this)
+                                    }.catch { e ->
+                                        Timber.tag("CHAT_WS").e(e, "[CHAT_WS] Fatal error in messages flow")
+                                        throw e
+                                    }.launchIn(this)
 
                                 chatWebSocketService
                                     .subscribeToTyping(resolvedId)
@@ -303,8 +318,10 @@ class ChatDetailViewModel
                                                 otherUserLastSeenAt = if (typingIndicator.isTyping) null else it.otherUserLastSeenAt,
                                             )
                                         }
-                                    }.catch { e -> Timber.e(e, "Error in WebSocket typing flow") }
-                                    .launchIn(this)
+                                    }.catch { e ->
+                                        Timber.tag("CHAT_WS").e(e, "[CHAT_WS] Fatal error in typing flow")
+                                        throw e
+                                    }.launchIn(this)
 
                                 val otherUid = finalCached?.otherUserId
                                     ?: _uiState.value.otherUserId.takeIf { it.isNotBlank() }
@@ -314,22 +331,32 @@ class ChatDetailViewModel
                                     chatRepository
                                         .subscribeToPresence(otherUid)
                                         .onEach { presence ->
+                                            Timber.tag("CHAT_PRESENCE").d(
+                                                "[CHAT_PRESENCE] Party B (%s) status changed -> %s (lastSeen=%s)",
+                                                otherUid,
+                                                if (presence.online) "ONLINE" else "OFFLINE",
+                                                presence.lastSeenAt,
+                                            )
                                             _uiState.update {
                                                 it.copy(
                                                     isOtherUserOnline = presence.online,
                                                     otherUserLastSeenAt = if (presence.online) null else presence.lastSeenAt,
                                                 )
                                             }
-                                        }.catch { e -> Timber.e(e, "Error in WebSocket presence flow") }
-                                        .launchIn(this)
+                                        }.catch { e ->
+                                            Timber.tag("CHAT_PRESENCE").e(e, "[CHAT_PRESENCE] Fatal error in presence flow for otherUid=%s", otherUid)
+                                            throw e
+                                        }.launchIn(this)
                                 }
                                 awaitCancellation()
                             }
                         } catch (e: Exception) {
-                            Timber.e(e, "WebSocket connection failed or disconnected, retrying...")
-                            chatWebSocketService.disconnect()
+                            Timber.tag("CHAT_WS").e(e, "[CHAT_WS] WebSocket dropped (attempt #%d) — reconnecting", attempt + 1)
+                            chatWebSocketService.invalidateSession()
+                            chatRepository.clearInFlightIds()
                             attempt++
-                            delay(min(2000L * attempt, 10000L))
+                            val backoffMs = minOf(2000L * attempt, 10_000L)
+                            delay(backoffMs)
                         }
                     }
                 }
@@ -396,6 +423,24 @@ class ChatDetailViewModel
             loadHistoryAndAutoCard()
         }
 
+        fun loadOlderMessages() {
+            val state = _uiState.value
+            if (state.isLoadingOlderMessages || !state.hasMoreHistory) return
+            val id = conversationId ?: return
+            val nextPage = state.currentHistoryPage + 1
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoadingOlderMessages = true) }
+                val result = chatRepository.loadMessageHistory(id, nextPage)
+                _uiState.update { s ->
+                    s.copy(
+                        isLoadingOlderMessages = false,
+                        currentHistoryPage = if (result.isSuccess) nextPage else s.currentHistoryPage,
+                        hasMoreHistory = result.getOrDefault(true),
+                    )
+                }
+            }
+        }
+
         private fun markAsRead() {
             val id = conversationId ?: return
             viewModelScope.launch {
@@ -434,6 +479,19 @@ class ChatDetailViewModel
         fun sendTextMessage(content: String) {
             val id = conversationId ?: return
             if (content.isBlank()) return
+            val partyBStatus = if (_uiState.value.isOtherUserOnline) {
+                "ONLINE"
+            } else {
+                "OFFLINE (lastSeen=${_uiState.value.otherUserLastSeenAt ?: "unknown"})"
+            }
+            Timber.tag("CHAT_UI").d(
+                "[CHAT_UI] sendTextMessage initiated: convId=%s, otherUserId=%s, Party B status=[%s], isEncryptionReady=%b, content='%s'",
+                id,
+                _uiState.value.otherUserId,
+                partyBStatus,
+                _uiState.value.isEncryptionReady,
+                content,
+            )
             val currentReply = uiState.value.replyingToMessage
             viewModelScope.launch {
                 // Clear the typing indicator immediately when the message is sent
@@ -442,9 +500,17 @@ class ChatDetailViewModel
 
                 if (!_uiState.value.isEncryptionReady) {
                     val otherUid = _uiState.value.otherUserId.takeIf { it.isNotBlank() }
+                    Timber.tag("CHAT_UI").d(
+                        "[CHAT_UI] Encryption not marked ready. Calling ensureKeysExchanged for convId=%s, otherUid=%s",
+                        id,
+                        otherUid,
+                    )
                     val secretKey = keyExchangeHandler.ensureKeysExchanged(id, otherUid)
                     if (secretKey != null) {
+                        Timber.tag("CHAT_UI").d("[CHAT_UI] Keys exchanged successfully for convId=%s. Setting isEncryptionReady=true", id)
                         _uiState.update { it.copy(isEncryptionReady = true) }
+                    } else {
+                        Timber.tag("CHAT_UI").w("[CHAT_UI] Keys exchange returned NULL for convId=%s", id)
                     }
                 }
 
@@ -472,6 +538,7 @@ class ChatDetailViewModel
                     null
                 }
 
+                Timber.tag("CHAT_UI").d("[CHAT_UI] Dispatching to chatRepository.sendMessage: convId=%s, type=TEXT", id)
                 chatRepository.sendMessage(
                     conversationId = id,
                     type = MessageType.TEXT,
@@ -487,6 +554,7 @@ class ChatDetailViewModel
         fun markServiceCompleted() {
             val id = conversationId ?: return
             viewModelScope.launch {
+                chatRepository.completeService(id)
                 chatRepository.sendMessage(
                     conversationId = id,
                     type = MessageType.SERVICE_COMPLETED,
@@ -665,6 +733,48 @@ class ChatDetailViewModel
                 voicePlayer.release()
             } catch (e: Throwable) {
                 // Ignore in test environment
+            }
+        }
+
+        fun toggleSearch() {
+            _uiState.update { state ->
+                if (state.isSearchActive) {
+                    state.copy(
+                        isSearchActive = false,
+                        searchQuery = "",
+                        searchResults = emptyList(),
+                        searchResultIndex = 0,
+                    )
+                } else {
+                    state.copy(isSearchActive = true)
+                }
+            }
+        }
+
+        fun onChatSearchQueryChanged(query: String) {
+            _uiState.update { state ->
+                val trimmed = query.trim()
+                val results = if (trimmed.isBlank()) {
+                    emptyList()
+                } else {
+                    state.messages.reversed().mapIndexedNotNull { idx, msg ->
+                        if (msg.content.contains(trimmed, ignoreCase = true)) idx else null
+                    }
+                }
+                state.copy(
+                    searchQuery = query,
+                    searchResults = results,
+                    searchResultIndex = 0,
+                )
+            }
+        }
+
+        fun searchNavigate(direction: Int) {
+            _uiState.update { state ->
+                if (state.searchResults.isEmpty()) return@update state
+                val newIdx = (state.searchResultIndex + direction)
+                    .coerceIn(0, state.searchResults.size - 1)
+                state.copy(searchResultIndex = newIdx)
             }
         }
 

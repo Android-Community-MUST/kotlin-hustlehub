@@ -1,0 +1,19 @@
+appId: must.kdroiders.hustlehub
+---
+- launchApp
+
+# Discovery assertions
+- assertVisible:
+    id: "search_bar"
+- assertVisible:
+    id: "category_chips"
+- assertVisible:
+    id: "service_grid"
+
+# Click first service
+- tapOn:
+    id: "service_card"
+
+# Detail assertions
+- assertVisible:
+    id: "service_detail_screen"

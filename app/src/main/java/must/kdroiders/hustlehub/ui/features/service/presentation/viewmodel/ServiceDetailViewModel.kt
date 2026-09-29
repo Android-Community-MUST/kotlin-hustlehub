@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.bookmarks.domain.repository.BookmarkRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
@@ -22,6 +23,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
+@Suppress("LongParameterList")
 class ServiceDetailViewModel
     @Inject
     constructor(
@@ -30,6 +32,7 @@ class ServiceDetailViewModel
         private val getServiceReviewsUseCase: GetServiceReviewsUseCase,
         private val authRepository: AuthRepository,
         private val userRepository: UserRepository,
+        private val bookmarkRepository: BookmarkRepository,
         private val hustleAnalytics: HustleAnalytics,
         private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
@@ -61,10 +64,43 @@ class ServiceDetailViewModel
         private val _uiState = MutableStateFlow(ServiceDetailUiState())
         val uiState: StateFlow<ServiceDetailUiState> = _uiState.asStateFlow()
 
+        private val _isBookmarked = MutableStateFlow(false)
+        val isBookmarked: StateFlow<Boolean> = _isBookmarked.asStateFlow()
+
         fun initialize(id: String) {
             if (serviceId == id) return
             serviceId = id
+            observeBookmark(id)
             load()
+        }
+
+        private fun observeBookmark(id: String) {
+            viewModelScope.launch {
+                bookmarkRepository.isBookmarkedFlow(id).collect { bookmarked ->
+                    _isBookmarked.value = bookmarked
+                }
+            }
+        }
+
+        fun toggleBookmark(onResult: (Boolean, String) -> Unit = { _, _ -> }) {
+            val service = _uiState.value.service ?: return
+            viewModelScope.launch {
+                val result = bookmarkRepository.toggleBookmark(
+                    serviceId = service.id,
+                    title = service.title,
+                    category = service.category.name,
+                    priceRange = service.priceRange,
+                    rating = service.averageRating.toDouble(),
+                    imageUrl = service.portfolio.firstOrNull(),
+                )
+                result
+                    .onSuccess { nowBookmarked ->
+                        val message = if (nowBookmarked) "Saved to bookmarks" else "Removed from bookmarks"
+                        onResult(nowBookmarked, message)
+                    }.onFailure {
+                        onResult(_isBookmarked.value, "Failed to update bookmark")
+                    }
+            }
         }
 
         fun load() {

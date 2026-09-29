@@ -34,7 +34,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "must.kdroiders.hustlehub.HiltTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -61,6 +61,23 @@ android {
     }
 
     buildTypes {
+        create("beta") {
+            initWith(getByName("debug"))
+            isDebuggable = false
+            versionNameSuffix = "-beta"
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+            val keystoreFile = keysProperty("KEYSTORE_FILE").ifEmpty { System.getenv("KEYSTORE_FILE") ?: "" }
+            if (keystoreFile.isNotEmpty() && file(keystoreFile).exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -69,7 +86,7 @@ android {
                 "proguard-rules.pro",
             )
             val keystoreFile = keysProperty("KEYSTORE_FILE").ifEmpty { System.getenv("KEYSTORE_FILE") ?: "" }
-            if (keystoreFile.isNotEmpty()) {
+            if (keystoreFile.isNotEmpty() && file(keystoreFile).exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
@@ -185,6 +202,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
     // Baseline Profile generator — run on rooted emulator to regenerate baseline-prof.txt
     androidTestImplementation(libs.androidx.benchmark.macro.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)

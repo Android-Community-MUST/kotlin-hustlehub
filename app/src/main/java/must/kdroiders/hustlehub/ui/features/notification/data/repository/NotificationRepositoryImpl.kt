@@ -39,17 +39,25 @@ class NotificationRepositoryImpl
 
         override suspend fun markRead(id: String): Result<Unit> =
             runCatching {
+                notificationDao.markAsRead(id)
                 apiService.markRead(id)
             }.map { }
 
         override suspend fun deleteNotification(id: String): Result<Unit> =
             runCatching {
+                notificationDao.deleteById(id)
                 apiService.deleteNotification(id)
             }.map { }
 
         override suspend fun markAllRead(): Result<Unit> =
             runCatching {
+                notificationDao.markAllAsRead()
                 apiService.markAllRead()
+            }.map { }
+
+        override suspend fun restoreNotification(notification: Notification): Result<Unit> =
+            runCatching {
+                notificationDao.upsert(notification.toEntity())
             }.map { }
 
         override suspend fun getUnreadCount(): Result<Int> =
@@ -91,13 +99,17 @@ class NotificationRepositoryImpl
             }
             return Notification(
                 id = id,
-                userId = userId,
+                userId = userId ?: "",
                 type = typeEnum,
                 title = title,
                 body = body,
                 data = data,
                 isRead = isRead,
-                sentAt = sentAt,
+                sentAt = sentAt.ifBlank {
+                    java.time.Instant
+                        .now()
+                        .toString()
+                },
             )
         }
 

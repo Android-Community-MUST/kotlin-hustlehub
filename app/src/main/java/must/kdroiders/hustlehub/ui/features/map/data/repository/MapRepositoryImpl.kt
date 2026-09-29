@@ -53,6 +53,7 @@ class MapRepositoryImpl
                         averageRating = dto.averageRating,
                         lat = dto.lat,
                         lng = dto.lng,
+                        distanceMeters = dto.distanceMeters,
                     )
                 }
                 mapPinDao.upsertAll(pins.map { it.toEntity() })

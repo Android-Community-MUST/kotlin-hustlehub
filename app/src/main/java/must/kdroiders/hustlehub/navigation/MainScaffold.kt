@@ -192,6 +192,7 @@ fun MainShellScreen(
                             innerBackstack.clear()
                             innerBackstack.add(BottomHome)
                         },
+                        onItemClick = onNavigateToServiceDetail,
                     )
                 }
             },

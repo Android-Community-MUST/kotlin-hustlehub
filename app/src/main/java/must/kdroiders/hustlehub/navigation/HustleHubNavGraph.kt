@@ -154,6 +154,9 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         backstack.add(Notifications)
                     }
                 }
+                is DeepLinkAction.OpenSubscription -> {
+                    backstack.add(Subscription(serviceId = action.serviceId))
+                }
                 is DeepLinkAction.OpenProfile, is DeepLinkAction.OpenChatList -> {
                     while (backstack.size > 1 && backstack.last() != MainShell) {
                         backstack.remove(backstack.last())
@@ -324,7 +327,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onNavigateToAiSearch = { backstack.add(AiSearchScreen) },
                                 onNavigateToEditProfile = { backstack.add(EditProfile) },
                                 onNavigateToNotifications = { backstack.add(Notifications) },
-                                onNavigateToSubscription = { backstack.add(Subscription) },
+                                onNavigateToSubscription = { backstack.add(Subscription()) },
                                 onNavigateToAnalytics = { tab -> backstack.add(Analytics(initialTab = tab)) },
                                 onNavigateToAdminDashboard = { backstack.add(AdminDashboard) },
                             )
@@ -338,7 +341,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onNavigateToNotificationPreferences = { backstack.add(NotificationPreferences) },
                                 onNavigateToPrivacy = { backstack.add(PrivacySettings) },
                                 onNavigateToBlockedUsers = { backstack.add(BlockedUsers) },
-                                onNavigateToSubscription = { backstack.add(Subscription) },
+                                onNavigateToSubscription = { backstack.add(Subscription()) },
                                 onNavigateToHelp = { backstack.add(HelpFaq) },
                                 onAccountDeleted = {
                                     backstack.clear()
@@ -383,7 +386,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 serviceId = key.serviceId,
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                                 onSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) },
-                                onNavigateToSubscription = { backstack.add(Subscription) },
+                                onNavigateToSubscription = { backstack.add(Subscription()) },
                             )
                         }
 
@@ -393,6 +396,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                                 onCreateService = { backstack.add(CreateService()) },
                                 onEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
+                                onBoostService = { serviceId -> backstack.add(Subscription(serviceId = serviceId)) },
                             )
                         }
 
@@ -539,17 +543,15 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         }
 
                         // Subscription & Pro upgrade
-                        entry<Subscription> {
+                        entry<Subscription> { key ->
                             SubscriptionScreen(
                                 onNavigateBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                                 onNavigateToPaymentStatus = { checkoutRequestId ->
                                     backstack.add(PaymentStatus(checkoutRequestId = checkoutRequestId))
                                 },
+                                serviceId = key.serviceId,
                             )
                         }
-
-                        // Subscription from a specific service (Boost This Service)
-                        // Handled via SubscriptionScreen's serviceId parameter — pass it through
 
                         // M-Pesa payment status polling
                         entry<PaymentStatus> { key ->
@@ -579,6 +581,9 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             BookmarkScreen(
                                 onBack = {
                                     if (backstack.size > 1) backstack.remove(backstack.last())
+                                },
+                                onItemClick = { serviceId ->
+                                    backstack.add(ServiceDetail(serviceId))
                                 },
                             )
                         }

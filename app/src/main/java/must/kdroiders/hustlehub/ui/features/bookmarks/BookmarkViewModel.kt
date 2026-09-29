@@ -1,52 +1,55 @@
-
 package must.kdroiders.hustlehub.ui.features.bookmarks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.ui.features.bookmarks.domain.repository.BookmarkRepository
+import timber.log.Timber
+import javax.inject.Inject
 
-class BookmarkViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow<BookmarkUiState>(BookmarkUiState.Loading)
-    val uiState: StateFlow<BookmarkUiState> = _uiState.asStateFlow()
-
-    init {
-        loadBookmarks()
-    }
-
-    fun loadBookmarks() {
-        viewModelScope.launch {
-            _uiState.value = BookmarkUiState.Loading
-            try {
-                // Instantly resolve state to Empty for testing/initial setup
-                val items = emptyList<BookmarkItem>()
-
-                _uiState.value = if (items.isEmpty()) {
-                    BookmarkUiState.Empty
-                } else {
-                    BookmarkUiState.Success(items)
-                }
-            } catch (e: Exception) {
-                _uiState.value = BookmarkUiState.Error(
-                    e.localizedMessage ?: "Failed to load bookmarks",
+@HiltViewModel
+class BookmarkViewModel
+    @Inject
+    constructor(
+        private val bookmarkRepository: BookmarkRepository,
+    ) : ViewModel() {
+        val uiState: StateFlow<BookmarkUiState> =
+            bookmarkRepository
+                .getBookmarksFlow()
+                .map { items ->
+                    if (items.isEmpty()) {
+                        BookmarkUiState.Empty
+                    } else {
+                        BookmarkUiState.Success(items)
+                    }
+                }.catch { e ->
+                    Timber.e(e, "Error observing bookmarks")
+                    emit(BookmarkUiState.Error(e.localizedMessage ?: "Failed to load bookmarks"))
+                }.stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5_000),
+                    initialValue = BookmarkUiState.Loading,
                 )
-            }
-        }
-    }
 
-    fun removeBookmark(itemId: String) {
-        viewModelScope.launch {
-            val currentState = _uiState.value
-            if (currentState is BookmarkUiState.Success) {
-                val updatedList = currentState.items.filterNot { it.id == itemId }
-                _uiState.value = if (updatedList.isEmpty()) {
-                    BookmarkUiState.Empty
-                } else {
-                    BookmarkUiState.Success(updatedList)
-                }
+        init {
+            refresh()
+        }
+
+        fun refresh() {
+            viewModelScope.launch {
+                bookmarkRepository.refreshBookmarks()
+            }
+        }
+
+        fun removeBookmark(itemId: String) {
+            viewModelScope.launch {
+                bookmarkRepository.removeBookmark(itemId)
             }
         }
     }
-}

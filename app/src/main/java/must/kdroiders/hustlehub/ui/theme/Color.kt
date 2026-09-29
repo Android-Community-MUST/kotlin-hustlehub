@@ -79,3 +79,9 @@ val CategoryNeonBrightCyan = Color(0xFF00E5FF) // TECH
 val CategoryNeonBlue = Color(0xFF82B1FF) // FASHION
 val CategoryNeonPink = Color(0xFFFF4081) // PHOTOGRAPHY
 val CategoryNeonDefault = Color(0xFFE0E0E0)
+
+// E2EE Chat Security Banner (WhatsApp style)
+val HustleE2EeBannerContainerDark = Color(0xFF182229)
+val HustleE2EeBannerContainerLight = Color(0xFFFFF4CC)
+val HustleE2EeBannerContentDark = Color(0xFFFFD56B)
+val HustleE2EeBannerContentLight = Color(0xFF7A5C00)

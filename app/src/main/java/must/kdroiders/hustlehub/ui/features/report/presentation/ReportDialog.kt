@@ -8,13 +8,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -40,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReportDialog(
     targetId: String,
@@ -187,9 +190,12 @@ fun ReportDialog(
                     },
                 ) {
                     if (state.isSubmitting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.padding(horizontal = 8.dp),
+                        CircularWavyProgressIndicator(
+                            modifier = Modifier
+                                .padding(horizontal = 8.dp)
+                                .size(18.dp),
                             color = MaterialTheme.colorScheme.onPrimary,
+                            trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
                         )
                     } else {
                         Text("Submit Report")

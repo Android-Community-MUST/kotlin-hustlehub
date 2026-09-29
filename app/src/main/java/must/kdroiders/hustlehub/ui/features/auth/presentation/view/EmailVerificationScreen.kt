@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleCard
@@ -103,7 +105,9 @@ fun EmailVerificationScreen(
                     },
                     loading = uiState.isLoading,
                     enabled = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(TestTags.VERIFY_EMAIL_BUTTON),
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -120,7 +124,9 @@ fun EmailVerificationScreen(
                         text = stringResource(R.string.auth_btn_resend_email),
                         onClick = { emailVerificationViewModel.resendOtp() },
                         variant = HustleButtonVariant.Outlined,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(TestTags.RESEND_EMAIL_BUTTON),
                     )
                 }
             }
