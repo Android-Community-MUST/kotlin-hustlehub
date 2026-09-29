@@ -12,12 +12,13 @@
         </trust-anchors>
     </base-config>
 
-    <!-- Permit cleartext HTTP for local backend testing (emulator, Wi-Fi dev IPs, localhost) -->
+    <!-- Permit cleartext HTTP for local backend testing (emulator, Wi-Fi dev IPs, localhost) and run.app -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">10.238.26.212</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
         <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">run.app</domain>
     </domain-config>
 
     <debug-overrides>
