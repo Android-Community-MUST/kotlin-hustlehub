@@ -135,6 +135,7 @@ class ChatDetailViewModel
         private var messagesJob: Job? = null
         private var webSocketJob: Job? = null
         private var presenceJob: Job? = null
+        private var initializeJob: Job? = null
 
         private val networkSyncJob: Job? = null
 
@@ -184,11 +185,12 @@ class ChatDetailViewModel
             messagesJob?.cancel()
             webSocketJob?.cancel()
             presenceJob?.cancel()
+            initializeJob?.cancel()
 
             val currentUid = firebaseAuth?.currentUser?.uid ?: ""
             _uiState.update { it.copy(currentUserId = currentUid, messages = emptyList(), replyingToMessage = null) }
 
-            viewModelScope.launch {
+            initializeJob = viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
 
                 // 1. Resolve conversation ID FIRST (the input could be a conversation ID or a provider/user ID)
@@ -723,10 +725,12 @@ class ChatDetailViewModel
 
         public override fun onCleared() {
             super.onCleared()
+            initializeJob?.cancel()
             messagesJob?.cancel()
             webSocketJob?.cancel()
             presenceJob?.cancel()
             typingClearJob?.cancel()
+            viewModelScope.cancel()
 
             try {
                 chatRepository.setActiveConversation(null)

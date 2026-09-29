@@ -15,10 +15,12 @@ import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ReviewEligibility
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicateReviewUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.DeleteReviewUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyReviewUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetReviewEligibilityUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.SubmitReviewUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.UpdateReviewUseCase
@@ -40,6 +42,7 @@ class WriteReviewViewModelTest {
     private val getServiceByIdUseCase: GetServiceByIdUseCase = mockk(relaxed = true)
     private val getProviderProfileUseCase: GetProviderProfileUseCase = mockk(relaxed = true)
     private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase = mockk(relaxed = true)
+    private val getReviewEligibilityUseCase: GetReviewEligibilityUseCase = mockk(relaxed = true)
     private val hustleAnalytics: HustleAnalytics = mockk(relaxed = true)
     private val hustleCrashlytics: HustleCrashlytics = mockk(relaxed = true)
     private val appReviewManager: AppReviewManager = mockk(relaxed = true)
@@ -51,6 +54,10 @@ class WriteReviewViewModelTest {
         Dispatchers.setMain(testDispatcher)
 
         coEvery { getMyReviewUseCase(any()) } returns Result.success(null)
+        coEvery { checkDuplicateReviewUseCase(any()) } returns Result.success(false)
+        coEvery { getReviewEligibilityUseCase(any()) } returns Result.success(
+            ReviewEligibility(canReview = true, reason = "ELIGIBLE", isVerified = true),
+        )
 
         viewModel = WriteReviewViewModel(
             submitReviewUseCase = submitReviewUseCase,
@@ -60,6 +67,7 @@ class WriteReviewViewModelTest {
             getServiceByIdUseCase = getServiceByIdUseCase,
             getProviderProfileUseCase = getProviderProfileUseCase,
             checkDuplicateReviewUseCase = checkDuplicateReviewUseCase,
+            getReviewEligibilityUseCase = getReviewEligibilityUseCase,
             hustleAnalytics = hustleAnalytics,
             hustleCrashlytics = hustleCrashlytics,
             appReviewManager = appReviewManager,
@@ -247,5 +255,47 @@ class WriteReviewViewModelTest {
             assertFalse(state.isEditMode)
             assertFalse(state.hasAlreadyReviewed)
             assertEquals(null, state.existingReviewId)
+        }
+
+    @Test
+    fun `initialize marks isEligible false when eligibility is NO_INTERACTION`() =
+        runTest {
+            val mockService = Service(id = "srv-1", providerId = "prov-1", title = "Haircut")
+            val mockProvider = User(id = "prov-1", name = "Barber Sam")
+
+            coEvery { getServiceByIdUseCase("srv-1") } returns Result.success(mockService)
+            coEvery { getProviderProfileUseCase("prov-1") } returns Result.success(mockProvider)
+            coEvery { getReviewEligibilityUseCase("srv-1") } returns Result.success(
+                ReviewEligibility(canReview = false, reason = "NO_INTERACTION", isVerified = false),
+            )
+
+            viewModel.initialize("srv-1")
+
+            val state = viewModel.uiState.value
+            assertFalse(state.isLoadingInfo)
+            assertFalse(state.isEligible)
+            assertEquals("NO_INTERACTION", state.ineligibilityReason)
+            assertFalse(state.canSubmit)
+        }
+
+    @Test
+    fun `submit does nothing when user is ineligible and not in edit mode`() =
+        runTest {
+            val mockService = Service(id = "srv-1", providerId = "prov-1", title = "Haircut")
+            val mockProvider = User(id = "prov-1", name = "Barber Sam")
+
+            coEvery { getServiceByIdUseCase("srv-1") } returns Result.success(mockService)
+            coEvery { getProviderProfileUseCase("prov-1") } returns Result.success(mockProvider)
+            coEvery { getReviewEligibilityUseCase("srv-1") } returns Result.success(
+                ReviewEligibility(canReview = false, reason = "NO_INTERACTION", isVerified = false),
+            )
+
+            viewModel.initialize("srv-1")
+            viewModel.onRatingChanged(5)
+            viewModel.onCommentChanged("Awesome service!")
+            viewModel.submit()
+
+            coVerify(exactly = 0) { submitReviewUseCase(any(), any(), any(), any()) }
+            assertFalse(viewModel.uiState.value.submitSuccess)
         }
 }

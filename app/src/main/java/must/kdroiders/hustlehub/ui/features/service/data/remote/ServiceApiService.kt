@@ -7,6 +7,7 @@ import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateReview
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateServiceRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ProviderReplyRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.RatingDistributionResponse
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewEligibilityResponse
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewResponse
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ServiceResponse
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.UpdateReviewRequest
@@ -117,4 +118,9 @@ interface ServiceApiService {
     suspend fun getMyReviewForService(
         @Path("serviceId") serviceId: String,
     ): ApiResponse<ReviewResponse?>
+
+    @GET("services/{serviceId}/reviews/eligibility")
+    suspend fun getReviewEligibility(
+        @Path("serviceId") serviceId: String,
+    ): ApiResponse<ReviewEligibilityResponse>
 }

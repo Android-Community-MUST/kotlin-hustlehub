@@ -637,6 +637,12 @@
     <string name="review_success_title">Review Submitted!</string>
     <string name="review_success_subtitle">Thank you for sharing your feedback</string>
     <string name="reviews_count_format">%1$d reviews</string>
+    <string name="service_review_chat_first_btn">Message to Review</string>
+    <string name="review_ineligible_no_interaction_title">Message the Provider First</string>
+    <string name="review_ineligible_no_interaction_desc">To keep HustleHub feedback trustworthy and verified, you need to chat or interact with the provider before writing a review.</string>
+    <string name="review_ineligible_own_service_title">Cannot Review Own Service</string>
+    <string name="review_ineligible_own_service_desc">You are the provider of this service and cannot review it.</string>
+    <string name="action_message_provider">Message Provider</string>
 
     <!-- Settings -->
     <string name="toast_feature_coming_soon">Feature coming soon</string>

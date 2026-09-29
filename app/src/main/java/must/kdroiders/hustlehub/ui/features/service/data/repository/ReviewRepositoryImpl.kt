@@ -16,6 +16,7 @@ import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewRespon
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.UpdateReviewRequest
 import must.kdroiders.hustlehub.ui.features.service.domain.model.RatingDistribution
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ReviewEligibility
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ReviewRepository
 import retrofit2.HttpException
 import timber.log.Timber
@@ -202,6 +203,24 @@ class ReviewRepositoryImpl
                     } else {
                         null
                     }
+                }
+            }
+
+        override suspend fun getReviewEligibility(serviceId: String): Result<ReviewEligibility> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = apiService.getReviewEligibility(serviceId)
+                    check(response.success && response.data != null) { response.message }
+                    val d = response.data
+                    ReviewEligibility(
+                        canReview = d.canReview,
+                        reason = d.reason,
+                        isVerified = d.isVerified,
+                    )
+                }.recoverCatching { e ->
+                    if (e is CancellationException) throw e
+                    Timber.w(e, "ReviewRepositoryImpl.getReviewEligibility failed for serviceId='$serviceId'")
+                    throw e
                 }
             }
     }

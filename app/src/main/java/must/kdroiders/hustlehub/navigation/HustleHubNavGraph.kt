@@ -615,6 +615,22 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 initialIsAnonymous = key.initialIsAnonymous,
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                                 onSubmitSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                                onNavigateToChat = { providerId, serviceId, title, category, priceRange, providerName ->
+                                    val chatDest = ChatDetail(
+                                        chatId = providerId,
+                                        serviceId = serviceId,
+                                        serviceTitle = title,
+                                        serviceCategory = category,
+                                        servicePriceRange = priceRange,
+                                        providerName = providerName,
+                                    )
+                                    if (ProfileCompletenessChecker.needsLocationForBooking(cachedUser)) {
+                                        pendingChatArgs = chatDest
+                                        showBookingGate = true
+                                    } else {
+                                        backstack.add(chatDest)
+                                    }
+                                },
                             )
                         }
 

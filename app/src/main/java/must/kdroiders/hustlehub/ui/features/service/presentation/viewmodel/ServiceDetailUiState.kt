@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel
 
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ReviewEligibility
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 
 data class ServiceDetailUiState(
@@ -12,6 +13,7 @@ data class ServiceDetailUiState(
     val totalReviewCount: Int = 0,
     /** True when the currently logged-in user is the provider of this service. */
     val isOwnService: Boolean = false,
+    val reviewEligibility: ReviewEligibility? = null,
     val isLoading: Boolean = true,
     val error: String? = null,
 )

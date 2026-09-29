@@ -80,3 +80,13 @@ data class UpdateReviewRequest(
     @SerializedName("isAnonymous")
     val isAnonymous: Boolean = false,
 )
+
+@Keep
+data class ReviewEligibilityResponse(
+    @SerializedName("canReview")
+    val canReview: Boolean,
+    @SerializedName("reason")
+    val reason: String,
+    @SerializedName("isVerified")
+    val isVerified: Boolean = false,
+)

@@ -44,6 +44,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -214,6 +215,7 @@ fun ServiceDetailScreen(
                     onProviderClick = { state.service?.providerId?.let { onNavigateToProviderProfile(it) } },
                     onNavigateToWriteReview = onNavigateToWriteReview,
                     onNavigateToAllReviews = onNavigateToAllReviews,
+                    onNavigateToChat = onNavigateToChat,
                 )
             }
 
@@ -361,6 +363,14 @@ private fun ServiceDetailContent(
     onProviderClick: () -> Unit,
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit,
     onNavigateToAllReviews: (serviceId: String) -> Unit,
+    onNavigateToChat: (
+        providerId: String,
+        serviceId: String,
+        serviceTitle: String,
+        serviceCategory: String,
+        servicePriceRange: String,
+        providerName: String,
+    ) -> Unit,
 ) {
     val service = state.service ?: return
     val provider = state.provider
@@ -634,16 +644,54 @@ private fun ServiceDetailContent(
                         modifier = Modifier.semantics { heading() },
                     )
                     if (!state.isOwnService) {
-                        Button(
-                            onClick = { onNavigateToWriteReview(service.id, service.providerId) },
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                            modifier = Modifier.height(32.dp),
-                        ) {
-                            Text(
-                                stringResource(R.string.chat_write_review),
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.labelSmall,
-                            )
+                        val eligibility = state.reviewEligibility
+                        if (eligibility != null && !eligibility.canReview) {
+                            if (eligibility.isNoInteraction) {
+                                OutlinedButton(
+                                    onClick = {
+                                        onNavigateToChat(
+                                            service.providerId,
+                                            service.id,
+                                            service.title,
+                                            service.category.name,
+                                            service.priceRange,
+                                            state.provider?.name ?: "",
+                                        )
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                    modifier = Modifier.height(32.dp),
+                                ) {
+                                    Text(
+                                        stringResource(R.string.service_review_chat_first_btn),
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.labelSmall,
+                                    )
+                                }
+                            } else if (eligibility.isAlreadyReviewed) {
+                                OutlinedButton(
+                                    onClick = { onNavigateToWriteReview(service.id, service.providerId) },
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                    modifier = Modifier.height(32.dp),
+                                ) {
+                                    Text(
+                                        stringResource(R.string.review_edit_title),
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.labelSmall,
+                                    )
+                                }
+                            }
+                        } else {
+                            Button(
+                                onClick = { onNavigateToWriteReview(service.id, service.providerId) },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                modifier = Modifier.height(32.dp),
+                            ) {
+                                Text(
+                                    stringResource(R.string.chat_write_review),
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                            }
                         }
                     }
                 }

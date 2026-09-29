@@ -17,6 +17,7 @@ import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderPr
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicateReviewUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.DeleteReviewUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyReviewUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetReviewEligibilityUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.SubmitReviewUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.UpdateReviewUseCase
@@ -35,6 +36,7 @@ class WriteReviewViewModel
         private val getServiceByIdUseCase: GetServiceByIdUseCase,
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
         private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase,
+        private val getReviewEligibilityUseCase: GetReviewEligibilityUseCase,
         private val hustleAnalytics: HustleAnalytics,
         private val hustleCrashlytics: HustleCrashlytics,
         private val appReviewManager: AppReviewManager,
@@ -82,7 +84,9 @@ class WriteReviewViewModel
                     .onSuccess { service ->
                         getProviderProfileUseCase(service.providerId)
                             .onSuccess { provider ->
-                                val alreadyReviewed = checkDuplicateReviewUseCase(id).getOrDefault(false)
+                                val eligibility = getReviewEligibilityUseCase(id).getOrNull()
+                                val alreadyReviewed = (eligibility?.isAlreadyReviewed == true) ||
+                                    checkDuplicateReviewUseCase(id).getOrDefault(false)
                                 val myReview = if (_uiState.value.existingReviewId == null) {
                                     getMyReviewUseCase(id).getOrNull()
                                 } else {
@@ -91,10 +95,19 @@ class WriteReviewViewModel
 
                                 _uiState.update { current ->
                                     val isEdit = current.isEditMode || myReview != null
+                                    val canReview = when {
+                                        isEdit -> true
+                                        eligibility != null -> eligibility.canReview
+                                        else -> true
+                                    }
+                                    val reason = if (!canReview) eligibility?.reason else null
+
                                     current.copy(
                                         service = service,
                                         provider = provider,
                                         isLoadingInfo = false,
+                                        isEligible = canReview,
+                                        ineligibilityReason = reason,
                                         hasAlreadyReviewed = alreadyReviewed || isEdit,
                                         isEditMode = isEdit,
                                         existingReviewId = current.existingReviewId ?: myReview?.id,

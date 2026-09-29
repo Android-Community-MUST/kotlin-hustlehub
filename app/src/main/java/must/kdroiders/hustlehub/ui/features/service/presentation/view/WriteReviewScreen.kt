@@ -74,6 +74,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -103,6 +104,7 @@ fun WriteReviewScreen(
     viewModel: WriteReviewViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
     onSubmitSuccess: () -> Unit = {},
+    onNavigateToChat: ((providerId: String, serviceId: String, title: String, category: String, priceRange: String, providerName: String) -> Unit)? = null,
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -309,39 +311,128 @@ fun WriteReviewScreen(
                     }
                 }
 
-                if (state.hasAlreadyReviewed && !state.isEditMode) {
-                    Spacer(Modifier.height(16.dp))
-                    Row(
+                if (!state.isEligible && !state.isEditMode) {
+                    Spacer(Modifier.height(24.dp))
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f))
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onErrorContainer,
-                        )
-                        Spacer(Modifier.width(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(32.dp),
+                            )
+                        }
+                        Spacer(Modifier.height(16.dp))
                         Text(
-                            text = stringResource(R.string.review_already_submitted),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            fontWeight = FontWeight.Medium,
+                            text = if (state.ineligibilityReason == "OWN_SERVICE") {
+                                stringResource(R.string.review_ineligible_own_service_title)
+                            } else {
+                                stringResource(R.string.review_ineligible_no_interaction_title)
+                            },
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center,
                         )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = if (state.ineligibilityReason == "OWN_SERVICE") {
+                                stringResource(R.string.review_ineligible_own_service_desc)
+                            } else {
+                                stringResource(R.string.review_ineligible_no_interaction_desc)
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(Modifier.height(24.dp))
+                        if (state.ineligibilityReason != "OWN_SERVICE" && onNavigateToChat != null && state.service != null) {
+                            Button(
+                                onClick = {
+                                    val svc = state.service
+                                    if (svc != null) {
+                                        onNavigateToChat(
+                                            svc.providerId,
+                                            svc.id,
+                                            svc.title,
+                                            svc.category.name,
+                                            svc.priceRange,
+                                            state.provider?.name ?: "",
+                                        )
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp),
+                                shape = RoundedCornerShape(24.dp),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.action_message_provider),
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                            Spacer(Modifier.height(12.dp))
+                        }
+                        OutlinedButton(
+                            onClick = onBack,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(24.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.action_back),
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
                     }
-                }
+                } else {
+                    if (state.hasAlreadyReviewed && !state.isEditMode) {
+                        Spacer(Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f))
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onErrorContainer,
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                text = stringResource(R.string.review_already_submitted),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
 
-                Spacer(Modifier.height(32.dp))
+                    Spacer(Modifier.height(32.dp))
 
-                StarRatingBar(
-                    rating = state.rating,
-                    starSize = 44.dp,
-                    onRatingChanged = viewModel::onRatingChanged,
-                    modifier = Modifier.testTag(TestTags.REVIEW_RATING_BAR),
-                )
+                    StarRatingBar(
+                        rating = state.rating,
+                        starSize = 44.dp,
+                        onRatingChanged = viewModel::onRatingChanged,
+                        modifier = Modifier.testTag(TestTags.REVIEW_RATING_BAR),
+                    )
 
                 Spacer(Modifier.height(16.dp))
 
@@ -544,6 +635,7 @@ fun WriteReviewScreen(
                     }
                 }
             }
+        }
 
             // Animated Submission Success Overlay
             AnimatedVisibility(

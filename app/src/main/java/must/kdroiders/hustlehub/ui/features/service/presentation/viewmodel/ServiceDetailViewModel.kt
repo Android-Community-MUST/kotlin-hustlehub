@@ -15,6 +15,7 @@ import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepositor
 import must.kdroiders.hustlehub.ui.features.bookmarks.domain.repository.BookmarkRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetReviewEligibilityUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceReviewsUseCase
 import timber.log.Timber
@@ -28,6 +29,7 @@ class ServiceDetailViewModel
         private val getServiceByIdUseCase: GetServiceByIdUseCase,
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
         private val getServiceReviewsUseCase: GetServiceReviewsUseCase,
+        private val getReviewEligibilityUseCase: GetReviewEligibilityUseCase,
         private val authRepository: AuthRepository,
         private val bookmarkRepository: BookmarkRepository,
         private val hustleAnalytics: HustleAnalytics,
@@ -90,9 +92,11 @@ class ServiceDetailViewModel
 
                 val serviceDeferred = async { getServiceByIdUseCase(id) }
                 val reviewsDeferred = async { getServiceReviewsUseCase(id, page = 0, size = 5) }
+                val eligibilityDeferred = async { runCatching { getReviewEligibilityUseCase(id).getOrNull() }.getOrNull() }
 
                 val serviceResult = serviceDeferred.await()
                 val reviewsResult = reviewsDeferred.await()
+                val eligibility = eligibilityDeferred.await()
 
                 serviceResult
                     .onSuccess { service ->
@@ -109,6 +113,7 @@ class ServiceDetailViewModel
                                 reviews = reviewPage?.content ?: emptyList(),
                                 totalReviewCount = reviewPage?.totalElements?.toInt() ?: service.reviewCount,
                                 isOwnService = currentUid != null && provider != null && (currentUid == provider.id || currentUid == provider.uuid),
+                                reviewEligibility = eligibility,
                                 isLoading = false,
                                 error = null,
                             )

@@ -3,6 +3,7 @@ package must.kdroiders.hustlehub.ui.features.service.domain.repository
 import must.kdroiders.hustlehub.core.api.PageResponse
 import must.kdroiders.hustlehub.ui.features.service.domain.model.RatingDistribution
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ReviewEligibility
 
 interface ReviewRepository {
     suspend fun submitReview(
@@ -37,4 +38,6 @@ interface ReviewRepository {
     suspend fun deleteReview(reviewId: String): Result<Unit>
 
     suspend fun getMyReviewForService(serviceId: String): Result<Review?>
+
+    suspend fun getReviewEligibility(serviceId: String): Result<ReviewEligibility>
 }
