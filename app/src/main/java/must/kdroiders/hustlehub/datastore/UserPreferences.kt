@@ -50,6 +50,8 @@ class UserPreferences
             val USER_ROLE = stringPreferencesKey("user_role")
             val USER_AVATAR_URL = stringPreferencesKey("user_avatar_url")
             val USER_UUID = stringPreferencesKey("user_uuid")
+            val USER_CAMPUS_LOCATION = stringPreferencesKey("user_campus_location")
+            val USER_PHONE = stringPreferencesKey("user_phone")
             val APP_THEME = stringPreferencesKey("app_theme")
             val RECENT_SEARCHES = stringSetPreferencesKey("recent_searches")
             val LAST_SELECTED_CATEGORY = stringPreferencesKey("last_selected_category")
@@ -128,6 +130,8 @@ class UserPreferences
                         ?.let { runCatching { UserRole.valueOf(it) }.getOrDefault(UserRole.CUSTOMER) }
                         ?: UserRole.CUSTOMER,
                     profilePhotoUrl = prefs[USER_AVATAR_URL] ?: "",
+                    campusLocation = prefs[USER_CAMPUS_LOCATION] ?: "",
+                    phone = prefs[USER_PHONE] ?: "",
                     isVerifiedPro = prefs[IS_PRO_USER] ?: false,
                 )
             }
@@ -160,6 +164,8 @@ class UserPreferences
                     prefs[USER_EMAIL] = user.email
                     prefs[USER_ROLE] = user.role.name
                     prefs[USER_AVATAR_URL] = user.profilePhotoUrl
+                    prefs[USER_CAMPUS_LOCATION] = user.campusLocation
+                    prefs[USER_PHONE] = user.phone
                     prefs[IS_PRO_USER] = user.isVerifiedPro
                 }
                 Timber.d("User written to DataStore: uid=%s", user.id)

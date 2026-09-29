@@ -32,7 +32,6 @@ sealed interface SplashDestination {
     data object Home : SplashDestination
     data object Login : SplashDestination
     data object Onboarding : SplashDestination
-    data object ProfileSetup : SplashDestination
     data class AccountSuspended(
         val reason: String = "",
         val suspendedUntil: String? = null,
