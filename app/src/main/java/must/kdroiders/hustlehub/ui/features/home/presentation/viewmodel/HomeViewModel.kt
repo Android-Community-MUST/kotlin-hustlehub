@@ -12,21 +12,18 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.auth.AuthManager
-import must.kdroiders.hustlehub.core.cache.LruServiceCache
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
-import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.util.HustleScoreCalculator
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import timber.log.Timber
-import java.util.PriorityQueue
 import javax.inject.Inject
 
 private const val PAGE_SIZE = 10
-private const val MAX_FEATURED_COUNT = 5
 
 data class HomeUiState(
     val selectedCategory: ServiceCategory = ServiceCategory.ALL,
@@ -54,61 +51,17 @@ class HomeViewModel
         private val userRepository: UserRepository,
         private val notificationRepository: NotificationRepository,
         private val userPreferences: UserPreferences,
-        private val notificationDao: NotificationDao? = null,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(HomeUiState())
         val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-        companion object {
-            private val featuredComparator = Comparator<Service> { a, b ->
-                val tierA = when {
-                    a.isFeatured -> 3
-                    a.averageRating > 0f -> 2
-                    else -> 1
-                }
-                val tierB = when {
-                    b.isFeatured -> 3
-                    b.averageRating > 0f -> 2
-                    else -> 1
-                }
-                if (tierA != tierB) {
-                    tierA.compareTo(tierB)
-                } else {
-                    when (tierA) {
-                        3 -> {
-                            val c = a.createdAt.compareTo(b.createdAt)
-                            if (c != 0) c else a.averageRating.compareTo(b.averageRating)
-                        }
-                        2 -> {
-                            val r = a.averageRating.compareTo(b.averageRating)
-                            if (r != 0) r else a.createdAt.compareTo(b.createdAt)
-                        }
-                        else -> {
-                            a.createdAt.compareTo(b.createdAt)
-                        }
-                    }
-                }
-            }
-        }
-
         private var searchJob: Job? = null
-        private val serviceCache = LruServiceCache(maxSize = 100)
 
         init {
             loadUserInitials()
             fetchServices(reset = true)
             loadNotificationCount()
             observeProviderBannerVisibility()
-            observeUnreadNotifications()
-        }
-
-        private fun observeUnreadNotifications() {
-            val dao = notificationDao ?: return
-            viewModelScope.launch {
-                dao.getUnreadCountFlow().collect { unread ->
-                    _uiState.update { it.copy(notificationCount = unread) }
-                }
-            }
         }
 
         private fun observeProviderBannerVisibility() {
@@ -182,11 +135,20 @@ class HomeViewModel
                 browseServices(page = page, size = PAGE_SIZE, category = category, query = query)
                     .onSuccess { pageResponse ->
                         _uiState.update { current ->
-                            if (reset) serviceCache.clear()
-                            serviceCache.putAll(pageResponse.content)
-                            val merged = serviceCache.snapshot()
+                            val merged = if (reset) {
+                                pageResponse.content
+                            } else {
+                                (current.services + pageResponse.content).distinctBy { it.id }
+                            }
 
-                            val featured = selectTopFeatured(merged)
+                            // Derive Featured services for the carousel.
+                            // Priority 1: Paid featured listings (isFeatured == true)
+                            // Priority 2: High rated services fallback (averageRating > 0f)
+                            val paidFeatured = merged.filter { it.isFeatured }.sortedByDescending { it.createdAt }
+                            val ratedFallback = merged
+                                .filter { !it.isFeatured && it.averageRating > 0f }
+                                .sortedByDescending { HustleScoreCalculator.calculateForService(it) }
+                            val featured = (paidFeatured + ratedFallback).distinctBy { it.id }.take(5)
 
                             current.copy(
                                 services = merged,
@@ -244,23 +206,5 @@ class HomeViewModel
         override fun onCleared() {
             super.onCleared()
             searchJob?.cancel()
-        }
-
-        // O(n log k) min-heap selection — faster than 3x O(n log n) sort passes
-        private fun selectTopFeatured(
-            merged: List<Service>,
-            k: Int = MAX_FEATURED_COUNT,
-        ): List<Service> {
-            if (merged.size <= k) return merged.sortedWith(featuredComparator.reversed())
-            val heap = PriorityQueue<Service>(k, featuredComparator)
-            for (service in merged) {
-                if (heap.size < k) {
-                    heap.add(service)
-                } else if (featuredComparator.compare(service, heap.peek()!!) > 0) {
-                    heap.poll()
-                    heap.add(service)
-                }
-            }
-            return heap.sortedWith(featuredComparator.reversed())
         }
     }
