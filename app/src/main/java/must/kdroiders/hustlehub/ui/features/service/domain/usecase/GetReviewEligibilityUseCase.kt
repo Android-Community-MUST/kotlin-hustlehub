@@ -7,6 +7,5 @@ import javax.inject.Inject
 class GetReviewEligibilityUseCase
     @Inject
     constructor(private val repository: ReviewRepository) {
-        suspend operator fun invoke(serviceId: String): Result<ReviewEligibility> =
-            repository.getReviewEligibility(serviceId)
+        suspend operator fun invoke(serviceId: String): Result<ReviewEligibility> = repository.getReviewEligibility(serviceId)
     }

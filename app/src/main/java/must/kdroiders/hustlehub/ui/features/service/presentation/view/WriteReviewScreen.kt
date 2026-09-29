@@ -434,208 +434,208 @@ fun WriteReviewScreen(
                         modifier = Modifier.testTag(TestTags.REVIEW_RATING_BAR),
                     )
 
-                Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
 
-                val feedbackText = when (state.rating) {
-                    5 -> stringResource(R.string.review_rate_5)
-                    4 -> stringResource(R.string.review_rate_4)
-                    3 -> stringResource(R.string.review_rate_3)
-                    2 -> stringResource(R.string.review_rate_2)
-                    1 -> stringResource(R.string.review_rate_1)
-                    else -> stringResource(R.string.review_rate_hint)
-                }
-                Text(
-                    text = feedbackText,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-
-                if (state.rating > 0) {
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(
-                            if (state.rating > 1) R.string.review_rated_stars_plural else R.string.review_rated_stars_singular,
-                            state.rating,
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                Spacer(Modifier.height(32.dp))
-
-                val defaultProviderName = stringResource(R.string.profile_fallback_name)
-                val providerFirstName = state.provider
-                    ?.name
-                    ?.split(" ")
-                    ?.firstOrNull() ?: defaultProviderName
-
-                HustleTextField(
-                    value = state.comment,
-                    onValueChange = viewModel::onCommentChanged,
-                    placeholder = stringResource(R.string.review_comment_placeholder, providerFirstName),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag(TestTags.REVIEW_CONTENT_INPUT),
-                    singleLine = false,
-                    minLines = 5,
-                    maxLines = 5,
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(R.string.review_char_count_format, state.commentLength, state.maxCommentLength),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (state.commentLength >=
-                        state.maxCommentLength
-                    ) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    modifier = Modifier.align(Alignment.End),
-                )
-
-                Spacer(Modifier.height(24.dp))
-
-                val availableTags = listOf("Fast Delivery", "Great Communication", "Creative")
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    availableTags.forEach { tag ->
-                        val isSelected = state.selectedTags.contains(tag)
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(
-                                    if (isSelected) {
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                                    } else {
-                                        MaterialTheme.colorScheme.surface
-                                    },
-                                ).border(
-                                    width = 1.dp,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                                    shape = RoundedCornerShape(20.dp),
-                                ).clickable { viewModel.onTagToggled(tag) }
-                                .semantics {
-                                    role = Role.Checkbox
-                                    selected = isSelected
-                                }.padding(horizontal = 16.dp, vertical = 8.dp),
-                        ) {
-                            Text(
-                                text = tag,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                    val feedbackText = when (state.rating) {
+                        5 -> stringResource(R.string.review_rate_5)
+                        4 -> stringResource(R.string.review_rate_4)
+                        3 -> stringResource(R.string.review_rate_3)
+                        2 -> stringResource(R.string.review_rate_2)
+                        1 -> stringResource(R.string.review_rate_1)
+                        else -> stringResource(R.string.review_rate_hint)
                     }
-                }
-
-                Spacer(Modifier.height(16.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Checkbox(
-                        checked = state.isAnonymous,
-                        onCheckedChange = viewModel::onAnonymousToggled,
-                    )
                     Text(
-                        text = stringResource(R.string.review_post_anonymously),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = feedbackText,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
-                }
 
-                Spacer(Modifier.height(32.dp))
-
-                Button(
-                    onClick = viewModel::submit,
-                    enabled = state.canSubmit,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .testTag(TestTags.SUBMIT_REVIEW_BUTTON),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                    ),
-                ) {
-                    if (state.isSubmitting) {
-                        LoadingIndicator(
-                            modifier = Modifier.size(24.dp),
+                    if (state.rating > 0) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(
+                                if (state.rating > 1) R.string.review_rated_stars_plural else R.string.review_rated_stars_singular,
+                                state.rating,
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                    } else {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            Text(
-                                text = when {
-                                    state.isEditMode -> stringResource(R.string.review_update_btn)
-                                    state.hasAlreadyReviewed -> stringResource(R.string.review_already_reviewed_btn)
-                                    else -> stringResource(R.string.review_submit_btn)
-                                },
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
                     }
-                }
 
-                if (state.isEditMode) {
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedButton(
-                        onClick = { showDeleteDialog = true },
-                        enabled = !state.isDeleting && !state.isSubmitting,
+                    Spacer(Modifier.height(32.dp))
+
+                    val defaultProviderName = stringResource(R.string.profile_fallback_name)
+                    val providerFirstName = state.provider
+                        ?.name
+                        ?.split(" ")
+                        ?.firstOrNull() ?: defaultProviderName
+
+                    HustleTextField(
+                        value = state.comment,
+                        onValueChange = viewModel::onCommentChanged,
+                        placeholder = stringResource(R.string.review_comment_placeholder, providerFirstName),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
+                            .testTag(TestTags.REVIEW_CONTENT_INPUT),
+                        singleLine = false,
+                        minLines = 5,
+                        maxLines = 5,
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(R.string.review_char_count_format, state.commentLength, state.maxCommentLength),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (state.commentLength >=
+                            state.maxCommentLength
+                        ) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier.align(Alignment.End),
+                    )
+
+                    Spacer(Modifier.height(24.dp))
+
+                    val availableTags = listOf("Fast Delivery", "Great Communication", "Creative")
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        availableTags.forEach { tag ->
+                            val isSelected = state.selectedTags.contains(tag)
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(
+                                        if (isSelected) {
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                        } else {
+                                            MaterialTheme.colorScheme.surface
+                                        },
+                                    ).border(
+                                        width = 1.dp,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                                        shape = RoundedCornerShape(20.dp),
+                                    ).clickable { viewModel.onTagToggled(tag) }
+                                    .semantics {
+                                        role = Role.Checkbox
+                                        selected = isSelected
+                                    }.padding(horizontal = 16.dp, vertical = 8.dp),
+                            ) {
+                                Text(
+                                    text = tag,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Checkbox(
+                            checked = state.isAnonymous,
+                            onCheckedChange = viewModel::onAnonymousToggled,
+                        )
+                        Text(
+                            text = stringResource(R.string.review_post_anonymously),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
+                    Spacer(Modifier.height(32.dp))
+
+                    Button(
+                        onClick = viewModel::submit,
+                        enabled = state.canSubmit,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .testTag(TestTags.SUBMIT_REVIEW_BUTTON),
                         shape = RoundedCornerShape(28.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error,
-                        ),
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
                         ),
                     ) {
-                        if (state.isDeleting) {
-                            LoadingIndicator(modifier = Modifier.size(24.dp))
+                        if (state.isSubmitting) {
+                            LoadingIndicator(
+                                modifier = Modifier.size(24.dp),
+                            )
                         } else {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center,
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                                Spacer(Modifier.width(8.dp))
                                 Text(
-                                    text = stringResource(R.string.review_delete_btn),
+                                    text = when {
+                                        state.isEditMode -> stringResource(R.string.review_update_btn)
+                                        state.hasAlreadyReviewed -> stringResource(R.string.review_already_reviewed_btn)
+                                        else -> stringResource(R.string.review_submit_btn)
+                                    },
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                 )
+                                Spacer(Modifier.width(8.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
+                        }
+                    }
+
+                    if (state.isEditMode) {
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedButton(
+                            onClick = { showDeleteDialog = true },
+                            enabled = !state.isDeleting && !state.isSubmitting,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = RoundedCornerShape(28.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error,
+                            ),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                            ),
+                        ) {
+                            if (state.isDeleting) {
+                                LoadingIndicator(modifier = Modifier.size(24.dp))
+                            } else {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = stringResource(R.string.review_delete_btn),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
             // Animated Submission Success Overlay
             AnimatedVisibility(
