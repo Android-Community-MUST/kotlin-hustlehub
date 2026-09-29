@@ -73,17 +73,19 @@ class HomeViewModel
                 }
                 if (tierA != tierB) {
                     tierA.compareTo(tierB)
-                } else when (tierA) {
-                    3 -> {
-                        val c = a.createdAt.compareTo(b.createdAt)
-                        if (c != 0) c else a.averageRating.compareTo(b.averageRating)
-                    }
-                    2 -> {
-                        val r = a.averageRating.compareTo(b.averageRating)
-                        if (r != 0) r else a.createdAt.compareTo(b.createdAt)
-                    }
-                    else -> {
-                        a.createdAt.compareTo(b.createdAt)
+                } else {
+                    when (tierA) {
+                        3 -> {
+                            val c = a.createdAt.compareTo(b.createdAt)
+                            if (c != 0) c else a.averageRating.compareTo(b.averageRating)
+                        }
+                        2 -> {
+                            val r = a.averageRating.compareTo(b.averageRating)
+                            if (r != 0) r else a.createdAt.compareTo(b.createdAt)
+                        }
+                        else -> {
+                            a.createdAt.compareTo(b.createdAt)
+                        }
                     }
                 }
             }
