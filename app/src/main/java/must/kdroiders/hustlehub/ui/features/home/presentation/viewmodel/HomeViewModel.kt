@@ -92,7 +92,7 @@ class HomeViewModel
                     userPreferences.cachedUser,
                     userPreferences.isProviderBannerDismissed,
                 ) { user, dismissed ->
-                    !dismissed && user.role == UserRole.CUSTOMER
+                    !dismissed && user.role == UserRole.ROLE_CUSTOMER
                 }.collect { show ->
                     _uiState.update { it.copy(showProviderBanner = show) }
                 }

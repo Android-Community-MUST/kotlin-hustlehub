@@ -94,7 +94,7 @@ class LoginViewModel
                     id = firebaseUser.uid,
                     name = firebaseUser.displayName ?: "",
                     email = firebaseUser.email ?: "",
-                    role = UserRole.CUSTOMER,
+                    role = UserRole.ROLE_CUSTOMER,
                     profilePhotoUrl = firebaseUser.photoUrl?.toString() ?: "",
                 )
                 userPreferences.writeUser(userToSave)

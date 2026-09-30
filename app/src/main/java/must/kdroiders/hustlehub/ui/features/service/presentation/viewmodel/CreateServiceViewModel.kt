@@ -437,8 +437,8 @@ class CreateServiceViewModel
                             }
                         } else {
                             val user = userPreferences.cachedUser.firstOrNull()
-                            if (user != null && user.role == UserRole.CUSTOMER) {
-                                userPreferences.writeUser(user.copy(role = UserRole.PROVIDER))
+                            if (user != null && user.role == UserRole.ROLE_CUSTOMER) {
+                                userPreferences.writeUser(user.copy(role = UserRole.ROLE_PROVIDER))
                             }
                             resetForm()
                             _events.emit(CreateServiceEvent.Success)

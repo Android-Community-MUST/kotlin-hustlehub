@@ -126,9 +126,7 @@ class UserPreferences
                     uuid = prefs[USER_UUID] ?: "",
                     name = prefs[USER_NAME] ?: "",
                     email = prefs[USER_EMAIL] ?: "",
-                    role = prefs[USER_ROLE]
-                        ?.let { runCatching { UserRole.valueOf(it) }.getOrDefault(UserRole.CUSTOMER) }
-                        ?: UserRole.CUSTOMER,
+                    role = UserRole.from(prefs[USER_ROLE]),
                     profilePhotoUrl = prefs[USER_AVATAR_URL] ?: "",
                     campusLocation = prefs[USER_CAMPUS_LOCATION] ?: "",
                     phone = prefs[USER_PHONE] ?: "",

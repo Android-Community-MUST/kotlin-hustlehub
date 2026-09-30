@@ -149,7 +149,7 @@ private fun ProfileContent(
 ) {
     val user = state.user ?: return
     val horizontalPadding = LocalDimensions.current.horizontalPadding
-    val isProvider = user.role == UserRole.PROVIDER || user.role == UserRole.BOTH || state.services.isNotEmpty()
+    val isProvider = user.role == UserRole.ROLE_PROVIDER || user.role == UserRole.ROLE_BOTH || state.services.isNotEmpty()
     val isAdmin = AdminAuthUtils
         .isAuthorizedAdmin(user.email, user.role.name)
 
