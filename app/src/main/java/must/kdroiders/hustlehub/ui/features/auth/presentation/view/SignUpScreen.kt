@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -36,7 +37,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.SignUpVi
 
 @Composable
 fun SignUpScreen(
-    onNavigateToLogin: () -> Unit,
+    onNavigateToLogin: (email: String) -> Unit,
     onSignUpSuccess: (email: String) -> Unit,
     onGoogleSignInClick: () -> Unit = {},
     signUpViewModel: SignUpViewModel = hiltViewModel(),
@@ -84,6 +85,7 @@ fun SignUpScreen(
                 value = uiState.name,
                 onValueChange = signUpViewModel::onNameChanged,
                 label = stringResource(R.string.auth_name_label),
+                contentType = ContentType.PersonFullName,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag(TestTags.SIGNUP_NAME),
@@ -102,6 +104,7 @@ fun SignUpScreen(
                 onValueChange = signUpViewModel::onEmailChanged,
                 label = stringResource(R.string.auth_student_email_label),
                 placeholder = stringResource(R.string.auth_student_email_hint),
+                contentType = ContentType.EmailAddress,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag(TestTags.SIGNUP_EMAIL),
@@ -119,6 +122,7 @@ fun SignUpScreen(
                 value = uiState.password,
                 onValueChange = signUpViewModel::onPasswordChanged,
                 label = stringResource(R.string.auth_password_hint),
+                contentType = ContentType.NewPassword,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag(TestTags.SIGNUP_PASSWORD),
@@ -140,6 +144,7 @@ fun SignUpScreen(
                 value = uiState.confirmPassword,
                 onValueChange = signUpViewModel::onConfirmPasswordChanged,
                 label = stringResource(R.string.auth_confirm_password_hint),
+                contentType = ContentType.NewPassword,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag(TestTags.SIGNUP_CONFIRM_PASSWORD),
@@ -220,7 +225,7 @@ fun SignUpScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable { onNavigateToLogin() },
+                    modifier = Modifier.clickable { onNavigateToLogin(uiState.email) },
                 )
             }
         }

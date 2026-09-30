@@ -334,16 +334,16 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 email = key.email,
                                 onVerified = {
                                     backstack.clear()
-                                    backstack.add(Login(email = key.email))
+                                    backstack.add(MainShell)
                                 },
                             )
                         }
 
                         entry<SignUp> {
                             SignUpScreen(
-                                onNavigateToLogin = {
+                                onNavigateToLogin = { email ->
                                     if (backstack.isNotEmpty()) backstack.remove(backstack.last())
-                                    if (backstack.isEmpty()) backstack.add(Login())
+                                    if (backstack.isEmpty()) backstack.add(Login(email = email))
                                 },
                                 onSignUpSuccess = { email ->
                                     backstack.add(EmailVerification(email = email))
