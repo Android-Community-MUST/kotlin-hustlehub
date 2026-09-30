@@ -5,7 +5,8 @@ enum class UserRole {
     ROLE_PROVIDER,
     ROLE_BOTH,
     ROLE_ADMIN,
-    ROLE_SUPER_ADMIN;
+    ROLE_SUPER_ADMIN,
+    ;
 
     companion object {
         fun from(value: String?): UserRole {
