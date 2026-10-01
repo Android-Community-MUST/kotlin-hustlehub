@@ -121,6 +121,18 @@ class SignUpViewModelTest {
     }
 
     @Test
+    fun `signUp triggers validation error on non-alphanumeric email username`() {
+        viewModel.onNameChanged("John Doe")
+        viewModel.onEmailChanged("john+test@students.must.ac.ke")
+        viewModel.onPasswordChanged("Password123")
+        viewModel.onConfirmPasswordChanged("Password123")
+
+        viewModel.signUp {}
+        val state = viewModel.uiState.value
+        assertEquals("Email username must contain only alphanumeric characters", state.emailError)
+    }
+
+    @Test
     fun `signUp triggers validation error on weak password`() {
         viewModel.onNameChanged("John Doe")
         viewModel.onEmailChanged("john@must.ac.ke")
