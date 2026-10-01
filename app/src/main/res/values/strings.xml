@@ -63,6 +63,8 @@
     <string name="settings_help_faq_subtitle">FAQs, Contact Support, Bug Reports &amp; Legal</string>
     <string name="settings_app_version">App Version</string>
     <string name="settings_open_source_licenses">Open Source Licenses</string>
+    <string name="settings_rate_app">Rate HustleHub</string>
+    <string name="settings_rate_app_subtitle">Enjoying HustleHub? Leave a review on Google Play</string>
 
     <string name="settings_choose_theme">Choose Theme</string>
     <string name="settings_theme_system">System Default</string>
@@ -184,17 +186,29 @@
     <string name="offline_banner_online">Back online</string>
     <string name="offline_retry_cd">Retry connection</string>
     <string name="badge_featured_cd">Featured listing badge</string>
-    <string name="badge_featured_text">&#9889; FEATURED</string>
+    <string name="badge_featured_text">FEATURED</string>
     <string name="badge_pro_cd">HustleHub Pro member</string>
     <string name="badge_pro_text">PRO</string>
-    <string name="quick_contact_title">Delivery &amp; Contact Info</string>
-    <string name="quick_contact_subtitle">Enter your phone number and campus location so the service provider can reach you.</string>
-    <string name="quick_contact_phone_label">Phone Number</string>
-    <string name="quick_contact_phone_hint">e.g. 0712345678</string>
-    <string name="quick_contact_location_label">Campus Residence / Location</string>
-    <string name="quick_contact_location_hint">e.g. Hostel B Room 204 or Mess 2</string>
-    <string name="quick_contact_phone_required">Phone number is required</string>
-    <string name="quick_contact_location_required">Campus location is required</string>
+    <!-- Provider Review Reply -->
+    <string name="reply_to_review_title">Reply to Review</string>
+    <string name="reply_to_review_label">Your Response</string>
+    <string name="reply_to_review_placeholder">Thank the customer or address their feedback…</string>
+    <string name="reply_to_review_submit">Post Reply</string>
+
+    <!-- Report Dialog -->
+    <string name="report_submitted_title">Report Submitted</string>
+    <string name="report_submitted_message">Thank you. Our moderators will review this reported %1$s shortly.</string>
+    <string name="report_target_title">Report %1$s</string>
+    <string name="report_why_prompt">Why are you reporting this?</string>
+    <string name="report_reason_spam">Spam</string>
+    <string name="report_reason_inappropriate">Inappropriate</string>
+    <string name="report_reason_fake">Fake</string>
+    <string name="report_reason_harassment">Harassment</string>
+    <string name="report_reason_other">Other</string>
+    <string name="report_specify_required">Please specify (required)</string>
+    <string name="report_context_optional">Additional context (optional)</string>
+    <string name="report_details_placeholder">Provide details…</string>
+    <string name="report_submit_action">Submit Report</string>
 
     <!-- Authentication & Account -->
     <string name="auth_login_title">Login to your account</string>
@@ -248,7 +262,8 @@
 
     <!-- Phase 3: Home, Discovery & AI Search -->
     <string name="home_section_featured">Featured Hustlers</string>
-    <string name="home_section_available_now">Available Now</string>
+    <string name="home_section_available_now">Discover Hustles</string>
+    <string name="home_section_discover_hustles">Discover Hustles</string>
     <string name="home_section_top_hustlers">Top Hustlers</string>
     <string name="home_view_all">View All</string>
     <string name="home_coming_soon">Coming soon</string>
@@ -429,6 +444,14 @@
     <string name="service_portfolio_free_format">Max %1$d photos • %2$d/%1$d</string>
     <string name="service_portfolio_pro_upgrade_attached">You have %1$d photos attached to this service. Upgrade to PRO to add or swap more photos!</string>
     <string name="service_portfolio_free_limit_upgrade">Free limit reached (3/3 photos). Upgrade to PRO to upload up to 15 portfolio photos!</string>
+    <string name="service_category_placeholder">Select category</string>
+    <string name="service_category_sheet_title">Select Category</string>
+    <string name="service_category_sheet_subtitle">Choose the best fit for your hustle</string>
+    <string name="service_category_search_placeholder">Search categories…</string>
+    <string name="service_category_no_results">No categories found</string>
+    <string name="cd_choose_category">Choose category</string>
+    <string name="cd_required">required</string>
+    <string name="service_category_required_error">Please select a category</string>
     <string name="service_title_label">Service Title</string>
     <string name="service_title_placeholder">e.g. Professional Braiding Services</string>
     <string name="service_desc_label">Description</string>
@@ -440,6 +463,7 @@
     <string name="service_tags_hint">Max 5 tags • press Enter or + to add</string>
     <string name="service_tags_placeholder">e.g. braids</string>
     <string name="cd_add_tag">Add tag</string>
+    <string name="cd_remove_tag_format">Remove tag %1$s</string>
     <string name="service_open_to_barter">Open to Barter</string>
     <string name="service_barter_desc">Accept service exchanges instead of cash</string>
     <string name="cd_barter_service">Open to Barter Service</string>
@@ -560,7 +584,7 @@
     <string name="profile_fallback_name">Hustler Provider</string>
     <string name="profile_status_available">Available on Campus</string>
     <string name="profile_status_off_duty">Off Duty</string>
-    <string name="profile_fallback_campus_location">MUST Main Campus</string>
+    <string name="profile_fallback_campus_location">Nchiru</string>
     <string name="profile_stat_hustle_score">HUSTLE\nSCORE</string>
     <string name="profile_stat_services">SERVICES</string>
     <string name="profile_stat_reviews">REVIEWS</string>
@@ -601,10 +625,24 @@
     <string name="review_post_anonymously">Post anonymously</string>
     <string name="review_already_reviewed_btn">Already Reviewed</string>
     <string name="review_submit_btn">Submit Review</string>
+    <string name="review_update_btn">Update Review</string>
+    <string name="review_edit_title">Edit Your Review</string>
+    <string name="review_updated_snackbar">Review updated! Thank you.</string>
+    <string name="review_delete_btn">Delete Review</string>
+    <string name="review_deleted_snackbar">Review deleted.</string>
+    <string name="review_delete_dialog_title">Delete Review?</string>
+    <string name="review_delete_dialog_message">Are you sure you want to delete your review? This action cannot be undone.</string>
+    <string name="review_edited_tag">(edited)</string>
     <string name="cd_success">Success</string>
     <string name="review_success_title">Review Submitted!</string>
     <string name="review_success_subtitle">Thank you for sharing your feedback</string>
     <string name="reviews_count_format">%1$d reviews</string>
+    <string name="service_review_chat_first_btn">Message to Review</string>
+    <string name="review_ineligible_no_interaction_title">Message the Provider First</string>
+    <string name="review_ineligible_no_interaction_desc">To keep HustleHub feedback trustworthy and verified, you need to chat or interact with the provider before writing a review.</string>
+    <string name="review_ineligible_own_service_title">Cannot Review Own Service</string>
+    <string name="review_ineligible_own_service_desc">You are the provider of this service and cannot review it.</string>
+    <string name="action_message_provider">Message Provider</string>
 
     <!-- Settings -->
     <string name="toast_feature_coming_soon">Feature coming soon</string>

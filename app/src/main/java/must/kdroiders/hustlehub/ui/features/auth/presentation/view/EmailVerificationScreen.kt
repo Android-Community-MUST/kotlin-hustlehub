@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
@@ -41,9 +42,14 @@ fun EmailVerificationScreen(
 ) {
     val uiState by emailVerificationViewModel.uiState.collectAsState()
 
-    // Pass the email into the ViewModel as soon as screen loads
     LaunchedEffect(email) {
         emailVerificationViewModel.setEmail(email)
+    }
+
+    // Auto-check on resume — advances if Firebase already verified the email
+    LifecycleResumeEffect(Unit) {
+        emailVerificationViewModel.checkVerificationStatus(onVerified)
+        onPauseOrDispose { }
     }
 
     Column(
@@ -79,7 +85,6 @@ fun EmailVerificationScreen(
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Error message with liveRegion
                 uiState.errorMessage?.let { error ->
                     Text(
                         text = error,
@@ -93,7 +98,6 @@ fun EmailVerificationScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // Verify button
                 HustleButton(
                     text = if (uiState.isLoading) {
                         stringResource(R.string.auth_btn_verifying)
@@ -112,7 +116,6 @@ fun EmailVerificationScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Resend with 60s countdown
                 if (uiState.resendCooldown > 0) {
                     Text(
                         text = stringResource(R.string.auth_resend_cooldown_format, uiState.resendCooldown),

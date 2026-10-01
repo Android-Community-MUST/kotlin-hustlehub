@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.chat.presentation.components
 
 import android.location.Location
+import androidx.annotation.Keep
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -81,6 +82,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.annotations.SerializedName
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
@@ -1074,19 +1076,32 @@ private fun parseVoiceDurationFromMetadata(metadata: String?): String {
 }
 
 // Metadata structures
-private data class VoiceMetadata(val durationSeconds: Int)
-private data class LocationMetadata(val lat: Double, val lng: Double, val label: String?)
-private data class ServiceMetadata(
-    val serviceId: String,
-    val title: String,
-    val priceRange: String,
-    val category: String? = null,
-    val providerName: String? = null,
+@Keep
+private data class VoiceMetadata(
+    @SerializedName("durationSeconds") val durationSeconds: Int,
 )
+
+@Keep
+private data class LocationMetadata(
+    @SerializedName("lat") val lat: Double,
+    @SerializedName("lng") val lng: Double,
+    @SerializedName("label") val label: String?,
+)
+
+@Keep
+private data class ServiceMetadata(
+    @SerializedName("serviceId") val serviceId: String,
+    @SerializedName("title") val title: String,
+    @SerializedName("priceRange") val priceRange: String,
+    @SerializedName("category") val category: String? = null,
+    @SerializedName("providerName") val providerName: String? = null,
+)
+
+@Keep
 private data class ReplyMetadata(
-    val replyToId: String?,
-    val replyToContent: String?,
-    val replyToSenderName: String?,
+    @SerializedName("replyToId") val replyToId: String?,
+    @SerializedName("replyToContent") val replyToContent: String?,
+    @SerializedName("replyToSenderName") val replyToSenderName: String?,
 )
 
 @Composable

@@ -39,7 +39,7 @@ fun ProviderBannerCard(
     modifier: Modifier = Modifier,
 ) {
     HustleCard(
-        variant = HustleCardVariant.Secondary,
+        variant = HustleCardVariant.Elevated,
         modifier = modifier,
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {

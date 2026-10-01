@@ -68,7 +68,7 @@ fun ServiceCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(16f / 9f)
+                .aspectRatio(4f / 3f)
                 .background(MaterialTheme.colorScheme.surfaceVariant),
         ) {
             val imageUrl = service.portfolio.firstOrNull() ?: service.iconUrl
@@ -78,7 +78,7 @@ fun ServiceCard(
                         .Builder(LocalContext.current)
                         .data(imageUrl)
                         // Request exactly card-thumbnail resolution to avoid downloading full-res
-                        .size(Size(360, 200))
+                        .size(Size(360, 270))
                         .scale(Scale.FILL)
                         .crossfade(true)
                         .build(),
@@ -170,20 +170,16 @@ private fun AvailabilityBadge(
     availability: ServiceAvailability,
     modifier: Modifier = Modifier,
 ) {
-    // Derive target color for every availability state — keep composable mounted
-    // so animateColorAsState transitions smoothly instead of unmounting/remounting.
     val targetColor = when (availability) {
         ServiceAvailability.AVAILABLE -> HustleActiveGreen
         ServiceAvailability.BUSY -> MaterialTheme.colorScheme.tertiary
         ServiceAvailability.OFFLINE -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     val label = when (availability) {
         ServiceAvailability.AVAILABLE -> "LIVE"
         ServiceAvailability.BUSY -> "BUSY"
         ServiceAvailability.OFFLINE -> "AWAY"
-        else -> "AWAY"
     }
 
     val animatedColor by animateColorAsState(

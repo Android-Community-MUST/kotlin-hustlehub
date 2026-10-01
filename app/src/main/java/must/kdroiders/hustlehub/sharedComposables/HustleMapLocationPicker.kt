@@ -79,7 +79,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import must.kdroiders.hustlehub.R
 import java.util.Locale
 
-private val NCHIRU_LATLNG = LatLng(-0.0076, 37.6534)
+private val NCHIRU_LATLNG = LatLng(0.12678026093702657, 37.71798703306698)
 private const val MAP_PICKER_ZOOM = 17f
 
 private enum class PickerMapType(val label: String, val mapType: MapType) {

@@ -7,9 +7,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -98,6 +101,8 @@ class ChatDetailViewModel
         private val hustleAnalytics: HustleAnalytics,
         private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
+        internal var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+
         private val _uiState = MutableStateFlow(ChatDetailUiState())
         val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
 
@@ -135,6 +140,7 @@ class ChatDetailViewModel
         private var messagesJob: Job? = null
         private var webSocketJob: Job? = null
         private var presenceJob: Job? = null
+        private var initializeJob: Job? = null
 
         private val networkSyncJob: Job? = null
 
@@ -184,15 +190,16 @@ class ChatDetailViewModel
             messagesJob?.cancel()
             webSocketJob?.cancel()
             presenceJob?.cancel()
+            initializeJob?.cancel()
 
             val currentUid = firebaseAuth?.currentUser?.uid ?: ""
             _uiState.update { it.copy(currentUserId = currentUid, messages = emptyList(), replyingToMessage = null) }
 
-            viewModelScope.launch {
+            initializeJob = viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, error = null) }
 
                 // 1. Resolve conversation ID FIRST (the input could be a conversation ID or a provider/user ID)
-                val cached = withContext(Dispatchers.IO) { conversationDao.getById(conversationId) }
+                val cached = withContext(ioDispatcher) { conversationDao.getById(conversationId) }
                 val resolvedId = if (cached != null) {
                     conversationId
                 } else {
@@ -216,7 +223,7 @@ class ChatDetailViewModel
                 chatRepository.setActiveConversation(resolvedId)
 
                 // 2. Load cached conversation details to show other user's info in header instantly
-                val finalCached = withContext(Dispatchers.IO) { conversationDao.getById(resolvedId) }
+                val finalCached = withContext(ioDispatcher) { conversationDao.getById(resolvedId) }
                 if (finalCached != null) {
                     val sId = finalCached.serviceId
                     var isProvider = false
@@ -262,7 +269,7 @@ class ChatDetailViewModel
                 _uiState.update { it.copy(isEncryptionReady = secretKey != null) }
 
                 // 3. Cancel the notification for this conversation
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     NotificationHelper.cancelConversationNotification(context, resolvedId)
                 }
 
@@ -572,7 +579,7 @@ class ChatDetailViewModel
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true) }
                 try {
-                    val response = withContext(Dispatchers.IO) {
+                    val response = withContext(ioDispatcher) {
                         val requestFile = file.readBytes().toRequestBody("audio/m4a".toMediaTypeOrNull())
                         val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
                         val convIdBody = MultipartBody.Part.createFormData("conversationId", id)
@@ -602,7 +609,7 @@ class ChatDetailViewModel
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true) }
                 try {
-                    val response = withContext(Dispatchers.IO) {
+                    val response = withContext(ioDispatcher) {
                         val requestFile = imageBytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
                         val fileName = "chat_img_${System.currentTimeMillis()}.jpg"
                         val body = MultipartBody.Part.createFormData("file", fileName, requestFile)
@@ -723,10 +730,12 @@ class ChatDetailViewModel
 
         public override fun onCleared() {
             super.onCleared()
+            initializeJob?.cancel()
             messagesJob?.cancel()
             webSocketJob?.cancel()
             presenceJob?.cancel()
             typingClearJob?.cancel()
+            viewModelScope.coroutineContext.cancelChildren()
 
             try {
                 chatRepository.setActiveConversation(null)

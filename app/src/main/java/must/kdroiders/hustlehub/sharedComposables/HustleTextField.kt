@@ -38,11 +38,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -66,14 +70,42 @@ fun HustleTextField(
     leadingIcon: ImageVector? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     isPassword: Boolean = false,
+    contentType: ContentType? = null,
+    capitalization: KeyboardCapitalization? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = true,
     minLines: Int = 1,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    enabled: Boolean = true,
     placeholder: String? = null,
     suffix: @Composable (() -> Unit)? = null,
 ) {
+    val effectiveContentType = contentType ?: when {
+        isPassword -> ContentType.Password
+        keyboardOptions.keyboardType == KeyboardType.Email -> ContentType.EmailAddress
+        keyboardOptions.keyboardType == KeyboardType.Phone -> ContentType.PhoneNumber
+        else -> null
+    }
+
+    val effectiveCapitalization = when {
+        isPassword -> KeyboardCapitalization.None
+        capitalization != null -> capitalization
+        keyboardOptions.capitalization != KeyboardCapitalization.None -> keyboardOptions.capitalization
+        keyboardOptions.keyboardType in listOf(
+            KeyboardType.Email,
+            KeyboardType.Phone,
+            KeyboardType.Number,
+            KeyboardType.NumberPassword,
+            KeyboardType.Decimal,
+            KeyboardType.Password,
+            KeyboardType.Ascii,
+        ) -> KeyboardCapitalization.None
+        singleLine -> KeyboardCapitalization.Words
+        else -> KeyboardCapitalization.Sentences
+    }
+    val effectiveKeyboardOptions = keyboardOptions.copy(capitalization = effectiveCapitalization)
+
     var passwordVisible by remember { mutableStateOf(false) }
 
     val visualTransformation = if (isPassword && !passwordVisible) {
@@ -138,7 +170,16 @@ fun HustleTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (effectiveContentType != null) {
+                        Modifier.semantics { this.contentType = effectiveContentType }
+                    } else {
+                        Modifier
+                    },
+                ),
+            enabled = enabled,
             label = label?.let {
                 {
                     Text(
@@ -174,7 +215,7 @@ fun HustleTextField(
                 }
             },
             trailingIcon = actualTrailingIcon,
-            keyboardOptions = keyboardOptions,
+            keyboardOptions = effectiveKeyboardOptions,
             keyboardActions = keyboardActions,
             singleLine = singleLine,
             minLines = minLines,

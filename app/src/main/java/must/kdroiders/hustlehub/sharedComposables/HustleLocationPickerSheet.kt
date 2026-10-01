@@ -75,12 +75,12 @@ import java.util.Locale
 data class CampusLandmark(val label: String, val lat: Double, val lng: Double)
 
 val MUST_LANDMARKS = listOf(
-    CampusLandmark("Main Gate", -0.0076, 37.6534),
-    CampusLandmark("Library", -0.0072, 37.6540),
-    CampusLandmark("Sci & Tech", -0.0068, 37.6548),
-    CampusLandmark("Hostels Area", -0.0090, 37.6520),
-    CampusLandmark("Student Center", -0.0082, 37.6528),
-    CampusLandmark("Administration", -0.0074, 37.6530),
+    CampusLandmark("Nchiru", 0.12678026093702657, 37.71798703306698),
+    CampusLandmark("Main Gate", 0.1287023, 37.7178652),
+    CampusLandmark("Library", 0.13439365178842066, 37.71093074244712),
+    CampusLandmark("Student Center (STC)", 0.13682288626766367, 37.71061051468327),
+    CampusLandmark("Administration Block", 0.1350753084340695, 37.708471705326545),
+    CampusLandmark("Hostels Area", 0.1368881050837471, 37.71051829497458),
 )
 
 /**

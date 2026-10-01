@@ -18,6 +18,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -27,10 +31,14 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.auth.AuthStateViewModel
 import must.kdroiders.hustlehub.core.notification.InAppBannerManager
 import must.kdroiders.hustlehub.core.notification.InAppNotificationBanner
+import must.kdroiders.hustlehub.core.profile.ProfileCompletenessChecker
 import must.kdroiders.hustlehub.onboarding.OnboardingScreen
+import must.kdroiders.hustlehub.sharedComposables.ProfileGateBottomSheet
+import must.kdroiders.hustlehub.sharedComposables.ProfileGateType
 import must.kdroiders.hustlehub.splash.SplashDestination
 import must.kdroiders.hustlehub.splash.SplashScreen
 import must.kdroiders.hustlehub.ui.features.admin.presentation.view.AdminDashboardScreen
@@ -168,6 +176,82 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
 
     val activeBanner by InAppBannerManager.activeBanner.collectAsState()
 
+    val profileGateViewModel: ProfileGateViewModel = if (activity != null) {
+        hiltViewModel<ProfileGateViewModel>(viewModelStoreOwner = activity)
+    } else {
+        hiltViewModel()
+    }
+    val cachedUser by profileGateViewModel.cachedUser.collectAsState()
+    val navScope = rememberCoroutineScope()
+
+    var showBookingGate by remember { mutableStateOf(false) }
+    var pendingChatArgs by remember { mutableStateOf<ChatDetail?>(null) }
+    var showListingGate by remember { mutableStateOf(false) }
+    var isSavingGate by remember { mutableStateOf(false) }
+    var gateError by remember { mutableStateOf<String?>(null) }
+
+    if (showBookingGate) {
+        ProfileGateBottomSheet(
+            gateType = ProfileGateType.BOOKING,
+            initialCampusLocation = cachedUser.campusLocation,
+            isSaving = isSavingGate,
+            errorMessage = gateError,
+            onDismiss = {
+                showBookingGate = false
+                pendingChatArgs = null
+                gateError = null
+            },
+            onSave = { campusLocation, phone, bio ->
+                isSavingGate = true
+                gateError = null
+                navScope.launch {
+                    profileGateViewModel
+                        .saveLocation(campusLocation, phone, bio)
+                        .onSuccess {
+                            isSavingGate = false
+                            showBookingGate = false
+                            pendingChatArgs?.let { backstack.add(it) }
+                            pendingChatArgs = null
+                        }.onFailure {
+                            isSavingGate = false
+                            gateError = "Could not save location. Please try again."
+                        }
+                }
+            },
+        )
+    }
+
+    if (showListingGate) {
+        ProfileGateBottomSheet(
+            gateType = ProfileGateType.LISTING,
+            initialCampusLocation = cachedUser.campusLocation,
+            initialPhone = cachedUser.phone,
+            initialBio = cachedUser.bio,
+            isSaving = isSavingGate,
+            errorMessage = gateError,
+            onDismiss = {
+                showListingGate = false
+                gateError = null
+            },
+            onSave = { campusLocation, phone, bio ->
+                isSavingGate = true
+                gateError = null
+                navScope.launch {
+                    profileGateViewModel
+                        .saveLocation(campusLocation, phone, bio)
+                        .onSuccess {
+                            isSavingGate = false
+                            showListingGate = false
+                            backstack.add(CreateService())
+                        }.onFailure {
+                            isSavingGate = false
+                            gateError = "Could not save profile. Please try again."
+                        }
+                }
+            },
+        )
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         SharedTransitionLayout {
             CompositionLocalProvider(LocalSharedTransitionScope provides this) {
@@ -191,7 +275,6 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                         SplashDestination.Home -> MainShell
                                         SplashDestination.Login -> Login()
                                         SplashDestination.Onboarding -> Onboarding
-                                        SplashDestination.ProfileSetup -> ProfileSetup
                                         is SplashDestination.AccountSuspended -> AccountSuspendedKey(
                                             reason = destination.reason,
                                             suspendedUntil = destination.suspendedUntil,
@@ -251,16 +334,16 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 email = key.email,
                                 onVerified = {
                                     backstack.clear()
-                                    backstack.add(Login(email = key.email))
+                                    backstack.add(MainShell)
                                 },
                             )
                         }
 
                         entry<SignUp> {
                             SignUpScreen(
-                                onNavigateToLogin = {
+                                onNavigateToLogin = { email ->
                                     if (backstack.isNotEmpty()) backstack.remove(backstack.last())
-                                    if (backstack.isEmpty()) backstack.add(Login())
+                                    if (backstack.isEmpty()) backstack.add(Login(email = email))
                                 },
                                 onSignUpSuccess = { email ->
                                     backstack.add(EmailVerification(email = email))
@@ -306,7 +389,13 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             MainShellScreen(
                                 onNavigateToProfileSetup = { backstack.add(ProfileSetup) },
                                 onNavigateToSettings = { backstack.add(Settings) },
-                                onNavigateToCreateService = { backstack.add(CreateService()) },
+                                onNavigateToCreateService = {
+                                    if (ProfileCompletenessChecker.needsProfileForListing(cachedUser)) {
+                                        showListingGate = true
+                                    } else {
+                                        backstack.add(CreateService())
+                                    }
+                                },
                                 onNavigateToMyServices = { backstack.add(MyServices) },
                                 onNavigateToEditService = { serviceId ->
                                     backstack.add(
@@ -433,16 +522,20 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 serviceId = key.serviceId,
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                                 onNavigateToChat = { providerId, serviceId, title, category, priceRange, providerName ->
-                                    backstack.add(
-                                        ChatDetail(
-                                            chatId = providerId,
-                                            serviceId = serviceId,
-                                            serviceTitle = title,
-                                            serviceCategory = category,
-                                            servicePriceRange = priceRange,
-                                            providerName = providerName,
-                                        ),
+                                    val chatDest = ChatDetail(
+                                        chatId = providerId,
+                                        serviceId = serviceId,
+                                        serviceTitle = title,
+                                        serviceCategory = category,
+                                        servicePriceRange = priceRange,
+                                        providerName = providerName,
                                     )
+                                    if (ProfileCompletenessChecker.needsLocationForBooking(cachedUser)) {
+                                        pendingChatArgs = chatDest
+                                        showBookingGate = true
+                                    } else {
+                                        backstack.add(chatDest)
+                                    }
                                 },
                                 onNavigateToProviderProfile = { providerId ->
                                     backstack.add(
@@ -471,6 +564,18 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             AllReviewsScreen(
                                 serviceId = key.serviceId,
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                                onNavigateToWriteReview = { serviceId, providerId, reviewId, initialRating, initialComment, initialIsAnonymous ->
+                                    backstack.add(
+                                        WriteReview(
+                                            serviceId = serviceId,
+                                            providerId = providerId,
+                                            reviewId = reviewId,
+                                            initialRating = initialRating,
+                                            initialComment = initialComment,
+                                            initialIsAnonymous = initialIsAnonymous,
+                                        ),
+                                    )
+                                },
                             )
                         }
 
@@ -504,8 +609,28 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         entry<WriteReview> { key ->
                             WriteReviewScreen(
                                 serviceId = key.serviceId,
+                                reviewId = key.reviewId,
+                                initialRating = key.initialRating,
+                                initialComment = key.initialComment,
+                                initialIsAnonymous = key.initialIsAnonymous,
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                                 onSubmitSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                                onNavigateToChat = { providerId, serviceId, title, category, priceRange, providerName ->
+                                    val chatDest = ChatDetail(
+                                        chatId = providerId,
+                                        serviceId = serviceId,
+                                        serviceTitle = title,
+                                        serviceCategory = category,
+                                        servicePriceRange = priceRange,
+                                        providerName = providerName,
+                                    )
+                                    if (ProfileCompletenessChecker.needsLocationForBooking(cachedUser)) {
+                                        pendingChatArgs = chatDest
+                                        showBookingGate = true
+                                    } else {
+                                        backstack.add(chatDest)
+                                    }
+                                },
                             )
                         }
 

@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -60,7 +61,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -75,19 +75,14 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.setViewTreeLifecycleOwner
-import androidx.lifecycle.setViewTreeViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -115,7 +110,7 @@ import must.kdroiders.hustlehub.ui.theme.LocalIsDarkTheme
 import timber.log.Timber
 
 private object MapDefaults {
-    val MERU_UNIVERSITY = LatLng(0.1287003, 37.7098333)
+    val MERU_UNIVERSITY = LatLng(0.12678026093702657, 37.71798703306698)
     const val DEFAULT_ZOOM = 16f
     const val MIN_ZOOM = 12f
     const val MAX_ZOOM = 20f
@@ -134,28 +129,6 @@ fun MapScreen(
     val scope = rememberCoroutineScope()
     val uiState by mapViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    val currentView = LocalView.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val savedStateRegistryOwner = LocalSavedStateRegistryOwner.current
-    val viewModelStoreOwner = LocalViewModelStoreOwner.current
-
-    DisposableEffect(currentView, lifecycleOwner, savedStateRegistryOwner, viewModelStoreOwner) {
-        val targets = listOfNotNull(
-            currentView,
-            currentView.rootView,
-            (context as? android.app.Activity)?.window?.decorView,
-            (context as? android.app.Activity)?.findViewById(android.R.id.content),
-        )
-        targets.forEach { target ->
-            target.setViewTreeLifecycleOwner(lifecycleOwner)
-            target.setViewTreeSavedStateRegistryOwner(savedStateRegistryOwner)
-            if (viewModelStoreOwner != null) {
-                target.setViewTreeViewModelStoreOwner(viewModelStoreOwner)
-            }
-        }
-        onDispose { }
-    }
 
     val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
     val isConnected by connectivityViewModel.isConnected.collectAsStateWithLifecycle()
@@ -380,6 +353,10 @@ fun MapScreen(
                                 color = MaterialTheme.colorScheme.onSurface,
                             ),
                             singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Words,
+                                imeAction = ImeAction.Search,
+                            ),
                             modifier = Modifier.weight(1f),
                             decorationBox = { innerTextField ->
                                 Box(contentAlignment = Alignment.CenterStart) {
@@ -458,20 +435,9 @@ fun MapScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Category Filter Chips
-                val categories = remember {
-                    listOf(
-                        ServiceCategory.ALL to "All",
-                        ServiceCategory.TECH to "Tech",
-                        ServiceCategory.SALON to "Salon",
-                        ServiceCategory.LAUNDRY to "Laundry",
-                        ServiceCategory.TUTORING to "Tutoring",
-                        ServiceCategory.FOOD to "Food",
-                        ServiceCategory.FASHION to "Fashion",
-                        ServiceCategory.PHOTOGRAPHY to "Photo",
-                    )
-                }
+                val categories = remember { ServiceCategory.entries }
 
-                categories.forEach { (category, label) ->
+                categories.forEach { category ->
                     val isSelected = if (category == ServiceCategory.ALL) {
                         uiState.selectedCategory == null
                     } else {
@@ -484,7 +450,7 @@ fun MapScreen(
                             val targetCategory = if (isSelected || category == ServiceCategory.ALL) null else category
                             mapViewModel.selectCategory(targetCategory)
                         },
-                        label = { Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                        label = { Text(category.label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
                         leadingIcon = {
                             if (category != ServiceCategory.ALL) {
                                 val (icon, _) = getCategoryIconAndColor(category)

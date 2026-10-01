@@ -61,31 +61,8 @@ class HomeViewModel
 
         companion object {
             private val featuredComparator = Comparator<Service> { a, b ->
-                val tierA = when {
-                    a.isFeatured -> 3
-                    a.averageRating > 0f -> 2
-                    else -> 1
-                }
-                val tierB = when {
-                    b.isFeatured -> 3
-                    b.averageRating > 0f -> 2
-                    else -> 1
-                }
-                if (tierA != tierB) {
-                    tierA.compareTo(tierB)
-                } else when (tierA) {
-                    3 -> {
-                        val c = a.createdAt.compareTo(b.createdAt)
-                        if (c != 0) c else a.averageRating.compareTo(b.averageRating)
-                    }
-                    2 -> {
-                        val r = a.averageRating.compareTo(b.averageRating)
-                        if (r != 0) r else a.createdAt.compareTo(b.createdAt)
-                    }
-                    else -> {
-                        a.createdAt.compareTo(b.createdAt)
-                    }
-                }
+                val c = a.createdAt.compareTo(b.createdAt)
+                if (c != 0) c else a.averageRating.compareTo(b.averageRating)
             }
         }
 
@@ -115,7 +92,7 @@ class HomeViewModel
                     userPreferences.cachedUser,
                     userPreferences.isProviderBannerDismissed,
                 ) { user, dismissed ->
-                    !dismissed && user.role == UserRole.CUSTOMER
+                    !dismissed && user.role == UserRole.ROLE_CUSTOMER
                 }.collect { show ->
                     _uiState.update { it.copy(showProviderBanner = show) }
                 }
@@ -244,14 +221,15 @@ class HomeViewModel
             searchJob?.cancel()
         }
 
-        // O(n log k) min-heap selection — faster than 3x O(n log n) sort passes
+        // O(n log k) min-heap selection of active paid featured services
         private fun selectTopFeatured(
             merged: List<Service>,
             k: Int = MAX_FEATURED_COUNT,
         ): List<Service> {
-            if (merged.size <= k) return merged.sortedWith(featuredComparator.reversed())
+            val paidFeatured = merged.filter { it.isFeatured }
+            if (paidFeatured.size <= k) return paidFeatured.sortedWith(featuredComparator.reversed())
             val heap = PriorityQueue<Service>(k, featuredComparator)
-            for (service in merged) {
+            for (service in paidFeatured) {
                 if (heap.size < k) {
                     heap.add(service)
                 } else if (featuredComparator.compare(service, heap.peek()!!) > 0) {

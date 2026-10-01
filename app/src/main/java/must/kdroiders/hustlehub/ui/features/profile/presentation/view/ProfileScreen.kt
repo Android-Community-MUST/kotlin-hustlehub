@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
@@ -54,31 +56,6 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
-
-@Composable
-fun MyProfileScreen(
-    profileViewModel: ProfileViewModel = hiltViewModel(),
-    onEditClick: () -> Unit = {},
-    onAddNewServiceClick: () -> Unit = {},
-    onServiceClick: (serviceId: String) -> Unit = {},
-    onNavigateToMyServices: () -> Unit = {},
-    onSettingsClick: () -> Unit = {},
-    onNavigateToSubscription: () -> Unit = {},
-    onNavigateToAnalytics: (tab: String) -> Unit = {},
-    onNavigateToAdminDashboard: () -> Unit = {},
-) {
-    ProfileScreen(
-        profileViewModel = profileViewModel,
-        onEditClick = onEditClick,
-        onAddNewServiceClick = onAddNewServiceClick,
-        onServiceClick = onServiceClick,
-        onNavigateToMyServices = onNavigateToMyServices,
-        onSettingsClick = onSettingsClick,
-        onNavigateToSubscription = onNavigateToSubscription,
-        onNavigateToAnalytics = onNavigateToAnalytics,
-        onNavigateToAdminDashboard = onNavigateToAdminDashboard,
-    )
-}
 
 @Composable
 fun ProfileScreen(
@@ -121,8 +98,9 @@ fun ProfileScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(modifier = Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding())) {
             when {
                 state.isLoading && !state.isRefreshing -> LoadingState()
                 state.error != null -> ErrorState(
@@ -171,8 +149,8 @@ private fun ProfileContent(
 ) {
     val user = state.user ?: return
     val horizontalPadding = LocalDimensions.current.horizontalPadding
-    val isProvider = user.role == UserRole.PROVIDER || user.role == UserRole.BOTH || state.services.isNotEmpty()
-    val isAdmin = must.kdroiders.hustlehub.core.auth.AdminAuthUtils
+    val isProvider = user.role == UserRole.ROLE_PROVIDER || user.role == UserRole.ROLE_BOTH || state.services.isNotEmpty()
+    val isAdmin = AdminAuthUtils
         .isAuthorizedAdmin(user.email, user.role.name)
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
@@ -181,7 +159,7 @@ private fun ProfileContent(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             top = 8.dp,
-            bottom = 40.dp,
+            bottom = 16.dp,
         ),
     ) {
         item(key = "hero_profile") {

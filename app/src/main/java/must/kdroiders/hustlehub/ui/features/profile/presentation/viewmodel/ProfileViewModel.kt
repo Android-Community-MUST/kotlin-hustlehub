@@ -3,6 +3,8 @@ package must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -64,9 +66,15 @@ class ProfileViewModel
                             }
                         }
 
+                        val isOnline = if (services.isNotEmpty()) {
+                            services.any { it.availability != ServiceAvailability.OFFLINE }
+                        } else {
+                            user?.isOnline ?: true
+                        }
+
                         _uiState.update {
                             it.copy(
-                                user = user,
+                                user = user?.copy(isOnline = isOnline),
                                 services = services,
                                 hustleScore = calculatedScore,
                                 reviewCount = calculatedReviewCount,
@@ -92,52 +100,69 @@ class ProfileViewModel
                 ServiceAvailability.AVAILABLE
             }
 
-            // Optimistically update UI
+            val updatedServices = _uiState.value.services.map { svc ->
+                if (svc.id == serviceId) svc.copy(availability = newAvailability) else svc
+            }
+            val anyActive = updatedServices.any { it.availability != ServiceAvailability.OFFLINE }
+
             _uiState.update { state ->
                 state.copy(
-                    services = state.services.map { svc ->
-                        if (svc.id == serviceId) svc.copy(availability = newAvailability) else svc
-                    },
+                    user = state.user?.copy(isOnline = anyActive),
+                    services = updatedServices,
                 )
             }
 
-            // Update on backend
             viewModelScope.launch {
-                updateAvailabilityUseCase(serviceId, newAvailability).onFailure { e ->
-                    Timber.e(e, "Failed to update service availability")
-                    // Revert on failure
-                    _uiState.update { state ->
-                        state.copy(
-                            services = state.services.map { svc ->
+                updateAvailabilityUseCase(serviceId, newAvailability)
+                    .onSuccess {
+                        userRepository.updateOnlineStatus(anyActive)
+                    }.onFailure { e ->
+                        Timber.e(e, "Failed to update service availability")
+                        _uiState.update { state ->
+                            val revertedServices = state.services.map { svc ->
                                 if (svc.id == serviceId) svc.copy(availability = currentService.availability) else svc
-                            },
-                            error = "Failed to update service availability",
-                        )
+                            }
+                            val revertedAnyActive = revertedServices.any { it.availability != ServiceAvailability.OFFLINE }
+                            state.copy(
+                                user = state.user?.copy(isOnline = revertedAnyActive),
+                                services = revertedServices,
+                                error = "Failed to update service availability",
+                            )
+                        }
                     }
-                }
             }
         }
 
         fun toggleOverallAvailability(isOnline: Boolean) {
             val currentUser = _uiState.value.user ?: return
+            val previousUser = currentUser
+            val previousServices = _uiState.value.services
+            val targetAvailability = if (isOnline) ServiceAvailability.AVAILABLE else ServiceAvailability.OFFLINE
 
-            // Optimistically update UI
             _uiState.update { state ->
                 state.copy(
                     user = currentUser.copy(isOnline = isOnline),
                     services = state.services.map { svc ->
-                        svc.copy(
-                            availability = if (isOnline) ServiceAvailability.AVAILABLE else ServiceAvailability.OFFLINE,
-                        )
+                        svc.copy(availability = targetAvailability)
                     },
                 )
             }
 
-            // Update each service availability status on backend
             viewModelScope.launch {
-                val targetAvailability = if (isOnline) ServiceAvailability.AVAILABLE else ServiceAvailability.OFFLINE
-                _uiState.value.services.forEach { service ->
-                    updateAvailabilityUseCase(service.id, targetAvailability)
+                userRepository.updateOnlineStatus(isOnline)
+
+                val serviceUpdates = previousServices.map { service ->
+                    async { updateAvailabilityUseCase(service.id, targetAvailability) }
+                }
+                val results = serviceUpdates.awaitAll()
+                if (results.all { it.isFailure } && previousServices.isNotEmpty()) {
+                    _uiState.update { state ->
+                        state.copy(
+                            user = previousUser,
+                            services = previousServices,
+                            error = "Failed to update availability",
+                        )
+                    }
                 }
             }
         }

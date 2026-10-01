@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.settings.presentation.view
 
+import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,12 +29,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SnackbarDuration
@@ -62,11 +59,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.core.review.findActivity
 import must.kdroiders.hustlehub.datastore.AppTheme
 import must.kdroiders.hustlehub.sharedComposables.HustleBackButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
+import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.LogOutButton
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.ProfileIdentityCard
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsDivider
@@ -122,6 +121,11 @@ fun SettingsScreen(
                 is SettingsEvent.NavigateToReport,
                 -> onNavigateToHelp()
                 is SettingsEvent.NavigateToLicenses -> showLicensesDialog = true
+                is SettingsEvent.TriggerRateApp -> {
+                    (context as? Activity ?: context.findActivity())?.let { activity ->
+                        settingsViewModel.launchReviewFlow(activity)
+                    }
+                }
                 else -> {
                     Toast.makeText(context, featureComingSoonToast, Toast.LENGTH_SHORT).show()
                 }
@@ -199,8 +203,6 @@ fun SettingsScreen(
         }
 
         must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.PASSWORD_INPUT -> {
-            var passwordVisible by remember { mutableStateOf(false) }
-
             AlertDialog(
                 onDismissRequest = settingsViewModel::onDeleteAccountDismissed,
                 title = { Text(stringResource(R.string.settings_delete_confirm_password_title)) },
@@ -212,44 +214,16 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(12.dp))
-                        androidx.compose.material3.OutlinedTextField(
+                        HustleTextField(
                             value = state.deletePasswordInput,
                             onValueChange = settingsViewModel::onDeletePasswordChanged,
-                            label = { Text(stringResource(R.string.label_password)) },
+                            label = stringResource(R.string.label_password),
                             singleLine = true,
+                            isPassword = true,
                             isError = state.deletePasswordError != null,
-                            visualTransformation = if (passwordVisible) {
-                                androidx.compose.ui.text.input.VisualTransformation.None
-                            } else {
-                                androidx.compose.ui.text.input
-                                    .PasswordVisualTransformation()
-                            },
-                            trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(
-                                        imageVector = if (passwordVisible) {
-                                            Icons.Default.Visibility
-                                        } else {
-                                            Icons.Default.VisibilityOff
-                                        },
-                                        contentDescription = if (passwordVisible) {
-                                            stringResource(R.string.cd_hide_password)
-                                        } else {
-                                            stringResource(R.string.cd_show_password)
-                                        },
-                                    )
-                                }
-                            },
+                            errorText = state.deletePasswordError,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        if (state.deletePasswordError != null) {
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = state.deletePasswordError ?: "",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
                     }
                 },
                 confirmButton = {
@@ -338,7 +312,7 @@ fun SettingsScreen(
                             Text(
                                 text = license,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.outline,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -387,7 +361,7 @@ fun SettingsScreen(
                     Text(
                         text = stringResource(R.string.settings_about_copyright),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             },
@@ -557,6 +531,13 @@ fun SettingsScreen(
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
+                    icon = Icons.Default.Star,
+                    label = stringResource(R.string.settings_rate_app),
+                    subtitle = stringResource(R.string.settings_rate_app_subtitle),
+                    onClick = settingsViewModel::onRateAppClicked,
+                )
+                SettingsDivider()
+                SettingsRowNavigate(
                     icon = Icons.Default.Code,
                     label = stringResource(R.string.settings_open_source_licenses),
                     onClick = settingsViewModel::onLicensesClicked,
@@ -593,7 +574,7 @@ fun SettingsScreen(
                 Text(
                     text = stringResource(R.string.settings_version_footer_format, state.appVersion),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 11.sp,
                 )
             }

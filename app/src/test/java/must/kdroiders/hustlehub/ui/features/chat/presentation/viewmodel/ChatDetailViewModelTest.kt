@@ -63,6 +63,7 @@ class ChatDetailViewModelTest {
         chatRepository = mockk(relaxed = true)
         coEvery { chatRepository.loadMessageHistory(any(), any()) } returns Result.success(true)
         coEvery { chatRepository.getOrCreateConversation(any(), any()) } returns Result.failure(RuntimeException("Not stubbed"))
+        coEvery { chatRepository.resendUnsyncedMessages() } returns Result.success(Unit)
         chatWebSocketService = mockk(relaxed = true)
         mediaApiService = mockk(relaxed = true)
         conversationDao = mockk(relaxed = true)
@@ -96,7 +97,9 @@ class ChatDetailViewModelTest {
             connectivityObserver = connectivityObserver,
             hustleAnalytics = hustleAnalytics,
             hustleCrashlytics = hustleCrashlytics,
-        )
+        ).apply {
+            ioDispatcher = testDispatcher
+        }
     }
 
     @After
@@ -106,18 +109,21 @@ class ChatDetailViewModelTest {
     }
 
     @Test
-    fun `initial uiState has default values`() {
-        val state = viewModel.uiState.value
-        assertTrue(state.messages.isEmpty())
-        assertFalse(state.isTyping)
-        assertFalse(state.isLoading)
-    }
+    fun `initial uiState has default values`() =
+        runTest {
+            val state = viewModel.uiState.value
+            assertTrue(state.messages.isEmpty())
+            assertFalse(state.isTyping)
+            assertFalse(state.isLoading)
+        }
 
     @Test
     fun `sendTypingIndicator sends websocket event`() =
         runTest {
             viewModel.initialize(conversationId = "conv-1")
+            testScheduler.advanceUntilIdle()
             viewModel.sendTypingIndicator(true)
+            testScheduler.advanceUntilIdle()
 
             coVerify { chatWebSocketService.sendTypingIndicator(any()) }
         }
@@ -130,11 +136,13 @@ class ChatDetailViewModelTest {
             viewModel.initialize(
                 conversationId = "conv-1",
             )
+            testScheduler.advanceUntilIdle()
 
             var callbackCalled = false
             viewModel.blockUser {
                 callbackCalled = true
             }
+            testScheduler.advanceUntilIdle()
 
             coVerify { userRepository.blockUser("conv-1") }
             assertTrue(callbackCalled)
@@ -146,6 +154,7 @@ class ChatDetailViewModelTest {
             coEvery { chatRepository.loadMessageHistory("conv-1", 1) } returns Result.success(true)
 
             viewModel.initialize(conversationId = "conv-1")
+            testScheduler.advanceUntilIdle()
             viewModel.loadOlderMessages()
             testScheduler.advanceUntilIdle()
 

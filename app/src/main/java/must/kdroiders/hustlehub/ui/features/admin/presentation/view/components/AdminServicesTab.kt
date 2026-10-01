@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
@@ -76,6 +77,7 @@ fun AdminServicesTab(
                     onValueChange = { serviceIdInput = it },
                     label = stringResource(R.string.admin_services_id_label),
                     placeholder = stringResource(R.string.admin_services_id_placeholder),
+                    capitalization = KeyboardCapitalization.None,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                 )

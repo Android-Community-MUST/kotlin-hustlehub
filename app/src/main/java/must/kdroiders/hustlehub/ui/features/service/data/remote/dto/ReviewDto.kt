@@ -3,11 +3,6 @@ package must.kdroiders.hustlehub.ui.features.service.data.remote.dto
 import androidx.annotation.Keep
 import com.google.gson.annotations.SerializedName
 
-/**
- * Wire-format DTO for a single review returned by the backend.
- *
- * Maps to GET /api/v1/services/{serviceId}/reviews (paginated).
- */
 @Keep
 data class ReviewResponse(
     @SerializedName("id")
@@ -30,15 +25,42 @@ data class ReviewResponse(
     val isAnonymous: Boolean = false,
     @SerializedName("isVerified")
     val isVerified: Boolean = false,
+    @SerializedName("providerReply")
+    val providerReply: String? = null,
+    @SerializedName("providerRepliedAt")
+    val providerRepliedAt: String? = null,
+    @SerializedName("updatedAt")
+    val updatedAt: String? = null,
     @SerializedName("createdAt")
     val createdAt: String,
 )
 
-/**
- * Request body for POST /api/v1/services/{serviceId}/reviews.
- *
- * @param isAnonymous When true the backend omits customer identity from public responses.
- */
+@Keep
+data class RatingDistributionResponse(
+    @SerializedName("serviceId")
+    val serviceId: String,
+    @SerializedName("averageRating")
+    val averageRating: Double,
+    @SerializedName("totalReviews")
+    val totalReviews: Int,
+    @SerializedName("count1Stars")
+    val count1Stars: Int,
+    @SerializedName("count2Stars")
+    val count2Stars: Int,
+    @SerializedName("count3Stars")
+    val count3Stars: Int,
+    @SerializedName("count4Stars")
+    val count4Stars: Int,
+    @SerializedName("count5Stars")
+    val count5Stars: Int,
+)
+
+@Keep
+data class ProviderReplyRequest(
+    @SerializedName("reply")
+    val reply: String,
+)
+
 @Keep
 data class CreateReviewRequest(
     @SerializedName("rating")
@@ -47,4 +69,24 @@ data class CreateReviewRequest(
     val comment: String? = null,
     @SerializedName("isAnonymous")
     val isAnonymous: Boolean = false,
+)
+
+@Keep
+data class UpdateReviewRequest(
+    @SerializedName("rating")
+    val rating: Int,
+    @SerializedName("comment")
+    val comment: String? = null,
+    @SerializedName("isAnonymous")
+    val isAnonymous: Boolean = false,
+)
+
+@Keep
+data class ReviewEligibilityResponse(
+    @SerializedName("canReview")
+    val canReview: Boolean,
+    @SerializedName("reason")
+    val reason: String,
+    @SerializedName("isVerified")
+    val isVerified: Boolean = false,
 )

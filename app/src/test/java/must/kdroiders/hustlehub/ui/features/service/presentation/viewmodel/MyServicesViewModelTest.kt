@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
@@ -32,6 +33,7 @@ class MyServicesViewModelTest {
     private val updateAvailability: UpdateAvailabilityUseCase = mockk(relaxed = true)
     private val storageRepository: StorageRepository = mockk(relaxed = true)
     private val serviceRepository: ServiceRepository = mockk(relaxed = true)
+    private val userRepository: UserRepository = mockk(relaxed = true)
     private val context: Context = mockk(relaxed = true)
 
     private lateinit var viewModel: MyServicesViewModel
@@ -52,6 +54,7 @@ class MyServicesViewModelTest {
             updateAvailability = updateAvailability,
             storageRepository = storageRepository,
             serviceRepository = serviceRepository,
+            userRepository = userRepository,
             context = context,
         )
     }

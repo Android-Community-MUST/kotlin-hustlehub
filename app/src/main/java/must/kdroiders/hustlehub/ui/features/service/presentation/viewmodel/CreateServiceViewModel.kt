@@ -57,9 +57,9 @@ data class CreateServiceUiState(
     val openToBarter: Boolean = false,
     // Operating Location
     val locationMode: LocationSelectionMode = LocationSelectionMode.CAMPUS_PRESET,
-    val selectedLat: Double? = -0.0076,
-    val selectedLng: Double? = 37.6534,
-    val locationLabel: String = "MUST Main Campus (Nchiru)",
+    val selectedLat: Double? = 0.12678026093702657,
+    val selectedLng: Double? = 37.71798703306698,
+    val locationLabel: String = "Nchiru",
     // Portfolio
     val portfolioUris: List<Uri> = emptyList(), // newly picked local images
     val existingPortfolioUrls: List<String> = emptyList(), // loaded from server on edit
@@ -290,9 +290,9 @@ class CreateServiceViewModel
                 when (mode) {
                     LocationSelectionMode.CAMPUS_PRESET -> state.copy(
                         locationMode = mode,
-                        selectedLat = -0.0076,
-                        selectedLng = 37.6534,
-                        locationLabel = "MUST Main Campus (Nchiru)",
+                        selectedLat = 0.12678026093702657,
+                        selectedLng = 37.71798703306698,
+                        locationLabel = "Nchiru",
                     )
                     LocationSelectionMode.CURRENT_GPS -> state.copy(
                         locationMode = mode,
@@ -437,8 +437,8 @@ class CreateServiceViewModel
                             }
                         } else {
                             val user = userPreferences.cachedUser.firstOrNull()
-                            if (user != null && user.role == UserRole.CUSTOMER) {
-                                userPreferences.writeUser(user.copy(role = UserRole.PROVIDER))
+                            if (user != null && user.role == UserRole.ROLE_CUSTOMER) {
+                                userPreferences.writeUser(user.copy(role = UserRole.ROLE_PROVIDER))
                             }
                             resetForm()
                             _events.emit(CreateServiceEvent.Success)

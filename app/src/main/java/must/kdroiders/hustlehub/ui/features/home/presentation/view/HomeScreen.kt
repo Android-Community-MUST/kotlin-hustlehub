@@ -1,10 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.home.presentation.view
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,16 +15,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -48,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -67,13 +60,13 @@ import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.CategoryChipRow
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.EmptyServicesView
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.FeaturedServicesRow
+import must.kdroiders.hustlehub.ui.features.home.presentation.components.FeaturedServicesRowShimmer
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.HomeSearchBar
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.HomeTopBar
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ProviderBannerCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCardShimmer
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.HomeViewModel
-import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
 /** Number of shimmer placeholders shown while the initial page loads. */
@@ -189,12 +182,8 @@ fun HomeScreen(
                         )
                     }
 
-                    item(key = "provider_banner", span = { GridItemSpan(maxLineSpan) }) {
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = state.showProviderBanner,
-                            enter = expandVertically() + fadeIn(),
-                            exit = shrinkVertically() + fadeOut(),
-                        ) {
+                    if (state.showProviderBanner) {
+                        item(key = "provider_banner", span = { GridItemSpan(maxLineSpan) }) {
                             ProviderBannerCard(
                                 onListServiceClick = onNavigateToCreateService,
                                 onDismiss = homeViewModel::dismissProviderBanner,
@@ -217,7 +206,6 @@ fun HomeScreen(
                     }
 
                     item(key = "categories", span = { GridItemSpan(maxLineSpan) }) {
-                        Spacer(Modifier.height(4.dp))
                         CategoryChipRow(
                             selected = state.selectedCategory,
                             onSelected = homeViewModel::onCategorySelected,
@@ -225,76 +213,80 @@ fun HomeScreen(
                         )
                     }
 
-                    // Featured section — top 5 rated services, conditionally shown.
-
                     if (state.featuredServices.isNotEmpty()) {
-                        item(key = "featured_header", span = { GridItemSpan(maxLineSpan) }) {
+                        item(key = "featured_section", span = { GridItemSpan(maxLineSpan) }) {
                             val comingSoon = stringResource(R.string.home_coming_soon)
-                            Spacer(Modifier.height(4.dp))
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.home_section_featured),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                )
-                                TextButton(
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            snackbarHostState.showSnackbar(comingSoon)
-                                        }
-                                    },
-                                    contentPadding = PaddingValues(0.dp),
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
-                                        text = stringResource(R.string.home_view_all),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontSize = 12.sp,
+                                        text = stringResource(R.string.home_section_featured),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                    )
+                                    TextButton(
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar(comingSoon)
+                                            }
+                                        },
+                                        modifier = Modifier.height(32.dp),
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.home_view_all),
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 12.sp,
+                                            ),
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                FeaturedServicesRow(
+                                    services = state.featuredServices,
+                                    onServiceClick = onNavigateToServiceDetail,
+                                )
+                            }
+                        }
+                    } else if (state.isLoadingServices) {
+                        item(key = "featured_shimmer", span = { GridItemSpan(maxLineSpan) }) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.home_section_featured),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground,
                                     )
                                 }
+                                Spacer(Modifier.height(8.dp))
+                                FeaturedServicesRowShimmer()
                             }
-                            Spacer(Modifier.height(2.dp))
-                        }
-
-                        item(key = "featured_row", span = { GridItemSpan(maxLineSpan) }) {
-                            FeaturedServicesRow(
-                                services = state.featuredServices,
-                                onServiceClick = onNavigateToServiceDetail,
-                                modifier = Modifier,
-                            )
-                            Spacer(Modifier.height(4.dp))
                         }
                     }
 
-                    // Section label for the paginated service grid below.
-
                     item(key = "browse_header", span = { GridItemSpan(maxLineSpan) }) {
-                        Spacer(Modifier.height(8.dp))
-                        Row(
+                        Text(
+                            text = stringResource(R.string.home_section_discover_hustles),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.padding(start = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(HustleActiveGreen),
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                text = stringResource(R.string.home_section_available_now),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground,
-                            )
-                        }
+                        )
                         Spacer(Modifier.height(12.dp))
                     }
 
