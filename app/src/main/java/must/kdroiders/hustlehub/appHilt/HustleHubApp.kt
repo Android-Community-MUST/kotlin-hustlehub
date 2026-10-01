@@ -32,6 +32,9 @@ class HustleHubApp : Application(), ImageLoaderFactory, Configuration.Provider {
     @Inject
     lateinit var hustleCrashlytics: HustleCrashlytics
 
+    @Inject
+    lateinit var conversationDaoProvider: Provider<must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao>
+
     override fun onCreate() {
         super.onCreate()
 
@@ -60,6 +63,17 @@ class HustleHubApp : Application(), ImageLoaderFactory, Configuration.Provider {
                 }
             } catch (e: Exception) {
                 Timber.e(e, "MapsInitializer pre-init failed")
+            }
+        }
+
+        // Synchronize launcher app icon badge count with local database on startup
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val count = conversationDaoProvider.get().getTotalUnreadCountSync()
+                must.kdroiders.hustlehub.core.notification.AppBadgeHelper
+                    .applyBadgeCount(applicationContext, count)
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to restore app launcher badge count on cold start")
             }
         }
     }

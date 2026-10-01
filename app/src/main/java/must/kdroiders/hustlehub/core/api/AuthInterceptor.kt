@@ -12,14 +12,6 @@ class AuthInterceptor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
-        val path = originalRequest.url.encodedPath
-
-        // Skip auth token only for exactly /auth/register — strict match to avoid
-        // accidentally exempting future /auth/register-* paths
-        val isRegisterEndpoint = path.trimEnd('/').endsWith("/auth/register")
-        if (isRegisterEndpoint) {
-            return chain.proceed(originalRequest)
-        }
 
         val currentUser = firebaseAuth?.currentUser
         if (currentUser == null) {

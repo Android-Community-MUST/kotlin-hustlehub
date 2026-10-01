@@ -97,10 +97,6 @@ class NotificationViewModel
 
         fun markAllAsRead() {
             val currentList = _uiState.value.notifications
-            val hasUnread = currentList.any { !it.isRead }
-            if (!hasUnread) return
-
-            // Optimistic update
             val updatedList = currentList.map { it.copy(isRead = true) }
             _uiState.update { current ->
                 current.copy(
@@ -109,7 +105,7 @@ class NotificationViewModel
                 )
             }
 
-            // Fire network call in background
+            // Fire network & Room call in background
             viewModelScope.launch {
                 repository
                     .markAllRead()
@@ -141,6 +137,7 @@ class NotificationViewModel
                 repository
                     .deleteNotification(notificationId)
                     .onFailure {
+                        // Revert on failure
                         _uiState.update { current ->
                             current.copy(
                                 notifications = currentList,
@@ -148,6 +145,24 @@ class NotificationViewModel
                             )
                         }
                     }
+            }
+        }
+
+        fun restoreNotification(notification: Notification) {
+            val currentList = _uiState.value.notifications.toMutableList()
+            if (currentList.none { it.id == notification.id }) {
+                currentList.add(notification)
+                currentList.sortByDescending { it.sentAt }
+            }
+            _uiState.update { current ->
+                current.copy(
+                    notifications = currentList,
+                    unreadCount = currentList.count { !it.isRead },
+                )
+            }
+
+            viewModelScope.launch {
+                repository.restoreNotification(notification)
             }
         }
 

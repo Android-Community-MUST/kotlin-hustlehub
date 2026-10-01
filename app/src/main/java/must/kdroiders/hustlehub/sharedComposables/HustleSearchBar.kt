@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 
 /**
@@ -95,7 +96,10 @@ fun HustleSearchBar(
                         color = MaterialTheme.colorScheme.onSurface,
                     ),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Search,
+                    ),
                     keyboardActions = KeyboardActions(onSearch = { onSearchClick?.invoke() }),
                     modifier = Modifier.weight(1f),
                     decorationBox = { innerTextField ->

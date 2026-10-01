@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -9,25 +10,36 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.api.userFriendlyMessage
+import must.kdroiders.hustlehub.core.review.AppReviewManager
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicateReviewUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.DeleteReviewUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyReviewUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetReviewEligibilityUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.SubmitReviewUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.UpdateReviewUseCase
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
+@Suppress("LongParameterList")
 class WriteReviewViewModel
     @Inject
     constructor(
         private val submitReviewUseCase: SubmitReviewUseCase,
+        private val updateReviewUseCase: UpdateReviewUseCase,
+        private val deleteReviewUseCase: DeleteReviewUseCase,
+        private val getMyReviewUseCase: GetMyReviewUseCase,
         private val getServiceByIdUseCase: GetServiceByIdUseCase,
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
         private val checkDuplicateReviewUseCase: CheckDuplicateReviewUseCase,
+        private val getReviewEligibilityUseCase: GetReviewEligibilityUseCase,
         private val hustleAnalytics: HustleAnalytics,
         private val hustleCrashlytics: HustleCrashlytics,
+        private val appReviewManager: AppReviewManager,
     ) : ViewModel() {
         private var serviceId: String? = null
 
@@ -38,9 +50,29 @@ class WriteReviewViewModel
         private val _uiState = MutableStateFlow(WriteReviewUiState())
         val uiState: StateFlow<WriteReviewUiState> = _uiState.asStateFlow()
 
-        fun initialize(id: String) {
-            if (serviceId == id) return
+        fun initialize(
+            id: String,
+            reviewId: String? = null,
+            initialRating: Int? = null,
+            initialComment: String? = null,
+            initialIsAnonymous: Boolean? = null,
+        ) {
+            val isSameService = serviceId == id
             serviceId = id
+
+            if (reviewId != null || initialRating != null || initialComment != null || initialIsAnonymous != null) {
+                _uiState.update {
+                    it.copy(
+                        isEditMode = reviewId != null,
+                        existingReviewId = reviewId ?: it.existingReviewId,
+                        rating = initialRating ?: it.rating,
+                        comment = initialComment ?: it.comment,
+                        isAnonymous = initialIsAnonymous ?: it.isAnonymous,
+                    )
+                }
+            }
+
+            if (isSameService && _uiState.value.service != null) return
             fetchDetails()
         }
 
@@ -52,23 +84,49 @@ class WriteReviewViewModel
                     .onSuccess { service ->
                         getProviderProfileUseCase(service.providerId)
                             .onSuccess { provider ->
-                                val alreadyReviewed = checkDuplicateReviewUseCase(id).getOrDefault(false)
+                                val eligibility = getReviewEligibilityUseCase(id).getOrNull()
+                                val alreadyReviewed = (eligibility?.isAlreadyReviewed == true) ||
+                                    checkDuplicateReviewUseCase(id).getOrDefault(false)
+                                val myReview = if (_uiState.value.existingReviewId == null) {
+                                    getMyReviewUseCase(id).getOrNull()
+                                } else {
+                                    null
+                                }
 
-                                _uiState.update {
-                                    it.copy(
+                                _uiState.update { current ->
+                                    val isEdit = current.isEditMode || myReview != null
+                                    val canReview = when {
+                                        isEdit -> true
+                                        eligibility != null -> eligibility.canReview
+                                        else -> true
+                                    }
+                                    val reason = if (!canReview) eligibility?.reason else null
+
+                                    current.copy(
                                         service = service,
                                         provider = provider,
                                         isLoadingInfo = false,
-                                        hasAlreadyReviewed = alreadyReviewed,
-                                        error = if (alreadyReviewed) "You have already reviewed this service." else null,
+                                        isEligible = canReview,
+                                        ineligibilityReason = reason,
+                                        hasAlreadyReviewed = alreadyReviewed || isEdit,
+                                        isEditMode = isEdit,
+                                        existingReviewId = current.existingReviewId ?: myReview?.id,
+                                        rating = if (current.rating > 0) current.rating else (myReview?.rating ?: current.rating),
+                                        comment = if (current.comment.isNotBlank()) current.comment else (myReview?.comment ?: current.comment),
+                                        isAnonymous = if (current.isEditMode && current.existingReviewId != null) {
+                                            current.isAnonymous
+                                        } else {
+                                            myReview?.isAnonymous ?: current.isAnonymous
+                                        },
+                                        error = if (alreadyReviewed && !isEdit) "You have already reviewed this service." else null,
                                     )
                                 }
-                            }.onFailure { e ->
+                            }.onFailure {
                                 _uiState.update {
                                     it.copy(isLoadingInfo = false, error = "Failed to load provider profile.")
                                 }
                             }
-                    }.onFailure { e ->
+                    }.onFailure {
                         _uiState.update {
                             it.copy(isLoadingInfo = false, error = "Failed to load service details.")
                         }
@@ -106,28 +164,90 @@ class WriteReviewViewModel
 
             viewModelScope.launch {
                 _uiState.update { it.copy(isSubmitting = true, error = null) }
+                val commentText = state.comment.trim().takeIf { it.isNotBlank() }
 
-                submitReviewUseCase(
-                    serviceId = sid,
-                    rating = state.rating,
-                    comment = state.comment.trim().takeIf { it.isNotBlank() },
-                    isAnonymous = state.isAnonymous,
-                ).onSuccess {
-                    hustleAnalytics.logReviewSubmitted(sid, state.rating.toFloat())
-                    _uiState.update { it.copy(isSubmitting = false, submitSuccess = true) }
-                }.onFailure { e ->
-                    Timber.e(e, "WriteReviewViewModel: submit failed for serviceId=$sid")
-                    val isDuplicate = e.message?.contains("409", ignoreCase = true) == true ||
-                        e.message?.contains("already reviewed", ignoreCase = true) == true
-                    val errorMsg = if (isDuplicate) "You have already reviewed this service." else e.userFriendlyMessage("Failed to submit review.")
-                    _uiState.update {
-                        it.copy(
-                            isSubmitting = false,
-                            hasAlreadyReviewed = isDuplicate,
-                            error = errorMsg,
-                        )
+                if (state.isEditMode && state.existingReviewId != null) {
+                    updateReviewUseCase(
+                        reviewId = state.existingReviewId,
+                        rating = state.rating,
+                        comment = commentText,
+                        isAnonymous = state.isAnonymous,
+                    ).onSuccess {
+                        appReviewManager.recordSignificantAction()
+                        _uiState.update { it.copy(isSubmitting = false, submitSuccess = true) }
+                    }.onFailure { e ->
+                        Timber.e(e, "WriteReviewViewModel: update failed for reviewId=${state.existingReviewId}")
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                error = e.userFriendlyMessage("Failed to update review."),
+                            )
+                        }
+                    }
+                } else {
+                    submitReviewUseCase(
+                        serviceId = sid,
+                        rating = state.rating,
+                        comment = commentText,
+                        isAnonymous = state.isAnonymous,
+                    ).onSuccess {
+                        hustleAnalytics.logReviewSubmitted(sid, state.rating.toFloat())
+                        appReviewManager.recordSignificantAction()
+                        _uiState.update { it.copy(isSubmitting = false, submitSuccess = true) }
+                    }.onFailure { e ->
+                        Timber.e(e, "WriteReviewViewModel: submit failed for serviceId=$sid")
+                        val isDuplicate = e.message?.contains("409", ignoreCase = true) == true ||
+                            e.message?.contains("already reviewed", ignoreCase = true) == true
+                        val isNoInteraction = e.message?.contains("interact with the provider", ignoreCase = true) == true
+                        val errorMsg = when {
+                            isDuplicate -> "You have already reviewed this service."
+                            isNoInteraction -> "You must chat with the provider before reviewing this service."
+                            else -> e.userFriendlyMessage("Failed to submit review.")
+                        }
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                hasAlreadyReviewed = isDuplicate,
+                                error = errorMsg,
+                            )
+                        }
                     }
                 }
+            }
+        }
+
+        fun deleteReview() {
+            val reviewId = _uiState.value.existingReviewId ?: return
+            viewModelScope.launch {
+                _uiState.update { it.copy(isDeleting = true, error = null) }
+                deleteReviewUseCase(reviewId)
+                    .onSuccess {
+                        _uiState.update {
+                            it.copy(
+                                isDeleting = false,
+                                deleteSuccess = true,
+                                isEditMode = false,
+                                hasAlreadyReviewed = false,
+                                existingReviewId = null,
+                                rating = 0,
+                                comment = "",
+                            )
+                        }
+                    }.onFailure { e ->
+                        Timber.e(e, "WriteReviewViewModel: delete failed for reviewId=$reviewId")
+                        _uiState.update {
+                            it.copy(
+                                isDeleting = false,
+                                error = e.userFriendlyMessage("Failed to delete review."),
+                            )
+                        }
+                    }
+            }
+        }
+
+        fun launchReviewIfEligible(activity: Activity) {
+            viewModelScope.launch {
+                appReviewManager.launchReviewIfEligible(activity)
             }
         }
     }

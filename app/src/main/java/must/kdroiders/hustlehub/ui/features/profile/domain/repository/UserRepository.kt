@@ -85,6 +85,12 @@ interface UserRepository {
     suspend fun removeFcmToken(token: String): Result<Unit>
 
     /**
+     * Updates the user's online availability status (active/offline).
+     * Wraps PUT /api/v1/users/me/status.
+     */
+    suspend fun updateOnlineStatus(isOnline: Boolean): Result<Unit>
+
+    /**
      * Updates the user's location coordinates.
      * Wraps PUT /api/v1/users/me/location.
      */

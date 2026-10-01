@@ -99,9 +99,13 @@ private fun FeaturedServiceCard(
                 .background(
                     Brush.linearGradient(
                         colors = when (service.category) {
-                            ServiceCategory.SALON -> listOf(
+                            ServiceCategory.TECH -> listOf(
                                 MaterialTheme.colorScheme.primary,
                                 MaterialTheme.colorScheme.tertiary,
+                            )
+                            ServiceCategory.SALON -> listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.secondary,
                             )
                             ServiceCategory.TUTORING -> listOf(
                                 MaterialTheme.colorScheme.secondary,

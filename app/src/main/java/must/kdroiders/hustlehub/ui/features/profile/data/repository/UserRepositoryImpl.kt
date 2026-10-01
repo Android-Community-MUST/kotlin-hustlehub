@@ -13,6 +13,7 @@ import must.kdroiders.hustlehub.ui.features.profile.data.local.entity.toDomain
 import must.kdroiders.hustlehub.ui.features.profile.data.local.entity.toEntity
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.FcmTokenRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.LocationUpdateRequest
+import must.kdroiders.hustlehub.ui.features.profile.data.remote.OnlineStatusRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UpdateProfileRequest
 import must.kdroiders.hustlehub.ui.features.profile.data.remote.UserApiService
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
@@ -266,6 +267,16 @@ class UserRepositoryImpl
                 Timber.e(e, "UserRepositoryImpl: failed to fetch blocked users")
             }
 
+        override suspend fun updateOnlineStatus(isOnline: Boolean): Result<Unit> =
+            runCatching {
+                val response = userApiService.updateOnlineStatus(OnlineStatusRequest(isOnline))
+                if (!response.isSuccessful) {
+                    throw Exception("Failed to update online status: HTTP ${response.code()}")
+                }
+            }.onFailure { e ->
+                Timber.e(e, "UserRepositoryImpl: failed to update online status")
+            }
+
         override suspend fun deleteAccount(): Result<Unit> =
             runCatching {
                 val response = userApiService.deleteMe()
@@ -286,7 +297,7 @@ private fun UserResponseDto.toDomain(): User =
         email = email,
         phone = phone ?: "",
         campusLocation = campusLocation ?: "",
-        role = runCatching { UserRole.valueOf(role.removePrefix("ROLE_")) }.getOrDefault(UserRole.CUSTOMER),
+        role = UserRole.from(role),
         profilePhotoUrl = avatarUrl ?: "",
         bio = bio ?: "",
         isVerified = verified,

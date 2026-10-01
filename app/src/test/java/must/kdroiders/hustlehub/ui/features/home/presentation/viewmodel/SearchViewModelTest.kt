@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import must.kdroiders.hustlehub.core.api.PageResponse
 import must.kdroiders.hustlehub.datastore.UserPreferences
+import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
 import must.kdroiders.hustlehub.ui.features.home.domain.model.SearchFilters
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.SearchServicesUseCase
 import org.junit.After
@@ -27,6 +28,7 @@ class SearchViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var searchServicesUseCase: SearchServicesUseCase
     private lateinit var userPreferences: UserPreferences
+    private lateinit var discoveryApiService: DiscoveryApiService
     private lateinit var viewModel: SearchViewModel
 
     @Before
@@ -39,8 +41,15 @@ class SearchViewModelTest {
         userPreferences = mockk(relaxed = true) {
             every { recentSearches } returns flowOf(listOf("Tutor", "Haircut"))
         }
+        discoveryApiService = mockk(relaxed = true) {
+            coEvery { getSuggestions(any(), any()) } returns must.kdroiders.hustlehub.core.api.ApiResponse(
+                success = true,
+                message = "ok",
+                data = emptyList(),
+            )
+        }
 
-        viewModel = SearchViewModel(searchServicesUseCase, userPreferences)
+        viewModel = SearchViewModel(searchServicesUseCase, userPreferences, discoveryApiService)
     }
 
     @After
@@ -93,5 +102,16 @@ class SearchViewModelTest {
             assertEquals(SearchFilters(), state.filters)
             assertEquals(SearchFilters(), state.draftFilters)
             assertFalse(state.isFilterSheetOpen)
+        }
+
+    @Test
+    fun `onSuggestionSelected updates query, clears suggestions, and triggers search`() =
+        runTest {
+            viewModel.onSuggestionSelected("Hair Cut")
+
+            val state = viewModel.uiState.value
+            assertEquals("Hair Cut", state.query)
+            assertTrue(state.suggestions.isEmpty())
+            coVerify { searchServicesUseCase("Hair Cut", any(), any(), any()) }
         }
 }

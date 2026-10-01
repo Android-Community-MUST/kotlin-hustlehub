@@ -353,8 +353,8 @@ private fun ServiceResponse.toDomainModel(): Service =
         openToBarter = openToBarter,
         isFeatured = isFeatured ?: false,
         tags = tags ?: emptyList(),
-        createdAt = 0L,
-        updatedAt = 0L,
+        createdAt = runCatching { Instant.parse(createdAt).toEpochMilli() }.getOrDefault(0L),
+        updatedAt = runCatching { Instant.parse(updatedAt).toEpochMilli() }.getOrDefault(0L),
         iconUrl = portfolioImages?.firstOrNull() ?: "",
         location = location,
     )
@@ -370,6 +370,7 @@ private fun ReviewResponse.toDomain(): Review =
         rating = rating,
         comment = comment,
         isAnonymous = isAnonymous,
+        isVerified = isVerified,
         createdAt = runCatching {
             Instant.parse(createdAt).toEpochMilli()
         }.getOrDefault(0L),

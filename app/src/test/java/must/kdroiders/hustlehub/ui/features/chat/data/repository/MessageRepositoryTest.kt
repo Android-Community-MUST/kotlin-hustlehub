@@ -50,6 +50,7 @@ class MessageRepositoryTest {
         val testSecret = keyGen.generateKey()
         every { keyExchangeHandler.getOrGenerateLocalSecret(any()) } returns testSecret
         every { keyExchangeHandler.getCachedSecret(any()) } returns testSecret
+        every { keyExchangeHandler.getCandidateSecrets(any()) } returns listOf(testSecret)
 
         repository = ChatRepositoryImpl(
             context = context,
@@ -99,7 +100,31 @@ class MessageRepositoryTest {
             val result = repository.loadMessageHistory("conv-1", 0)
 
             assertTrue(result.isSuccess)
+            assertEquals(true, result.getOrNull())
             coVerify(exactly = 1) { messageDao.upsertAll(any()) }
+        }
+
+    @Test
+    fun `loadMessageHistory returns false when content is empty`() =
+        runTest {
+            coEvery {
+                conversationApiService.getMessages("conv-1", 1, 50)
+            } returns ApiResponse(
+                success = true,
+                message = "Success",
+                data = PageResponse(
+                    content = emptyList(),
+                    page = 1,
+                    size = 50,
+                    totalElements = 0L,
+                    totalPages = 1,
+                ),
+            )
+
+            val result = repository.loadMessageHistory("conv-1", 1)
+
+            assertTrue(result.isSuccess)
+            assertEquals(false, result.getOrNull())
         }
 
     @Test
@@ -191,8 +216,9 @@ class MessageRepositoryTest {
 
             assertTrue(result.isSuccess)
             coVerify(exactly = 1) { chatWebSocketService.sendMessage(any()) }
-            coVerify {
-                messageDao.upsert(match { it.id == "temp_123" && it.isSynced && !it.isFailed })
+            // Message stays pending in Room until the server ACK arrives on the WebSocket topic.
+            coVerify(exactly = 0) {
+                messageDao.upsert(match { it.id == "temp_123" && it.isSynced })
             }
         }
 }

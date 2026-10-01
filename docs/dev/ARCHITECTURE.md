@@ -92,91 +92,23 @@ must.kdroiders.hustlehub/
 │       ├── CachedMessage.kt
 │       └── CachedConversation.kt
 │
-└── 📁 feature/
-    ├── 📁 auth/
-    │   ├── 📁 data/
-    │   │   ├── remote/AuthApiService.kt   # Retrofit: POST /api/v1/auth/register
-    │   │   └── AuthRepositoryImpl.kt
-    │   ├── 📁 domain/
-    │   │   ├── AuthRepository.kt          # Interface
-    │   │   └── usecase/
-    │   │       ├── SignUpUseCase.kt
-    │   │       ├── LoginUseCase.kt
-    │   │       └── VerifyEmailUseCase.kt
-    │   └── 📁 presentation/
-    │       ├── SignUpScreen.kt
-    │       ├── LoginScreen.kt
-    │       └── AuthViewModel.kt
-    │
-    ├── 📁 splash/ & 📁 onboarding/        # (already implemented)
-    │
-    ├── 📁 profile/
-    │   ├── 📁 data/
-    │   │   ├── remote/UserApiService.kt   # GET/PUT /api/v1/users/me
-    │   │   └── ProfileRepositoryImpl.kt
-    │   ├── 📁 domain/
-    │   └── 📁 presentation/
-    │       ├── ProfileScreen.kt
-    │       ├── ProfileSetupScreen.kt
-    │       └── ProfileViewModel.kt
-    │
-    ├── 📁 services/
-    │   ├── 📁 data/
-    │   │   ├── remote/ServiceApiService.kt  # CRUD /api/v1/services
-    │   │   └── ServiceRepositoryImpl.kt
-    │   ├── 📁 domain/
-    │   └── 📁 presentation/
-    │       ├── ServiceListScreen.kt
-    │       ├── ServiceDetailScreen.kt
-    │       ├── CreateServiceScreen.kt
-    │       └── ServiceViewModel.kt
-    │
-    ├── 📁 discovery/
-    │   ├── 📁 data/
-    │   │   ├── remote/DiscoveryApiService.kt  # /api/v1/discovery/*
-    │   │   └── DiscoveryRepositoryImpl.kt
-    │   ├── 📁 domain/
-    │   └── 📁 presentation/
-    │       ├── HomeScreen.kt
-    │       ├── SearchScreen.kt
-    │       ├── AiSearchScreen.kt
-    │       └── DiscoveryViewModel.kt
-    │
-    ├── 📁 chat/
-    │   ├── 📁 data/
-    │   │   ├── remote/
-    │   │   │   ├── ConversationApiService.kt  # REST: history, list
-    │   │   │   └── ChatWebSocketService.kt    # OkHttp WebSocket / STOMP
-    │   │   └── ChatRepositoryImpl.kt
-    │   ├── 📁 domain/
-    │   └── 📁 presentation/
-    │       ├── ConversationListScreen.kt
-    │       ├── ChatScreen.kt
-    │       └── ChatViewModel.kt
-    │
-    ├── 📁 map/
-    │   ├── 📁 data/
-    │   │   └── remote/MapApiService.kt     # GET /api/v1/discovery/map-pins
-    │   └── 📁 presentation/
-    │       ├── MapScreen.kt
-    │       └── MapViewModel.kt
-    │
-    ├── 📁 reviews/
-    │   ├── 📁 data/
-    │   │   └── remote/ReviewApiService.kt  # POST /api/v1/reviews
-    │   └── 📁 presentation/
-    │       ├── WriteReviewScreen.kt
-    │       └── ReviewViewModel.kt
-    │
-    ├── 📁 notifications/
-    │   ├── HustleFcmService.kt             # extends FirebaseMessagingService
-    │   └── 📁 presentation/
-    │       ├── NotificationScreen.kt
-    │       └── NotificationViewModel.kt
-    │
-    └── 📁 media/
-        ├── remote/MediaApiService.kt       # POST /api/v1/media/upload
-        └── MediaUploadRepository.kt
+└── 📁 ui/
+    ├── 📁 auth/                           # Login, SignUp, EmailVerification
+    └── 📁 features/                       # Canonical feature slices
+        ├── 📁 admin/                      # Admin dashboard & moderation
+        ├── 📁 analytics/                  # Search and service telemetry
+        ├── 📁 chat/                       # REST history + WebSocket real-time
+        │   ├── 📁 data/
+        │   ├── 📁 domain/
+        │   └── 📁 presentation/
+        ├── 📁 home/                       # Home feed & service listings
+        ├── 📁 map/                        # Campus map + provider pins
+        ├── 📁 media/                      # Image & voice upload
+        ├── 📁 monetization/               # M-Pesa STK push & subscriptions
+        ├── 📁 notification/               # FCM push & notification history
+        ├── 📁 profile/                    # User profile & settings
+        ├── 📁 report/                     # Student report submission
+        └── 📁 service/                    # Service CRUD & availability
 ```
 
 ---
@@ -219,9 +151,9 @@ HustleHub uses a **Zero-Friction Customer Onboarding** paradigm:
    - When a new customer signs up or verifies their email with Firebase Auth, they are **automatically registered in PostgreSQL as `ROLE_CUSTOMER` in the background**.
    - Customers bypass mandatory setup screens and land directly on `HomeScreen` to browse services immediately.
 
-2. **Just-In-Time (JIT) Contact Collection:**
-   - Phone number and campus residence location (e.g. *"Hostel B, Room 204"*) are collected **only when a customer takes a transaction action** (e.g. tapping `"DM Provider"` or `"Book Service"`).
-   - A lightweight `QuickContactModal` collects contact info on the spot, saves it to PostgreSQL via `userRepository.saveUserProfile()`, and seamlessly completes the DM/Booking flow.
+2. **Direct, Zero-Friction Messaging:**
+   - Customers can immediately message providers without interruption. Delivery or location coordination happens naturally inside the chat (via conversation or location attachment).
+   - Phone and campus location details are managed directly in Profile Setup or Edit Profile.
 
 3. **Provider Onboarding:**
    - Full profile setup (bio, avatar, campus location, published services) is required only when a user decides to **Become a Provider** or publish a service.

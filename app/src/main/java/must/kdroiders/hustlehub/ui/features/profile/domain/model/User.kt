@@ -1,9 +1,20 @@
 package must.kdroiders.hustlehub.ui.features.profile.domain.model
 
 enum class UserRole {
-    PROVIDER,
-    CUSTOMER,
-    BOTH,
+    ROLE_CUSTOMER,
+    ROLE_PROVIDER,
+    ROLE_BOTH,
+    ROLE_ADMIN,
+    ROLE_SUPER_ADMIN,
+    ;
+
+    companion object {
+        fun from(value: String?): UserRole {
+            if (value.isNullOrBlank()) return ROLE_CUSTOMER
+            val normalized = if (value.startsWith("ROLE_")) value else "ROLE_$value"
+            return runCatching { valueOf(normalized) }.getOrDefault(ROLE_CUSTOMER)
+        }
+    }
 }
 
 data class User(
@@ -13,7 +24,7 @@ data class User(
     val email: String = "",
     val phone: String = "",
     val campusLocation: String = "",
-    val role: UserRole = UserRole.CUSTOMER,
+    val role: UserRole = UserRole.ROLE_CUSTOMER,
     val profilePhotoUrl: String = "",
     val bio: String = "",
     val isVerified: Boolean = false,

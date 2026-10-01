@@ -153,7 +153,14 @@ data object EditProfile : NavKey
  * invalidate the correct service detail cache.
  */
 @Serializable
-data class WriteReview(val serviceId: String, val providerId: String) : NavKey
+data class WriteReview(
+    val serviceId: String,
+    val providerId: String,
+    val reviewId: String? = null,
+    val initialRating: Int? = null,
+    val initialComment: String? = null,
+    val initialIsAnonymous: Boolean? = null,
+) : NavKey
 
 /** In-app notification center screen. */
 @Serializable
@@ -173,7 +180,7 @@ data object NotificationPreferences : NavKey
 
 /** Subscription & Pro upgrade screen — navigable from Profile, Settings, and service creation. */
 @Serializable
-data object Subscription : NavKey
+data class Subscription(val serviceId: String? = null) : NavKey
 
 /**
  * Payment status polling screen — pushed after a successful STK push trigger.

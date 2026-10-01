@@ -12,47 +12,30 @@ import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
-import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
-import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
+import must.kdroiders.hustlehub.ui.features.bookmarks.domain.repository.BookmarkRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetReviewEligibilityUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceReviewsUseCase
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
+@Suppress("LongParameterList")
 class ServiceDetailViewModel
     @Inject
     constructor(
         private val getServiceByIdUseCase: GetServiceByIdUseCase,
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
         private val getServiceReviewsUseCase: GetServiceReviewsUseCase,
+        private val getReviewEligibilityUseCase: GetReviewEligibilityUseCase,
         private val authRepository: AuthRepository,
-        private val userRepository: UserRepository,
+        private val bookmarkRepository: BookmarkRepository,
         private val hustleAnalytics: HustleAnalytics,
         private val hustleCrashlytics: HustleCrashlytics,
     ) : ViewModel() {
         private var serviceId: String? = null
-
-        fun updateContactInfo(
-            phone: String,
-            campusLocation: String,
-            onComplete: () -> Unit,
-        ) {
-            val currentUser = authRepository.getCurrentUser() ?: return
-            viewModelScope.launch {
-                val user = User(
-                    id = currentUser.uid,
-                    email = currentUser.email ?: "",
-                    name = currentUser.displayName ?: "Hustler",
-                    phone = phone,
-                    campusLocation = campusLocation,
-                )
-                userRepository.saveUserProfile(user)
-                onComplete()
-            }
-        }
 
         init {
             hustleCrashlytics.setScreen("ServiceDetailScreen")
@@ -61,10 +44,43 @@ class ServiceDetailViewModel
         private val _uiState = MutableStateFlow(ServiceDetailUiState())
         val uiState: StateFlow<ServiceDetailUiState> = _uiState.asStateFlow()
 
+        private val _isBookmarked = MutableStateFlow(false)
+        val isBookmarked: StateFlow<Boolean> = _isBookmarked.asStateFlow()
+
         fun initialize(id: String) {
             if (serviceId == id) return
             serviceId = id
+            observeBookmark(id)
             load()
+        }
+
+        private fun observeBookmark(id: String) {
+            viewModelScope.launch {
+                bookmarkRepository.isBookmarkedFlow(id).collect { bookmarked ->
+                    _isBookmarked.value = bookmarked
+                }
+            }
+        }
+
+        fun toggleBookmark(onResult: (Boolean, String) -> Unit = { _, _ -> }) {
+            val service = _uiState.value.service ?: return
+            viewModelScope.launch {
+                val result = bookmarkRepository.toggleBookmark(
+                    serviceId = service.id,
+                    title = service.title,
+                    category = service.category.name,
+                    priceRange = service.priceRange,
+                    rating = service.averageRating.toDouble(),
+                    imageUrl = service.portfolio.firstOrNull(),
+                )
+                result
+                    .onSuccess { nowBookmarked ->
+                        val message = if (nowBookmarked) "Saved to bookmarks" else "Removed from bookmarks"
+                        onResult(nowBookmarked, message)
+                    }.onFailure {
+                        onResult(_isBookmarked.value, "Failed to update bookmark")
+                    }
+            }
         }
 
         fun load() {
@@ -76,9 +92,11 @@ class ServiceDetailViewModel
 
                 val serviceDeferred = async { getServiceByIdUseCase(id) }
                 val reviewsDeferred = async { getServiceReviewsUseCase(id, page = 0, size = 5) }
+                val eligibilityDeferred = async { runCatching { getReviewEligibilityUseCase(id).getOrNull() }.getOrNull() }
 
                 val serviceResult = serviceDeferred.await()
                 val reviewsResult = reviewsDeferred.await()
+                val eligibility = eligibilityDeferred.await()
 
                 serviceResult
                     .onSuccess { service ->
@@ -95,6 +113,7 @@ class ServiceDetailViewModel
                                 reviews = reviewPage?.content ?: emptyList(),
                                 totalReviewCount = reviewPage?.totalElements?.toInt() ?: service.reviewCount,
                                 isOwnService = currentUid != null && provider != null && (currentUid == provider.id || currentUid == provider.uuid),
+                                reviewEligibility = eligibility,
                                 isLoading = false,
                                 error = null,
                             )

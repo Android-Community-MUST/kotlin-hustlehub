@@ -29,10 +29,13 @@ fun ReviewSummaryCard(
     averageRating: Float,
     totalReviews: Int,
     modifier: Modifier = Modifier,
+    ratingDistribution: IntArray = IntArray(5),
 ) {
-    // We visually mock the distribution bars based on the average rating,
-    // since the backend currently doesn't provide the exact breakdown.
-    val distribution = calculateDummyDistribution(averageRating, totalReviews)
+    val distribution = if (ratingDistribution.any { it > 0 }) {
+        ratingDistribution
+    } else {
+        calculateDummyDistribution(averageRating, totalReviews)
+    }
 
     Row(
         modifier = modifier
@@ -106,9 +109,6 @@ fun ReviewSummaryCard(
     }
 }
 
-/**
- * Creates a visually plausible distribution of ratings based on the average.
- */
 private fun calculateDummyDistribution(
     average: Float,
     total: Int,

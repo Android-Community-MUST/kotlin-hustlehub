@@ -9,15 +9,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import must.kdroiders.hustlehub.core.review.AppReviewManager
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.data.local.AppDatabase
+import must.kdroiders.hustlehub.datastore.AppTheme
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.DeleteAccountUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignOutUseCase
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
 import org.junit.After
@@ -33,10 +37,11 @@ class SettingsViewModelTest {
 
     private lateinit var authRepository: AuthRepository
     private lateinit var signOutUseCase: SignOutUseCase
-    private lateinit var deleteAccountUseCase: must.kdroiders.hustlehub.ui.features.auth.domain.usecase.DeleteAccountUseCase
+    private lateinit var deleteAccountUseCase: DeleteAccountUseCase
     private lateinit var userPreferences: UserPreferences
     private lateinit var appDatabase: AppDatabase
     private lateinit var chatRepository: ChatRepository
+    private lateinit var appReviewManager: AppReviewManager
 
     private lateinit var viewModel: SettingsViewModel
 
@@ -50,6 +55,7 @@ class SettingsViewModelTest {
         userPreferences = mockk(relaxed = true)
         appDatabase = mockk(relaxed = true)
         chatRepository = mockk(relaxed = true)
+        appReviewManager = mockk(relaxed = true)
 
         val mockUserInfo: com.google.firebase.auth.UserInfo = mockk {
             every { providerId } returns "password"
@@ -62,7 +68,7 @@ class SettingsViewModelTest {
             every { providerData } returns listOf(mockUserInfo)
         }
         every { authRepository.getCurrentUser() } returns mockUser
-        every { userPreferences.appTheme } returns kotlinx.coroutines.flow.flowOf(must.kdroiders.hustlehub.datastore.AppTheme.SYSTEM)
+        every { userPreferences.appTheme } returns flowOf(AppTheme.SYSTEM)
 
         viewModel = SettingsViewModel(
             authRepository = authRepository,
@@ -72,6 +78,7 @@ class SettingsViewModelTest {
             appDatabase = appDatabase,
             chatRepository = chatRepository,
             hustleCrashlytics = HustleCrashlytics(null),
+            appReviewManager = appReviewManager,
         ).apply {
             ioDispatcher = testDispatcher
         }
@@ -224,4 +231,24 @@ class SettingsViewModelTest {
                 userPreferences.saveTheme(must.kdroiders.hustlehub.datastore.AppTheme.DARK)
             }
         }
+
+    @Test
+    fun `onRateAppClicked emits TriggerRateApp event`() =
+        runTest {
+            val eventDeferred = async {
+                viewModel.events.first()
+            }
+            viewModel.onRateAppClicked()
+            assertEquals(SettingsEvent.TriggerRateApp, eventDeferred.await())
+        }
+
+    @Test
+    fun `launchReviewFlow delegates to appReviewManager openPlayStorePage`() {
+        val mockActivity: android.app.Activity = mockk(relaxed = true)
+        io.mockk.every { appReviewManager.openPlayStorePage(mockActivity) } returns Unit
+
+        viewModel.launchReviewFlow(mockActivity)
+
+        io.mockk.verify(exactly = 1) { appReviewManager.openPlayStorePage(mockActivity) }
+    }
 }

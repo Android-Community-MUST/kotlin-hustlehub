@@ -1,0 +1,461 @@
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+
+package must.kdroiders.hustlehub.sharedComposables
+
+import android.location.Geocoder
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
+import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
+import java.util.Locale
+
+data class CampusLandmark(val label: String, val lat: Double, val lng: Double)
+
+val MUST_LANDMARKS = listOf(
+    CampusLandmark("Nchiru", 0.12678026093702657, 37.71798703306698),
+    CampusLandmark("Main Gate", 0.1287023, 37.7178652),
+    CampusLandmark("Library", 0.13439365178842066, 37.71093074244712),
+    CampusLandmark("Student Center (STC)", 0.13682288626766367, 37.71061051468327),
+    CampusLandmark("Administration Block", 0.1350753084340695, 37.708471705326545),
+    CampusLandmark("Hostels Area", 0.1368881050837471, 37.71051829497458),
+)
+
+/**
+ * WhatsApp-style location sharing bottom sheet.
+ * Reusable across chat and any other feature that needs location selection.
+ *
+ * Provides three ways to share a location:
+ *  1. Current GPS location with accuracy badge
+ *  2. Campus landmark presets
+ *  3. Choose on Map — opens [HustleMapLocationPicker]
+ *
+ * @param title Sheet heading shown to the user.
+ * @param mapPickerTitle Title shown inside the map picker dialog.
+ * @param onDismiss Called when the sheet should close.
+ * @param onLocationSelected Called with (lat, lng, label) when the user confirms a location.
+ */
+@Composable
+fun HustleLocationPickerSheet(
+    onDismiss: () -> Unit,
+    onLocationSelected: (lat: Double, lng: Double, label: String) -> Unit,
+    title: String = stringResource(R.string.chat_share_location_title),
+    mapPickerTitle: String = stringResource(R.string.chat_choose_on_map),
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    var showMapPicker by remember { mutableStateOf(false) }
+
+    var gpsLat by remember { mutableStateOf(0.0) }
+    var gpsLng by remember { mutableStateOf(0.0) }
+    var gpsAccuracy by remember { mutableStateOf<Float?>(null) }
+    var gpsAddress by remember { mutableStateOf("") }
+    var gpsAreaName by remember { mutableStateOf("") }
+    var isLoadingGps by remember { mutableStateOf(true) }
+    var isGeocodingGps by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val fusedClient = LocationServices.getFusedLocationProviderClient(context)
+        isLoadingGps = true
+        try {
+            @Suppress("MissingPermission")
+            val location = withTimeoutOrNull(4000L) { fusedClient.lastLocation.await() }
+            if (location != null) {
+                gpsLat = location.latitude
+                gpsLng = location.longitude
+                gpsAccuracy = location.accuracy
+                isLoadingGps = false
+
+                if (Geocoder.isPresent()) {
+                    isGeocodingGps = true
+                    withContext(Dispatchers.IO) {
+                        try {
+                            withTimeoutOrNull(2500L) {
+                                val geocoder = Geocoder(context, Locale.getDefault())
+
+                                @Suppress("DEPRECATION")
+                                val addresses = geocoder.getFromLocation(gpsLat, gpsLng, 1)
+                                if (!addresses.isNullOrEmpty()) {
+                                    val addr = addresses[0]
+                                    val lines = (0..addr.maxAddressLineIndex).mapNotNull { addr.getAddressLine(it) }
+                                    gpsAddress = lines.joinToString(", ")
+                                    gpsAreaName = extractAreaName(gpsAddress)
+                                }
+                            }
+                        } catch (_: Exception) {
+                            gpsAreaName = "Current Location"
+                        } finally {
+                            isGeocodingGps = false
+                        }
+                    }
+                }
+            } else {
+                isLoadingGps = false
+            }
+        } catch (_: Exception) {
+            isLoadingGps = false
+        }
+    }
+
+    if (showMapPicker) {
+        HustleMapLocationPicker(
+            initialLat = if (gpsLat != 0.0) gpsLat else -0.0076,
+            initialLng = if (gpsLng != 0.0) gpsLng else 37.6534,
+            title = mapPickerTitle,
+            onLocationConfirmed = { lat, lng, label ->
+                onLocationSelected(lat, lng, label)
+                showMapPicker = false
+                onDismiss()
+            },
+            onDismiss = { showMapPicker = false },
+        )
+        return
+    }
+
+    val defaultLocationLabel = stringResource(R.string.chat_current_location)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
+                    .semantics { heading() },
+            )
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            Spacer(Modifier.height(8.dp))
+
+            CurrentLocationCard(
+                isLoadingGps = isLoadingGps,
+                isGeocodingGps = isGeocodingGps,
+                gpsAreaName = gpsAreaName.ifBlank { defaultLocationLabel },
+                gpsAddress = gpsAddress,
+                gpsAccuracy = gpsAccuracy,
+                onSend = {
+                    if (gpsLat != 0.0 || gpsLng != 0.0) {
+                        onLocationSelected(gpsLat, gpsLng, gpsAreaName.ifBlank { defaultLocationLabel })
+                        scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
+                    }
+                },
+            )
+
+            Spacer(Modifier.height(12.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+            )
+            Spacer(Modifier.height(12.dp))
+
+            Text(
+                text = stringResource(R.string.chat_campus_landmarks),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+            )
+            Spacer(Modifier.height(6.dp))
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(MUST_LANDMARKS) { landmark ->
+                    LandmarkChip(
+                        label = landmark.label,
+                        onClick = {
+                            onLocationSelected(landmark.lat, landmark.lng, landmark.label)
+                            scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
+                        },
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+            )
+            Spacer(Modifier.height(4.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { showMapPicker = true }
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = RoundedCornerShape(12.dp),
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Map,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+                Spacer(Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.chat_choose_on_map),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = stringResource(R.string.chat_drop_pin_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CurrentLocationCard(
+    isLoadingGps: Boolean,
+    isGeocodingGps: Boolean,
+    gpsAreaName: String,
+    gpsAddress: String,
+    gpsAccuracy: Float?,
+    onSend: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(12.dp),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Default.MyLocation,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+
+        Spacer(Modifier.width(14.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            if (isLoadingGps) {
+                Text(
+                    text = stringResource(R.string.chat_getting_location),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(4.dp))
+                LinearWavyProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(3.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = gpsAreaName,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (isGeocodingGps) {
+                        Spacer(Modifier.width(6.dp))
+                        LinearWavyProgressIndicator(
+                            modifier = Modifier
+                                .width(32.dp)
+                                .height(3.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+                Spacer(Modifier.height(2.dp))
+                if (gpsAccuracy != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AccuracyDot(accuracy = gpsAccuracy)
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.chat_accurate_to_format, gpsAccuracy.toInt()),
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                if (gpsAddress.isNotBlank()) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = gpsAddress,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        Button(
+            onClick = onSend,
+            enabled = !isLoadingGps,
+            shape = RoundedCornerShape(12.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+        ) {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(stringResource(R.string.action_send), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        }
+    }
+}
+
+@Composable
+private fun AccuracyDot(accuracy: Float) {
+    val dotColor = if (accuracy <= 50f) HustleActiveGreen else HustleWarningAmber
+    val infiniteTransition = rememberInfiniteTransition(label = "gpsDot")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
+        label = "gpsDotAlpha",
+    )
+    Box(
+        modifier = Modifier
+            .size(8.dp)
+            .background(dotColor.copy(alpha = alpha), CircleShape),
+    )
+}
+
+@Composable
+private fun LandmarkChip(
+    label: String,
+    onClick: () -> Unit,
+) {
+    SuggestionChip(
+        onClick = onClick,
+        label = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = null,
+                    modifier = Modifier.size(13.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(Modifier.width(4.dp))
+                Text(label, style = MaterialTheme.typography.labelMedium)
+            }
+        },
+        colors = SuggestionChipDefaults.suggestionChipColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+            labelColor = MaterialTheme.colorScheme.onSurface,
+        ),
+        border = SuggestionChipDefaults.suggestionChipBorder(
+            enabled = true,
+            borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+        ),
+    )
+}

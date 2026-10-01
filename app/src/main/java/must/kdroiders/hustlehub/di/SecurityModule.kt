@@ -80,7 +80,7 @@ object SecurityModule {
 
     @Provides
     @Singleton
-    fun provideCryptoManager(): CryptoManager = CryptoManager()
+    fun provideCryptoManager(encryptedPrefs: SharedPreferences): CryptoManager = CryptoManager(encryptedPrefs)
 
     @Provides
     @Singleton

@@ -4,4 +4,6 @@ import must.kdroiders.hustlehub.ui.features.analytics.data.remote.dto.ProviderAn
 
 interface AnalyticsRepository {
     suspend fun getProviderAnalytics(): Result<ProviderAnalyticsDto>
+
+    suspend fun trackServiceView(serviceId: String): Result<Unit>
 }

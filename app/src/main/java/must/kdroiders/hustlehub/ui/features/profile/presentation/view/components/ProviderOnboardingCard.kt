@@ -1,6 +1,7 @@
 package must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
@@ -29,13 +31,14 @@ import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleCard
 import must.kdroiders.hustlehub.sharedComposables.HustleCardVariant
 
+/** Card inviting non-providers to list their skills and start earning on campus. */
 @Composable
 fun ProviderOnboardingCard(
     onCreateServiceClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     HustleCard(
-        variant = HustleCardVariant.Glass,
+        variant = HustleCardVariant.Elevated,
         modifier = modifier,
     ) {
         Column(
@@ -46,13 +49,18 @@ fun ProviderOnboardingCard(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(16.dp),
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Storefront,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(28.dp),
                 )
             }
@@ -61,9 +69,8 @@ fun ProviderOnboardingCard(
 
             Text(
                 text = stringResource(R.string.profile_provider_cta_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.semantics { heading() },
             )
 
@@ -72,7 +79,8 @@ fun ProviderOnboardingCard(
             Text(
                 text = stringResource(R.string.profile_provider_cta_body),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f),
+                textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 8.dp),
             )
 

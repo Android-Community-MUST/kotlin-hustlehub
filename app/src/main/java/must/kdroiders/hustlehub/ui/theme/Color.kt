@@ -78,4 +78,20 @@ val CategoryNeonAmber = Color(0xFFFFB300) // FOOD
 val CategoryNeonBrightCyan = Color(0xFF00E5FF) // TECH
 val CategoryNeonBlue = Color(0xFF82B1FF) // FASHION
 val CategoryNeonPink = Color(0xFFFF4081) // PHOTOGRAPHY
+val CategoryNeonIndigo = Color(0xFF7C4DFF) // PRINTING
+val CategoryNeonViolet = Color(0xFFEA80FC) // DESIGN
+val CategoryNeonOrange = Color(0xFFFF9100) // GAS_CYLINDER
+val CategoryNeonWarmAmber = Color(0xFFFFAB40) // TUCK_SHOP
+val CategoryNeonYellow = Color(0xFFFFD600) // DELIVERY
+val CategoryNeonRose = Color(0xFFFF80AB) // BEAUTY
+val CategoryNeonMint = Color(0xFF69F0AE) // CLEANING
+val CategoryNeonTeal = Color(0xFF1DE9B6) // RENTALS
+val CategoryNeonCoral = Color(0xFFFF6E40) // MARKETPLACE
+val CategoryNeonLime = Color(0xFFAEEA00) // EVENTS
 val CategoryNeonDefault = Color(0xFFE0E0E0)
+
+// E2EE Chat Security Banner (WhatsApp style)
+val HustleE2EeBannerContainerDark = Color(0xFF182229)
+val HustleE2EeBannerContainerLight = Color(0xFFFFF4CC)
+val HustleE2EeBannerContentDark = Color(0xFFFFD56B)
+val HustleE2EeBannerContentLight = Color(0xFF7A5C00)

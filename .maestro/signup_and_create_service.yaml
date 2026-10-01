@@ -1,0 +1,39 @@
+appId: must.kdroiders.hustlehub
+---
+- launchApp:
+    clearState: true
+
+# If onboarding is shown, advance through
+- runFlow:
+    when:
+      visible: "Get Started"
+    commands:
+      - tapOn: "Get Started"
+
+# Navigate to Sign Up
+- tapOn:
+    id: "login_signup_link"
+
+# Complete Sign Up Form
+- tapOn:
+    id: "signup_name_input"
+- inputText: "Student Tester"
+
+- tapOn:
+    id: "signup_email_input"
+- inputText: "tester@must.ac.ke"
+
+- tapOn:
+    id: "signup_password_input"
+- inputText: "StudentPass123!"
+
+- tapOn:
+    id: "signup_confirm_password_input"
+- inputText: "StudentPass123!"
+
+- hideKeyboard
+- tapOn:
+    id: "signup_button"
+
+# Verification
+- assertVisible: "Verify"

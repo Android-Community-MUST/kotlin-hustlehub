@@ -11,8 +11,12 @@ import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toDomain
 import must.kdroiders.hustlehub.ui.features.service.data.local.entity.toEntity
 import must.kdroiders.hustlehub.ui.features.service.data.remote.ServiceApiService
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateReviewRequest
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ProviderReplyRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewResponse
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.UpdateReviewRequest
+import must.kdroiders.hustlehub.ui.features.service.domain.model.RatingDistribution
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ReviewEligibility
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ReviewRepository
 import retrofit2.HttpException
 import timber.log.Timber
@@ -63,7 +67,7 @@ class ReviewRepositoryImpl
             withContext(Dispatchers.IO) {
                 runCatching {
                     val response = apiService.getServiceReviews(serviceId, page, size)
-                    check(response.success && response.data != null) { response.message ?: "Failed to fetch reviews" }
+                    check(response.success && response.data != null) { response.message }
                     val pageData = response.data
                     val reviews = pageData.content.map { it.toDomain() }
                     reviewDao.upsertAll(reviews.map { it.toEntity() })
@@ -74,9 +78,22 @@ class ReviewRepositoryImpl
                         totalElements = pageData.totalElements,
                         totalPages = pageData.totalPages,
                     )
-                }.onFailure { e ->
+                }.recoverCatching { e ->
                     if (e is CancellationException) throw e
-                    Timber.w(e, "ReviewRepositoryImpl.getReviewsForService network miss for serviceId='$serviceId'")
+                    Timber.w(e, "ReviewRepositoryImpl.getReviewsForService network error for serviceId='$serviceId', falling back to cache")
+                    val cached = reviewDao.getReviewsForService(serviceId)
+                    if (cached.isNotEmpty()) {
+                        val domainReviews = cached.map { it.toDomain() }
+                        PageResponse(
+                            content = domainReviews,
+                            page = page,
+                            size = size,
+                            totalElements = domainReviews.size.toLong(),
+                            totalPages = 1,
+                        )
+                    } else {
+                        throw e
+                    }
                 }
             }
 
@@ -88,11 +105,122 @@ class ReviewRepositoryImpl
                         return@runCatching false
                     }
                     val response = apiService.getServiceReviews(serviceId, page = 0, size = 50)
-                    check(response.success && response.data != null) { response.message ?: "Failed to fetch reviews" }
+                    check(response.success && response.data != null) { response.message }
                     response.data.content.any { it.customerId == currentUser.id }
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
                     Timber.w(e, "ReviewRepositoryImpl.checkDuplicateReview failed for serviceId='$serviceId'")
+                }
+            }
+
+        override suspend fun getRatingDistribution(serviceId: String): Result<RatingDistribution> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = apiService.getRatingDistribution(serviceId)
+                    check(response.success && response.data != null) { response.message }
+                    val d = response.data
+                    RatingDistribution(
+                        count1Stars = d.count1Stars,
+                        count2Stars = d.count2Stars,
+                        count3Stars = d.count3Stars,
+                        count4Stars = d.count4Stars,
+                        count5Stars = d.count5Stars,
+                        averageRating = d.averageRating.toFloat(),
+                        totalReviews = d.totalReviews,
+                    )
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.w(e, "ReviewRepositoryImpl.getRatingDistribution failed for serviceId='$serviceId'")
+                }
+            }
+
+        override suspend fun replyToReview(
+            reviewId: String,
+            reply: String,
+        ): Result<Review> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = apiService.replyToReview(reviewId, ProviderReplyRequest(reply))
+                    check(response.success && response.data != null) { response.message }
+                    val review = response.data.toDomain()
+                    reviewDao.upsert(review.toEntity())
+                    review
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.w(e, "ReviewRepositoryImpl.replyToReview failed for reviewId='$reviewId'")
+                }
+            }
+
+        override suspend fun updateReview(
+            reviewId: String,
+            rating: Int,
+            comment: String?,
+            isAnonymous: Boolean,
+        ): Result<Review> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val request = UpdateReviewRequest(
+                        rating = rating,
+                        comment = comment,
+                        isAnonymous = isAnonymous,
+                    )
+                    val response = apiService.updateReview(reviewId, request)
+                    check(response.success && response.data != null) { response.message }
+                    val review = response.data.toDomain()
+                    reviewDao.upsert(review.toEntity())
+                    review
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.w(e, "ReviewRepositoryImpl.updateReview failed for reviewId='$reviewId'")
+                }
+            }
+
+        override suspend fun deleteReview(reviewId: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = apiService.deleteReview(reviewId)
+                    check(response.success) { response.message }
+                    reviewDao.deleteById(reviewId)
+                }.onFailure { e ->
+                    if (e is CancellationException) throw e
+                    Timber.w(e, "ReviewRepositoryImpl.deleteReview failed for reviewId='$reviewId'")
+                }
+            }
+
+        override suspend fun getMyReviewForService(serviceId: String): Result<Review?> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = apiService.getMyReviewForService(serviceId)
+                    check(response.success) { response.message }
+                    response.data?.toDomain()
+                }.recoverCatching { e ->
+                    if (e is CancellationException) throw e
+                    Timber.w(e, "ReviewRepositoryImpl.getMyReviewForService network miss for serviceId='$serviceId', trying cache")
+                    val currentUser = userPreferences.cachedUser.firstOrNull()
+                    if (currentUser != null && currentUser.id.isNotBlank()) {
+                        val cached = reviewDao.getReviewsForService(serviceId)
+                        cached.find { it.customerId == currentUser.id }?.toDomain()
+                    } else {
+                        null
+                    }
+                }
+            }
+
+        override suspend fun getReviewEligibility(serviceId: String): Result<ReviewEligibility> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = apiService.getReviewEligibility(serviceId)
+                    check(response.success && response.data != null) { response.message }
+                    val d = response.data
+                    ReviewEligibility(
+                        canReview = d.canReview,
+                        reason = d.reason,
+                        isVerified = d.isVerified,
+                    )
+                }.recoverCatching { e ->
+                    if (e is CancellationException) throw e
+                    Timber.w(e, "ReviewRepositoryImpl.getReviewEligibility failed for serviceId='$serviceId'")
+                    throw e
                 }
             }
     }
@@ -108,6 +236,14 @@ private fun ReviewResponse.toDomain(): Review =
         rating = rating,
         comment = comment,
         isAnonymous = isAnonymous,
+        isVerified = isVerified,
+        providerReply = providerReply,
+        providerRepliedAt = providerRepliedAt?.let {
+            runCatching { Instant.parse(it).toEpochMilli() }.getOrNull()
+        },
+        updatedAt = updatedAt?.let {
+            runCatching { Instant.parse(it).toEpochMilli() }.getOrNull()
+        },
         createdAt = runCatching {
             Instant.parse(createdAt).toEpochMilli()
         }.getOrDefault(0L),

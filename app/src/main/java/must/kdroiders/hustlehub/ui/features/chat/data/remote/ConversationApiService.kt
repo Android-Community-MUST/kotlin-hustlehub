@@ -51,4 +51,9 @@ interface ConversationApiService {
     suspend fun deleteMessageForEveryone(
         @Path("messageId") messageId: String,
     ): ApiResponse<Unit>
+
+    @POST("conversations/{conversationId}/complete-service")
+    suspend fun completeService(
+        @Path("conversationId") conversationId: String,
+    ): ApiResponse<Unit>
 }

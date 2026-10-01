@@ -23,6 +23,7 @@ import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -93,12 +94,90 @@ class HomeViewModelTest {
                 totalElements = 1,
                 totalPages = 1,
             )
-            coEvery { browseServices(page = 0, size = 10, category = ServiceCategory.TECH, query = null) } returns Result.success(techPage)
+            coEvery {
+                browseServices(page = 0, size = 10, category = ServiceCategory.TECH, query = null)
+            } returns Result.success(techPage)
 
             viewModel.onCategorySelected(ServiceCategory.TECH)
 
             assertEquals(ServiceCategory.TECH, viewModel.uiState.value.selectedCategory)
             assertEquals(1, viewModel.uiState.value.services.size)
             coVerify { browseServices(page = 0, size = 10, category = ServiceCategory.TECH, query = null) }
+        }
+
+    @Test
+    fun `initialization leaves featuredServices empty when no services are featured`() =
+        runTest {
+            val state = viewModel.uiState.value
+            // Since s-1 and s-2 have isFeatured = false, featuredServices is empty.
+            assertTrue(state.featuredServices.isEmpty())
+        }
+
+    @Test
+    fun `featuredServices strictly includes only active paid boosted services`() =
+        runTest {
+            val mixedPage = PageResponse(
+                content = listOf(
+                    Service(
+                        id = "unrated-1",
+                        title = "Unrated 1",
+                        averageRating = 0f,
+                        isFeatured = false,
+                        createdAt = 100L,
+                    ),
+                    Service(
+                        id = "rated-1",
+                        title = "Rated 1",
+                        averageRating = 4.8f,
+                        reviewCount = 10,
+                        isFeatured = false,
+                        createdAt = 200L,
+                    ),
+                    Service(
+                        id = "paid-1",
+                        title = "Paid 1",
+                        averageRating = 0f,
+                        isFeatured = true,
+                        createdAt = 300L,
+                    ),
+                    Service(
+                        id = "rated-2",
+                        title = "Rated 2",
+                        averageRating = 4.2f,
+                        reviewCount = 5,
+                        isFeatured = false,
+                        createdAt = 150L,
+                    ),
+                    Service(
+                        id = "paid-2",
+                        title = "Paid 2",
+                        averageRating = 5.0f,
+                        isFeatured = true,
+                        createdAt = 400L,
+                    ),
+                    Service(
+                        id = "unrated-2",
+                        title = "Unrated 2",
+                        averageRating = 0f,
+                        isFeatured = false,
+                        createdAt = 50L,
+                    ),
+                ),
+                page = 0,
+                size = 10,
+                totalElements = 6,
+                totalPages = 1,
+            )
+            coEvery {
+                browseServices(page = 0, size = 10, category = ServiceCategory.TECH, query = null)
+            } returns Result.success(mixedPage)
+
+            viewModel.onCategorySelected(ServiceCategory.TECH)
+
+            val featured = viewModel.uiState.value.featuredServices
+            // Only paid-1 and paid-2 are featured
+            assertEquals(2, featured.size)
+            assertEquals("paid-2", featured[0].id)
+            assertEquals("paid-1", featured[1].id)
         }
 }

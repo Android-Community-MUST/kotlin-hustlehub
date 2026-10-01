@@ -7,6 +7,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -123,7 +124,9 @@ fun MainShellScreen(
     ) { innerPadding ->
         NavDisplay(
             backStack = innerBackstack,
-            modifier = Modifier.padding(innerPadding),
+            modifier = Modifier
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding),
             onBack = { /* tabs don't back-navigate; system back is handled by root */ },
             transitionSpec = {
                 (
@@ -192,6 +195,7 @@ fun MainShellScreen(
                             innerBackstack.clear()
                             innerBackstack.add(BottomHome)
                         },
+                        onItemClick = onNavigateToServiceDetail,
                     )
                 }
             },

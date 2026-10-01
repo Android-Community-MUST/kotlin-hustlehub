@@ -14,6 +14,8 @@ import must.kdroiders.hustlehub.ui.features.monetization.domain.usecase.GetSubsc
 import must.kdroiders.hustlehub.ui.features.monetization.domain.usecase.InitiateStkPushUseCase
 import must.kdroiders.hustlehub.ui.features.monetization.domain.usecase.PaymentPollState
 import must.kdroiders.hustlehub.ui.features.monetization.domain.usecase.PollPaymentStatusUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -41,12 +43,16 @@ class MonetizationViewModel
         private val initiateStkPushUseCase: InitiateStkPushUseCase,
         private val pollPaymentStatusUseCase: PollPaymentStatusUseCase,
         private val getSubscriptionUseCase: GetSubscriptionUseCase,
+        private val getMyServicesUseCase: GetMyServicesUseCase,
     ) : ViewModel() {
         private val _subscriptionState = MutableStateFlow<SubscriptionUiState>(SubscriptionUiState.Loading)
         val subscriptionState: StateFlow<SubscriptionUiState> = _subscriptionState.asStateFlow()
 
         private val _paymentState = MutableStateFlow<PaymentUiState>(PaymentUiState.Idle)
         val paymentState: StateFlow<PaymentUiState> = _paymentState.asStateFlow()
+
+        private val _userServices = MutableStateFlow<List<Service>>(emptyList())
+        val userServices: StateFlow<List<Service>> = _userServices.asStateFlow()
 
         /**
          * Emits the checkoutRequestId once after a successful STK push trigger.
@@ -58,6 +64,19 @@ class MonetizationViewModel
 
         init {
             loadSubscription()
+            loadUserServices()
+        }
+
+        /** Loads the current user's services to allow choosing a listing to feature. */
+        fun loadUserServices() {
+            viewModelScope.launch {
+                getMyServicesUseCase()
+                    .onSuccess { services ->
+                        _userServices.update { services }
+                    }.onFailure { e ->
+                        Timber.e(e, "Failed to load user services for monetization")
+                    }
+            }
         }
 
         /** Fetches the current subscription status and caches Pro flag to DataStore. */

@@ -1,0 +1,55 @@
+name: "💡 Beta Feedback & Suggestions"
+description: "Submit usability feedback, feature requests, or UI/UX suggestions from testing"
+title: "[Feedback]: "
+labels: ["enhancement", "beta-feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share your experience using HustleHub Beta! Your feedback helps shape the campus release.
+
+  - type: dropdown
+    id: feedback_category
+    attributes:
+      label: Feedback Category
+      options:
+        - "UI / UX Design"
+        - "Performance & Speed"
+        - "Missing Feature / Enhancement"
+        - "Navigation / Workflow Simplicity"
+        - "Other"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: role
+    attributes:
+      label: Tester Perspective
+      options:
+        - "Service Provider (Offering skills/services on campus)"
+        - "Customer / Student (Searching for services)"
+        - "Both"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: rating
+    attributes:
+      label: Overall Rating for this Feature / Area (1 to 5)
+      options:
+        - "⭐⭐⭐⭐⭐ (5 - Excellent, very intuitive)"
+        - "⭐⭐⭐⭐ (4 - Good, minor friction)"
+        - "⭐⭐⭐ (3 - Average, needs improvement)"
+        - "⭐⭐ (2 - Poor, confusing to use)"
+        - "⭐ (1 - Terrible, completely broken experience)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: feedback_detail
+    attributes:
+      label: Feedback Details
+      description: "Explain what you liked, what felt confusing, or what would make this feature better."
+      placeholder: "When browsing services, having a filter by campus location would save a lot of time."
+    validations:
+      required: true

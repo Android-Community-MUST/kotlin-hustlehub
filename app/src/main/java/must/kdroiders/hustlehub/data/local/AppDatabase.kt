@@ -4,6 +4,8 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import must.kdroiders.hustlehub.ui.features.bookmarks.data.local.dao.BookmarkDao
+import must.kdroiders.hustlehub.ui.features.bookmarks.data.local.entity.BookmarkEntity
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.MessageDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationEntity
@@ -28,8 +30,9 @@ import must.kdroiders.hustlehub.ui.features.service.data.local.entity.ServiceEnt
         NotificationEntity::class,
         ReviewEntity::class,
         MapPinEntity::class,
+        BookmarkEntity::class,
     ],
-    version = 7,
+    version = 10,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -46,6 +49,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun reviewDao(): ReviewDao
 
     abstract fun mapPinDao(): MapPinDao
+
+    abstract fun bookmarkDao(): BookmarkDao
 
     companion object {
         /** Migration 4 → 5: Add E2EE columns to messages table. */
@@ -146,6 +151,41 @@ abstract class AppDatabase : RoomDatabase() {
             object : Migration(6, 7) {
                 override fun migrate(db: SupportSQLiteDatabase) {
                     db.execSQL("ALTER TABLE conversations ADD COLUMN isArchived INTEGER NOT NULL DEFAULT 0")
+                }
+            }
+
+        /** Migration 7 → 8: Add bookmarks table for saving favorite services. */
+        val MIGRATION_7_8 =
+            object : Migration(7, 8) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `bookmarks` (
+                            `serviceId` TEXT NOT NULL,
+                            `title` TEXT NOT NULL,
+                            `category` TEXT NOT NULL,
+                            `priceRange` TEXT NOT NULL,
+                            `rating` REAL NOT NULL,
+                            `imageUrl` TEXT,
+                            `bookmarkedAt` INTEGER NOT NULL,
+                            PRIMARY KEY(`serviceId`)
+                        )
+                        """.trimIndent(),
+                    )
+                }
+            }
+        val MIGRATION_8_9 =
+            object : Migration(8, 9) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE reviews ADD COLUMN isVerified INTEGER NOT NULL DEFAULT 0")
+                    db.execSQL("ALTER TABLE reviews ADD COLUMN providerReply TEXT DEFAULT NULL")
+                    db.execSQL("ALTER TABLE reviews ADD COLUMN providerRepliedAt INTEGER DEFAULT NULL")
+                }
+            }
+        val MIGRATION_9_10 =
+            object : Migration(9, 10) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE reviews ADD COLUMN updatedAt INTEGER DEFAULT NULL")
                 }
             }
     }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -26,7 +27,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ServiceCardShimmer(modifier: Modifier = Modifier) {
+fun rememberServiceCardShimmerBrush(): Brush {
     val transition = rememberInfiniteTransition(label = "shimmer")
     val translateX by transition.animateFloat(
         initialValue = -300f,
@@ -44,12 +45,18 @@ fun ServiceCardShimmer(modifier: Modifier = Modifier) {
         MaterialTheme.colorScheme.surfaceVariant,
     )
 
-    val brush = Brush.linearGradient(
+    return Brush.linearGradient(
         colors = shimmerColors,
         start = Offset(translateX, 0f),
         end = Offset(translateX + 300f, 300f),
     )
+}
 
+@Composable
+fun ServiceCardShimmer(
+    modifier: Modifier = Modifier,
+    brush: Brush = rememberServiceCardShimmerBrush(),
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -62,7 +69,7 @@ fun ServiceCardShimmer(modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(140.dp)
+                .aspectRatio(4f / 3f)
                 .clip(RoundedCornerShape(12.dp))
                 .background(brush),
         )

@@ -3,7 +3,6 @@ package must.kdroiders.hustlehub.ui.features.auth.presentation.view
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,9 +37,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -61,6 +62,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
 import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.LoginViewModel
+import must.kdroiders.hustlehub.ui.theme.LocalIsDarkTheme
 
 @Composable
 fun LoginScreen(
@@ -105,7 +107,7 @@ fun LoginScreen(
             Spacer(Modifier.height(72.dp))
 
             // Logo
-            val isDarkTheme = isSystemInDarkTheme()
+            val isDarkTheme = LocalIsDarkTheme.current
             val logoResId = if (isDarkTheme) R.drawable.dark_logo else R.drawable.light_logo
             Image(
                 painter = painterResource(id = logoResId),
@@ -144,6 +146,7 @@ fun LoginScreen(
                 value = uiState.email,
                 onValueChange = { loginViewModel.onEmailChange(it) },
                 placeholder = stringResource(R.string.auth_email_hint),
+                contentType = ContentType.EmailAddress,
                 leadingIcon = Icons.Default.Email,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
@@ -159,6 +162,7 @@ fun LoginScreen(
                 value = uiState.password,
                 onValueChange = { loginViewModel.onPasswordChange(it) },
                 placeholder = stringResource(R.string.auth_password_hint),
+                contentType = ContentType.Password,
                 isPassword = true,
                 leadingIcon = Icons.Default.Lock,
                 modifier = Modifier.fillMaxWidth(),
@@ -257,7 +261,9 @@ fun LoginScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable { onNavigateToSignUp() },
+                    modifier = Modifier
+                        .clickable { onNavigateToSignUp() }
+                        .testTag("login_signup_link"),
                 )
             }
 

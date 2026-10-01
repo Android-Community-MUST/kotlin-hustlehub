@@ -44,8 +44,11 @@ enum class HustleCardVariant {
     /** Tonal translucent section card */
     Tonal,
 
-    /** Translucent glass card — matches StatCard style */
+    /** Translucent glass card */
     Glass,
+
+    /** Secondary tonal card — matches secondary button container color */
+    Secondary,
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -56,6 +59,7 @@ fun HustleCard(
     onClick: (() -> Unit)? = null,
     contentPadding: PaddingValues? = null,
     containerColor: Color? = null,
+    border: BorderStroke? = null,
     content: @Composable () -> Unit,
 ) {
     val dimensions = LocalDimensions.current
@@ -82,88 +86,70 @@ fun HustleCard(
             }
         }
 
-    val glassBackground = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+    val glassBackground = MaterialTheme.colorScheme.secondaryContainer
     val glassBorder = BorderStroke(
         width = 1.dp,
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
     )
 
-    when (variant) {
-        HustleCardVariant.Surface -> {
-            Card(
-                onClick = onClick ?: {},
-                enabled = onClick != null,
-                modifier = cardModifier,
-                shape = cardShape,
-                interactionSource = interactionSource,
-                colors = CardDefaults.cardColors(
-                    containerColor = containerColor ?: MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            ) {
-                Box(Modifier.padding(effectivePadding)) { content() }
-            }
-        }
+    val actualContainerColor = when (variant) {
+        HustleCardVariant.Secondary -> containerColor ?: MaterialTheme.colorScheme.secondaryContainer
+        HustleCardVariant.Tonal, HustleCardVariant.Glass -> containerColor ?: glassBackground
+        else -> containerColor ?: MaterialTheme.colorScheme.surface
+    }
 
-        HustleCardVariant.Elevated -> {
-            Card(
-                onClick = onClick ?: {},
-                enabled = onClick != null,
-                modifier = cardModifier,
-                shape = cardShape,
-                interactionSource = interactionSource,
-                colors = CardDefaults.cardColors(
-                    containerColor = containerColor ?: MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 2.dp,
-                    pressedElevation = 6.dp,
-                    hoveredElevation = 4.dp,
-                ),
-            ) {
-                Box(Modifier.padding(effectivePadding)) { content() }
-            }
-        }
+    val actualContentColor = when (variant) {
+        HustleCardVariant.Secondary, HustleCardVariant.Tonal, HustleCardVariant.Glass ->
+            MaterialTheme.colorScheme.onSecondaryContainer
+        else -> MaterialTheme.colorScheme.onSurface
+    }
 
-        HustleCardVariant.Outlined -> {
-            Card(
-                onClick = onClick ?: {},
-                enabled = onClick != null,
-                modifier = cardModifier,
-                shape = cardShape,
-                interactionSource = interactionSource,
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
-                ),
-                colors = CardDefaults.cardColors(
-                    containerColor = containerColor ?: MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            ) {
-                Box(Modifier.padding(effectivePadding)) { content() }
-            }
-        }
+    val actualBorder = when (variant) {
+        HustleCardVariant.Outlined -> border ?: BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+        )
+        HustleCardVariant.Tonal, HustleCardVariant.Glass -> border ?: glassBorder
+        else -> border
+    }
 
-        HustleCardVariant.Tonal, HustleCardVariant.Glass -> {
-            Card(
-                onClick = onClick ?: {},
-                enabled = onClick != null,
-                modifier = cardModifier,
-                shape = cardShape,
-                interactionSource = interactionSource,
-                border = glassBorder,
-                colors = CardDefaults.cardColors(
-                    containerColor = containerColor ?: glassBackground,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            ) {
-                Box(Modifier.padding(effectivePadding)) { content() }
-            }
+    val actualElevation = when (variant) {
+        HustleCardVariant.Elevated -> CardDefaults.cardElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 6.dp,
+            hoveredElevation = 4.dp,
+        )
+        else -> CardDefaults.cardElevation(defaultElevation = 0.dp)
+    }
+
+    val cardColors = CardDefaults.cardColors(
+        containerColor = actualContainerColor,
+        contentColor = actualContentColor,
+        disabledContainerColor = actualContainerColor,
+        disabledContentColor = actualContentColor,
+    )
+
+    if (onClick != null) {
+        Card(
+            onClick = onClick,
+            modifier = cardModifier,
+            shape = cardShape,
+            interactionSource = interactionSource,
+            border = actualBorder,
+            colors = cardColors,
+            elevation = actualElevation,
+        ) {
+            Box(Modifier.padding(effectivePadding)) { content() }
+        }
+    } else {
+        Card(
+            modifier = cardModifier,
+            shape = cardShape,
+            border = actualBorder,
+            colors = cardColors,
+            elevation = actualElevation,
+        ) {
+            Box(Modifier.padding(effectivePadding)) { content() }
         }
     }
 }

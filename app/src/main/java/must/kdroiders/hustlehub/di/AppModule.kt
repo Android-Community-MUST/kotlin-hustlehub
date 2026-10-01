@@ -23,6 +23,10 @@ import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.repository.AuthRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
+import must.kdroiders.hustlehub.ui.features.bookmarks.data.local.dao.BookmarkDao
+import must.kdroiders.hustlehub.ui.features.bookmarks.data.remote.BookmarkApiService
+import must.kdroiders.hustlehub.ui.features.bookmarks.data.repository.BookmarkRepositoryImpl
+import must.kdroiders.hustlehub.ui.features.bookmarks.domain.repository.BookmarkRepository
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.MessageDao
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
@@ -140,6 +144,9 @@ object AppModule {
                 AppDatabase.MIGRATION_4_5,
                 AppDatabase.MIGRATION_5_6,
                 AppDatabase.MIGRATION_6_7,
+                AppDatabase.MIGRATION_7_8,
+                AppDatabase.MIGRATION_8_9,
+                AppDatabase.MIGRATION_9_10,
             ).fallbackToDestructiveMigration(dropAllTables = true)
             .build()
 
@@ -170,6 +177,17 @@ object AppModule {
     @Provides
     @Singleton
     fun provideMapPinDao(db: AppDatabase): MapPinDao = db.mapPinDao()
+
+    @Provides
+    @Singleton
+    fun provideBookmarkDao(db: AppDatabase): BookmarkDao = db.bookmarkDao()
+
+    @Provides
+    @Singleton
+    fun provideBookmarkRepository(
+        bookmarkDao: BookmarkDao,
+        bookmarkApiService: BookmarkApiService,
+    ): BookmarkRepository = BookmarkRepositoryImpl(bookmarkDao, bookmarkApiService)
 
     @Provides
     @Singleton

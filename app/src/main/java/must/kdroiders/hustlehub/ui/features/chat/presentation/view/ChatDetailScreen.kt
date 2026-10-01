@@ -18,6 +18,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -48,6 +50,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
@@ -58,10 +62,13 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -70,12 +77,14 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -87,6 +96,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -97,16 +107,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -119,6 +135,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.notification.ActiveConversationTracker
+import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.core.utils.createTempCameraFile
 import must.kdroiders.hustlehub.core.utils.saveImageToGallery
@@ -127,6 +144,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.Message
 import must.kdroiders.hustlehub.ui.features.chat.domain.model.MessageType
 import must.kdroiders.hustlehub.ui.features.chat.presentation.audio.VoiceRecorder
+import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ChatEncryptionBanner
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.ChatLocationPickerSheet
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.DateSeparator
 import must.kdroiders.hustlehub.ui.features.chat.presentation.components.MessageBubble
@@ -139,6 +157,11 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+
+private data class MessageDisplayMeta(
+    val showDateSeparator: Boolean,
+    val isGroupedWithNext: Boolean,
+)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -264,10 +287,73 @@ fun ChatDetailScreen(
         }
     }
 
-    // Scroll to bottom when list size changes or typing changes
-    LaunchedEffect(state.messages.size, state.isTyping) {
-        if (state.messages.isNotEmpty()) {
-            listState.animateScrollToItem(0)
+    val reversedMessages = remember(state.messages) { state.messages.reversed() }
+    var prevMessageCount by remember { mutableIntStateOf(0) }
+    var unreadCountWhileScrolledUp by remember { mutableIntStateOf(0) }
+
+    val isNearBottom by remember {
+        derivedStateOf { listState.firstVisibleItemIndex <= 1 }
+    }
+
+    LaunchedEffect(isNearBottom) {
+        if (isNearBottom) {
+            unreadCountWhileScrolledUp = 0
+        }
+    }
+
+    // Smart auto-scroll: instantly snap on initial load; smooth scroll if near bottom or sent by current user
+    LaunchedEffect(state.messages.size) {
+        val currentCount = state.messages.size
+        if (currentCount == 0) return@LaunchedEffect
+
+        if (prevMessageCount == 0) {
+            listState.scrollToItem(0)
+        } else if (currentCount > prevMessageCount) {
+            val newCount = currentCount - prevMessageCount
+            val latestMessage = reversedMessages.firstOrNull()
+            val isSentByMe = latestMessage != null &&
+                (latestMessage.senderId != state.otherUserId || latestMessage.id.startsWith("temp_"))
+
+            if (isSentByMe || isNearBottom) {
+                unreadCountWhileScrolledUp = 0
+                listState.animateScrollToItem(0)
+            } else {
+                unreadCountWhileScrolledUp += newCount
+            }
+        }
+        prevMessageCount = currentCount
+    }
+
+    val shouldLoadOlderMessages by remember {
+        derivedStateOf {
+            val totalItems = listState.layoutInfo.totalItemsCount
+            val lastVisible = listState.layoutInfo.visibleItemsInfo
+                .lastOrNull()
+                ?.index ?: 0
+            totalItems > 0 && lastVisible >= totalItems - 5 && state.hasMoreHistory && !state.isLoadingOlderMessages
+        }
+    }
+
+    LaunchedEffect(shouldLoadOlderMessages) {
+        if (shouldLoadOlderMessages) {
+            chatDetailViewModel.loadOlderMessages()
+        }
+    }
+
+    LaunchedEffect(state.searchResultIndex, state.searchResults) {
+        val targetIdx = state.searchResults.getOrNull(state.searchResultIndex)
+        if (targetIdx != null) {
+            listState.animateScrollToItem(targetIdx)
+        }
+    }
+
+    val searchFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(state.isSearchActive) {
+        if (state.isSearchActive) {
+            searchFocusRequester.requestFocus()
+            keyboardController?.show()
         }
     }
 
@@ -428,98 +514,189 @@ fun ChatDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics { heading() },
-                    ) {
-                        // User Avatar with online indicator dot
-                        Box {
-                            if (!state.otherUserAvatar.isNullOrBlank()) {
-                                AsyncImage(
-                                    model = state.otherUserAvatar,
-                                    contentDescription = stringResource(R.string.cd_avatar_format, state.otherUserName),
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop,
+                    if (state.isSearchActive) {
+                        TextField(
+                            value = state.searchQuery,
+                            onValueChange = chatDetailViewModel::onChatSearchQueryChanged,
+                            placeholder = {
+                                Text(
+                                    text = stringResource(R.string.chat_search_in_conversation),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 )
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primaryContainer)
-                                        .clearAndSetSemantics { },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    val firstLetter = state.otherUserName.firstOrNull()?.uppercase() ?: "?"
-                                    Text(
-                                        text = firstLetter,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        fontWeight = FontWeight.Bold,
+                            },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(
+                                onSearch = {
+                                    if (state.searchResults.isNotEmpty()) {
+                                        chatDetailViewModel.searchNavigate(1)
+                                    }
+                                },
+                            ),
+                            trailingIcon = {
+                                if (state.searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { chatDetailViewModel.onChatSearchQueryChanged("") }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = stringResource(R.string.cd_close_search),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                            },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                            ),
+                            textStyle = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(searchFocusRequester),
+                        )
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .semantics { heading() },
+                        ) {
+                            // User Avatar with online indicator dot
+                            Box {
+                                if (!state.otherUserAvatar.isNullOrBlank()) {
+                                    AsyncImage(
+                                        model = state.otherUserAvatar,
+                                        contentDescription = stringResource(R.string.cd_avatar_format, state.otherUserName),
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop,
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primaryContainer)
+                                            .clearAndSetSemantics { },
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        val firstLetter = state.otherUserName.firstOrNull()?.uppercase() ?: "?"
+                                        Text(
+                                            text = firstLetter,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                    }
+                                }
+
+                                // Online presence dot
+                                if (state.isOtherUserOnline) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .size(12.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.background)
+                                            .padding(2.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.tertiary),
                                     )
                                 }
                             }
 
-                            // Online presence dot
-                            if (state.isOtherUserOnline) {
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomEnd)
-                                        .size(12.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.background)
-                                        .padding(2.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.tertiary),
-                                )
-                            }
-                        }
+                            Spacer(modifier = Modifier.width(12.dp))
 
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        // Name and typing/presence status line
-                        Column {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
+                            // Name and typing/presence status line
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = state.otherUserName,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false),
+                                    )
+                                }
+                                val lastSeenAt = state.otherUserLastSeenAt
+                                val subtitle = when {
+                                    state.isTyping -> stringResource(R.string.chat_status_typing)
+                                    state.isOtherUserOnline -> stringResource(R.string.chat_status_online)
+                                    lastSeenAt != null ->
+                                        stringResource(R.string.chat_status_last_seen_format, formatLastSeen(lastSeenAt))
+                                    else -> stringResource(R.string.chat_status_offline)
+                                }
                                 Text(
-                                    text = state.otherUserName,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f, fill = false),
+                                    text = subtitle,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (state.isTyping || state.isOtherUserOnline) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                    },
+                                    fontWeight = if (state.isTyping || state.isOtherUserOnline) FontWeight.Bold else FontWeight.Normal,
                                 )
                             }
-                            val lastSeenAt = state.otherUserLastSeenAt
-                            val subtitle = when {
-                                state.isTyping -> stringResource(R.string.chat_status_typing)
-                                state.isOtherUserOnline -> stringResource(R.string.chat_status_online)
-                                lastSeenAt != null ->
-                                    stringResource(R.string.chat_status_last_seen_format, formatLastSeen(lastSeenAt))
-                                else -> stringResource(R.string.chat_status_offline)
-                            }
-                            Text(
-                                text = subtitle,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (state.isTyping || state.isOtherUserOnline) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                                },
-                                fontWeight = if (state.isTyping || state.isOtherUserOnline) FontWeight.Bold else FontWeight.Normal,
-                            )
                         }
                     }
                 },
                 navigationIcon = {
-                    HustleBackButton(onClick = onBackClick)
+                    if (state.isSearchActive) {
+                        IconButton(onClick = { chatDetailViewModel.toggleSearch() }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.cd_close_search),
+                            )
+                        }
+                    } else {
+                        HustleBackButton(onClick = onBackClick)
+                    }
                 },
                 actions = {
-                    if (state.isCurrentUserProvider && !state.isServiceCompleted) {
+                    if (!state.isSearchActive) {
+                        IconButton(onClick = { chatDetailViewModel.toggleSearch() }) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = stringResource(R.string.cd_open_search),
+                            )
+                        }
+                    } else if (state.searchResults.isNotEmpty()) {
+                        Text(
+                            text = stringResource(
+                                R.string.chat_search_result_format,
+                                state.searchResultIndex + 1,
+                                state.searchResults.size,
+                            ),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        IconButton(
+                            onClick = { chatDetailViewModel.searchNavigate(-1) },
+                            enabled = state.searchResultIndex > 0,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = stringResource(R.string.cd_search_prev_result),
+                            )
+                        }
+                        IconButton(
+                            onClick = { chatDetailViewModel.searchNavigate(1) },
+                            enabled = state.searchResultIndex < state.searchResults.size - 1,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = stringResource(R.string.cd_search_next_result),
+                                modifier = Modifier.scale(-1f),
+                            )
+                        }
+                    }
+
+                    if (!state.isSearchActive && state.isCurrentUserProvider && !state.isServiceCompleted) {
                         IconButton(onClick = { chatDetailViewModel.markServiceCompleted() }) {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
@@ -670,8 +847,44 @@ fun ChatDetailScreen(
             }
 
             // Messages list (reversed so it starts at the bottom)
-            val reversedMessages = state.messages.reversed()
             val cannotOpenMapToast = stringResource(R.string.chat_cannot_open_map)
+
+            // Precompute date separators and grouping once per list update to keep fling scrolling at 120fps
+            val messageDisplayMetaList = remember(reversedMessages) {
+                reversedMessages.mapIndexed { index, message ->
+                    val prevMessage = if (index < reversedMessages.size - 1) reversedMessages[index + 1] else null
+                    val showDateSeparator = if (prevMessage == null) {
+                        true
+                    } else {
+                        try {
+                            val currentInstant = Instant.parse(message.timestamp)
+                            val prevInstant = Instant.parse(prevMessage.timestamp)
+                            val currentDate = currentInstant.atZone(ZoneId.systemDefault()).toLocalDate()
+                            val prevDate = prevInstant.atZone(ZoneId.systemDefault()).toLocalDate()
+                            ChronoUnit.DAYS.between(prevDate, currentDate) > 0
+                        } catch (_: Exception) {
+                            false
+                        }
+                    }
+
+                    val nextMessage = if (index > 0) reversedMessages[index - 1] else null
+                    val isGroupedWithNext = nextMessage != null &&
+                        nextMessage.senderId == message.senderId &&
+                        try {
+                            val currentInstant = Instant.parse(message.timestamp)
+                            val nextInstant = Instant.parse(nextMessage.timestamp)
+                            Duration.between(currentInstant, nextInstant).abs().toMinutes() < 2
+                        } catch (_: Exception) {
+                            false
+                        }
+
+                    MessageDisplayMeta(
+                        showDateSeparator = showDateSeparator,
+                        isGroupedWithNext = isGroupedWithNext,
+                    )
+                }
+            }
+
             Box(modifier = Modifier.weight(1f)) {
                 LazyColumn(
                     state = listState,
@@ -682,46 +895,14 @@ fun ChatDetailScreen(
                     itemsIndexed(
                         items = reversedMessages,
                         key = { _, msg -> msg.id },
+                        contentType = { _, msg -> msg.type },
                     ) { index, message ->
                         val isSelf = message.senderId != state.otherUserId || message.id.startsWith("temp_")
-
-                        // Because messages are reversed (newest first, index 0),
-                        // the previous message chronologically is at index + 1
-                        val prevMessage = if (index < reversedMessages.size - 1) reversedMessages[index + 1] else null
-
-                        var showDateSeparator = false
-                        if (prevMessage == null) {
-                            showDateSeparator = true
-                        } else {
-                            try {
-                                val currentInstant = Instant.parse(message.timestamp)
-                                val prevInstant = Instant.parse(prevMessage.timestamp)
-                                val currentDate = currentInstant.atZone(ZoneId.systemDefault()).toLocalDate()
-                                val prevDate = prevInstant.atZone(ZoneId.systemDefault()).toLocalDate()
-
-                                if (ChronoUnit.DAYS.between(prevDate, currentDate) > 0) {
-                                    showDateSeparator = true
-                                }
-                            } catch (e: Exception) {
-                                // Ignore parse errors
-                            }
-                        }
-
-                        // Determine if this message is grouped with the next message
-                        // (same sender, within 2 minutes)
-                        val nextMessage = if (index > 0) reversedMessages[index - 1] else null
-                        val isGroupedWithNext = nextMessage != null &&
-                            nextMessage.senderId == message.senderId &&
-                            try {
-                                val currentInstant = Instant.parse(message.timestamp)
-                                val nextInstant = Instant.parse(nextMessage.timestamp)
-                                java.time.Duration
-                                    .between(currentInstant, nextInstant)
-                                    .abs()
-                                    .toMinutes() < 2
-                            } catch (_: Exception) {
-                                false
-                            }
+                        val meta = messageDisplayMetaList.getOrNull(index)
+                        val showDateSeparator = meta?.showDateSeparator ?: false
+                        val isGroupedWithNext = meta?.isGroupedWithNext ?: false
+                        val currentMatchIndex = state.searchResults.getOrNull(state.searchResultIndex)
+                        val isSearchMatch = state.isSearchActive && currentMatchIndex == index
 
                         Column(
                             modifier = Modifier.fillMaxWidth(),
@@ -737,6 +918,7 @@ fun ChatDetailScreen(
                                 currentUserLocation = currentUserLocation,
                                 onVoicePlayClick = chatDetailViewModel::playVoice,
                                 onVoiceSpeedToggle = chatDetailViewModel::toggleVoicePlaybackSpeed,
+                                modifier = Modifier.testTag(TestTags.MESSAGE_BUBBLE),
                                 onLocationClick = { lat, lng, label ->
                                     val mapUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng($label)")
                                     val intent = Intent(Intent.ACTION_VIEW, mapUri)
@@ -753,10 +935,32 @@ fun ChatDetailScreen(
                                 onDeleteForMe = { msg -> chatDetailViewModel.deleteMessageForMe(msg.id) },
                                 onDeleteForEveryone = { msg -> chatDetailViewModel.deleteMessageForEveryone(msg.id) },
                                 onReportMessage = { msg -> messageToReport = msg },
+                                onRetry = { msgId -> chatDetailViewModel.onRetryMessage(msgId) },
                                 isOtherUserOnline = state.isOtherUserOnline,
                                 isGroupedWithNext = isGroupedWithNext,
+                                isSearchMatch = isSearchMatch,
                             )
                         }
+                    }
+
+                    if (state.isLoadingOlderMessages) {
+                        item(key = "load_older_indicator") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                LinearWavyProgressIndicator(
+                                    modifier = Modifier.fillMaxWidth(0.35f),
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                    }
+
+                    item(key = "chat_e2ee_security_banner") {
+                        ChatEncryptionBanner()
                     }
                 }
 
@@ -768,6 +972,58 @@ fun ChatDetailScreen(
                         color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                     )
+                }
+
+                // Floating "Scroll to Bottom" button (WhatsApp / Telegram style)
+                val showScrollToBottom by remember {
+                    derivedStateOf { listState.firstVisibleItemIndex > 1 }
+                }
+
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = showScrollToBottom,
+                    enter = scaleIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + fadeIn(),
+                    exit = scaleOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + fadeOut(),
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = 12.dp),
+                ) {
+                    Box {
+                        Surface(
+                            onClick = {
+                                unreadCountWhileScrolledUp = 0
+                                scope.launch { listState.animateScrollToItem(0) }
+                            },
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.95f),
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            shadowElevation = 3.dp,
+                            modifier = Modifier.size(42.dp),
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = stringResource(R.string.chat_scroll_to_bottom),
+                                    modifier = Modifier.size(24.dp),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+
+                        if (unreadCountWhileScrolledUp > 0) {
+                            Badge(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 1.dp, end = 1.dp),
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                            ) {
+                                Text(
+                                    text = if (unreadCountWhileScrolledUp > 99) "99+" else unreadCountWhileScrolledUp.toString(),
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -1065,7 +1321,9 @@ fun ChatDetailScreen(
                         placeholder = { Text(stringResource(R.string.chat_type_message_hint)) },
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(24.dp)),
+                            .clip(RoundedCornerShape(24.dp))
+                            .testTag(TestTags.CHAT_INPUT_FIELD),
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
@@ -1121,6 +1379,7 @@ fun ChatDetailScreen(
                             onClick = {
                                 chatDetailViewModel.sendTextMessage(textInput)
                                 textInput = ""
+                                scope.launch { listState.animateScrollToItem(0) }
                             },
                             interactionSource = sendInteractionSource,
                             colors = IconButtonDefaults.iconButtonColors(
@@ -1129,7 +1388,8 @@ fun ChatDetailScreen(
                             ),
                             modifier = Modifier
                                 .size(48.dp)
-                                .scale(sendScale),
+                                .scale(sendScale)
+                                .testTag(TestTags.SEND_MESSAGE_BUTTON),
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Send,
@@ -1161,7 +1421,10 @@ private fun AttachmentOption(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(role = Role.Button, onClick = onClick),
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(8.dp),
     ) {
         Box(
             modifier = Modifier

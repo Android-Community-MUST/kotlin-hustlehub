@@ -44,6 +44,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -64,6 +65,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -76,6 +78,7 @@ import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
+import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
 import must.kdroiders.hustlehub.sharedComposables.EmptyStateView
 import must.kdroiders.hustlehub.sharedComposables.ErrorView
@@ -114,6 +117,7 @@ fun ServiceDetailScreen(
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit = { _, _ -> },
     onNavigateToAllReviews: (serviceId: String) -> Unit = {},
     onNavigateToEditService: (serviceId: String) -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     val state by serviceDetailViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -124,34 +128,14 @@ fun ServiceDetailScreen(
     }
 
     var fullScreenImageIndex by remember { mutableStateOf<Int?>(null) }
-    var showQuickContactModal by remember { mutableStateOf(false) }
 
     val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
     val isConnected by connectivityViewModel.isConnected.collectAsStateWithLifecycle()
 
-    if (showQuickContactModal) {
-        must.kdroiders.hustlehub.sharedComposables.QuickContactModal(
-            onDismiss = { showQuickContactModal = false },
-            onSaveContactInfo = { phone, location ->
-                showQuickContactModal = false
-                serviceDetailViewModel.updateContactInfo(phone, location) {
-                    val svc = state.service
-                    if (svc != null) {
-                        onNavigateToChat(
-                            svc.providerId,
-                            svc.id,
-                            svc.title,
-                            svc.category.name,
-                            svc.priceRange,
-                            state.provider?.name ?: "",
-                        )
-                    }
-                }
-            },
-        )
-    }
-
     Scaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(TestTags.SERVICE_DETAIL_SCREEN),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (!state.isLoading && state.error == null) {
@@ -231,6 +215,7 @@ fun ServiceDetailScreen(
                     onProviderClick = { state.service?.providerId?.let { onNavigateToProviderProfile(it) } },
                     onNavigateToWriteReview = onNavigateToWriteReview,
                     onNavigateToAllReviews = onNavigateToAllReviews,
+                    onNavigateToChat = onNavigateToChat,
                 )
             }
 
@@ -276,7 +261,7 @@ fun ServiceDetailScreen(
                             ) {
                                 Icon(Icons.Default.Share, contentDescription = stringResource(R.string.action_share), tint = Color.White, modifier = Modifier.size(22.dp))
                             }
-                            var isBookmarked by remember { mutableStateOf(false) }
+                            val isBookmarked by serviceDetailViewModel.isBookmarked.collectAsStateWithLifecycle()
                             val bookmarkInteractionSource = remember { MutableInteractionSource() }
                             val isBookmarkPressed by bookmarkInteractionSource.collectIsPressedAsState()
                             val bookmarkScale by animateFloatAsState(
@@ -297,10 +282,10 @@ fun ServiceDetailScreen(
 
                             IconButton(
                                 onClick = {
-                                    isBookmarked = !isBookmarked
-                                    scope.launch {
-                                        val msg = if (isBookmarked) bookmarkSavedMsg else bookmarkRemovedMsg
-                                        snackbarHostState.showSnackbar(msg)
+                                    serviceDetailViewModel.toggleBookmark { _, msg ->
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(msg)
+                                        }
                                     }
                                 },
                                 interactionSource = bookmarkInteractionSource,
@@ -378,6 +363,14 @@ private fun ServiceDetailContent(
     onProviderClick: () -> Unit,
     onNavigateToWriteReview: (serviceId: String, providerId: String) -> Unit,
     onNavigateToAllReviews: (serviceId: String) -> Unit,
+    onNavigateToChat: (
+        providerId: String,
+        serviceId: String,
+        serviceTitle: String,
+        serviceCategory: String,
+        servicePriceRange: String,
+        providerName: String,
+    ) -> Unit,
 ) {
     val service = state.service ?: return
     val provider = state.provider
@@ -385,6 +378,7 @@ private fun ServiceDetailContent(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         // Hero Image Header
         item(key = "hero_image") {
@@ -507,7 +501,6 @@ private fun ServiceDetailContent(
                     )
                 }
             }
-            Spacer(Modifier.height(16.dp))
         }
 
         // Provider Card
@@ -520,6 +513,7 @@ private fun ServiceDetailContent(
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
                     .clickable(onClick = onProviderClick)
+                    .testTag(TestTags.VIEW_PROFILE_BUTTON)
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -598,88 +592,115 @@ private fun ServiceDetailContent(
                     )
                 }
             }
-            Spacer(Modifier.height(24.dp))
         }
 
         // About section
         if (service.description.isNotBlank()) {
-            item(key = "about_header") {
-                SectionHeader(title = stringResource(R.string.service_about_title), modifier = Modifier.padding(horizontal = 20.dp))
-                Spacer(Modifier.height(12.dp))
-            }
-            item(key = "about_body") {
-                Text(
-                    text = service.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                )
-                Spacer(Modifier.height(16.dp))
+            item(key = "about_section") {
+                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    SectionHeader(title = stringResource(R.string.service_about_title))
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = service.description.trim(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
+                    )
+                }
             }
         }
 
         // Portfolio
         if (service.portfolio.isNotEmpty()) {
-            item(key = "portfolio_header") {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    SectionHeader(title = stringResource(R.string.service_portfolio_title))
-                    TextButton(onClick = { /* Full gallery view later */ }) {
-                        Text(stringResource(R.string.home_view_all), style = MaterialTheme.typography.labelLarge)
-                    }
+            item(key = "portfolio_section") {
+                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    SectionHeader(
+                        title = stringResource(R.string.service_portfolio_title),
+                        actionLabel = if (service.portfolio.size > 3) stringResource(R.string.home_view_all) else null,
+                        onAction = { onImageClick(0) },
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    PortfolioGallery(
+                        imageUrls = service.portfolio,
+                        onImageClick = onImageClick,
+                    )
                 }
-                Spacer(Modifier.height(8.dp))
-            }
-            item(key = "portfolio_row") {
-                PortfolioGallery(
-                    imageUrls = service.portfolio,
-                    onImageClick = onImageClick,
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                )
-                Spacer(Modifier.height(32.dp))
             }
         }
 
         // Reviews section
-        item(key = "reviews_header") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.service_reviews_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.semantics { heading() },
-                )
-                if (!state.isOwnService) {
-                    Button(
-                        onClick = { onNavigateToWriteReview(service.id, service.providerId) },
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                        modifier = Modifier.height(32.dp),
-                    ) {
-                        Text(stringResource(R.string.chat_write_review), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+        item(key = "reviews_section") {
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.service_reviews_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                    if (!state.isOwnService) {
+                        val eligibility = state.reviewEligibility
+                        if (eligibility != null && !eligibility.canReview) {
+                            if (eligibility.isNoInteraction) {
+                                OutlinedButton(
+                                    onClick = {
+                                        onNavigateToChat(
+                                            service.providerId,
+                                            service.id,
+                                            service.title,
+                                            service.category.name,
+                                            service.priceRange,
+                                            state.provider?.name ?: "",
+                                        )
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                    modifier = Modifier.height(32.dp),
+                                ) {
+                                    Text(
+                                        stringResource(R.string.service_review_chat_first_btn),
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.labelSmall,
+                                    )
+                                }
+                            } else if (eligibility.isAlreadyReviewed) {
+                                OutlinedButton(
+                                    onClick = { onNavigateToWriteReview(service.id, service.providerId) },
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                    modifier = Modifier.height(32.dp),
+                                ) {
+                                    Text(
+                                        stringResource(R.string.review_edit_title),
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.labelSmall,
+                                    )
+                                }
+                            }
+                        } else {
+                            Button(
+                                onClick = { onNavigateToWriteReview(service.id, service.providerId) },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                modifier = Modifier.height(32.dp),
+                            ) {
+                                Text(
+                                    stringResource(R.string.chat_write_review),
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                            }
+                        }
                     }
                 }
+                Spacer(Modifier.height(12.dp))
+                ReviewSummaryCard(
+                    averageRating = service.averageRating,
+                    totalReviews = state.totalReviewCount,
+                )
             }
-            Spacer(Modifier.height(16.dp))
-        }
-
-        item(key = "reviews_summary") {
-            ReviewSummaryCard(
-                averageRating = service.averageRating,
-                totalReviews = state.totalReviewCount,
-                modifier = Modifier.padding(horizontal = 20.dp),
-            )
-            Spacer(Modifier.height(24.dp))
         }
 
         if (state.reviews.isEmpty()) {

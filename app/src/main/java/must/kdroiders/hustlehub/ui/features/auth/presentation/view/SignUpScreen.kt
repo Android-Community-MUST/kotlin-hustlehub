@@ -13,6 +13,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -26,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustleTextField
@@ -34,7 +37,7 @@ import must.kdroiders.hustlehub.ui.features.auth.presentation.viewmodel.SignUpVi
 
 @Composable
 fun SignUpScreen(
-    onNavigateToLogin: () -> Unit,
+    onNavigateToLogin: (email: String) -> Unit,
     onSignUpSuccess: (email: String) -> Unit,
     onGoogleSignInClick: () -> Unit = {},
     signUpViewModel: SignUpViewModel = hiltViewModel(),
@@ -82,7 +85,10 @@ fun SignUpScreen(
                 value = uiState.name,
                 onValueChange = signUpViewModel::onNameChanged,
                 label = stringResource(R.string.auth_name_label),
-                modifier = Modifier.fillMaxWidth(),
+                contentType = ContentType.PersonFullName,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TestTags.SIGNUP_NAME),
                 isError = uiState.nameError != null,
                 errorText = uiState.nameError,
                 leadingIcon = Icons.Default.Person,
@@ -98,7 +104,10 @@ fun SignUpScreen(
                 onValueChange = signUpViewModel::onEmailChanged,
                 label = stringResource(R.string.auth_student_email_label),
                 placeholder = stringResource(R.string.auth_student_email_hint),
-                modifier = Modifier.fillMaxWidth(),
+                contentType = ContentType.EmailAddress,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TestTags.SIGNUP_EMAIL),
                 isError = uiState.emailError != null,
                 errorText = uiState.emailError,
                 keyboardOptions = KeyboardOptions(
@@ -113,7 +122,10 @@ fun SignUpScreen(
                 value = uiState.password,
                 onValueChange = signUpViewModel::onPasswordChanged,
                 label = stringResource(R.string.auth_password_hint),
-                modifier = Modifier.fillMaxWidth(),
+                contentType = ContentType.NewPassword,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TestTags.SIGNUP_PASSWORD),
                 isError = uiState.passwordError != null,
                 errorText = uiState.passwordError,
                 isPassword = true,
@@ -132,7 +144,10 @@ fun SignUpScreen(
                 value = uiState.confirmPassword,
                 onValueChange = signUpViewModel::onConfirmPasswordChanged,
                 label = stringResource(R.string.auth_confirm_password_hint),
-                modifier = Modifier.fillMaxWidth(),
+                contentType = ContentType.NewPassword,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TestTags.SIGNUP_CONFIRM_PASSWORD),
                 isError = uiState.confirmPasswordError != null,
                 errorText = uiState.confirmPasswordError,
                 isPassword = true,
@@ -144,7 +159,9 @@ fun SignUpScreen(
             HustleButton(
                 text = stringResource(R.string.auth_btn_signup),
                 onClick = { signUpViewModel.signUp(onSignUpSuccess) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TestTags.SIGNUP_BUTTON),
                 loading = uiState.isLoading,
             )
 
@@ -208,7 +225,7 @@ fun SignUpScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable { onNavigateToLogin() },
+                    modifier = Modifier.clickable { onNavigateToLogin(uiState.email) },
                 )
             }
         }

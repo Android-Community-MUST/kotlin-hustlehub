@@ -17,15 +17,26 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.Checkroom
+import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.LocalGasStation
 import androidx.compose.material.icons.filled.LocalMall
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.TwoWheeler
+import androidx.compose.material.icons.filled.Weekend
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,26 +58,27 @@ import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.theme.CategoryNeonAmber
 import must.kdroiders.hustlehub.ui.theme.CategoryNeonBlue
 import must.kdroiders.hustlehub.ui.theme.CategoryNeonBrightCyan
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonCoral
 import must.kdroiders.hustlehub.ui.theme.CategoryNeonCyan
 import must.kdroiders.hustlehub.ui.theme.CategoryNeonDefault
 import must.kdroiders.hustlehub.ui.theme.CategoryNeonGreen
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonIndigo
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonLime
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonMint
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonOrange
 import must.kdroiders.hustlehub.ui.theme.CategoryNeonPink
 import must.kdroiders.hustlehub.ui.theme.CategoryNeonPurple
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonRose
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonTeal
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonViolet
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonWarmAmber
+import must.kdroiders.hustlehub.ui.theme.CategoryNeonYellow
 import kotlin.math.*
 
 @Composable
 fun ProviderMarkerContent(pin: MapPin) {
-    val (icon, baseColor) = getCategoryIconAndColor(pin.category)
-    val neonColor = when (pin.category) {
-        ServiceCategory.SALON -> CategoryNeonPurple
-        ServiceCategory.LAUNDRY -> CategoryNeonCyan
-        ServiceCategory.TUTORING -> CategoryNeonGreen
-        ServiceCategory.FOOD -> CategoryNeonAmber
-        ServiceCategory.TECH -> CategoryNeonBrightCyan
-        ServiceCategory.FASHION -> CategoryNeonBlue
-        ServiceCategory.PHOTOGRAPHY -> CategoryNeonPink
-        else -> CategoryNeonDefault
-    }
+    val (icon, neonColor) = getCategoryIconAndColor(pin.category)
+    val baseColor = neonColor
 
     val pillBgColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
     val titleTextColor = MaterialTheme.colorScheme.onSurface
@@ -173,13 +185,24 @@ fun ProviderMarkerContent(pin: MapPin) {
 @Composable
 fun getCategoryIconAndColor(category: ServiceCategory): Pair<androidx.compose.ui.graphics.vector.ImageVector, Color> {
     return when (category) {
-        ServiceCategory.SALON -> Icons.Default.ContentCut to CategoryNeonPurple
-        ServiceCategory.LAUNDRY -> Icons.Default.LocalMall to CategoryNeonCyan
-        ServiceCategory.TUTORING -> Icons.Default.School to CategoryNeonGreen
-        ServiceCategory.FOOD -> Icons.Default.Restaurant to CategoryNeonAmber
         ServiceCategory.TECH -> Icons.Default.Computer to CategoryNeonBrightCyan
-        ServiceCategory.FASHION -> Icons.Default.Checkroom to CategoryNeonBlue
+        ServiceCategory.PRINTING -> Icons.Default.Print to CategoryNeonIndigo
+        ServiceCategory.DESIGN -> Icons.Default.Palette to CategoryNeonViolet
+        ServiceCategory.TUTORING -> Icons.Default.School to CategoryNeonGreen
         ServiceCategory.PHOTOGRAPHY -> Icons.Default.PhotoCamera to CategoryNeonPink
+        ServiceCategory.RENTALS -> Icons.Default.DirectionsCar to CategoryNeonTeal
+        ServiceCategory.GAS_CYLINDER -> Icons.Default.LocalGasStation to CategoryNeonOrange
+        ServiceCategory.FOOD -> Icons.Default.Restaurant to CategoryNeonAmber
+        ServiceCategory.TUCK_SHOP -> Icons.Default.Storefront to CategoryNeonWarmAmber
+        ServiceCategory.DELIVERY -> Icons.Default.TwoWheeler to CategoryNeonYellow
+        ServiceCategory.SALON -> Icons.Default.ContentCut to CategoryNeonPurple
+        ServiceCategory.BEAUTY -> Icons.Default.Spa to CategoryNeonRose
+        ServiceCategory.FASHION -> Icons.Default.Checkroom to CategoryNeonBlue
+        ServiceCategory.DECOR -> Icons.Default.Weekend to CategoryNeonGreen
+        ServiceCategory.CLEANING -> Icons.Default.CleaningServices to CategoryNeonMint
+        ServiceCategory.LAUNDRY -> Icons.Default.LocalMall to CategoryNeonCyan
+        ServiceCategory.MARKETPLACE -> Icons.Default.ShoppingBag to CategoryNeonCoral
+        ServiceCategory.EVENTS -> Icons.Default.Celebration to CategoryNeonLime
         else -> Icons.Default.Place to CategoryNeonDefault
     }
 }

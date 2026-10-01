@@ -14,6 +14,7 @@ import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserReposi
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetServicesByProviderUseCase
 import must.kdroiders.hustlehub.ui.features.profile.domain.util.HustleScoreCalculator
+import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -69,19 +70,22 @@ class ProviderProfileViewModel
                         val totalReviews = services.sumOf { it.reviewCount }
                         val avgRating = if (services.isNotEmpty()) services.map { it.averageRating }.average().toFloat() else 0f
 
-                        // Compute hustle score using Bayesian Average
                         val hustleScore = HustleScoreCalculator.calculate(services)
-
-                        // Compute badges based on thresholds
                         val badges = buildList {
                             if (totalReviews >= 20 && avgRating >= 4.5f) add(Badge("Top Rated", BadgeType.GOLD))
                             if (services.size >= 3) add(Badge("Multi-Service", BadgeType.BLUE))
                             if (provider?.isVerified == true) add(Badge("Verified", BadgeType.GREEN))
                         }
 
+                        val isOnline = if (services.isNotEmpty()) {
+                            services.any { it.availability != ServiceAvailability.OFFLINE }
+                        } else {
+                            provider?.isOnline ?: true
+                        }
+
                         _uiState.update {
                             it.copy(
-                                provider = provider,
+                                provider = provider?.copy(isOnline = isOnline),
                                 services = services,
                                 reviewCount = totalReviews,
                                 hustleScore = hustleScore,

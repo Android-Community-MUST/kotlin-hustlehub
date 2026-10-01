@@ -5,8 +5,12 @@ import must.kdroiders.hustlehub.core.api.PageResponse
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.AvailabilityRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateReviewRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.CreateServiceRequest
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ProviderReplyRequest
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.RatingDistributionResponse
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewEligibilityResponse
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ReviewResponse
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.ServiceResponse
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.UpdateReviewRequest
 import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.UpdateServiceRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -82,10 +86,41 @@ interface ServiceApiService {
         @Query("size") size: Int = 10,
     ): ApiResponse<PageResponse<ReviewResponse>>
 
-    /** Submits a new review. Maps to POST /api/v1/services/{serviceId}/reviews. Returns 409 on duplicate (same user + service). */
     @POST("services/{serviceId}/reviews")
     suspend fun submitReview(
         @Path("serviceId") serviceId: String,
         @Body request: CreateReviewRequest,
     ): ApiResponse<ReviewResponse>
+
+    @GET("services/{serviceId}/reviews/distribution")
+    suspend fun getRatingDistribution(
+        @Path("serviceId") serviceId: String,
+    ): ApiResponse<RatingDistributionResponse>
+
+    @POST("reviews/{reviewId}/reply")
+    suspend fun replyToReview(
+        @Path("reviewId") reviewId: String,
+        @Body request: ProviderReplyRequest,
+    ): ApiResponse<ReviewResponse>
+
+    @PUT("reviews/{reviewId}")
+    suspend fun updateReview(
+        @Path("reviewId") reviewId: String,
+        @Body request: UpdateReviewRequest,
+    ): ApiResponse<ReviewResponse>
+
+    @DELETE("reviews/{reviewId}")
+    suspend fun deleteReview(
+        @Path("reviewId") reviewId: String,
+    ): ApiResponse<Unit>
+
+    @GET("services/{serviceId}/reviews/mine")
+    suspend fun getMyReviewForService(
+        @Path("serviceId") serviceId: String,
+    ): ApiResponse<ReviewResponse?>
+
+    @GET("services/{serviceId}/reviews/eligibility")
+    suspend fun getReviewEligibility(
+        @Path("serviceId") serviceId: String,
+    ): ApiResponse<ReviewEligibilityResponse>
 }

@@ -65,6 +65,7 @@ fun MyServicesScreen(
     onBack: () -> Unit,
     onCreateService: () -> Unit,
     onEditService: (String) -> Unit,
+    onBoostService: (String) -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -253,6 +254,7 @@ fun MyServicesScreen(
                                     onAvailabilityChange = { newAvailability ->
                                         viewModel.onAvailabilityChange(service.id, newAvailability)
                                     },
+                                    onBoostClick = { onBoostService(service.id) },
                                 )
                             }
                         }

@@ -63,6 +63,8 @@
     <string name="settings_help_faq_subtitle">FAQs, Contact Support, Bug Reports &amp; Legal</string>
     <string name="settings_app_version">App Version</string>
     <string name="settings_open_source_licenses">Open Source Licenses</string>
+    <string name="settings_rate_app">Rate HustleHub</string>
+    <string name="settings_rate_app_subtitle">Enjoying HustleHub? Leave a review on Google Play</string>
 
     <string name="settings_choose_theme">Choose Theme</string>
     <string name="settings_theme_system">System Default</string>
@@ -184,17 +186,29 @@
     <string name="offline_banner_online">Back online</string>
     <string name="offline_retry_cd">Retry connection</string>
     <string name="badge_featured_cd">Featured listing badge</string>
-    <string name="badge_featured_text">&#9889; FEATURED</string>
+    <string name="badge_featured_text">FEATURED</string>
     <string name="badge_pro_cd">HustleHub Pro member</string>
     <string name="badge_pro_text">PRO</string>
-    <string name="quick_contact_title">Delivery &amp; Contact Info</string>
-    <string name="quick_contact_subtitle">Enter your phone number and campus location so the service provider can reach you.</string>
-    <string name="quick_contact_phone_label">Phone Number</string>
-    <string name="quick_contact_phone_hint">e.g. 0712345678</string>
-    <string name="quick_contact_location_label">Campus Residence / Location</string>
-    <string name="quick_contact_location_hint">e.g. Hostel B Room 204 or Mess 2</string>
-    <string name="quick_contact_phone_required">Phone number is required</string>
-    <string name="quick_contact_location_required">Campus location is required</string>
+    <!-- Provider Review Reply -->
+    <string name="reply_to_review_title">Reply to Review</string>
+    <string name="reply_to_review_label">Your Response</string>
+    <string name="reply_to_review_placeholder">Thank the customer or address their feedback…</string>
+    <string name="reply_to_review_submit">Post Reply</string>
+
+    <!-- Report Dialog -->
+    <string name="report_submitted_title">Report Submitted</string>
+    <string name="report_submitted_message">Thank you. Our moderators will review this reported %1$s shortly.</string>
+    <string name="report_target_title">Report %1$s</string>
+    <string name="report_why_prompt">Why are you reporting this?</string>
+    <string name="report_reason_spam">Spam</string>
+    <string name="report_reason_inappropriate">Inappropriate</string>
+    <string name="report_reason_fake">Fake</string>
+    <string name="report_reason_harassment">Harassment</string>
+    <string name="report_reason_other">Other</string>
+    <string name="report_specify_required">Please specify (required)</string>
+    <string name="report_context_optional">Additional context (optional)</string>
+    <string name="report_details_placeholder">Provide details…</string>
+    <string name="report_submit_action">Submit Report</string>
 
     <!-- Authentication & Account -->
     <string name="auth_login_title">Login to your account</string>
@@ -248,7 +262,8 @@
 
     <!-- Phase 3: Home, Discovery & AI Search -->
     <string name="home_section_featured">Featured Hustlers</string>
-    <string name="home_section_available_now">Available Now</string>
+    <string name="home_section_available_now">Discover Hustles</string>
+    <string name="home_section_discover_hustles">Discover Hustles</string>
     <string name="home_section_top_hustlers">Top Hustlers</string>
     <string name="home_view_all">View All</string>
     <string name="home_coming_soon">Coming soon</string>
@@ -383,6 +398,8 @@
     <string name="chat_status_sending">Sending</string>
     <string name="chat_status_read">Read</string>
     <string name="chat_status_delivered">Delivered</string>
+    <string name="chat_e2ee_banner_text">Messages are end-to-end encrypted. Only people in this chat can read, listen to, or share them.</string>
+    <string name="chat_scroll_to_bottom">Scroll to bottom</string>
     <string name="chat_status_sent">Sent</string>
     <string name="cd_play">Play</string>
     <string name="cd_pause">Pause</string>
@@ -391,6 +408,15 @@
     <string name="chat_shared_location">Shared Location</string>
     <string name="chat_shared_location_pin">Shared Location Pin</string>
     <string name="chat_tap_view_maps">Tap to view in Maps</string>
+
+    <!-- In-chat search -->
+    <string name="chat_search_in_conversation">Search in conversation</string>
+    <string name="chat_search_result_format">%1$d of %2$d</string>
+    <string name="chat_search_no_results">No messages found</string>
+    <string name="cd_search_next_result">Next result</string>
+    <string name="cd_search_prev_result">Previous result</string>
+    <string name="cd_close_search">Close search</string>
+    <string name="cd_open_search">Search messages</string>
     <string name="chat_service_request">SERVICE REQUEST</string>
     <string name="chat_view_service">View Service</string>
 
@@ -418,6 +444,14 @@
     <string name="service_portfolio_free_format">Max %1$d photos • %2$d/%1$d</string>
     <string name="service_portfolio_pro_upgrade_attached">You have %1$d photos attached to this service. Upgrade to PRO to add or swap more photos!</string>
     <string name="service_portfolio_free_limit_upgrade">Free limit reached (3/3 photos). Upgrade to PRO to upload up to 15 portfolio photos!</string>
+    <string name="service_category_placeholder">Select category</string>
+    <string name="service_category_sheet_title">Select Category</string>
+    <string name="service_category_sheet_subtitle">Choose the best fit for your hustle</string>
+    <string name="service_category_search_placeholder">Search categories…</string>
+    <string name="service_category_no_results">No categories found</string>
+    <string name="cd_choose_category">Choose category</string>
+    <string name="cd_required">required</string>
+    <string name="service_category_required_error">Please select a category</string>
     <string name="service_title_label">Service Title</string>
     <string name="service_title_placeholder">e.g. Professional Braiding Services</string>
     <string name="service_desc_label">Description</string>
@@ -429,6 +463,7 @@
     <string name="service_tags_hint">Max 5 tags • press Enter or + to add</string>
     <string name="service_tags_placeholder">e.g. braids</string>
     <string name="cd_add_tag">Add tag</string>
+    <string name="cd_remove_tag_format">Remove tag %1$s</string>
     <string name="service_open_to_barter">Open to Barter</string>
     <string name="service_barter_desc">Accept service exchanges instead of cash</string>
     <string name="cd_barter_service">Open to Barter Service</string>
@@ -549,7 +584,7 @@
     <string name="profile_fallback_name">Hustler Provider</string>
     <string name="profile_status_available">Available on Campus</string>
     <string name="profile_status_off_duty">Off Duty</string>
-    <string name="profile_fallback_campus_location">MUST Main Campus</string>
+    <string name="profile_fallback_campus_location">Nchiru</string>
     <string name="profile_stat_hustle_score">HUSTLE\nSCORE</string>
     <string name="profile_stat_services">SERVICES</string>
     <string name="profile_stat_reviews">REVIEWS</string>
@@ -560,6 +595,12 @@
     <string name="service_kes_price_format">KES %1$s</string>
     <string name="cd_service_item_format">Service: %1$s, Price: KES %2$s</string>
     <string name="status_active">Active</string>
+    <string name="profile_tab_services">Services</string>
+    <string name="profile_tab_badges">Badges</string>
+    <string name="profile_tab_insights">Insights</string>
+    <string name="profile_badges_count_format">Badges (%1$d)</string>
+    <string name="profile_badges_empty_title">No Badges Yet</string>
+    <string name="profile_badges_empty_desc">Complete services and earn 5-star ratings to unlock your first achievement badge!</string>
     <string name="profile_tab_analytics">Analytics</string>
     <string name="profile_tab_earnings">Earnings</string>
     <string name="cd_tab_format">%1$s tab</string>
@@ -584,10 +625,24 @@
     <string name="review_post_anonymously">Post anonymously</string>
     <string name="review_already_reviewed_btn">Already Reviewed</string>
     <string name="review_submit_btn">Submit Review</string>
+    <string name="review_update_btn">Update Review</string>
+    <string name="review_edit_title">Edit Your Review</string>
+    <string name="review_updated_snackbar">Review updated! Thank you.</string>
+    <string name="review_delete_btn">Delete Review</string>
+    <string name="review_deleted_snackbar">Review deleted.</string>
+    <string name="review_delete_dialog_title">Delete Review?</string>
+    <string name="review_delete_dialog_message">Are you sure you want to delete your review? This action cannot be undone.</string>
+    <string name="review_edited_tag">(edited)</string>
     <string name="cd_success">Success</string>
     <string name="review_success_title">Review Submitted!</string>
     <string name="review_success_subtitle">Thank you for sharing your feedback</string>
     <string name="reviews_count_format">%1$d reviews</string>
+    <string name="service_review_chat_first_btn">Message to Review</string>
+    <string name="review_ineligible_no_interaction_title">Message the Provider First</string>
+    <string name="review_ineligible_no_interaction_desc">To keep HustleHub feedback trustworthy and verified, you need to chat or interact with the provider before writing a review.</string>
+    <string name="review_ineligible_own_service_title">Cannot Review Own Service</string>
+    <string name="review_ineligible_own_service_desc">You are the provider of this service and cannot review it.</string>
+    <string name="action_message_provider">Message Provider</string>
 
     <!-- Settings -->
     <string name="toast_feature_coming_soon">Feature coming soon</string>
@@ -710,4 +765,69 @@
     <string name="auth_account_suspended_temporary_format">Temporary Suspension (%1$s)</string>
     <string name="auth_account_suspended_permanent">Indefinite / Permanent Suspension</string>
     <string name="auth_account_suspended_appeal_instructions">If you believe this suspension is in error or would like to submit an appeal with additional context, tap below to contact the moderation team.</string>
+
+    <!-- Bookmarks Screen -->
+    <string name="bookmarks_title">Bookmarks</string>
+    <string name="bookmarks_empty_title">No bookmarks yet</string>
+    <string name="bookmarks_empty_subtitle">Items you bookmark will appear here for quick access.</string>
+    <string name="bookmarks_remove_cd">Remove Bookmark</string>
+
+    <!-- Subscription Screen -->
+    <string name="sub_title">HustleHub Pro</string>
+    <string name="sub_extend_renew">Extend / Renew Subscription</string>
+    <string name="sub_benefits_title">What you get with Pro</string>
+    <string name="sub_benefit_priority_listing">Priority listing in discovery feed</string>
+    <string name="sub_benefit_portfolio_photos">Up to 15 portfolio photos (Free: 3)</string>
+    <string name="sub_benefit_video_pitch">Video pitch upload</string>
+    <string name="sub_benefit_pro_badge">Verified PRO badge on profile</string>
+    <string name="sub_benefit_map_pin">Featured campus map pin</string>
+    <string name="sub_feature">Feature</string>
+    <string name="sub_free">Free</string>
+    <string name="sub_pro">Pro</string>
+    <string name="sub_comparison_photos">Photos</string>
+    <string name="sub_comparison_video_pitch">Video pitch</string>
+    <string name="sub_comparison_featured">Featured listing</string>
+    <string name="sub_comparison_badge">PRO badge</string>
+    <string name="sub_comparison_price">Price</string>
+    <string name="sub_comparison_free_photos_val">3</string>
+    <string name="sub_comparison_pro_photos_val">15</string>
+    <string name="sub_comparison_no">No</string>
+    <string name="sub_comparison_yes">Yes</string>
+    <string name="sub_comparison_price_pro">KES 150/mo</string>
+    <string name="sub_section_select_plan">Select Subscription Plan</string>
+    <string name="sub_section_extend_plan">Extend Subscription</string>
+    <string name="sub_plan_monthly_title">HustleHub Pro (1 Month)</string>
+    <string name="sub_plan_monthly_desc">Full Pro benefits &amp; badge for 30 days</string>
+    <string name="sub_plan_monthly_price">KES 150</string>
+    <string name="sub_plan_quarterly_title">HustleHub Pro (3 Months)</string>
+    <string name="sub_plan_quarterly_save">SAVE KES 50</string>
+    <string name="sub_plan_quarterly_desc">Full Pro benefits &amp; badge for 90 days</string>
+    <string name="sub_plan_quarterly_price">KES 400</string>
+    <string name="sub_plan_featured_title">Featured Listing Boost</string>
+    <string name="sub_plan_featured_desc">Boost service to top of search for 3 days</string>
+    <string name="sub_plan_featured_price">KES 50</string>
+    <string name="sub_selected_service">Selected Service</string>
+    <string name="sub_featuring_service">Featuring Service</string>
+    <string name="sub_no_services_error">You do not have any active services. Please create a service first before boosting it.</string>
+    <string name="sub_choose_service_to_boost">Choose service to boost:</string>
+    <string name="sub_selected_cd">Selected</string>
+    <string name="sub_pay_with_mpesa">Pay with M-Pesa</string>
+    <string name="sub_phone_label">Phone Number</string>
+    <string name="sub_phone_placeholder">e.g. 0712345678</string>
+    <string name="sub_btn_upgrade_quarterly">Upgrade to Pro (3 Months) — KES 400</string>
+    <string name="sub_btn_boost_service_format">Boost \"%1$s\" (3 Days) — KES 50</string>
+    <string name="sub_btn_boost_listing">Boost Listing (3 Days) — KES 50</string>
+    <string name="sub_btn_upgrade_monthly">Upgrade to Pro (1 Month) — KES 150</string>
+    <string name="sub_active_pro_member">ACTIVE PRO MEMBER</string>
+    <string name="sub_plan_format">Plan: %1$s</string>
+    <string name="sub_time_remaining">Time Remaining:</string>
+    <string name="sub_expires_format">Expires: %1$s</string>
+    <string name="sub_expired">Subscription Expired</string>
+    <string name="sub_time_days_hours">%1$d %2$s, %3$d %4$s left</string>
+    <string name="sub_time_hours">%1$d %2$s left</string>
+    <string name="sub_time_less_than_hour">&lt; 1 hour left</string>
+    <string name="sub_day_singular">day</string>
+    <string name="sub_day_plural">days</string>
+    <string name="sub_hour_singular">hour</string>
+    <string name="sub_hour_plural">hours</string>
 </resources>

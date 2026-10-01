@@ -48,8 +48,10 @@ class VoicePlayer(private val context: Context) {
     private val _playerState = MutableStateFlow(PlayerState())
     val playerState: StateFlow<PlayerState> = _playerState.asStateFlow()
 
-    private val exoPlayer: ExoPlayer by lazy {
-        ExoPlayer
+    private var exoPlayer: ExoPlayer? = null
+
+    private fun getOrCreatePlayer(): ExoPlayer {
+        return exoPlayer ?: ExoPlayer
             .Builder(context)
             .build()
             .apply {
@@ -77,8 +79,8 @@ class VoicePlayer(private val context: Context) {
                             _playerState.update { it.copy(durationMs = dur) }
                         }
                         if (state == Player.STATE_ENDED) {
-                            exoPlayer.seekTo(0)
-                            exoPlayer.pause()
+                            seekTo(0)
+                            pause()
                             _playerState.update {
                                 it.copy(
                                     currentPositionMs = 0,
@@ -87,7 +89,7 @@ class VoicePlayer(private val context: Context) {
                         }
                     }
                 })
-            }
+            }.also { exoPlayer = it }
     }
 
     private val speedCycle = listOf(1.0f, 1.5f, 2.0f)
@@ -97,7 +99,7 @@ class VoicePlayer(private val context: Context) {
         val current = _playerState.value.playbackSpeed
         val idx = speedCycle.indexOf(current)
         val next = speedCycle[(idx + 1) % speedCycle.size]
-        exoPlayer.playbackParameters = PlaybackParameters(next)
+        exoPlayer?.playbackParameters = PlaybackParameters(next)
         _playerState.update { it.copy(playbackSpeed = next) }
     }
 
@@ -123,7 +125,7 @@ class VoicePlayer(private val context: Context) {
         scope.launch {
             try {
                 val localUri = getOrDownload(url)
-                exoPlayer.apply {
+                getOrCreatePlayer().apply {
                     // Preserve current speed when switching tracks
                     val speed = _playerState.value.playbackSpeed
                     playbackParameters = PlaybackParameters(speed)
@@ -139,13 +141,13 @@ class VoicePlayer(private val context: Context) {
     }
 
     fun pause() {
-        exoPlayer.pause()
+        exoPlayer?.pause()
         _playerState.update { it.copy(isPlaying = false) }
         stopProgressUpdates()
     }
 
     private fun resume() {
-        exoPlayer.play()
+        exoPlayer?.play()
         _playerState.update { it.copy(isPlaying = true) }
     }
 
@@ -165,7 +167,8 @@ class VoicePlayer(private val context: Context) {
     fun release() {
         stopProgressUpdates()
         try {
-            exoPlayer.release()
+            exoPlayer?.release()
+            exoPlayer = null
         } catch (e: Throwable) {
             // Ignored in unit test environments
         }
@@ -176,8 +179,8 @@ class VoicePlayer(private val context: Context) {
     private fun stopPlayback() {
         stopProgressUpdates()
         try {
-            exoPlayer.stop()
-            exoPlayer.clearMediaItems()
+            exoPlayer?.stop()
+            exoPlayer?.clearMediaItems()
         } catch (e: Exception) {
             Timber.w(e, "Error stopping ExoPlayer")
         }
@@ -207,8 +210,9 @@ class VoicePlayer(private val context: Context) {
         stopProgressUpdates()
         updateJob = scope.launch {
             while (true) {
-                val pos = exoPlayer.currentPosition.coerceAtLeast(0L).toInt()
-                val dur = exoPlayer.duration.takeIf { it > 0L }?.toInt() ?: _playerState.value.durationMs
+                val player = exoPlayer ?: break
+                val pos = player.currentPosition.coerceAtLeast(0L).toInt()
+                val dur = player.duration.takeIf { it > 0L }?.toInt() ?: _playerState.value.durationMs
                 _playerState.update { it.copy(currentPositionMs = pos, durationMs = dur) }
                 delay(PROGRESS_UPDATE_INTERVAL_MS)
             }

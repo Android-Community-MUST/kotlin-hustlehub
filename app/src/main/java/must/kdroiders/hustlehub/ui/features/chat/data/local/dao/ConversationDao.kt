@@ -18,6 +18,10 @@ interface ConversationDao {
     @Query("SELECT COALESCE(SUM(unreadCount), 0) FROM conversations")
     fun getTotalUnreadCount(): Flow<Int>
 
+    /** Synchronous snapshot of total unread counts for background receivers and badge sync. */
+    @Query("SELECT COALESCE(SUM(unreadCount), 0) FROM conversations")
+    suspend fun getTotalUnreadCountSync(): Int
+
     @Upsert
     suspend fun upsert(entity: ConversationEntity)
 
