@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
 import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
@@ -130,7 +131,8 @@ class SplashViewModel
                                     Timber.e(e, "Failed to reload user in splash screen")
                                 }
 
-                                if (currentUser.isEmailVerified) {
+                                val isVerified = currentUser.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(currentUser.email)
+                                if (isVerified) {
                                     val hasProfileResult = userRepository.hasUserProfile(currentUser.uid)
                                     var targetDestination: SplashDestination = SplashDestination.Home
 

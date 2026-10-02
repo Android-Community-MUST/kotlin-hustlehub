@@ -36,10 +36,9 @@ A **defense-in-depth** model ensures administrative features remain inaccessible
 ```
 
 ### Authorized Administrator Allowlist:
-- `kipyegonaldo@gmail.com`
-- `vertigoproject.lab@gmail.com`
-- `jumaderick89@gmail.com`
 - `admin@must.ac.ke`
+- `nganga124007@students.must.ac.ke`
+- `nganga124007@students.ac.ke`
 
 ---
 

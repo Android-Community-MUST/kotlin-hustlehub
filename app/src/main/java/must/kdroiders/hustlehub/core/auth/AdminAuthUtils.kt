@@ -7,10 +7,9 @@ package must.kdroiders.hustlehub.core.auth
 object AdminAuthUtils {
     private val ADMIN_EMAILS =
         setOf(
-            "kipyegonaldo@gmail.com",
-            "vertigoproject.lab@gmail.com",
-            "jumaderick89@gmail.com",
             "admin@must.ac.ke",
+            "nganga124007@students.must.ac.ke",
+            "nganga124007@students.ac.ke",
         )
 
     /**
@@ -22,7 +21,7 @@ object AdminAuthUtils {
     ): Boolean {
         if (!email.isNullOrBlank()) {
             val normalized = email.trim().lowercase()
-            if (ADMIN_EMAILS.contains(normalized) || normalized.startsWith("vertigo")) {
+            if (ADMIN_EMAILS.contains(normalized)) {
                 return true
             }
         }
