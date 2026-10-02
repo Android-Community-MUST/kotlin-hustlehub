@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.core.api.userFriendlyMessage
+import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.AppTheme
@@ -130,7 +131,7 @@ class SettingsViewModel
                     displayName = user.displayName ?: "Hustler",
                     username = handle,
                     avatarUrl = user.photoUrl?.toString() ?: "",
-                    isVerified = user.isEmailVerified,
+                    isVerified = user.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(user.email),
                 )
             }
         }

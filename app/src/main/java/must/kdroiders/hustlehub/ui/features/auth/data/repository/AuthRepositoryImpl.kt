@@ -11,6 +11,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.core.api.FirebaseAuthErrorMapper
+import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
@@ -57,8 +58,10 @@ class AuthRepositoryImpl
                 // Refresh the ID token cache
                 user.getIdToken(true).await()
 
-                // Auto-send a new verification link if the email is still unverified
-                if (!user.isEmailVerified) {
+                val isVerified = user.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(user.email)
+
+                // Auto-send a new verification link if the email is still unverified and not admin
+                if (!isVerified) {
                     runCatching {
                         user.sendEmailVerification().await()
                         Timber.d("Automatic verification link re-sent to %s", email)
@@ -70,7 +73,7 @@ class AuthRepositoryImpl
 
                 LoginResult(
                     user = user,
-                    isEmailVerified = user.isEmailVerified,
+                    isEmailVerified = isVerified,
                 )
             }.getOrElse { e ->
                 if (e is CancellationException) throw e
@@ -111,18 +114,22 @@ class AuthRepositoryImpl
                     Timber.e(e, "Failed to update Firebase profile display name")
                 }
 
-                // Send the verification email link
-                runCatching {
-                    user.sendEmailVerification().await()
-                    Timber.d("Verification email sent to %s", email)
-                }.onFailure { e ->
-                    if (e is CancellationException) throw e
-                    Timber.e(e, "Failed to send verification email on sign-up")
+                val isVerified = user.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(email)
+
+                // Send the verification email link (skip for admin)
+                if (!isVerified) {
+                    runCatching {
+                        user.sendEmailVerification().await()
+                        Timber.d("Verification email sent to %s", email)
+                    }.onFailure { e ->
+                        if (e is CancellationException) throw e
+                        Timber.e(e, "Failed to send verification email on sign-up")
+                    }
                 }
 
                 LoginResult(
                     user = user,
-                    isEmailVerified = user.isEmailVerified,
+                    isEmailVerified = isVerified,
                 )
             }.getOrElse { e ->
                 if (e is CancellationException) throw e
@@ -188,7 +195,8 @@ class AuthRepositoryImpl
 
                 user.reload().await()
 
-                if (!user.isEmailVerified) {
+                val isVerified = user.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(user.email ?: email)
+                if (!isVerified) {
                     throw Exception(
                         "Email not yet verified. Please check your inbox and click the " +
                             "verification link, then tap \"Verify\" below.",
