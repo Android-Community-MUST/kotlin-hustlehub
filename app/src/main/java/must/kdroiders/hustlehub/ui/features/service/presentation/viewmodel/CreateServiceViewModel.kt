@@ -440,6 +440,7 @@ class CreateServiceViewModel
                             if (user != null && user.role == UserRole.ROLE_CUSTOMER) {
                                 userPreferences.writeUser(user.copy(role = UserRole.ROLE_PROVIDER))
                             }
+                            userPreferences.dismissProviderBanner()
                             resetForm()
                             _events.emit(CreateServiceEvent.Success)
                         }
