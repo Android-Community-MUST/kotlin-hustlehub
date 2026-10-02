@@ -17,9 +17,11 @@ import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -36,6 +38,7 @@ class HomeViewModelTest {
     private val userRepository: UserRepository = mockk(relaxed = true)
     private val notificationRepository: NotificationRepository = mockk(relaxed = true)
     private val userPreferences: UserPreferences = mockk(relaxed = true)
+    private val getMyServicesUseCase: GetMyServicesUseCase = mockk(relaxed = true)
 
     private lateinit var viewModel: HomeViewModel
 
@@ -48,6 +51,7 @@ class HomeViewModelTest {
 
         coEvery { userRepository.getUserProfile(any()) } returns Result.success(User(name = "John Doe"))
         coEvery { notificationRepository.getNotifications(any(), any()) } returns Result.success(emptyList())
+        coEvery { getMyServicesUseCase() } returns Result.success(emptyList())
 
         val page = PageResponse(
             content = listOf(
@@ -67,6 +71,7 @@ class HomeViewModelTest {
             userRepository = userRepository,
             notificationRepository = notificationRepository,
             userPreferences = userPreferences,
+            getMyServicesUseCase = getMyServicesUseCase,
         )
     }
 
@@ -179,5 +184,91 @@ class HomeViewModelTest {
             assertEquals(2, featured.size)
             assertEquals("paid-2", featured[0].id)
             assertEquals("paid-1", featured[1].id)
+        }
+
+    @Test
+    fun `showProviderBanner is false when user is blank on fresh install`() =
+        runTest {
+            every { userPreferences.cachedUser } returns flowOf(User(id = "", role = UserRole.ROLE_CUSTOMER))
+            every { userPreferences.isProviderBannerDismissed } returns flowOf(false)
+
+            val vm = HomeViewModel(
+                browseServices = browseServices,
+                authManager = authManager,
+                userRepository = userRepository,
+                notificationRepository = notificationRepository,
+                userPreferences = userPreferences,
+                getMyServicesUseCase = getMyServicesUseCase,
+            )
+
+            assertFalse(vm.uiState.value.showProviderBanner)
+        }
+
+    @Test
+    fun `showProviderBanner is false when user is provider`() =
+        runTest {
+            every { userPreferences.cachedUser } returns flowOf(User(id = "uid-1", role = UserRole.ROLE_PROVIDER))
+            every { userPreferences.isProviderBannerDismissed } returns flowOf(false)
+
+            val vm = HomeViewModel(
+                browseServices = browseServices,
+                authManager = authManager,
+                userRepository = userRepository,
+                notificationRepository = notificationRepository,
+                userPreferences = userPreferences,
+                getMyServicesUseCase = getMyServicesUseCase,
+            )
+
+            assertFalse(vm.uiState.value.showProviderBanner)
+            coVerify { userPreferences.dismissProviderBanner() }
+        }
+
+    @Test
+    fun `showProviderBanner is false and dismissed when user has listed services`() =
+        runTest {
+            every { userPreferences.cachedUser } returns flowOf(User(id = "uid-1", role = UserRole.ROLE_CUSTOMER))
+            every { userPreferences.isProviderBannerDismissed } returns flowOf(false)
+            coEvery { getMyServicesUseCase() } returns Result.success(
+                listOf(Service(id = "s-1", title = "Repair", category = ServiceCategory.TECH)),
+            )
+            val mockFirebaseUser: com.google.firebase.auth.FirebaseUser = mockk {
+                every { uid } returns "uid-1"
+            }
+            every { authManager.currentUser() } returns mockFirebaseUser
+            coEvery { userRepository.getUserProfile("uid-1") } returns Result.success(
+                User(id = "uid-1", name = "John Doe", role = UserRole.ROLE_CUSTOMER),
+            )
+
+            val vm = HomeViewModel(
+                browseServices = browseServices,
+                authManager = authManager,
+                userRepository = userRepository,
+                notificationRepository = notificationRepository,
+                userPreferences = userPreferences,
+                getMyServicesUseCase = getMyServicesUseCase,
+            )
+
+            assertFalse(vm.uiState.value.showProviderBanner)
+            coVerify { userPreferences.dismissProviderBanner() }
+            coVerify { userPreferences.writeUser(match { it.role == UserRole.ROLE_PROVIDER }) }
+        }
+
+    @Test
+    fun `showProviderBanner is true for customer with no services and banner not dismissed`() =
+        runTest {
+            every { userPreferences.cachedUser } returns flowOf(User(id = "uid-cust", role = UserRole.ROLE_CUSTOMER))
+            every { userPreferences.isProviderBannerDismissed } returns flowOf(false)
+            coEvery { getMyServicesUseCase() } returns Result.success(emptyList())
+
+            val vm = HomeViewModel(
+                browseServices = browseServices,
+                authManager = authManager,
+                userRepository = userRepository,
+                notificationRepository = notificationRepository,
+                userPreferences = userPreferences,
+                getMyServicesUseCase = getMyServicesUseCase,
+            )
+
+            assertTrue(vm.uiState.value.showProviderBanner)
         }
 }

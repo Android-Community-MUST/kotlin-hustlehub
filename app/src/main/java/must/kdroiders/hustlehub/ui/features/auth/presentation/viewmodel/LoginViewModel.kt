@@ -99,6 +99,9 @@ class LoginViewModel
                     profilePhotoUrl = firebaseUser.photoUrl?.toString() ?: "",
                 )
                 userPreferences.writeUser(userToSave)
+                if (userToSave.role == UserRole.ROLE_PROVIDER || userToSave.role == UserRole.ROLE_BOTH) {
+                    userPreferences.dismissProviderBanner()
+                }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to persist user to DataStore after login")
             }

@@ -21,6 +21,7 @@ import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import timber.log.Timber
 import java.util.PriorityQueue
 import javax.inject.Inject
@@ -54,6 +55,7 @@ class HomeViewModel
         private val userRepository: UserRepository,
         private val notificationRepository: NotificationRepository,
         private val userPreferences: UserPreferences,
+        private val getMyServicesUseCase: GetMyServicesUseCase? = null,
         private val notificationDao: NotificationDao? = null,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(HomeUiState())
@@ -68,6 +70,7 @@ class HomeViewModel
 
         private var searchJob: Job? = null
         private val serviceCache = LruServiceCache(maxSize = 100)
+        private val hasListedServices = MutableStateFlow(false)
 
         init {
             loadUserInitials()
@@ -91,8 +94,17 @@ class HomeViewModel
                 combine(
                     userPreferences.cachedUser,
                     userPreferences.isProviderBannerDismissed,
-                ) { user, dismissed ->
-                    !dismissed && user.role == UserRole.ROLE_CUSTOMER
+                    hasListedServices,
+                ) { user, dismissed, hasServices ->
+                    val isProviderRole =
+                        user.role == UserRole.ROLE_PROVIDER ||
+                            user.role == UserRole.ROLE_BOTH ||
+                            user.role == UserRole.ROLE_ADMIN ||
+                            user.role == UserRole.ROLE_SUPER_ADMIN
+                    if ((isProviderRole || hasServices) && !dismissed) {
+                        userPreferences.dismissProviderBanner()
+                    }
+                    !dismissed && !hasServices && user.id.isNotBlank() && user.role == UserRole.ROLE_CUSTOMER
                 }.collect { show ->
                     _uiState.update { it.copy(showProviderBanner = show) }
                 }
@@ -117,10 +129,14 @@ class HomeViewModel
         private fun loadUserInitials() {
             viewModelScope.launch {
                 val uid = authManager.currentUser()?.uid ?: return@launch
-                userRepository
-                    .getUserProfile(uid)
-                    .onSuccess { user ->
-                        if (user != null && user.name.isNotBlank()) {
+
+                val userResult = userRepository.getUserProfile(uid)
+                val servicesResult = getMyServicesUseCase?.invoke()
+                val hasServices = servicesResult?.getOrNull()?.isNotEmpty() == true
+
+                userResult.onSuccess { user ->
+                    if (user != null) {
+                        if (user.name.isNotBlank()) {
                             val parts = user.name.trim().split("\\s+".toRegex())
                             val initials = if (parts.size >= 2) {
                                 "${parts[0].first().uppercase()}${parts[1].first().uppercase()}"
@@ -128,9 +144,29 @@ class HomeViewModel
                                 parts[0].take(2).uppercase()
                             }
                             _uiState.update { it.copy(providerInitials = initials) }
+                        }
+
+                        val isProvider = hasServices || user.role == UserRole.ROLE_PROVIDER || user.role == UserRole.ROLE_BOTH
+                        if (isProvider) {
+                            _uiState.update { it.copy(showProviderBanner = false) }
+                            userPreferences.dismissProviderBanner()
+                            val roleToSave = if (hasServices && user.role == UserRole.ROLE_CUSTOMER) {
+                                UserRole.ROLE_PROVIDER
+                            } else {
+                                user.role
+                            }
+                            userPreferences.writeUser(user.copy(role = roleToSave))
+                        } else {
                             userPreferences.writeUser(user)
                         }
                     }
+                }
+
+                if (hasServices) {
+                    hasListedServices.value = true
+                    _uiState.update { it.copy(showProviderBanner = false) }
+                    userPreferences.dismissProviderBanner()
+                }
             }
         }
 
