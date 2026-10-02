@@ -17,18 +17,17 @@ import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-
-import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
-import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
@@ -230,14 +229,14 @@ class HomeViewModelTest {
             every { userPreferences.cachedUser } returns flowOf(User(id = "uid-1", role = UserRole.ROLE_CUSTOMER))
             every { userPreferences.isProviderBannerDismissed } returns flowOf(false)
             coEvery { getMyServicesUseCase() } returns Result.success(
-                listOf(Service(id = "s-1", title = "Repair", category = ServiceCategory.TECH))
+                listOf(Service(id = "s-1", title = "Repair", category = ServiceCategory.TECH)),
             )
             val mockFirebaseUser: com.google.firebase.auth.FirebaseUser = mockk {
                 every { uid } returns "uid-1"
             }
             every { authManager.currentUser() } returns mockFirebaseUser
             coEvery { userRepository.getUserProfile("uid-1") } returns Result.success(
-                User(id = "uid-1", name = "John Doe", role = UserRole.ROLE_CUSTOMER)
+                User(id = "uid-1", name = "John Doe", role = UserRole.ROLE_CUSTOMER),
             )
 
             val vm = HomeViewModel(
