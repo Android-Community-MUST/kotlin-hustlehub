@@ -190,10 +190,8 @@ See [SETUP.md](docs/dev/SETUP.md) for full setup instructions.
 <div align="center">
 
 | Login | Home / Discovery | Chat | Profile |
-|-------|-----------------|------|---------|
-| <img src="screenshots/login_light.png" width="200"/> | ![Home](https://via.placeholder.com/200x400/6C5CE7/FFFFFF?text=Home) | ![Chat](https://via.placeholder.com/200x400/00B894/FFFFFF?text=Chat) | ![Profile](https://via.placeholder.com/200x400/E17055/FFFFFF?text=Profile) |
-
-*Screenshots coming soon as development progresses*
+|:---:|:---:|:---:|:---:|
+| <img src="screenshots/login_light.png" width="200" alt="Login Screen"/> | <img src="screenshots/home.png" width="200" alt="Home / Discovery Screen"/> | <img src="screenshots/message.png" width="200" alt="Chat Screen"/> | <img src="screenshots/profile.png" width="200" alt="Profile Screen"/> |
 
 </div>
 
