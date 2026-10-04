@@ -24,12 +24,15 @@ class InstallReferrerManager @Inject constructor(
                     val action =
                         if (responseCode == InstallReferrerClient.InstallReferrerResponse.OK) {
                             try {
-                                parseReferrer(client.installReferrer.installReferrer)
+                                val raw = client.installReferrer.installReferrer
+                                Timber.tag("SHARE_LINK").d("[SHARE_LINK] Raw install referrer string: %s", raw)
+                                parseReferrer(raw)
                             } catch (e: Exception) {
-                                Timber.e(e, "Failed to read install referrer")
+                                Timber.tag("SHARE_LINK").e(e, "[SHARE_LINK] Failed to read install referrer")
                                 null
                             }
                         } else {
+                            Timber.tag("SHARE_LINK").w("[SHARE_LINK] Install referrer setup finished with non-OK code: %d", responseCode)
                             null
                         }
                     client.endConnection()
@@ -37,28 +40,44 @@ class InstallReferrerManager @Inject constructor(
                 }
 
                 override fun onInstallReferrerServiceDisconnected() {
+                    Timber.tag("SHARE_LINK").w("[SHARE_LINK] Install referrer service disconnected")
                     if (continuation.isActive) continuation.resume(null)
                 }
             })
         }
 
     private fun parseReferrer(raw: String?): DeepLinkAction? {
-        if (raw.isNullOrBlank()) return null
+        if (raw.isNullOrBlank()) {
+            Timber.tag("SHARE_LINK").d("[SHARE_LINK] Referrer raw string is null or blank")
+            return null
+        }
         return try {
-            val params = raw.split("&").associate {
+            val decodedRaw = if (raw.contains("%")) {
+                try {
+                    URLDecoder.decode(raw, "UTF-8")
+                } catch (_: Exception) {
+                    raw
+                }
+            } else {
+                raw
+            }
+            val params = decodedRaw.split("&").associate {
                 URLDecoder.decode(it.substringBefore("="), "UTF-8") to
                     URLDecoder.decode(it.substringAfter("=", ""), "UTF-8")
             }
             val target = params["target"]
             val id = params["id"]
-            Timber.d("Install referrer: target=$target id=$id")
+            Timber.tag("SHARE_LINK").d("[SHARE_LINK] Parsed install referrer: target=%s, id=%s (from raw=%s)", target, id, raw)
             when {
                 target == "profile" && !id.isNullOrBlank() -> DeepLinkAction.OpenProviderProfile(id)
                 target == "service" && !id.isNullOrBlank() -> DeepLinkAction.OpenServiceDetail(id)
-                else -> null
+                else -> {
+                    Timber.tag("SHARE_LINK").w("[SHARE_LINK] Unrecognized or incomplete referrer params: target=%s, id=%s", target, id)
+                    null
+                }
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error parsing referrer: $raw")
+            Timber.tag("SHARE_LINK").e(e, "[SHARE_LINK] Error parsing referrer: %s", raw)
             null
         }
     }

@@ -115,6 +115,7 @@ class SettingsViewModel
 
         init {
             loadCurrentUser()
+            observeCurrentUser()
             observeAppTheme()
         }
 
@@ -133,6 +134,29 @@ class SettingsViewModel
                     avatarUrl = user.photoUrl?.toString() ?: "",
                     isVerified = user.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(user.email),
                 )
+            }
+        }
+
+        private fun observeCurrentUser() {
+            viewModelScope.launch {
+                userPreferences.cachedUser.collect { cached ->
+                    val firebaseUser = authRepository.getCurrentUser()
+                    val name = cached.name.ifBlank { firebaseUser?.displayName.orEmpty() }.ifBlank { "Hustler" }
+                    val handle = name
+                        .replace(" ", "")
+                        .let { "@${it}_Hustler" }
+                    val avatar = cached.profilePhotoUrl.ifBlank { firebaseUser?.photoUrl?.toString().orEmpty() }
+                    val isVerified = firebaseUser?.isEmailVerified == true || AdminAuthUtils.isAuthorizedAdmin(firebaseUser?.email)
+
+                    _uiState.update {
+                        it.copy(
+                            displayName = name,
+                            username = handle,
+                            avatarUrl = avatar,
+                            isVerified = isVerified,
+                        )
+                    }
+                }
             }
         }
 

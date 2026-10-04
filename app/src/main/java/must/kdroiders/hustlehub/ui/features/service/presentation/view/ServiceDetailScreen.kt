@@ -254,24 +254,44 @@ fun ServiceDetailScreen(
                             val context = LocalContext.current
                             IconButton(
                                 onClick = {
-                                    val service = state.service ?: return@IconButton
+                                    val service = state.service
+                                    if (service == null) {
+                                        timber.log.Timber.tag("SHARE_LINK").w("[SHARE_LINK] Share clicked but service is null")
+                                        return@IconButton
+                                    }
+                                    timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Share clicked for serviceId=%s, title=%s", service.id, service.title)
                                     val providerName = state.provider?.name
                                     val shareLink = ShareLinkBuilder.buildServiceShareLink(service.id)
                                     val shareText = if (!providerName.isNullOrBlank()) {
-                                        "📌 ${service.title} by $providerName on HustleHub!\nBook here: $shareLink"
+                                        context.getString(
+                                            R.string.service_share_text_with_provider,
+                                            service.title,
+                                            providerName,
+                                            shareLink,
+                                        )
                                     } else {
-                                        "📌 ${service.title} on HustleHub!\nBook here: $shareLink"
+                                        context.getString(
+                                            R.string.service_share_text,
+                                            service.title,
+                                            shareLink,
+                                        )
                                     }
-                                    context.startActivity(
-                                        Intent.createChooser(
-                                            Intent(Intent.ACTION_SEND).apply {
-                                                type = "text/plain"
-                                                putExtra(Intent.EXTRA_SUBJECT, service.title)
-                                                putExtra(Intent.EXTRA_TEXT, shareText)
-                                            },
-                                            "Share Service",
-                                        ),
-                                    )
+                                    timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Launching share sheet with link=%s", shareLink)
+                                    try {
+                                        context.startActivity(
+                                            Intent.createChooser(
+                                                Intent(Intent.ACTION_SEND).apply {
+                                                    type = "text/plain"
+                                                    putExtra(Intent.EXTRA_SUBJECT, service.title)
+                                                    putExtra(Intent.EXTRA_TEXT, shareText)
+                                                },
+                                                context.getString(R.string.service_share_chooser_title),
+                                            ),
+                                        )
+                                        timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Share chooser launched successfully")
+                                    } catch (e: Exception) {
+                                        timber.log.Timber.tag("SHARE_LINK").e(e, "[SHARE_LINK] Failed to launch share chooser")
+                                    }
                                 },
                                 modifier = Modifier
                                     .size(44.dp)

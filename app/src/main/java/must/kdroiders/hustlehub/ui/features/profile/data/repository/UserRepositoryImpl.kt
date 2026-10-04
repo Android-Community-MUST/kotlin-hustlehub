@@ -27,6 +27,10 @@ import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
+import kotlinx.coroutines.tasks.await
+import must.kdroiders.hustlehub.datastore.UserPreferences
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -47,6 +51,8 @@ class UserRepositoryImpl
         private val mediaApiService: MediaApiService,
         private val serviceApiService: ServiceApiService,
         private val userDao: UserDao,
+        private val userPreferences: UserPreferences? = null,
+        private val firebaseAuth: FirebaseAuth? = null,
     ) : UserRepository {
         override suspend fun uploadProfilePhoto(
             userId: String,
@@ -84,7 +90,9 @@ class UserRepositoryImpl
                 )
                 val response = authApiService.register(request)
                 if (response.success && response.data != null) {
-                    response.data.toDomain()
+                    val savedUser = response.data.toDomain()
+                    syncLocalUserState(savedUser)
+                    savedUser
                 } else {
                     throw Exception(response.message)
                 }
@@ -94,6 +102,7 @@ class UserRepositoryImpl
                         // 409 Conflict = user already exists → treat as success
                         409 -> {
                             Timber.d("UserRepositoryImpl: user already registered (HTTP 409) — treating as success")
+                            syncLocalUserState(user)
                             user
                         }
                         else -> {
@@ -112,14 +121,18 @@ class UserRepositoryImpl
                 val response = userApiService.getMe()
                 if (response.success && response.data != null) {
                     val user = response.data.toDomain()
-                    userDao.upsert(user.toEntity())
+                    syncLocalUserState(user)
                     user
                 } else {
-                    userDao.getUserById(userId)?.toDomain()
+                    val localUser = userDao.getUserById(userId)?.toDomain()
+                    localUser?.let { syncLocalUserState(it) }
+                    localUser
                 }
             }.recoverCatching { e ->
                 Timber.w(e, "UserRepositoryImpl: network miss, checking Room cache for user: %s", userId)
-                userDao.getUserById(userId)?.toDomain() ?: throw e
+                val localUser = userDao.getUserById(userId)?.toDomain()
+                localUser?.let { syncLocalUserState(it) }
+                localUser ?: throw e
             }
 
         override suspend fun hasUserProfile(userId: String): Result<Boolean> =
@@ -178,13 +191,41 @@ class UserRepositoryImpl
                 )
                 val response = userApiService.updateMe(request)
                 if (response.success && response.data != null) {
-                    response.data.toDomain()
+                    val updatedUser = response.data.toDomain()
+                    syncLocalUserState(updatedUser)
+                    updatedUser
                 } else {
                     throw Exception(response.message)
                 }
             }.onFailure { e ->
                 Timber.e(e, "UserRepositoryImpl: failed to update profile")
             }
+
+        private suspend fun syncLocalUserState(user: User) {
+            runCatching {
+                userDao.upsert(user.toEntity())
+            }.onFailure { Timber.w(it, "UserRepositoryImpl: failed to upsert user to Room") }
+
+            runCatching {
+                userPreferences?.writeUser(user)
+            }.onFailure { Timber.w(it, "UserRepositoryImpl: failed to write user to DataStore") }
+
+            runCatching {
+                val currentUser = firebaseAuth?.currentUser
+                if (currentUser != null && user.name.isNotBlank()) {
+                    val profileUpdates = UserProfileChangeRequest.Builder()
+                        .setDisplayName(user.name)
+                        .apply {
+                            if (user.profilePhotoUrl.isNotBlank()) {
+                                setPhotoUri(Uri.parse(user.profilePhotoUrl))
+                            }
+                        }
+                        .build()
+                    currentUser.updateProfile(profileUpdates).await()
+                    Timber.d("UserRepositoryImpl: synced display name '%s' to Firebase Auth", user.name)
+                }
+            }.onFailure { Timber.w(it, "UserRepositoryImpl: failed to sync profile to Firebase Auth") }
+        }
 
         override suspend fun updateFcmToken(token: String): Result<Unit> =
             runCatching {

@@ -126,8 +126,10 @@ object AppModule {
         mediaApiService: MediaApiService,
         serviceApiService: ServiceApiService,
         userDao: UserDao,
+        userPreferences: UserPreferences,
+        firebaseAuth: FirebaseAuth?,
     ): UserRepository {
-        return UserRepositoryImpl(context, authApiService, userApiService, mediaApiService, serviceApiService, userDao)
+        return UserRepositoryImpl(context, authApiService, userApiService, mediaApiService, serviceApiService, userDao, userPreferences, firebaseAuth)
     }
 
     @Provides

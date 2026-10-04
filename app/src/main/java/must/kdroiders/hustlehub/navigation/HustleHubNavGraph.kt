@@ -182,14 +182,22 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
     val pendingLink by pendingDeepLinkViewModel.pendingLink.collectAsState()
     LaunchedEffect(pendingLink, backstack.lastOrNull()) {
         val link = pendingLink ?: return@LaunchedEffect
-        if (backstack.none { it is MainShell }) return@LaunchedEffect
+        if (backstack.none { it is MainShell }) {
+            timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Deferred link waiting for MainShell in backstack: %s", link)
+            return@LaunchedEffect
+        }
         val (target, id) = link
+        timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Routing deferred deep link: target=%s, id=%s", target, id)
         val action = when (target) {
             "profile" -> DeepLinkAction.OpenProviderProfile(id)
             "service" -> DeepLinkAction.OpenServiceDetail(id)
-            else -> return@LaunchedEffect
+            else -> {
+                timber.log.Timber.tag("SHARE_LINK").w("[SHARE_LINK] Unknown target in deferred deep link: %s", target)
+                return@LaunchedEffect
+            }
         }
         pendingDeepLinkViewModel.consume()
+        timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Consumed pending link and triggering navigation action: %s", action)
         mainNavigationViewModel?.triggerDeepLink(action)
     }
 

@@ -81,19 +81,38 @@ fun ProfileScreen(
             ProfileHeader(
                 onSettingsClick = onSettingsClick,
                 onShareClick = {
-                    val user = state.user ?: return@ProfileHeader
+                    val user = state.user
+                    if (user == null) {
+                        timber.log.Timber.tag("SHARE_LINK").w("[SHARE_LINK] Profile share clicked but user is null")
+                        return@ProfileHeader
+                    }
+                    timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Profile share clicked for userId=%s, name=%s", user.id, user.name)
                     val shareLink = ShareLinkBuilder.buildProfileShareLink(user.id)
-                    val shareText = "Connect with ${user.name} on HustleHub — the MUST campus marketplace!\n$shareLink"
-                    context.startActivity(
-                        Intent.createChooser(
-                            Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_SUBJECT, "Check out ${user.name} on HustleHub")
-                                putExtra(Intent.EXTRA_TEXT, shareText)
-                            },
-                            shareChooserTitle,
-                        ),
+                    val shareText = context.getString(
+                        R.string.profile_share_text_format,
+                        user.name,
+                        shareLink,
                     )
+                    val shareSubject = context.getString(
+                        R.string.profile_share_subject,
+                        user.name,
+                    )
+                    timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Launching profile share sheet with link=%s", shareLink)
+                    try {
+                        context.startActivity(
+                            Intent.createChooser(
+                                Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_SUBJECT, shareSubject)
+                                    putExtra(Intent.EXTRA_TEXT, shareText)
+                                },
+                                shareChooserTitle,
+                            ),
+                        )
+                        timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Profile share chooser launched successfully")
+                    } catch (e: Exception) {
+                        timber.log.Timber.tag("SHARE_LINK").e(e, "[SHARE_LINK] Failed to launch profile share chooser")
+                    }
                 },
             )
         },

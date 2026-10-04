@@ -28,16 +28,21 @@ class ProfileGateViewModel
             campusLocation: String,
             phone: String,
             bio: String,
-        ): Result<User> =
-            userRepository
+        ): Result<User> {
+            val user = cachedUser.value
+            val currentName = user.name.ifBlank {
+                userRepository.getUserProfile(user.id).getOrNull()?.name.orEmpty()
+            }
+            return userRepository
                 .updateProfile(
-                    name = cachedUser.value.name,
-                    bio = bio.ifBlank { cachedUser.value.bio },
-                    phone = phone.ifBlank { cachedUser.value.phone },
+                    name = currentName,
+                    bio = bio.ifBlank { user.bio },
+                    phone = phone.ifBlank { user.phone },
                     campusLocation = campusLocation,
-                    avatarUrl = cachedUser.value.profilePhotoUrl.takeIf { it.isNotBlank() },
-                    allowCalls = cachedUser.value.allowCalls,
+                    avatarUrl = user.profilePhotoUrl.takeIf { it.isNotBlank() },
+                    allowCalls = user.allowCalls,
                 ).also { result ->
                     result.onSuccess { userPreferences.writeUser(it) }
                 }
+        }
     }
