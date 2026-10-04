@@ -56,6 +56,7 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
+import must.kdroiders.hustlehub.util.ShareLinkBuilder
 
 @Composable
 fun ProfileScreen(
@@ -72,8 +73,6 @@ fun ProfileScreen(
     val state by profileViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    val shareSubject = stringResource(R.string.profile_share_subject)
-    val shareTextFormat = stringResource(R.string.profile_share_text_format)
     val shareChooserTitle = stringResource(R.string.profile_share_chooser_title)
     val defaultErrorMsg = stringResource(R.string.error_default_title)
 
@@ -82,16 +81,19 @@ fun ProfileScreen(
             ProfileHeader(
                 onSettingsClick = onSettingsClick,
                 onShareClick = {
-                    val userId = state.user?.id.orEmpty()
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_SUBJECT, shareSubject)
-                        putExtra(
-                            Intent.EXTRA_TEXT,
-                            String.format(shareTextFormat, userId),
-                        )
-                    }
-                    context.startActivity(Intent.createChooser(shareIntent, shareChooserTitle))
+                    val user = state.user ?: return@ProfileHeader
+                    val shareLink = ShareLinkBuilder.buildProfileShareLink(user.id)
+                    val shareText = "Connect with ${user.name} on HustleHub — the MUST campus marketplace!\n$shareLink"
+                    context.startActivity(
+                        Intent.createChooser(
+                            Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, "Check out ${user.name} on HustleHub")
+                                putExtra(Intent.EXTRA_TEXT, shareText)
+                            },
+                            shareChooserTitle,
+                        ),
+                    )
                 },
             )
         },

@@ -174,6 +174,25 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
         }
     }
 
+    val pendingDeepLinkViewModel: PendingDeepLinkViewModel = if (activity != null) {
+        hiltViewModel<PendingDeepLinkViewModel>(viewModelStoreOwner = activity)
+    } else {
+        hiltViewModel()
+    }
+    val pendingLink by pendingDeepLinkViewModel.pendingLink.collectAsState()
+    LaunchedEffect(pendingLink, backstack.lastOrNull()) {
+        val link = pendingLink ?: return@LaunchedEffect
+        if (backstack.none { it is MainShell }) return@LaunchedEffect
+        val (target, id) = link
+        val action = when (target) {
+            "profile" -> DeepLinkAction.OpenProviderProfile(id)
+            "service" -> DeepLinkAction.OpenServiceDetail(id)
+            else -> return@LaunchedEffect
+        }
+        pendingDeepLinkViewModel.consume()
+        mainNavigationViewModel?.triggerDeepLink(action)
+    }
+
     val activeBanner by InAppBannerManager.activeBanner.collectAsState()
 
     val profileGateViewModel: ProfileGateViewModel = if (activity != null) {

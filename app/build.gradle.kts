@@ -238,4 +238,7 @@ dependencies {
     // Google Play In-App Review
     implementation(libs.play.review)
     implementation(libs.play.review.ktx)
+
+    // Google Play Install Referrer — deferred deep linking
+    implementation("com.android.installreferrer:installreferrer:2.2")
 }

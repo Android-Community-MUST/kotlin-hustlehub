@@ -17,9 +17,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
+import must.kdroiders.hustlehub.core.deeplink.InstallReferrerManager
 import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
+import must.kdroiders.hustlehub.navigation.DeepLinkAction
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import timber.log.Timber
@@ -48,6 +50,7 @@ class SplashViewModel
         private val userRepository: UserRepository,
         private val appDatabase: AppDatabase,
         private val keyExchangeHandler: KeyExchangeHandler,
+        private val installReferrerManager: InstallReferrerManager,
     ) : ViewModel() {
         private val _destination =
             MutableStateFlow<SplashDestination?>(null)
@@ -87,6 +90,9 @@ class SplashViewModel
         }
 
         private fun determineDestination() {
+            viewModelScope.launch {
+                checkAndStoreDeferredDeepLink()
+            }
             viewModelScope.launch {
                 if (userPreferences.hasPendingDeletion.first()) {
                     Timber.w("Pending deletion detected on startup — completing local cleanup")
@@ -213,6 +219,27 @@ class SplashViewModel
                 minDelayJob.await()
                 _destination.value =
                     destinationResult.await()
+            }
+        }
+
+        private suspend fun checkAndStoreDeferredDeepLink() {
+            try {
+                if (userPreferences.hasProcessedInstallReferrer.first()) return
+                val action = installReferrerManager.getDeferredDeepLink()
+                if (action != null) {
+                    val (target, id) = when (action) {
+                        is DeepLinkAction.OpenProviderProfile -> "profile" to action.providerId
+                        is DeepLinkAction.OpenServiceDetail   -> "service" to action.serviceId
+                        else                                  -> null to null
+                    }
+                    if (target != null && id != null) {
+                        userPreferences.savePendingDeepLink(target, id)
+                        Timber.d("Deferred deep link stored: target=$target id=$id")
+                    }
+                }
+                userPreferences.markInstallReferrerProcessed()
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to check install referrer")
             }
         }
 

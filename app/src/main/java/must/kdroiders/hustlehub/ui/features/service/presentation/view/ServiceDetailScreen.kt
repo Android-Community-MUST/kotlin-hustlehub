@@ -98,6 +98,9 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewSummaryCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailUiState
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailViewModel
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+import must.kdroiders.hustlehub.util.ShareLinkBuilder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -248,12 +251,28 @@ fun ServiceDetailScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            val shareComingSoonMsg = stringResource(R.string.service_share_coming_soon)
-                            val bookmarkSavedMsg = stringResource(R.string.bookmark_saved)
-                            val bookmarkRemovedMsg = stringResource(R.string.bookmark_removed)
-
+                            val context = LocalContext.current
                             IconButton(
-                                onClick = { scope.launch { snackbarHostState.showSnackbar(shareComingSoonMsg) } },
+                                onClick = {
+                                    val service = state.service ?: return@IconButton
+                                    val providerName = state.provider?.name
+                                    val shareLink = ShareLinkBuilder.buildServiceShareLink(service.id)
+                                    val shareText = if (!providerName.isNullOrBlank()) {
+                                        "📌 ${service.title} by $providerName on HustleHub!\nBook here: $shareLink"
+                                    } else {
+                                        "📌 ${service.title} on HustleHub!\nBook here: $shareLink"
+                                    }
+                                    context.startActivity(
+                                        Intent.createChooser(
+                                            Intent(Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(Intent.EXTRA_SUBJECT, service.title)
+                                                putExtra(Intent.EXTRA_TEXT, shareText)
+                                            },
+                                            "Share Service",
+                                        ),
+                                    )
+                                },
                                 modifier = Modifier
                                     .size(44.dp)
                                     .clip(CircleShape)

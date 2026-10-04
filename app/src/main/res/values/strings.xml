@@ -425,7 +425,9 @@
     <string name="service_price_starting_format">KES %1$s +</string>
     <string name="action_edit_service">Edit Service</string>
     <string name="action_dm_provider">DM Provider</string>
-    <string name="service_share_coming_soon">Share feature coming soon!</string>
+    <string name="service_share_chooser_title">Share Service</string>
+    <string name="service_share_text_with_provider">%1$s by %2$s on HustleHub\nBook here: %3$s</string>
+    <string name="service_share_text">%1$s on HustleHub\nBook here: %2$s</string>
     <string name="action_share">Share</string>
     <string name="bookmark_saved">Saved!</string>
     <string name="bookmark_removed">Removed from saved</string>
@@ -551,8 +553,8 @@
 
     <!-- Phase 6: Profile, Reviews & Settings -->
     <!-- Profile -->
-    <string name="profile_share_subject">Check out my profile on HustleHub</string>
-    <string name="profile_share_text_format">Check out my profile on HustleHub: https://hustlehub.must.ac.ke/profile/%1$s</string>
+    <string name="profile_share_subject">Check out %1$s on HustleHub</string>
+    <string name="profile_share_text_format">Connect with %1$s on HustleHub — the MUST campus marketplace!\n%2$s</string>
     <string name="profile_share_chooser_title">Share Profile</string>
     <string name="cd_add_new_service">Add New Service</string>
     <string name="profile_edit_button">Edit Profile</string>
