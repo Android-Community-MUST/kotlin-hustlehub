@@ -24,6 +24,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.ResponseBody.Companion.toResponseBody
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModelTest {
@@ -161,5 +163,33 @@ class ProfileViewModelTest {
                 viewModel.uiState.value.services[0]
                     .availability,
             )
+        }
+
+    @Test
+    fun `loadProfile sets needsProfileSetup true when user is null`() =
+        runTest {
+            coEvery { userRepository.getUserProfile("uid-100") } returns Result.success(null)
+
+            viewModel.loadProfile()
+
+            val state = viewModel.uiState.value
+            assertEquals(true, state.needsProfileSetup)
+            assertEquals("Profile not found", state.error)
+            assertEquals(false, state.isLoading)
+        }
+
+    @Test
+    fun `loadProfile sets needsProfileSetup true when getUserProfile fails with HTTP 404`() =
+        runTest {
+            val responseBody = "{\"message\":\"User not found\"}".toResponseBody("application/json".toMediaType())
+            val http404 = retrofit2.HttpException(retrofit2.Response.error<Any>(404, responseBody))
+            coEvery { userRepository.getUserProfile("uid-100") } returns Result.failure(http404)
+
+            viewModel.loadProfile()
+
+            val state = viewModel.uiState.value
+            assertEquals(true, state.needsProfileSetup)
+            assertEquals("Profile not found", state.error)
+            assertEquals(false, state.isLoading)
         }
 }

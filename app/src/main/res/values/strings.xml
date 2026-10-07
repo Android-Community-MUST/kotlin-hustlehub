@@ -606,6 +606,9 @@
     <string name="profile_tab_analytics">Analytics</string>
     <string name="profile_tab_earnings">Earnings</string>
     <string name="cd_tab_format">%1$s tab</string>
+    <string name="profile_incomplete_title">Profile Incomplete</string>
+    <string name="profile_incomplete_message">Your profile is not yet set up on the server. Please complete your profile to continue.</string>
+    <string name="profile_incomplete_action">Complete Profile</string>
 
     <!-- Reviews -->
     <string name="reviews_sort_by">Sort by:</string>

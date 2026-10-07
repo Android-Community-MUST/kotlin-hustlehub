@@ -302,6 +302,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                         SplashDestination.Home -> MainShell
                                         SplashDestination.Login -> Login()
                                         SplashDestination.Onboarding -> Onboarding
+                                        SplashDestination.ProfileSetup -> ProfileSetup
                                         is SplashDestination.AccountSuspended -> AccountSuspendedKey(
                                             reason = destination.reason,
                                             suspendedUntil = destination.suspendedUntil,
@@ -361,12 +362,32 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 email = key.email,
                                 onVerified = {
                                     backstack.clear()
-                                    backstack.add(MainShell)
+                                    backstack.add(ProfileSetup)
                                 },
                             )
                         }
 
                         entry<SignUp> {
+                            val context = LocalContext.current
+                            val activity = context as? ComponentActivity
+                            val loginViewModel: LoginViewModel = if (activity != null) {
+                                hiltViewModel(viewModelStoreOwner = activity)
+                            } else {
+                                hiltViewModel()
+                            }
+
+                            // Observe Google sign-in navigation events from the shared ViewModel
+                            LaunchedEffect(loginViewModel) {
+                                loginViewModel.navigateToHome.collect { hasProfile ->
+                                    backstack.clear()
+                                    if (hasProfile) {
+                                        backstack.add(MainShell)
+                                    } else {
+                                        backstack.add(ProfileSetup)
+                                    }
+                                }
+                            }
+
                             SignUpScreen(
                                 onNavigateToLogin = { email ->
                                     if (backstack.isNotEmpty()) backstack.remove(backstack.last())

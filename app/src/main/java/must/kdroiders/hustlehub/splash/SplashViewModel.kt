@@ -35,6 +35,7 @@ sealed interface SplashDestination {
     data object Home : SplashDestination
     data object Login : SplashDestination
     data object Onboarding : SplashDestination
+    data object ProfileSetup : SplashDestination
     data class AccountSuspended(
         val reason: String = "",
         val suspendedUntil: String? = null,
@@ -130,7 +131,6 @@ class SplashViewModel
                                 SplashDestination.Onboarding
 
                             currentUser != null -> {
-                                // Reload to get latest verified status
                                 try {
                                     currentUser.reload().await()
                                 } catch (e: Exception) {
@@ -145,20 +145,10 @@ class SplashViewModel
                                     userProfileResult
                                         .onSuccess { user ->
                                             if (user == null) {
-                                                // Genuinely missing profile in both backend and local cache
-                                                val cached = userPreferences.cachedUser.first()
-                                                val registrationUser = User(
-                                                    id = currentUser.uid,
-                                                    email = currentUser.email ?: "",
-                                                    name = cached.name.ifBlank { currentUser.displayName.orEmpty() }.ifBlank { "Hustler" },
-                                                )
-                                                viewModelScope.launch {
-                                                    userRepository.saveUserProfile(registrationUser)
-                                                }
+                                                targetDestination = SplashDestination.ProfileSetup
                                             }
                                         }.onFailure { e ->
                                             if (e is retrofit2.HttpException && e.code() == 403) {
-                                                // Structured suspension response from FirebaseJwtFilter:
                                                 var suspendedReason = "Violation of terms of service."
                                                 var suspendedUntil: String? = null
                                                 try {
@@ -168,7 +158,6 @@ class SplashViewModel
                                                     if (reasonMatch != null) suspendedReason = reasonMatch.groupValues[1]
                                                     if (untilMatch != null) suspendedUntil = untilMatch.groupValues[1].takeIf { it.isNotBlank() && it != "null" }
                                                 } catch (_: Exception) {
-                                                    // keep defaults
                                                 }
                                                 targetDestination = SplashDestination.AccountSuspended(
                                                     reason = suspendedReason,
@@ -178,19 +167,8 @@ class SplashViewModel
                                                 firebaseAuth.signOut()
                                                 targetDestination = SplashDestination.Login
                                             } else if (e is retrofit2.HttpException && e.code() == 404) {
-                                                // 404: User authenticated in Firebase but no profile exists on backend yet
-                                                val cached = userPreferences.cachedUser.first()
-                                                val registrationUser = User(
-                                                    id = currentUser.uid,
-                                                    email = currentUser.email ?: "",
-                                                    name = cached.name.ifBlank { currentUser.displayName.orEmpty() }.ifBlank { "Hustler" },
-                                                )
-                                                viewModelScope.launch {
-                                                    userRepository.saveUserProfile(registrationUser)
-                                                }
-                                                targetDestination = SplashDestination.Home
+                                                targetDestination = SplashDestination.ProfileSetup
                                             } else {
-                                                // Transient network timeout or offline — do NOT overwrite the backend!
                                                 Timber.w(e, "SplashViewModel: Transient network error on splash — proceeding with cached session")
                                                 targetDestination = SplashDestination.Home
                                             }
@@ -209,11 +187,7 @@ class SplashViewModel
                                 SplashDestination.Login
                         }
                     } catch (e: Exception) {
-                        // rethrow cancellation to preserve
-                        // structured concurrency
                         coroutineContext.ensureActive()
-                        // fall back to Login so the app
-                        // never gets stuck on splash
                         Timber.e(
                             e,
                             "Error reading preferences",
@@ -222,7 +196,6 @@ class SplashViewModel
                     }
                 }
 
-                // wait for both to complete
                 minDelayJob.await()
                 _destination.value =
                     destinationResult.await()

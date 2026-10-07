@@ -39,6 +39,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
+import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ErrorState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.LoadingState
@@ -61,6 +62,7 @@ import must.kdroiders.hustlehub.util.ShareLinkBuilder
 @Composable
 fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
+    onNavigateToProfileSetup: () -> Unit = {},
     onEditClick: () -> Unit = {},
     onAddNewServiceClick: () -> Unit = {},
     onServiceClick: (serviceId: String) -> Unit = {},
@@ -124,6 +126,12 @@ fun ProfileScreen(
         Box(modifier = Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding())) {
             when {
                 state.isLoading && !state.isRefreshing -> LoadingState()
+                state.needsProfileSetup -> ErrorView(
+                    title = stringResource(R.string.profile_incomplete_title),
+                    message = stringResource(R.string.profile_incomplete_message),
+                    actionText = stringResource(R.string.profile_incomplete_action),
+                    onRetry = onNavigateToProfileSetup,
+                )
                 state.error != null -> ErrorState(
                     message = state.error ?: defaultErrorMsg,
                     onRetry = profileViewModel::retry,

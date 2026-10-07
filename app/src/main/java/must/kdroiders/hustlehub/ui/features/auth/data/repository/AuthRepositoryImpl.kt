@@ -202,6 +202,7 @@ class AuthRepositoryImpl
                             "verification link, then tap \"Verify\" below.",
                     )
                 }
+                runCatching { user.getIdToken(true).await() }
             }.onFailure { e ->
                 if (e is CancellationException) throw e
                 Timber.e(e, "Email verification check failed")
