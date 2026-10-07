@@ -31,7 +31,11 @@ class ProfileGateViewModel
         ): Result<User> {
             val user = cachedUser.value
             val currentName = user.name.ifBlank {
-                userRepository.getUserProfile(user.id).getOrNull()?.name.orEmpty()
+                userRepository
+                    .getUserProfile(user.id)
+                    .getOrNull()
+                    ?.name
+                    .orEmpty()
             }
             return userRepository
                 .updateProfile(

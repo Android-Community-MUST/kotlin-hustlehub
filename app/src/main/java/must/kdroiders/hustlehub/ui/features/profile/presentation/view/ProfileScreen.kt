@@ -30,16 +30,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
+import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
-import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.ErrorState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components.LoadingState
@@ -75,6 +76,7 @@ fun ProfileScreen(
     val state by profileViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val resources = LocalResources.current
     val shareChooserTitle = stringResource(R.string.profile_share_chooser_title)
     val defaultErrorMsg = stringResource(R.string.error_default_title)
 
@@ -85,21 +87,27 @@ fun ProfileScreen(
                 onShareClick = {
                     val user = state.user
                     if (user == null) {
-                        timber.log.Timber.tag("SHARE_LINK").w("[SHARE_LINK] Profile share clicked but user is null")
+                        timber.log.Timber
+                            .tag("SHARE_LINK")
+                            .w("[SHARE_LINK] Profile share clicked but user is null")
                         return@ProfileHeader
                     }
-                    timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Profile share clicked for userId=%s, name=%s", user.id, user.name)
+                    timber.log.Timber
+                        .tag("SHARE_LINK")
+                        .d("[SHARE_LINK] Profile share clicked for userId=%s, name=%s", user.id, user.name)
                     val shareLink = ShareLinkBuilder.buildProfileShareLink(user.id)
-                    val shareText = context.getString(
+                    val shareText = resources.getString(
                         R.string.profile_share_text_format,
                         user.name,
                         shareLink,
                     )
-                    val shareSubject = context.getString(
+                    val shareSubject = resources.getString(
                         R.string.profile_share_subject,
                         user.name,
                     )
-                    timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Launching profile share sheet with link=%s", shareLink)
+                    timber.log.Timber
+                        .tag("SHARE_LINK")
+                        .d("[SHARE_LINK] Launching profile share sheet with link=%s", shareLink)
                     try {
                         context.startActivity(
                             Intent.createChooser(
@@ -111,9 +119,13 @@ fun ProfileScreen(
                                 shareChooserTitle,
                             ),
                         )
-                        timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Profile share chooser launched successfully")
+                        timber.log.Timber
+                            .tag("SHARE_LINK")
+                            .d("[SHARE_LINK] Profile share chooser launched successfully")
                     } catch (e: Exception) {
-                        timber.log.Timber.tag("SHARE_LINK").e(e, "[SHARE_LINK] Failed to launch profile share chooser")
+                        timber.log.Timber
+                            .tag("SHARE_LINK")
+                            .e(e, "[SHARE_LINK] Failed to launch profile share chooser")
                     }
                 },
             )

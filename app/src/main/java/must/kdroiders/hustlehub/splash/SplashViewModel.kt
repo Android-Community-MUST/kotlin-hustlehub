@@ -22,7 +22,6 @@ import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.navigation.DeepLinkAction
-import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import timber.log.Timber
 import javax.inject.Inject
@@ -213,8 +212,8 @@ class SplashViewModel
                 if (action != null) {
                     val (target, id) = when (action) {
                         is DeepLinkAction.OpenProviderProfile -> "profile" to action.providerId
-                        is DeepLinkAction.OpenServiceDetail   -> "service" to action.serviceId
-                        else                                  -> null to null
+                        is DeepLinkAction.OpenServiceDetail -> "service" to action.serviceId
+                        else -> null to null
                     }
                     if (target != null && id != null) {
                         userPreferences.savePendingDeepLink(target, id)

@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.view
 
+import android.content.Intent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -65,6 +66,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -98,8 +101,6 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewSummaryCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailUiState
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailViewModel
-import android.content.Intent
-import androidx.compose.ui.platform.LocalContext
 import must.kdroiders.hustlehub.util.ShareLinkBuilder
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -252,31 +253,39 @@ fun ServiceDetailScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             val context = LocalContext.current
+                            val resources = LocalResources.current
+                            val shareChooserTitle = stringResource(R.string.service_share_chooser_title)
                             IconButton(
                                 onClick = {
                                     val service = state.service
                                     if (service == null) {
-                                        timber.log.Timber.tag("SHARE_LINK").w("[SHARE_LINK] Share clicked but service is null")
+                                        timber.log.Timber
+                                            .tag("SHARE_LINK")
+                                            .w("[SHARE_LINK] Share clicked but service is null")
                                         return@IconButton
                                     }
-                                    timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Share clicked for serviceId=%s, title=%s", service.id, service.title)
+                                    timber.log.Timber
+                                        .tag("SHARE_LINK")
+                                        .d("[SHARE_LINK] Share clicked for serviceId=%s, title=%s", service.id, service.title)
                                     val providerName = state.provider?.name
                                     val shareLink = ShareLinkBuilder.buildServiceShareLink(service.id)
                                     val shareText = if (!providerName.isNullOrBlank()) {
-                                        context.getString(
+                                        resources.getString(
                                             R.string.service_share_text_with_provider,
                                             service.title,
                                             providerName,
                                             shareLink,
                                         )
                                     } else {
-                                        context.getString(
+                                        resources.getString(
                                             R.string.service_share_text,
                                             service.title,
                                             shareLink,
                                         )
                                     }
-                                    timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Launching share sheet with link=%s", shareLink)
+                                    timber.log.Timber
+                                        .tag("SHARE_LINK")
+                                        .d("[SHARE_LINK] Launching share sheet with link=%s", shareLink)
                                     try {
                                         context.startActivity(
                                             Intent.createChooser(
@@ -285,12 +294,16 @@ fun ServiceDetailScreen(
                                                     putExtra(Intent.EXTRA_SUBJECT, service.title)
                                                     putExtra(Intent.EXTRA_TEXT, shareText)
                                                 },
-                                                context.getString(R.string.service_share_chooser_title),
+                                                shareChooserTitle,
                                             ),
                                         )
-                                        timber.log.Timber.tag("SHARE_LINK").d("[SHARE_LINK] Share chooser launched successfully")
+                                        timber.log.Timber
+                                            .tag("SHARE_LINK")
+                                            .d("[SHARE_LINK] Share chooser launched successfully")
                                     } catch (e: Exception) {
-                                        timber.log.Timber.tag("SHARE_LINK").e(e, "[SHARE_LINK] Failed to launch share chooser")
+                                        timber.log.Timber
+                                            .tag("SHARE_LINK")
+                                            .e(e, "[SHARE_LINK] Failed to launch share chooser")
                                     }
                                 },
                                 modifier = Modifier

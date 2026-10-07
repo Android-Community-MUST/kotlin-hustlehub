@@ -10,16 +10,17 @@ import must.kdroiders.hustlehub.datastore.UserPreferences
 import javax.inject.Inject
 
 @HiltViewModel
-class PendingDeepLinkViewModel @Inject constructor(
-    private val userPreferences: UserPreferences,
-) : ViewModel() {
+class PendingDeepLinkViewModel
+    @Inject
+    constructor(
+        private val userPreferences: UserPreferences,
+    ) : ViewModel() {
+        val pendingLink = userPreferences.pendingDeepLink
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    val pendingLink = userPreferences.pendingDeepLink
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
-
-    fun consume() {
-        viewModelScope.launch {
-            userPreferences.clearPendingDeepLink()
+        fun consume() {
+            viewModelScope.launch {
+                userPreferences.clearPendingDeepLink()
+            }
         }
     }
-}

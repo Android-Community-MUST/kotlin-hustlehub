@@ -230,7 +230,10 @@ class UserPreferences
                 if (!target.isNullOrBlank() && !id.isNullOrBlank()) target to id else null
             }
 
-        suspend fun savePendingDeepLink(target: String, id: String) {
+        suspend fun savePendingDeepLink(
+            target: String,
+            id: String,
+        ) {
             try {
                 dataStore.edit { prefs ->
                     prefs[PENDING_DEEPLINK_TARGET] = target

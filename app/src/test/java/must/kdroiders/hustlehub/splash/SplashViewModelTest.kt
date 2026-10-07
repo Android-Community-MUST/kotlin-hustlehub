@@ -50,7 +50,8 @@ class SplashViewModelTest {
         every { firebaseUser.uid } returns "test-uid-1"
         every { firebaseUser.email } returns "student@must.ac.ke"
         every { firebaseUser.isEmailVerified } returns true
-        every { firebaseUser.reload() } returns com.google.android.gms.tasks.Tasks.forResult(null)
+        every { firebaseUser.reload() } returns com.google.android.gms.tasks.Tasks
+            .forResult(null)
     }
 
     @After

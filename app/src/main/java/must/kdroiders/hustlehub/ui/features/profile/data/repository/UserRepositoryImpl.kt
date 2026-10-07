@@ -2,8 +2,12 @@ package must.kdroiders.hustlehub.ui.features.profile.data.repository
 
 import android.content.Context
 import android.net.Uri
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
+import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.RegisterRequest
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto
@@ -27,10 +31,6 @@ import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.UserProfileChangeRequest
-import kotlinx.coroutines.tasks.await
-import must.kdroiders.hustlehub.datastore.UserPreferences
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -213,14 +213,14 @@ class UserRepositoryImpl
             runCatching {
                 val currentUser = firebaseAuth?.currentUser
                 if (currentUser != null && user.name.isNotBlank()) {
-                    val profileUpdates = UserProfileChangeRequest.Builder()
+                    val profileUpdates = UserProfileChangeRequest
+                        .Builder()
                         .setDisplayName(user.name)
                         .apply {
                             if (user.profilePhotoUrl.isNotBlank()) {
                                 setPhotoUri(Uri.parse(user.profilePhotoUrl))
                             }
-                        }
-                        .build()
+                        }.build()
                     currentUser.updateProfile(profileUpdates).await()
                     Timber.d("UserRepositoryImpl: synced display name '%s' to Firebase Auth", user.name)
                 }
