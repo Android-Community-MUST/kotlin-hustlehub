@@ -38,6 +38,7 @@ fun ErrorView(
     title: String = stringResource(R.string.error_default_title),
     icon: ImageVector = Icons.Rounded.ErrorOutline,
     onRetry: (() -> Unit)? = null,
+    actionText: String = stringResource(R.string.action_try_again),
 ) {
     Column(
         modifier = modifier
@@ -91,7 +92,7 @@ fun ErrorView(
         if (onRetry != null) {
             Spacer(Modifier.height(36.dp))
             HustleButton(
-                text = stringResource(R.string.action_try_again),
+                text = actionText,
                 onClick = onRetry,
                 variant = HustleButtonVariant.Outlined,
             )

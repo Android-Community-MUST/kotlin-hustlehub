@@ -37,19 +37,29 @@ class ProfileViewModel
 
         fun loadProfile() {
             viewModelScope.launch {
-                _uiState.update { it.copy(isLoading = true, error = null) }
+                _uiState.update { it.copy(isLoading = true, error = null, needsProfileSetup = false) }
                 val firebaseUser = authRepository.getCurrentUser()
                 if (firebaseUser == null) {
                     _uiState.update { it.copy(isLoading = false, error = "Not logged in") }
                     return@launch
                 }
 
-                // Load user profile and services in parallel
                 val userResult = userRepository.getUserProfile(firebaseUser.uid)
                 val servicesResult = getMyServicesUseCase()
 
                 userResult
                     .onSuccess { user ->
+                        if (user == null) {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    error = "Profile not found",
+                                    needsProfileSetup = true,
+                                )
+                            }
+                            return@onSuccess
+                        }
+
                         val services = servicesResult.getOrElse { emptyList() }
                         val calculatedReviewCount = services.sumOf { it.reviewCount }
                         val calculatedScore = HustleScoreCalculator.calculate(services)
@@ -61,7 +71,7 @@ class ProfileViewModel
                             if (calculatedReviewCount >= 1) {
                                 add(Badge("Fast Responder", BadgeType.GREEN))
                             }
-                            if (user?.isVerified == true) {
+                            if (user.isVerified) {
                                 add(Badge("Verified Student", BadgeType.BLUE))
                             }
                         }
@@ -69,24 +79,30 @@ class ProfileViewModel
                         val isOnline = if (services.isNotEmpty()) {
                             services.any { it.availability != ServiceAvailability.OFFLINE }
                         } else {
-                            user?.isOnline ?: true
+                            user.isOnline
                         }
 
                         _uiState.update {
                             it.copy(
-                                user = user?.copy(isOnline = isOnline),
+                                user = user.copy(isOnline = isOnline),
                                 services = services,
                                 hustleScore = calculatedScore,
                                 reviewCount = calculatedReviewCount,
                                 badges = computedBadges,
                                 isLoading = false,
                                 error = null,
+                                needsProfileSetup = false,
                             )
                         }
                     }.onFailure { e ->
                         Timber.e(e, "Failed to load profile")
+                        val isNotFound = e is retrofit2.HttpException && (e.code() == 404 || e.code() == 403)
                         _uiState.update {
-                            it.copy(isLoading = false, error = "Failed to load profile. Please try again.")
+                            it.copy(
+                                isLoading = false,
+                                error = if (isNotFound) "Profile not found" else "Failed to load profile. Please try again.",
+                                needsProfileSetup = isNotFound,
+                            )
                         }
                     }
             }

@@ -59,8 +59,11 @@ class UserPreferences
             val IS_PRO_USER = booleanPreferencesKey("is_pro_user")
             val PRO_EXPIRES_AT = stringPreferencesKey("pro_expires_at")
 
-            /** Set before any network deletion call so a crash mid-flow is recoverable on next launch. */
             val PENDING_DELETION = booleanPreferencesKey("pending_deletion")
+
+            val PENDING_DEEPLINK_TARGET = stringPreferencesKey("pending_deeplink_target")
+            val PENDING_DEEPLINK_ID = stringPreferencesKey("pending_deeplink_id")
+            val HAS_PROCESSED_INSTALL_REFERRER = booleanPreferencesKey("has_processed_install_referrer")
 
             const val MAX_RECENT_SEARCHES = 10
         }
@@ -219,7 +222,53 @@ class UserPreferences
             }
         }
 
-        /** Cleared after local Room + DataStore wipe succeeds. */
+        val pendingDeepLink: Flow<Pair<String, String>?> = dataStore.data
+            .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
+            .map { prefs ->
+                val target = prefs[PENDING_DEEPLINK_TARGET]
+                val id = prefs[PENDING_DEEPLINK_ID]
+                if (!target.isNullOrBlank() && !id.isNullOrBlank()) target to id else null
+            }
+
+        suspend fun savePendingDeepLink(
+            target: String,
+            id: String,
+        ) {
+            try {
+                dataStore.edit { prefs ->
+                    prefs[PENDING_DEEPLINK_TARGET] = target
+                    prefs[PENDING_DEEPLINK_ID] = id
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error saving pending deep link")
+            }
+        }
+
+        suspend fun clearPendingDeepLink() {
+            try {
+                dataStore.edit { prefs ->
+                    prefs.remove(PENDING_DEEPLINK_TARGET)
+                    prefs.remove(PENDING_DEEPLINK_ID)
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error clearing pending deep link")
+            }
+        }
+
+        val hasProcessedInstallReferrer: Flow<Boolean> = dataStore.data
+            .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
+            .map { prefs -> prefs[HAS_PROCESSED_INSTALL_REFERRER] ?: false }
+
+        suspend fun markInstallReferrerProcessed() {
+            try {
+                dataStore.edit { prefs ->
+                    prefs[HAS_PROCESSED_INSTALL_REFERRER] = true
+                }
+            } catch (e: IOException) {
+                Timber.e(e, "Error marking install referrer processed")
+            }
+        }
+
         suspend fun clearPendingDeletion() {
             try {
                 dataStore.edit { prefs -> prefs.remove(PENDING_DELETION) }

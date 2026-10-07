@@ -18,6 +18,8 @@ import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.UpdateAvailabilityUseCase
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -161,5 +163,33 @@ class ProfileViewModelTest {
                 viewModel.uiState.value.services[0]
                     .availability,
             )
+        }
+
+    @Test
+    fun `loadProfile sets needsProfileSetup true when user is null`() =
+        runTest {
+            coEvery { userRepository.getUserProfile("uid-100") } returns Result.success(null)
+
+            viewModel.loadProfile()
+
+            val state = viewModel.uiState.value
+            assertEquals(true, state.needsProfileSetup)
+            assertEquals("Profile not found", state.error)
+            assertEquals(false, state.isLoading)
+        }
+
+    @Test
+    fun `loadProfile sets needsProfileSetup true when getUserProfile fails with HTTP 404`() =
+        runTest {
+            val responseBody = "{\"message\":\"User not found\"}".toResponseBody("application/json".toMediaType())
+            val http404 = retrofit2.HttpException(retrofit2.Response.error<Any>(404, responseBody))
+            coEvery { userRepository.getUserProfile("uid-100") } returns Result.failure(http404)
+
+            viewModel.loadProfile()
+
+            val state = viewModel.uiState.value
+            assertEquals(true, state.needsProfileSetup)
+            assertEquals("Profile not found", state.error)
+            assertEquals(false, state.isLoading)
         }
 }

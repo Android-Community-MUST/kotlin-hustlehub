@@ -17,10 +17,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
+import must.kdroiders.hustlehub.core.deeplink.InstallReferrerManager
 import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
-import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.navigation.DeepLinkAction
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import timber.log.Timber
 import javax.inject.Inject
@@ -33,6 +34,7 @@ sealed interface SplashDestination {
     data object Home : SplashDestination
     data object Login : SplashDestination
     data object Onboarding : SplashDestination
+    data object ProfileSetup : SplashDestination
     data class AccountSuspended(
         val reason: String = "",
         val suspendedUntil: String? = null,
@@ -48,6 +50,7 @@ class SplashViewModel
         private val userRepository: UserRepository,
         private val appDatabase: AppDatabase,
         private val keyExchangeHandler: KeyExchangeHandler,
+        private val installReferrerManager: InstallReferrerManager,
     ) : ViewModel() {
         private val _destination =
             MutableStateFlow<SplashDestination?>(null)
@@ -88,6 +91,9 @@ class SplashViewModel
 
         private fun determineDestination() {
             viewModelScope.launch {
+                checkAndStoreDeferredDeepLink()
+            }
+            viewModelScope.launch {
                 if (userPreferences.hasPendingDeletion.first()) {
                     Timber.w("Pending deletion detected on startup — completing local cleanup")
                     withContext(Dispatchers.IO) { appDatabase.clearAllTables() }
@@ -124,7 +130,6 @@ class SplashViewModel
                                 SplashDestination.Onboarding
 
                             currentUser != null -> {
-                                // Reload to get latest verified status
                                 try {
                                     currentUser.reload().await()
                                 } catch (e: Exception) {
@@ -133,25 +138,16 @@ class SplashViewModel
 
                                 val isVerified = currentUser.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(currentUser.email)
                                 if (isVerified) {
-                                    val hasProfileResult = userRepository.hasUserProfile(currentUser.uid)
+                                    val userProfileResult = userRepository.getUserProfile(currentUser.uid)
                                     var targetDestination: SplashDestination = SplashDestination.Home
 
-                                    hasProfileResult
-                                        .onSuccess { hasProfile ->
-                                            if (!hasProfile) {
-                                                val basicUser = User(
-                                                    id = currentUser.uid,
-                                                    email = currentUser.email ?: "",
-                                                    name = currentUser.displayName ?: "Hustler",
-                                                )
-                                                viewModelScope.launch {
-                                                    userRepository.saveUserProfile(basicUser)
-                                                }
+                                    userProfileResult
+                                        .onSuccess { user ->
+                                            if (user == null) {
+                                                targetDestination = SplashDestination.ProfileSetup
                                             }
                                         }.onFailure { e ->
                                             if (e is retrofit2.HttpException && e.code() == 403) {
-                                                // Structured suspension response from FirebaseJwtFilter:
-                                                // {"success":false,"message":"...","suspendedReason":"...","suspendedUntil":"ISO or null","isPermanent":bool}
                                                 var suspendedReason = "Violation of terms of service."
                                                 var suspendedUntil: String? = null
                                                 try {
@@ -161,7 +157,6 @@ class SplashViewModel
                                                     if (reasonMatch != null) suspendedReason = reasonMatch.groupValues[1]
                                                     if (untilMatch != null) suspendedUntil = untilMatch.groupValues[1].takeIf { it.isNotBlank() && it != "null" }
                                                 } catch (_: Exception) {
-                                                    // keep defaults
                                                 }
                                                 targetDestination = SplashDestination.AccountSuspended(
                                                     reason = suspendedReason,
@@ -170,16 +165,11 @@ class SplashViewModel
                                             } else if (e is retrofit2.HttpException && e.code() == 401) {
                                                 firebaseAuth.signOut()
                                                 targetDestination = SplashDestination.Login
+                                            } else if (e is retrofit2.HttpException && e.code() == 404) {
+                                                targetDestination = SplashDestination.ProfileSetup
                                             } else {
-                                                // Trigger auto-registration attempt in background for non-auth errors/missing user
-                                                val basicUser = User(
-                                                    id = currentUser.uid,
-                                                    email = currentUser.email ?: "",
-                                                    name = currentUser.displayName ?: "Hustler",
-                                                )
-                                                viewModelScope.launch {
-                                                    userRepository.saveUserProfile(basicUser)
-                                                }
+                                                Timber.w(e, "SplashViewModel: Transient network error on splash — proceeding with cached session")
+                                                targetDestination = SplashDestination.Home
                                             }
                                         }
                                     if (targetDestination == SplashDestination.Home) {
@@ -196,11 +186,7 @@ class SplashViewModel
                                 SplashDestination.Login
                         }
                     } catch (e: Exception) {
-                        // rethrow cancellation to preserve
-                        // structured concurrency
                         coroutineContext.ensureActive()
-                        // fall back to Login so the app
-                        // never gets stuck on splash
                         Timber.e(
                             e,
                             "Error reading preferences",
@@ -209,10 +195,39 @@ class SplashViewModel
                     }
                 }
 
-                // wait for both to complete
                 minDelayJob.await()
                 _destination.value =
                     destinationResult.await()
+            }
+        }
+
+        private suspend fun checkAndStoreDeferredDeepLink() {
+            try {
+                if (userPreferences.hasProcessedInstallReferrer.first()) {
+                    Timber.tag("SHARE_LINK").d("[SHARE_LINK] Install referrer has already been processed previously; skipping")
+                    return
+                }
+                Timber.tag("SHARE_LINK").d("[SHARE_LINK] Checking install referrer for deferred deep link...")
+                val action = installReferrerManager.getDeferredDeepLink()
+                if (action != null) {
+                    val (target, id) = when (action) {
+                        is DeepLinkAction.OpenProviderProfile -> "profile" to action.providerId
+                        is DeepLinkAction.OpenServiceDetail -> "service" to action.serviceId
+                        else -> null to null
+                    }
+                    if (target != null && id != null) {
+                        userPreferences.savePendingDeepLink(target, id)
+                        Timber.tag("SHARE_LINK").d("[SHARE_LINK] Deferred deep link stored in UserPreferences: target=%s, id=%s", target, id)
+                    }
+                    userPreferences.markInstallReferrerProcessed()
+                } else {
+                    Timber.tag("SHARE_LINK").d("[SHARE_LINK] No deferred deep link action returned from install referrer")
+                    if (!must.kdroiders.hustlehub.BuildConfig.DEBUG) {
+                        userPreferences.markInstallReferrerProcessed()
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.tag("SHARE_LINK").e(e, "[SHARE_LINK] Failed to check install referrer on splash")
             }
         }
 
