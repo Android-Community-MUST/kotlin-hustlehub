@@ -71,6 +71,29 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="hustlehub" />
             </intent-filter>
+
+            <!-- Android App Links: verified HTTPS domain -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="hustlehub-8367.web.app"
+                    android:pathPrefix="/profile" />
+                <data
+                    android:scheme="https"
+                    android:host="hustlehub-8367.web.app"
+                    android:pathPrefix="/service" />
+                <data
+                    android:scheme="https"
+                    android:host="hustlehub-8367.firebaseapp.com"
+                    android:pathPrefix="/profile" />
+                <data
+                    android:scheme="https"
+                    android:host="hustlehub-8367.firebaseapp.com"
+                    android:pathPrefix="/service" />
+            </intent-filter>
         </activity>
 
         <service
