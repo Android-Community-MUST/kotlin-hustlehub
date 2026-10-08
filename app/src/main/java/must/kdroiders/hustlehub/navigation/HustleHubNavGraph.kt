@@ -117,7 +117,8 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 currentTop is Login ||
                 currentTop is SignUp ||
                 currentTop is EmailVerification ||
-                currentTop is Onboarding
+                currentTop is Onboarding ||
+                currentTop is ProfileSetup
 
             if (authState == AuthState.Unauthenticated && !isInAuthFlow) {
                 backstack.clear()
@@ -311,6 +312,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                         SplashDestination.Login -> Login()
                                         SplashDestination.Onboarding -> Onboarding
                                         SplashDestination.ProfileSetup -> ProfileSetup
+                                        is SplashDestination.EmailVerification -> EmailVerification(email = destination.email)
                                         is SplashDestination.AccountSuspended -> AccountSuspendedKey(
                                             reason = destination.reason,
                                             suspendedUntil = destination.suspendedUntil,
@@ -371,6 +373,10 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onVerified = {
                                     backstack.clear()
                                     backstack.add(ProfileSetup)
+                                },
+                                onNavigateToLogin = {
+                                    backstack.clear()
+                                    backstack.add(Login())
                                 },
                             )
                         }
