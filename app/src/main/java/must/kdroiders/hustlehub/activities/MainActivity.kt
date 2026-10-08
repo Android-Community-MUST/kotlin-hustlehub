@@ -59,6 +59,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var appReviewManager: AppReviewManager
 
+    @Inject
+    lateinit var userPreferences: must.kdroiders.hustlehub.datastore.UserPreferences
+
     private var locationJob: kotlinx.coroutines.Job? = null
 
     private val loginViewModel: LoginViewModel by viewModels()
@@ -167,8 +170,18 @@ class MainActivity : ComponentActivity() {
                 val type = segments.getOrNull(0)
                 val id = segments.getOrNull(1)
                 when {
-                    type == "profile" && !id.isNullOrBlank() -> DeepLinkAction.OpenProviderProfile(id)
-                    type == "service" && !id.isNullOrBlank() -> DeepLinkAction.OpenServiceDetail(id)
+                    type == "profile" && !id.isNullOrBlank() -> {
+                        lifecycleScope.launch {
+                            userPreferences.savePendingDeepLink("profile", id)
+                        }
+                        DeepLinkAction.OpenProviderProfile(id)
+                    }
+                    type == "service" && !id.isNullOrBlank() -> {
+                        lifecycleScope.launch {
+                            userPreferences.savePendingDeepLink("service", id)
+                        }
+                        DeepLinkAction.OpenServiceDetail(id)
+                    }
                     else -> null
                 }
             }

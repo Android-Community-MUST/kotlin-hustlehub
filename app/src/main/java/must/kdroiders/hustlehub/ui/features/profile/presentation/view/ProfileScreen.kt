@@ -235,11 +235,13 @@ private fun ProfileContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = horizontalPadding),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     HustleButton(
                         text = stringResource(R.string.profile_edit_button),
                         icon = Icons.Default.Edit,
+                        iconSize = 18.dp,
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                         variant = HustleButtonVariant.Secondary,
                         onClick = onEditClick,
                         modifier = Modifier.weight(1f),
@@ -247,6 +249,8 @@ private fun ProfileContent(
                     HustleButton(
                         text = stringResource(R.string.action_add_service),
                         icon = Icons.Default.Add,
+                        iconSize = 18.dp,
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                         variant = HustleButtonVariant.Primary,
                         onClick = onAddNewServiceClick,
                         modifier = Modifier.weight(1f),
