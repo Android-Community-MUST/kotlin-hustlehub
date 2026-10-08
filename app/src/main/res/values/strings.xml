@@ -240,6 +240,12 @@
     <string name="auth_btn_verifying">Verifying…</string>
     <string name="auth_resend_cooldown_format">Resend email in %1$ds</string>
     <string name="auth_btn_resend_email">Resend Verification Email</string>
+    <string name="auth_btn_open_email_app">Open Email App</string>
+    <string name="auth_btn_change_account">Use a different email / Back to Login</string>
+    <string name="auth_email_app_not_found">No email app found on this device.</string>
+    <string name="auth_verify_complete_title">Verification Complete</string>
+    <string name="auth_verify_complete_desc">Your email has been successfully verified! Taking you to profile setup…</string>
+    <string name="auth_btn_continue_to_profile">Continue to Profile Setup</string>
     <string name="auth_change_password_title">Change Password</string>
     <string name="auth_secure_account_title">Secure your account</string>
     <string name="auth_change_password_desc">Enter your current password to verify your identity, then choose a new strong password.</string>

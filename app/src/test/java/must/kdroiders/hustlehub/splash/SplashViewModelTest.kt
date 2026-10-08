@@ -62,7 +62,13 @@ class SplashViewModelTest {
     @Test
     fun `when user is verified and profile exists, routes to Home`() =
         runTest {
-            val user = User(id = "test-uid-1", name = "Test Hustler", email = "student@must.ac.ke")
+            val user = User(
+                id = "test-uid-1",
+                name = "Test Hustler",
+                email = "student@must.ac.ke",
+                phone = "+254700000000",
+                campusLocation = "Main Campus",
+            )
             coEvery { userRepository.getUserProfile("test-uid-1") } returns Result.success(user)
 
             val viewModel = SplashViewModel(
@@ -117,7 +123,7 @@ class SplashViewModelTest {
         }
 
     @Test
-    fun `when user is not verified, routes to Login`() =
+    fun `when user is not verified, routes to EmailVerification`() =
         runTest {
             every { firebaseUser.isEmailVerified } returns false
 
@@ -131,6 +137,6 @@ class SplashViewModelTest {
             )
             testScheduler.advanceUntilIdle()
 
-            assertEquals(SplashDestination.Login, viewModel.destination.value)
+            assertEquals(SplashDestination.EmailVerification("student@must.ac.ke"), viewModel.destination.value)
         }
 }

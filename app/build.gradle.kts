@@ -31,7 +31,7 @@ android {
         applicationId = "must.kdroiders.hustlehub"
         minSdk = 24
         targetSdk = 37
-        versionCode = 2
+        versionCode = 5
         versionName = "1.0.0"
 
         testInstrumentationRunner = "must.kdroiders.hustlehub.HiltTestRunner"

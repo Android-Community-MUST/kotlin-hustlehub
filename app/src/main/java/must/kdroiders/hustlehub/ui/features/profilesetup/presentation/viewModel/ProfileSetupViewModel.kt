@@ -13,7 +13,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.core.api.userFriendlyMessage
+import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SyncUserProfileUseCase
@@ -190,6 +192,24 @@ class ProfileSetupViewModel
             )
 
             viewModelScope.launch {
+                val currentUser = firebaseAuth?.currentUser
+                if (currentUser != null) {
+                    runCatching {
+                        currentUser.reload().await()
+                        currentUser.getIdToken(true).await()
+                    }
+                    val isVerified = currentUser.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(currentUser.email)
+                    if (!isVerified) {
+                        _state.update {
+                            it.copy(
+                                isSaving = false,
+                                errorMessage = "Please verify your email address in Gmail before completing your profile.",
+                            )
+                        }
+                        return@launch
+                    }
+                }
+
                 syncUserProfileUseCase(user)
                     .onSuccess {
                         hustleAnalytics.setUserProperties(role = "ROLE_CUSTOMER", campus = currentState.campusLocation, isVerifiedPro = false)
