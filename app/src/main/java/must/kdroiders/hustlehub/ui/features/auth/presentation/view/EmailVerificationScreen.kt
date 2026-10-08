@@ -78,6 +78,8 @@ fun EmailVerificationScreen(
         }
     }
 
+    val emailAppNotFoundMessage = stringResource(R.string.auth_email_app_not_found)
+
     val openEmailApp = {
         val emailIntent = Intent(Intent.ACTION_MAIN).apply {
             addCategory(Intent.CATEGORY_APP_EMAIL)
@@ -93,7 +95,7 @@ fun EmailVerificationScreen(
                 Toast
                     .makeText(
                         context,
-                        context.getString(R.string.auth_email_app_not_found),
+                        emailAppNotFoundMessage,
                         Toast.LENGTH_LONG,
                     ).show()
             }
