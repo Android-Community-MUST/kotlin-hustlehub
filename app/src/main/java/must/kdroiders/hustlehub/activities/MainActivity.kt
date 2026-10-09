@@ -59,6 +59,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var appReviewManager: AppReviewManager
 
+    @Inject
+    lateinit var userPreferences: must.kdroiders.hustlehub.datastore.UserPreferences
+
     private var locationJob: kotlinx.coroutines.Job? = null
 
     private val loginViewModel: LoginViewModel by viewModels()
@@ -158,35 +161,60 @@ class MainActivity : ComponentActivity() {
 
     private fun handleIntent(intent: Intent?) {
         val uri = intent?.data ?: return
-        if (uri.scheme != "hustlehub") return
+        val scheme = uri.scheme ?: return
         val host = uri.host ?: return
-        val lastSegment = uri.lastPathSegment
 
-        val action: DeepLinkAction? = when (host) {
-            "chat" -> {
-                val conversationId = lastSegment ?: uri.getQueryParameter("conversationId")
-                if (!conversationId.isNullOrBlank()) DeepLinkAction.OpenChat(conversationId) else null
-            }
-            "service" -> {
-                if (!lastSegment.isNullOrBlank()) DeepLinkAction.OpenServiceDetail(lastSegment) else null
-            }
-            "profile" -> {
-                if (!lastSegment.isNullOrBlank()) DeepLinkAction.OpenProviderProfile(lastSegment) else null
-            }
-            "review" -> {
-                val serviceId = lastSegment
-                val providerId = uri.getQueryParameter("providerId") ?: ""
-                if (!serviceId.isNullOrBlank()) DeepLinkAction.OpenWriteReview(serviceId, providerId) else null
-            }
-            "notifications" -> DeepLinkAction.OpenNotifications
-            "app" -> {
+        val action: DeepLinkAction? = when {
+            scheme == "https" && (host == "hustlehub-8367.web.app" || host == "hustlehub-8367.firebaseapp.com") -> {
+                val segments = uri.pathSegments
+                val type = segments.getOrNull(0)
+                val id = segments.getOrNull(1)
                 when {
-                    uri.path?.contains("chat") == true -> {
-                        val conversationId = uri.getQueryParameter("conversationId")
+                    type == "profile" && !id.isNullOrBlank() -> {
+                        lifecycleScope.launch {
+                            userPreferences.savePendingDeepLink("profile", id)
+                        }
+                        DeepLinkAction.OpenProviderProfile(id)
+                    }
+                    type == "service" && !id.isNullOrBlank() -> {
+                        lifecycleScope.launch {
+                            userPreferences.savePendingDeepLink("service", id)
+                        }
+                        DeepLinkAction.OpenServiceDetail(id)
+                    }
+                    else -> null
+                }
+            }
+            scheme == "hustlehub" -> {
+                val lastSegment = uri.lastPathSegment
+                when (host) {
+                    "chat" -> {
+                        val conversationId = lastSegment ?: uri.getQueryParameter("conversationId")
                         if (!conversationId.isNullOrBlank()) DeepLinkAction.OpenChat(conversationId) else null
                     }
-                    uri.path?.contains("profile") == true -> DeepLinkAction.OpenProfile
-                    uri.path?.contains("inquiries") == true -> DeepLinkAction.OpenChatList
+                    "service" -> {
+                        if (!lastSegment.isNullOrBlank()) DeepLinkAction.OpenServiceDetail(lastSegment) else null
+                    }
+                    "profile" -> {
+                        if (!lastSegment.isNullOrBlank()) DeepLinkAction.OpenProviderProfile(lastSegment) else null
+                    }
+                    "review" -> {
+                        val serviceId = lastSegment
+                        val providerId = uri.getQueryParameter("providerId") ?: ""
+                        if (!serviceId.isNullOrBlank()) DeepLinkAction.OpenWriteReview(serviceId, providerId) else null
+                    }
+                    "notifications" -> DeepLinkAction.OpenNotifications
+                    "app" -> {
+                        when {
+                            uri.path?.contains("chat") == true -> {
+                                val conversationId = uri.getQueryParameter("conversationId")
+                                if (!conversationId.isNullOrBlank()) DeepLinkAction.OpenChat(conversationId) else null
+                            }
+                            uri.path?.contains("profile") == true -> DeepLinkAction.OpenProfile
+                            uri.path?.contains("inquiries") == true -> DeepLinkAction.OpenChatList
+                            else -> null
+                        }
+                    }
                     else -> null
                 }
             }
