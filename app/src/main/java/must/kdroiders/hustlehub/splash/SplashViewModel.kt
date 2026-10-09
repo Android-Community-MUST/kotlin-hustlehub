@@ -35,6 +35,7 @@ sealed interface SplashDestination {
     data object Login : SplashDestination
     data object Onboarding : SplashDestination
     data object ProfileSetup : SplashDestination
+    data class EmailVerification(val email: String) : SplashDestination
     data class AccountSuspended(
         val reason: String = "",
         val suspendedUntil: String? = null,
@@ -143,7 +144,7 @@ class SplashViewModel
 
                                     userProfileResult
                                         .onSuccess { user ->
-                                            if (user == null) {
+                                            if (user == null || user.campusLocation.isBlank() || user.phone.isBlank()) {
                                                 targetDestination = SplashDestination.ProfileSetup
                                             }
                                         }.onFailure { e ->
@@ -168,8 +169,13 @@ class SplashViewModel
                                             } else if (e is retrofit2.HttpException && e.code() == 404) {
                                                 targetDestination = SplashDestination.ProfileSetup
                                             } else {
-                                                Timber.w(e, "SplashViewModel: Transient network error on splash — proceeding with cached session")
-                                                targetDestination = SplashDestination.Home
+                                                Timber.w(e, "SplashViewModel: Transient network error on splash — checking cached session")
+                                                val cachedUser = userPreferences.cachedUser.first()
+                                                if (cachedUser.campusLocation.isBlank() || cachedUser.phone.isBlank()) {
+                                                    targetDestination = SplashDestination.ProfileSetup
+                                                } else {
+                                                    targetDestination = SplashDestination.Home
+                                                }
                                             }
                                         }
                                     if (targetDestination == SplashDestination.Home) {
@@ -178,7 +184,7 @@ class SplashViewModel
                                     }
                                     targetDestination
                                 } else {
-                                    SplashDestination.Login
+                                    SplashDestination.EmailVerification(email = currentUser.email ?: "")
                                 }
                             }
 

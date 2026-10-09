@@ -98,12 +98,31 @@ class UserRepositoryImpl
                 }
             }.recoverCatching { e ->
                 if (e is retrofit2.HttpException) {
+                    val errorBody = runCatching { e.response()?.errorBody()?.string() }.getOrNull()
+                    Timber.w(e, "UserRepositoryImpl: register endpoint returned HTTP %d: %s", e.code(), errorBody)
+
                     when (e.code()) {
-                        // 409 Conflict = user already exists → treat as success
-                        409 -> {
-                            Timber.d("UserRepositoryImpl: user already registered (HTTP 409) — treating as success")
-                            syncLocalUserState(user)
-                            user
+                        // 400 or 409: User already exists on backend or needs profile update
+                        400, 409 -> {
+                            Timber.d("UserRepositoryImpl: attempting profile update via PUT users/me for user: %s", user.id)
+                            val updateResult = updateProfile(
+                                name = user.name,
+                                bio = user.bio,
+                                phone = user.phone,
+                                campusLocation = user.campusLocation,
+                                avatarUrl = user.profilePhotoUrl.takeIf { it.isNotBlank() },
+                                allowCalls = user.allowCalls,
+                            )
+                            if (updateResult.isSuccess) {
+                                val updated = updateResult.getOrThrow()
+                                syncLocalUserState(updated)
+                                updated
+                            } else {
+                                val updateErr = updateResult.exceptionOrNull()
+                                Timber.e(updateErr, "UserRepositoryImpl: updateProfile fallback also failed")
+                                syncLocalUserState(user)
+                                user
+                            }
                         }
                         else -> {
                             Timber.e(e, "UserRepositoryImpl: failed to save profile (HTTP ${e.code()})")
@@ -129,7 +148,13 @@ class UserRepositoryImpl
                     localUser
                 }
             }.recoverCatching { e ->
-                Timber.w(e, "UserRepositoryImpl: network miss, checking Room cache for user: %s", userId)
+                // Do NOT fall back to Room for auth errors — these must propagate so the
+                // splash screen correctly routes the user to ProfileSetup or Login.
+                if (e is retrofit2.HttpException && (e.code() == 404 || e.code() == 403 || e.code() == 401)) {
+                    Timber.w(e, "UserRepositoryImpl: HTTP ${e.code()} for user profile — not falling back to cache")
+                    throw e
+                }
+                Timber.w(e, "UserRepositoryImpl: transient network miss, checking Room cache for user: %s", userId)
                 val localUser = userDao.getUserById(userId)?.toDomain()
                 localUser?.let { syncLocalUserState(it) }
                 localUser ?: throw e
@@ -138,7 +163,10 @@ class UserRepositoryImpl
         override suspend fun hasUserProfile(userId: String): Result<Boolean> =
             runCatching {
                 val response = userApiService.getMe()
-                response.success && response.data != null
+                response.success &&
+                    response.data != null &&
+                    !response.data.campusLocation.isNullOrBlank() &&
+                    !response.data.phone.isNullOrBlank()
             }.recoverCatching { e ->
                 if (e is retrofit2.HttpException && (e.code() == 403 || e.code() == 404)) {
                     Timber.d("UserRepositoryImpl: no backend profile found (HTTP ${e.code()}) — assuming new user")
