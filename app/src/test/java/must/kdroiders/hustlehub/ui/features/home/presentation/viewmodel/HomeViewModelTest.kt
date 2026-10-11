@@ -114,7 +114,6 @@ class HomeViewModelTest {
     fun `initialization leaves featuredServices empty when no services are featured`() =
         runTest {
             val state = viewModel.uiState.value
-            // Since s-1 and s-2 have isFeatured = false, featuredServices is empty.
             assertTrue(state.featuredServices.isEmpty())
         }
 
@@ -180,10 +179,38 @@ class HomeViewModelTest {
             viewModel.onCategorySelected(ServiceCategory.TECH)
 
             val featured = viewModel.uiState.value.featuredServices
-            // Only paid-1 and paid-2 are featured
             assertEquals(2, featured.size)
             assertEquals("paid-2", featured[0].id)
             assertEquals("paid-1", featured[1].id)
+        }
+
+    @Test
+    fun `services list prioritizes providerIsVerifiedPro services at top of discover feed`() =
+        runTest {
+            val page = PageResponse(
+                content = listOf(
+                    Service(id = "free-1", title = "Free Hustler", providerIsVerifiedPro = false),
+                    Service(id = "pro-1", title = "Pro Hustler 1", providerIsVerifiedPro = true),
+                    Service(id = "free-2", title = "Another Free", providerIsVerifiedPro = false),
+                    Service(id = "pro-2", title = "Pro Hustler 2", providerIsVerifiedPro = true),
+                ),
+                page = 0,
+                size = 10,
+                totalElements = 4,
+                totalPages = 1,
+            )
+            coEvery {
+                browseServices(page = 0, size = 10, category = ServiceCategory.TECH, query = null)
+            } returns Result.success(page)
+
+            viewModel.onCategorySelected(ServiceCategory.TECH)
+
+            val services = viewModel.uiState.value.services
+            assertEquals(4, services.size)
+            assertEquals("pro-1", services[0].id)
+            assertEquals("pro-2", services[1].id)
+            assertEquals("free-1", services[2].id)
+            assertEquals("free-2", services[3].id)
         }
 
     @Test

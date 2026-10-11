@@ -335,7 +335,6 @@ class ServiceRepositoryImpl
             }
     }
 
-// DTO → Domain mapper (private to this file)
 private fun ServiceResponse.toDomainModel(): Service =
     Service(
         id = serviceId,
@@ -352,6 +351,7 @@ private fun ServiceResponse.toDomainModel(): Service =
         reviewCount = reviewCount,
         openToBarter = openToBarter,
         isFeatured = isFeatured ?: false,
+        providerIsVerifiedPro = providerIsVerifiedPro ?: false,
         tags = tags ?: emptyList(),
         createdAt = runCatching { Instant.parse(createdAt).toEpochMilli() }.getOrDefault(0L),
         updatedAt = runCatching { Instant.parse(updatedAt).toEpochMilli() }.getOrDefault(0L),

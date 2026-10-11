@@ -41,6 +41,7 @@ import coil.request.ImageRequest
 import coil.size.Scale
 import coil.size.Size
 import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
+import must.kdroiders.hustlehub.sharedComposables.CompactProBadge
 import must.kdroiders.hustlehub.sharedComposables.FeaturedBadge
 import must.kdroiders.hustlehub.sharedComposables.bouncyClickable
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
@@ -77,7 +78,6 @@ fun ServiceCard(
                     model = ImageRequest
                         .Builder(LocalContext.current)
                         .data(imageUrl)
-                        // Request exactly card-thumbnail resolution to avoid downloading full-res
                         .size(Size(360, 270))
                         .scale(Scale.FILL)
                         .crossfade(true)
@@ -109,6 +109,9 @@ fun ServiceCard(
                 )
                 if (service.isFeatured) {
                     FeaturedBadge()
+                }
+                if (service.providerIsVerifiedPro) {
+                    CompactProBadge()
                 }
             }
         }
