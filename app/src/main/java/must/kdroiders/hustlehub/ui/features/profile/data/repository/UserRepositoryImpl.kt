@@ -361,7 +361,12 @@ class UserRepositoryImpl
             runCatching {
                 val response = userApiService.deleteMe()
                 if (!response.isSuccessful) {
-                    throw Exception("Failed to delete account on backend: code ${response.code()}")
+                    val errorBody = runCatching { response.errorBody()?.string() }.getOrNull()
+                    Timber.e("UserRepositoryImpl: deleteMe failed with HTTP %d: %s", response.code(), errorBody)
+                    val serverMessage = errorBody?.let { body ->
+                        Regex("\"message\"\\s*:\\s*\"([^\"]+)\"").find(body)?.groupValues?.get(1)
+                    }
+                    throw Exception(serverMessage ?: "Failed to delete account on backend: code ${response.code()}")
                 }
             }.onFailure { e ->
                 Timber.e(e, "UserRepositoryImpl: failed to delete user account on backend")
