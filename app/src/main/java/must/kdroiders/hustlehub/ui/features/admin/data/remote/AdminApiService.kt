@@ -85,8 +85,8 @@ interface AdminApiService {
 
     @GET("/api/v1/admin/audit-logs")
     suspend fun getAuditLogs(
-        @Query("targetType") targetType: String,
-        @Query("targetId") targetId: String,
+        @Query("targetType") targetType: String? = null,
+        @Query("targetId") targetId: String? = null,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 50,
     ): ApiResponse<PageResponse<AuditLogResponseDto>>

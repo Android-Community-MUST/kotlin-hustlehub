@@ -174,7 +174,7 @@ class AdminViewModel
 
         private fun loadAuditLogs() {
             viewModelScope.launch {
-                adminRepository.getAuditLogs("USER", "ALL").fold(
+                adminRepository.getAuditLogs().fold(
                     onSuccess = { list ->
                         _uiState.update { it.copy(auditLogs = list) }
                     },

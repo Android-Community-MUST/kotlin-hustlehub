@@ -147,8 +147,8 @@ class AdminRepositoryImpl
             }
 
         override suspend fun getAuditLogs(
-            targetType: String,
-            targetId: String,
+            targetType: String?,
+            targetId: String?,
         ): Result<List<AdminAuditLogItem>> =
             runCatching {
                 val response = apiService.getAuditLogs(targetType = targetType, targetId = targetId)
