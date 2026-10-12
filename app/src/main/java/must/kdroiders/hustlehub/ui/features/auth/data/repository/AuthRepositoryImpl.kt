@@ -316,6 +316,7 @@ class AuthRepositoryImpl
                         Timber.d("Backend user already deleted (HTTP 404) — treating as success")
                     } else {
                         Timber.e(error, "Backend user deletion failed during deleteAccount")
+                        throw error ?: Exception("Failed to delete account on server. Please try again.")
                     }
                 }
 
