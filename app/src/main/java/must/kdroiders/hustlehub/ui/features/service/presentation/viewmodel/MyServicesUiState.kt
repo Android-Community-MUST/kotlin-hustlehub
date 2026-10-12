@@ -9,8 +9,9 @@ data class MyServicesUiState(
     val error: String? = null,
     // ID of the service that is waiting for a network response (optimistic locking)
     val updatingServiceId: String? = null,
-    // ID of the service pending delete confirmation
     val pendingDeleteServiceId: String? = null,
+    val isProUser: Boolean = false,
+    val isProBannerDismissed: Boolean = false,
 
     // --- Gallery Bottom Sheet State ---
     val selectedServiceForGallery: String? = null,

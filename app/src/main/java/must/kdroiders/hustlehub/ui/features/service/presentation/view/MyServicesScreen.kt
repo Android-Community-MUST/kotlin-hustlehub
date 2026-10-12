@@ -55,6 +55,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.DeleteConfirmDialog
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.PortfolioSlots
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ProviderProBanner
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ServiceManagementCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.MyServicesViewModel
 
@@ -66,6 +67,7 @@ fun MyServicesScreen(
     onCreateService: () -> Unit,
     onEditService: (String) -> Unit,
     onBoostService: (String) -> Unit = {},
+    onNavigateToSubscription: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -241,6 +243,16 @@ fun MyServicesScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxSize(),
                         ) {
+                            if (!state.isProBannerDismissed) {
+                                item(key = "provider_pro_banner") {
+                                    ProviderProBanner(
+                                        isProUser = state.isProUser,
+                                        onUpgradeClick = onNavigateToSubscription,
+                                        onDismiss = viewModel::dismissProBanner,
+                                    )
+                                }
+                            }
+
                             items(
                                 items = state.services,
                                 key = { it.id },

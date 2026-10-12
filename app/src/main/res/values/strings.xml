@@ -851,4 +851,12 @@
     <string name="sub_day_plural">days</string>
     <string name="sub_hour_singular">hour</string>
     <string name="sub_hour_plural">hours</string>
+
+    <string name="pro_banner_title">Boost Your Campus Visibility</string>
+    <string name="pro_banner_desc">Pro providers get priority campus search ranking, up to 15 portfolio photos, and a highlighted map pin.</string>
+    <string name="pro_banner_upgrade_btn">Upgrade to Pro — KES 150/mo</string>
+    <string name="pro_banner_active_title">HustleHub Pro Active</string>
+    <string name="pro_banner_active_desc">Your services enjoy top priority ranking and a verified provider badge on campus.</string>
+    <string name="pro_banner_manage_btn">Manage Subscription</string>
+    <string name="pro_banner_dismiss_cd">Dismiss Pro banner</string>
 </resources>

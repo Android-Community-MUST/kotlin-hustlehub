@@ -511,6 +511,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onCreateService = { backstack.add(CreateService()) },
                                 onEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
                                 onBoostService = { serviceId -> backstack.add(Subscription(serviceId = serviceId)) },
+                                onNavigateToSubscription = { backstack.add(Subscription()) },
                             )
                         }
 

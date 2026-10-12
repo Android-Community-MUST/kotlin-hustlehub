@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
+import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
@@ -34,6 +35,7 @@ class MyServicesViewModel
         private val storageRepository: StorageRepository,
         private val serviceRepository: ServiceRepository,
         private val userRepository: UserRepository,
+        private val userPreferences: UserPreferences,
         @ApplicationContext private val context: Context,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(MyServicesUiState())
@@ -41,6 +43,19 @@ class MyServicesViewModel
 
         init {
             loadServices()
+            observeProStatus()
+        }
+
+        private fun observeProStatus() {
+            viewModelScope.launch {
+                userPreferences.cachedUser.collect { user ->
+                    _uiState.update { it.copy(isProUser = user.isVerifiedPro) }
+                }
+            }
+        }
+
+        fun dismissProBanner() {
+            _uiState.update { it.copy(isProBannerDismissed = true) }
         }
 
         fun loadServices() {
