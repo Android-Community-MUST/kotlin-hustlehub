@@ -73,6 +73,14 @@ class EditProfileViewModel
                 _uiState.update { it.copy(error = "Name cannot be empty.") }
                 return
             }
+            if (state.phone.isBlank()) {
+                _uiState.update { it.copy(error = "Phone number cannot be empty.") }
+                return
+            }
+            if (state.campusLocation.isBlank()) {
+                _uiState.update { it.copy(error = "Campus location cannot be empty.") }
+                return
+            }
 
             viewModelScope.launch {
                 _uiState.update { it.copy(isSaving = true, error = null) }

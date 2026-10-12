@@ -213,8 +213,11 @@ class UserRepositoryImpl
                     name = name,
                     bio = bio.takeIf { it.isNotBlank() },
                     avatarUrl = avatarUrl,
-                    phone = phone.takeIf { it.isNotBlank() },
-                    campusLocation = campusLocation.takeIf { it.isNotBlank() },
+                    // Always send phone and campusLocation — even if blank — so the backend
+                    // always stores them. Using takeIf{isNotBlank} caused null to be sent
+                    // when fields were empty, which the backend silently skipped.
+                    phone = phone.ifBlank { null },
+                    campusLocation = campusLocation.ifBlank { null },
                     allowCalls = allowCalls,
                 )
                 val response = userApiService.updateMe(request)
