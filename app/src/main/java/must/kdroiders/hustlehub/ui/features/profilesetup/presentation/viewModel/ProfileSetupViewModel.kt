@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.core.api.userFriendlyMessage
-import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SyncUserProfileUseCase
@@ -198,7 +197,7 @@ class ProfileSetupViewModel
                         currentUser.reload().await()
                         currentUser.getIdToken(true).await()
                     }
-                    val isVerified = currentUser.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(currentUser.email)
+                    val isVerified = currentUser.isEmailVerified
                     if (!isVerified) {
                         _state.update {
                             it.copy(

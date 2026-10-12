@@ -11,7 +11,6 @@ import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.core.api.FirebaseAuthErrorMapper
-import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.LoginResult
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
@@ -58,9 +57,9 @@ class AuthRepositoryImpl
                 // Refresh the ID token cache
                 user.getIdToken(true).await()
 
-                val isVerified = user.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(user.email)
+                val isVerified = user.isEmailVerified
 
-                // Auto-send a new verification link if the email is still unverified and not admin
+                // Auto-send a new verification link if the email is still unverified
                 if (!isVerified) {
                     runCatching {
                         user.sendEmailVerification().await()
@@ -114,9 +113,9 @@ class AuthRepositoryImpl
                     Timber.e(e, "Failed to update Firebase profile display name")
                 }
 
-                val isVerified = user.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(email)
+                val isVerified = user.isEmailVerified
 
-                // Send the verification email link (skip for admin)
+                // Send the verification email link
                 if (!isVerified) {
                     runCatching {
                         user.sendEmailVerification().await()
@@ -195,7 +194,7 @@ class AuthRepositoryImpl
 
                 user.reload().await()
 
-                val isVerified = user.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(user.email ?: email)
+                val isVerified = user.isEmailVerified
                 if (!isVerified) {
                     throw Exception(
                         "Email not yet verified. Please check your inbox and click the " +
