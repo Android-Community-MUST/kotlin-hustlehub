@@ -78,7 +78,6 @@ fun MyServicesScreen(
         uri?.let { viewModel.onGalleryImageAdded(it) }
     }
 
-    // Show errors as snackbar
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar(it)
@@ -86,7 +85,6 @@ fun MyServicesScreen(
         }
     }
 
-    // Refresh list when navigating back from the edit screen
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -98,7 +96,6 @@ fun MyServicesScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Delete confirmation dialog
     val pendingDeleteId = state.pendingDeleteServiceId
     val defaultServiceTitle = stringResource(R.string.service_fallback_title)
     if (pendingDeleteId != null) {
@@ -112,7 +109,6 @@ fun MyServicesScreen(
         )
     }
 
-    // Gallery Bottom Sheet
     if (state.selectedServiceForGallery != null) {
         val selectedService = state.services.find { it.id == state.selectedServiceForGallery }
         if (selectedService != null) {
@@ -124,7 +120,7 @@ fun MyServicesScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .padding(bottom = 32.dp), // extra padding for bottom navigation
+                        .padding(bottom = 32.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.service_quick_gallery_title),

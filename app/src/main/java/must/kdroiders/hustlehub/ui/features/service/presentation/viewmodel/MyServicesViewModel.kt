@@ -73,13 +73,10 @@ class MyServicesViewModel
             }
         }
 
-        // --- Availability ---
-
         fun onAvailabilityChange(
             serviceId: String,
             availability: ServiceAvailability,
         ) {
-            // Optimistic update — apply locally first
             _uiState.update { state ->
                 state.copy(
                     services = state.services.map { s ->
@@ -109,8 +106,6 @@ class MyServicesViewModel
                     }
             }
         }
-
-        // --- Delete ---
 
         fun requestDelete(serviceId: String) {
             _uiState.update { it.copy(pendingDeleteServiceId = serviceId) }
@@ -148,8 +143,6 @@ class MyServicesViewModel
         fun clearError() {
             _uiState.update { it.copy(error = null) }
         }
-
-        // --- Gallery / Portfolio ---
 
         fun openGallery(serviceId: String) {
             val service = _uiState.value.services.find { it.id == serviceId } ?: return
@@ -206,7 +199,6 @@ class MyServicesViewModel
                 try {
                     val uploadedUrls = mutableListOf<String>()
 
-                    // 1. Compress and upload new images
                     for (uri in state.portfolioUris) {
                         val compressedBytes = ImageCompressor.compressImage(context, uri)
                         if (compressedBytes != null) {
@@ -222,16 +214,13 @@ class MyServicesViewModel
                         }
                     }
 
-                    // 2. Combine surviving existing URLs and newly uploaded URLs
                     val finalPortfolioUrls = state.existingPortfolioUrls + uploadedUrls
 
-                    // 3. Update the service in backend
                     serviceRepository
                         .updateService(
                             serviceId = serviceId,
                             portfolioUrls = finalPortfolioUrls,
                         ).onSuccess { updatedService ->
-                            // 4. Update the local cache
                             _uiState.update { current ->
                                 val updatedServices = current.services.map { service ->
                                     if (service.id == updatedService.id) updatedService else service

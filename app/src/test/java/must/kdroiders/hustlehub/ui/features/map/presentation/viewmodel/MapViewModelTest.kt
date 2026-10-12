@@ -44,7 +44,6 @@ class MapViewModelTest {
             coEvery { getNotifications(any(), any()) } returns Result.success(emptyList())
         }
 
-        // Always stub the use case before initializing the ViewModel to avoid crashes in the init polling loop
         coEvery {
             getMapPinsUseCase(any(), any(), any(), any(), any())
         } returns Result.success(emptyList())
@@ -133,7 +132,6 @@ class MapViewModelTest {
             val userLat = 0.0515
             val userLng = 37.6456
 
-            // farPin is ~2 km north, nearPin is ~0.1 km north
             val nearPin = MapPin(
                 serviceId = "1",
                 providerId = "p1",
@@ -144,7 +142,7 @@ class MapViewModelTest {
                 availability = must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability.AVAILABLE,
                 averageRating = 4.5,
                 lat = 0.0524,
-                lng = 37.6456, // ~100 m away
+                lng = 37.6456,
             )
             val farPin = MapPin(
                 serviceId = "2",
@@ -156,10 +154,9 @@ class MapViewModelTest {
                 availability = must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability.AVAILABLE,
                 averageRating = 4.0,
                 lat = 0.0695,
-                lng = 37.6456, // ~2 km away
+                lng = 37.6456,
             )
 
-            // API returns far pin first, near pin second
             coEvery {
                 getMapPinsUseCase(any(), any(), any(), any(), any())
             } returns Result.success(listOf(farPin, nearPin))
@@ -169,10 +166,8 @@ class MapViewModelTest {
 
             val pins = viewModel.uiState.value.pins
             assertEquals(2, pins.size)
-            // After sorting, nearPin should be first
             assertEquals("1", pins[0].serviceId)
             assertEquals("2", pins[1].serviceId)
-            // Distance values must be populated
             assertTrue(pins[0].distanceMeters != null)
             assertTrue(pins[0].distanceMeters!! < pins[1].distanceMeters!!)
         }
@@ -195,5 +190,59 @@ class MapViewModelTest {
     fun `haversineDistance returns zero for same point`() {
         val dist = viewModel.haversineDistance(0.0515, 37.6456, 0.0515, 37.6456)
         assertEquals(0.0, dist, 0.001)
+    }
+
+    @Test
+    fun `map pin zIndex is elevated when isPro is true`() {
+        val proPin = MapPin(
+            serviceId = "pro-1",
+            providerId = "p-1",
+            providerName = "Pro Barber",
+            providerPhotoUrl = null,
+            serviceTitle = "Fade Cut",
+            category = must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory.SALON,
+            availability = must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability.AVAILABLE,
+            averageRating = 5.0,
+            lat = 0.0515,
+            lng = 37.6456,
+            isPro = true,
+        )
+        val normalPin = MapPin(
+            serviceId = "std-1",
+            providerId = "p-2",
+            providerName = "Standard Barber",
+            providerPhotoUrl = null,
+            serviceTitle = "Basic Cut",
+            category = must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory.SALON,
+            availability = must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability.AVAILABLE,
+            averageRating = 4.0,
+            lat = 0.0515,
+            lng = 37.6456,
+            isPro = false,
+        )
+        assertEquals(100f, proPin.zIndex)
+        assertEquals(0f, normalPin.zIndex)
+    }
+
+    @Test
+    fun `map pin response dto deserializes correctly with gson`() {
+        val json = """
+            {
+                "serviceId": "s-1",
+                "providerId": "p-1",
+                "providerName": "John Doe",
+                "providerPhotoUrl": null,
+                "title": "Haircut",
+                "category": "SALON",
+                "availability": "AVAILABLE",
+                "averageRating": 4.5,
+                "lat": 0.0515,
+                "lng": 37.6456,
+                "isVerifiedPro": true
+            }
+        """.trimIndent()
+        val dto = com.google.gson.Gson().fromJson(json, must.kdroiders.hustlehub.ui.features.home.data.remote.MapPinResponseDto::class.java)
+        assertEquals("s-1", dto.serviceId)
+        assertEquals(true, dto.isPro)
     }
 }

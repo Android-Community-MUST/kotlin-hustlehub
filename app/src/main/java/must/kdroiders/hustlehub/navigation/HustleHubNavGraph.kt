@@ -504,7 +504,6 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             )
                         }
 
-                        // My services management
                         entry<MyServices> {
                             MyServicesScreen(
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },

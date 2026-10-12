@@ -54,6 +54,7 @@ class MapRepositoryImpl
                         lat = dto.lat,
                         lng = dto.lng,
                         distanceMeters = dto.distanceMeters,
+                        isPro = dto.isPro == true,
                     )
                 }
                 mapPinDao.upsertAll(pins.map { it.toEntity() })
