@@ -43,6 +43,7 @@ import coil.size.Size
 import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
 import must.kdroiders.hustlehub.sharedComposables.CompactProBadge
 import must.kdroiders.hustlehub.sharedComposables.FeaturedBadge
+import must.kdroiders.hustlehub.sharedComposables.ServiceImagePlaceholder
 import must.kdroiders.hustlehub.sharedComposables.bouncyClickable
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
@@ -72,6 +73,13 @@ fun ServiceCard(
                 .aspectRatio(4f / 3f)
                 .background(MaterialTheme.colorScheme.surfaceVariant),
         ) {
+            val sharedImageModifier = LocalSharedTransitionScope.current?.run {
+                Modifier.sharedElement(
+                    rememberSharedContentState(key = "service_image_${service.id}"),
+                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
+                )
+            } ?: Modifier
+
             val imageUrl = service.portfolio.firstOrNull() ?: service.iconUrl
             if (imageUrl.isNotBlank()) {
                 AsyncImage(
@@ -86,14 +94,15 @@ fun ServiceCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
-                        .then(
-                            LocalSharedTransitionScope.current?.run {
-                                Modifier.sharedElement(
-                                    rememberSharedContentState(key = "service_image_${service.id}"),
-                                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
-                                )
-                            } ?: Modifier,
-                        ),
+                        .then(sharedImageModifier),
+                )
+            } else {
+                ServiceImagePlaceholder(
+                    category = service.category,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(sharedImageModifier),
+                    iconSize = 48.dp,
                 )
             }
 

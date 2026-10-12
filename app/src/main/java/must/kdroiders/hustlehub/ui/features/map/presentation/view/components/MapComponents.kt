@@ -88,7 +88,6 @@ fun ProviderMarkerContent(pin: MapPin) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(IntrinsicSize.Max),
     ) {
-        // Pill Layout with Glowing Neon Outer Halo
         Row(
             modifier = Modifier
                 .border(
@@ -106,7 +105,6 @@ fun ProviderMarkerContent(pin: MapPin) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Icon Badge
             Box(
                 modifier = Modifier
                     .size(24.dp)
@@ -124,7 +122,6 @@ fun ProviderMarkerContent(pin: MapPin) {
                 )
             }
 
-            // Info Column
             Column(
                 verticalArrangement = Arrangement.Center,
             ) {
@@ -167,7 +164,6 @@ fun ProviderMarkerContent(pin: MapPin) {
             }
         }
 
-        // Pointer Triangle — downward caret below the pill
         Box(
             modifier = Modifier
                 .offset(y = (-2).dp)
@@ -182,29 +178,8 @@ fun ProviderMarkerContent(pin: MapPin) {
     }
 }
 
-@Composable
 fun getCategoryIconAndColor(category: ServiceCategory): Pair<androidx.compose.ui.graphics.vector.ImageVector, Color> {
-    return when (category) {
-        ServiceCategory.TECH -> Icons.Default.Computer to CategoryNeonBrightCyan
-        ServiceCategory.PRINTING -> Icons.Default.Print to CategoryNeonIndigo
-        ServiceCategory.DESIGN -> Icons.Default.Palette to CategoryNeonViolet
-        ServiceCategory.TUTORING -> Icons.Default.School to CategoryNeonGreen
-        ServiceCategory.PHOTOGRAPHY -> Icons.Default.PhotoCamera to CategoryNeonPink
-        ServiceCategory.RENTALS -> Icons.Default.DirectionsCar to CategoryNeonTeal
-        ServiceCategory.GAS_CYLINDER -> Icons.Default.LocalGasStation to CategoryNeonOrange
-        ServiceCategory.FOOD -> Icons.Default.Restaurant to CategoryNeonAmber
-        ServiceCategory.TUCK_SHOP -> Icons.Default.Storefront to CategoryNeonWarmAmber
-        ServiceCategory.DELIVERY -> Icons.Default.TwoWheeler to CategoryNeonYellow
-        ServiceCategory.SALON -> Icons.Default.ContentCut to CategoryNeonPurple
-        ServiceCategory.BEAUTY -> Icons.Default.Spa to CategoryNeonRose
-        ServiceCategory.FASHION -> Icons.Default.Checkroom to CategoryNeonBlue
-        ServiceCategory.DECOR -> Icons.Default.Weekend to CategoryNeonGreen
-        ServiceCategory.CLEANING -> Icons.Default.CleaningServices to CategoryNeonMint
-        ServiceCategory.LAUNDRY -> Icons.Default.LocalMall to CategoryNeonCyan
-        ServiceCategory.MARKETPLACE -> Icons.Default.ShoppingBag to CategoryNeonCoral
-        ServiceCategory.EVENTS -> Icons.Default.Celebration to CategoryNeonLime
-        else -> Icons.Default.Place to CategoryNeonDefault
-    }
+    return must.kdroiders.hustlehub.sharedComposables.getCategoryIconAndColor(category)
 }
 
 @Composable

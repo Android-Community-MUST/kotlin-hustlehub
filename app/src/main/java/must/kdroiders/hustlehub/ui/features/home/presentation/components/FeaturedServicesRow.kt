@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.FeaturedBadge
+import must.kdroiders.hustlehub.sharedComposables.ServiceImagePlaceholder
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
@@ -92,7 +93,6 @@ private fun FeaturedServiceCard(
             .clickable(onClick = onClick)
             .testTag("featured_card_${service.id}"),
     ) {
-        // Hero image — gradient fallback when no portfolio image is available
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -131,6 +131,12 @@ private fun FeaturedServiceCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
+            } else {
+                ServiceImagePlaceholder(
+                    category = service.category,
+                    modifier = Modifier.fillMaxSize(),
+                    iconSize = 52.dp,
+                )
             }
 
             if (service.isFeatured) {
@@ -168,7 +174,6 @@ private fun FeaturedServiceCard(
             }
         }
 
-        // Bottom info section
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
