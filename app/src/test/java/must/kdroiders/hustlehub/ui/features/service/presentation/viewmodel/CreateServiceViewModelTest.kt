@@ -164,7 +164,7 @@ class CreateServiceViewModelTest {
             } returns Result.success(created)
 
             var emittedEvent: CreateServiceEvent? = null
-            val job = backgroundScope.launch {
+            val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
                 viewModel.events.collect { emittedEvent = it }
             }
 
@@ -177,7 +177,6 @@ class CreateServiceViewModelTest {
             viewModel.publish()
             testScheduler.advanceUntilIdle()
 
-            println("DEBUG TEST STATE: error=${viewModel.uiState.value.error}, loading=${viewModel.uiState.value.isLoading}, titleError=${viewModel.uiState.value.titleError}, event=$emittedEvent")
             assertTrue(emittedEvent is CreateServiceEvent.Success)
             assertEquals("Service created successfully!", (emittedEvent as CreateServiceEvent.Success).message)
             assertFalse(viewModel.uiState.value.isLoading)

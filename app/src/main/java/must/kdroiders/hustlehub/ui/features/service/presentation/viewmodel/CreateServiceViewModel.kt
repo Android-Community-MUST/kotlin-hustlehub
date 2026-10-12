@@ -102,7 +102,7 @@ class CreateServiceViewModel
         private val _uiState = MutableStateFlow(CreateServiceUiState())
         val uiState: StateFlow<CreateServiceUiState> = _uiState.asStateFlow()
 
-        private val _events = MutableSharedFlow<CreateServiceEvent>()
+        private val _events = MutableSharedFlow<CreateServiceEvent>(extraBufferCapacity = 1)
         val events: SharedFlow<CreateServiceEvent> = _events.asSharedFlow()
 
         init {
