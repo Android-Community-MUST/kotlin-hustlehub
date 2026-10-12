@@ -222,7 +222,6 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
 
     var showBookingGate by remember { mutableStateOf(false) }
     var pendingChatArgs by remember { mutableStateOf<ChatDetail?>(null) }
-    var showListingGate by remember { mutableStateOf(false) }
     var isSavingGate by remember { mutableStateOf(false) }
     var gateError by remember { mutableStateOf<String?>(null) }
 
@@ -257,36 +256,6 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
         )
     }
 
-    if (showListingGate) {
-        ProfileGateBottomSheet(
-            gateType = ProfileGateType.LISTING,
-            initialCampusLocation = cachedUser.campusLocation,
-            initialPhone = cachedUser.phone,
-            initialBio = cachedUser.bio,
-            isSaving = isSavingGate,
-            errorMessage = gateError,
-            onDismiss = {
-                showListingGate = false
-                gateError = null
-            },
-            onSave = { campusLocation, phone, bio ->
-                isSavingGate = true
-                gateError = null
-                navScope.launch {
-                    profileGateViewModel
-                        .saveLocation(campusLocation, phone, bio)
-                        .onSuccess {
-                            isSavingGate = false
-                            showListingGate = false
-                            backstack.add(CreateService())
-                        }.onFailure {
-                            isSavingGate = false
-                            gateError = "Could not save profile. Please try again."
-                        }
-                }
-            },
-        )
-    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         SharedTransitionLayout {
@@ -451,13 +420,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             MainShellScreen(
                                 onNavigateToProfileSetup = { backstack.add(ProfileSetup) },
                                 onNavigateToSettings = { backstack.add(Settings) },
-                                onNavigateToCreateService = {
-                                    if (ProfileCompletenessChecker.needsProfileForListing(cachedUser)) {
-                                        showListingGate = true
-                                    } else {
-                                        backstack.add(CreateService())
-                                    }
-                                },
+                                onNavigateToCreateService = { backstack.add(CreateService()) },
                                 onNavigateToMyServices = { backstack.add(MyServices) },
                                 onNavigateToEditService = { serviceId ->
                                     backstack.add(
