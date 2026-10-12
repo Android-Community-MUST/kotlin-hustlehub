@@ -97,8 +97,7 @@ private fun FeaturedServiceCard(
                 role = Role.Button,
                 onClickLabel = stringResource(R.string.chat_view_service),
                 onClick = onClick,
-            )
-            .testTag("featured_card_${service.id}"),
+            ).testTag("featured_card_${service.id}"),
     ) {
         Box(
             modifier = Modifier

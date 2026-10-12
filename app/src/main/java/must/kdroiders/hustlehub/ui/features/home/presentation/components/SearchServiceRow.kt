@@ -21,12 +21,12 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -52,8 +52,7 @@ fun SearchServiceRow(
                 role = Role.Button,
                 onClickLabel = stringResource(R.string.chat_view_service),
                 onClick = onClick,
-            )
-            .padding(vertical = 12.dp, horizontal = 16.dp),
+            ).padding(vertical = 12.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -152,8 +151,7 @@ fun SearchServiceRow(
                         role = Role.Button,
                         onClickLabel = stringResource(R.string.chat_messages_title),
                         onClick = onChatClick,
-                    )
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    ).padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {

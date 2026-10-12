@@ -73,8 +73,7 @@ fun ServiceCard(
                 role = Role.Button,
                 onClickLabel = stringResource(R.string.chat_view_service),
                 onClick = onClick,
-            )
-            .padding(bottom = 12.dp),
+            ).padding(bottom = 12.dp),
     ) {
         Box(
             modifier = Modifier
