@@ -30,10 +30,17 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -42,7 +49,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextAlign
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -103,10 +113,40 @@ fun CreateServiceScreen(
         if (serviceId != null) createServiceViewModel.loadForEdit(serviceId)
     }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val defaultCreateSuccessMsg = stringResource(R.string.service_created_success)
+    val defaultUpdateSuccessMsg = stringResource(R.string.service_updated_success)
+    val retryLabel = stringResource(R.string.action_retry)
+
+    LaunchedEffect(state.error) {
+        state.error?.let { err ->
+            val result = snackbarHostState.showSnackbar(
+                message = err,
+                actionLabel = retryLabel,
+                duration = SnackbarDuration.Long,
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                focusManager.clearFocus()
+                createServiceViewModel.publish()
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         createServiceViewModel.events.collect { event ->
             when (event) {
-                is CreateServiceEvent.Success -> onSuccess()
+                is CreateServiceEvent.Success -> {
+                    val msg = event.message ?: (if (state.isEditMode) defaultUpdateSuccessMsg else defaultCreateSuccessMsg)
+                    snackbarHostState.showSnackbar(
+                        message = msg,
+                        duration = SnackbarDuration.Short,
+                    )
+                    delay(800)
+                    onSuccess()
+                }
+                is CreateServiceEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
             }
         }
     }
@@ -123,7 +163,6 @@ fun CreateServiceScreen(
                 .navigationBarsPadding()
                 .imePadding(),
         ) {
-            // Top bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -148,7 +187,6 @@ fun CreateServiceScreen(
             ) {
                 Spacer(Modifier.height(8.dp))
 
-                // Portfolio section
                 val totalImages = state.existingPortfolioUrls.size + state.portfolioUris.size
                 val maxAllowed = state.maxAllowedPhotos
                 Row(
@@ -177,7 +215,6 @@ fun CreateServiceScreen(
                         if (!state.isProUser && totalImages >= 3) {
                             onNavigateToSubscription()
                         } else if (totalImages >= maxAllowed) {
-                            // Max limit reached
                         } else {
                             imagePicker.launch(
                                 PickVisualMediaRequest(
@@ -207,7 +244,6 @@ fun CreateServiceScreen(
                 }
                 Spacer(Modifier.height(20.dp))
 
-                // Service title
                 SectionLabel(text = stringResource(R.string.service_title_label), required = true)
                 HustleTextField(
                     value = state.title,
@@ -225,7 +261,6 @@ fun CreateServiceScreen(
                 )
                 Spacer(Modifier.height(16.dp))
 
-                // Category
                 SectionLabel(text = stringResource(R.string.filter_category_label), required = true)
                 CategoryDropdown(
                     selected = state.category,
@@ -236,7 +271,6 @@ fun CreateServiceScreen(
                 ErrorText(state.categoryError)
                 Spacer(Modifier.height(16.dp))
 
-                // Description
                 SectionLabel(text = stringResource(R.string.service_desc_label))
                 HustleTextField(
                     value = state.description,
@@ -268,7 +302,6 @@ fun CreateServiceScreen(
                 )
                 Spacer(Modifier.height(16.dp))
 
-                // Price range
                 SectionLabel(text = stringResource(R.string.service_price_range_label), required = true)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     HustleTextField(
@@ -306,7 +339,6 @@ fun CreateServiceScreen(
                 }
                 Spacer(Modifier.height(16.dp))
 
-                // Tags
                 SectionLabel(text = stringResource(R.string.service_tags_label))
                 Text(
                     text = stringResource(R.string.service_tags_hint),
@@ -374,7 +406,6 @@ fun CreateServiceScreen(
                 }
                 Spacer(Modifier.height(16.dp))
 
-                // Open to barter
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -415,7 +446,6 @@ fun CreateServiceScreen(
                 }
                 Spacer(Modifier.height(16.dp))
 
-                // Service Operating Location
                 ServiceLocationCard(
                     locationMode = state.locationMode,
                     selectedLat = state.selectedLat,
@@ -429,7 +459,6 @@ fun CreateServiceScreen(
                 )
                 Spacer(Modifier.height(16.dp))
 
-                // Current status
                 SectionLabel(text = stringResource(R.string.service_current_status_label))
                 AvailabilityChipSelector(
                     current = state.availability,
@@ -437,7 +466,6 @@ fun CreateServiceScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                // Global error
                 AnimatedVisibility(
                     visible = state.error != null,
                     enter = fadeIn(animationSpec = effectsSpec),
@@ -483,11 +511,60 @@ fun CreateServiceScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f)),
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .clickable(enabled = false) {},
                 contentAlignment = Alignment.Center,
             ) {
-                CircularWavyProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                Card(
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .padding(16.dp),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        CircularWavyProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(48.dp),
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = state.loadingStage
+                                ?: (if (state.isEditMode) stringResource(R.string.service_stage_saving_changes) else stringResource(R.string.service_stage_saving)),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center,
+                        )
+                        state.uploadProgress?.let { progress ->
+                            Spacer(Modifier.height(14.dp))
+                            LinearWavyProgressIndicator(
+                                progress = { progress },
+                                modifier = Modifier.fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            )
+                        }
+                    }
+                }
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(16.dp),
+        )
     }
 }

@@ -481,6 +481,12 @@
     <string name="service_current_status_label">Current Status</string>
     <string name="service_publishing">Publishing…</string>
     <string name="service_publish_button">Publish Service</string>
+    <string name="service_created_success">Service created successfully!</string>
+    <string name="service_updated_success">Service updated successfully!</string>
+    <string name="service_stage_preparing_images">Preparing photos…</string>
+    <string name="service_stage_uploading_images_format">Uploading photo %1$d of %2$d…</string>
+    <string name="service_stage_saving">Publishing your service…</string>
+    <string name="service_stage_saving_changes">Saving your changes…</string>
     <string name="service_fallback_title">this service</string>
     <string name="service_quick_gallery_title">Quick Gallery</string>
     <string name="service_manage_photos_format">Manage photos for %1$s</string>
