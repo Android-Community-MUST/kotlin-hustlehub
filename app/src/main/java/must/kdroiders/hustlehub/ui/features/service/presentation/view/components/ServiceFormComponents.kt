@@ -62,7 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.R
-import must.kdroiders.hustlehub.ui.features.map.presentation.view.components.getCategoryIconAndColor
+import must.kdroiders.hustlehub.sharedComposables.getCategoryIconAndColor
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 
 @Composable

@@ -32,7 +32,7 @@ import must.kdroiders.hustlehub.ui.features.service.data.local.entity.ServiceEnt
         MapPinEntity::class,
         BookmarkEntity::class,
     ],
-    version = 10,
+    version = 11,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -186,6 +186,12 @@ abstract class AppDatabase : RoomDatabase() {
             object : Migration(9, 10) {
                 override fun migrate(db: SupportSQLiteDatabase) {
                     db.execSQL("ALTER TABLE reviews ADD COLUMN updatedAt INTEGER DEFAULT NULL")
+                }
+            }
+        val MIGRATION_10_11 =
+            object : Migration(10, 11) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE cached_services ADD COLUMN providerIsVerifiedPro INTEGER NOT NULL DEFAULT 0")
                 }
             }
     }

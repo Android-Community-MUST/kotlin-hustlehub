@@ -3,10 +3,6 @@ package must.kdroiders.hustlehub.ui.features.service.data.local.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-/**
- * Room entity for caching service listings locally.
- * Portfolio images and tags are stored as JSON strings.
- */
 @Entity(tableName = "cached_services")
 data class ServiceEntity(
     @PrimaryKey val id: String,
@@ -20,8 +16,9 @@ data class ServiceEntity(
     val availability: String,
     val openToBarter: Boolean,
     val isFeatured: Boolean = false,
-    val portfolioJson: String, // JSON array of image URLs
-    val tagsJson: String, // JSON array of tags
+    val providerIsVerifiedPro: Boolean = false,
+    val portfolioJson: String,
+    val tagsJson: String,
     val iconUrl: String,
-    val lastUpdated: Long, // epoch ms — used for 30-min cache invalidation
+    val lastUpdated: Long,
 )

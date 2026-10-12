@@ -170,11 +170,8 @@ class HomeViewModel
             }
         }
 
-        // Fetch services — reset=true for fresh load or filter change, false for next page
         fun fetchServices(reset: Boolean = false) {
             val state = _uiState.value
-
-            // Don't load more if already at the end or currently loading
             if (!reset && (!state.hasMorePages || state.isLoadingMore)) return
 
             val page = if (reset) 0 else state.currentPage
@@ -198,9 +195,10 @@ class HomeViewModel
                             val merged = serviceCache.snapshot()
 
                             val featured = selectTopFeatured(merged)
+                            val prioritized = merged.sortedByDescending { it.providerIsVerifiedPro }
 
                             current.copy(
-                                services = merged,
+                                services = prioritized,
                                 featuredServices = featured,
                                 isLoadingServices = false,
                                 isRefreshing = false,
@@ -257,7 +255,6 @@ class HomeViewModel
             searchJob?.cancel()
         }
 
-        // O(n log k) min-heap selection of active paid featured services
         private fun selectTopFeatured(
             merged: List<Service>,
             k: Int = MAX_FEATURED_COUNT,

@@ -444,6 +444,9 @@
     <string name="service_jobs_done_format">%1$d jobs done</string>
     <string name="service_about_title">About Service</string>
     <string name="service_portfolio_title">Portfolio</string>
+    <string name="service_portfolio_empty_owner_title">Showcase your work</string>
+    <string name="service_portfolio_empty_owner_desc">Add portfolio photos to attract more clients and build trust.</string>
+    <string name="service_portfolio_add_photos">Add Photos</string>
     <string name="service_reviews_title">Reviews</string>
     <string name="service_see_all_reviews_format">See all %1$d reviews</string>
     <string name="service_edit_service">Edit Service</string>
