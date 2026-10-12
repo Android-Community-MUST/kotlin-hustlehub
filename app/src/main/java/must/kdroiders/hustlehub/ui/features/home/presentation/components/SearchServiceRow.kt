@@ -26,11 +26,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.ServiceImagePlaceholder
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 
@@ -44,7 +48,11 @@ fun SearchServiceRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.chat_view_service),
+                onClick = onClick,
+            )
             .padding(vertical = 12.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -58,7 +66,7 @@ fun SearchServiceRow(
             if (imageUrl.isNotBlank()) {
                 AsyncImage(
                     model = imageUrl,
-                    contentDescription = service.title,
+                    contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -137,9 +145,14 @@ fun SearchServiceRow(
 
             Row(
                 modifier = Modifier
+                    .minimumInteractiveComponentSize()
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                    .clickable(onClick = onChatClick)
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = stringResource(R.string.chat_messages_title),
+                        onClick = onChatClick,
+                    )
                     .padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),

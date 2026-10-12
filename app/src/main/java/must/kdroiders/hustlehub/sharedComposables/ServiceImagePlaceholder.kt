@@ -16,6 +16,7 @@ fun ServiceImagePlaceholder(
     category: ServiceCategory,
     modifier: Modifier = Modifier,
     iconSize: Dp = 40.dp,
+    contentDescription: String? = null,
 ) {
     val visuals = getCategoryVisuals(category)
 
@@ -25,7 +26,7 @@ fun ServiceImagePlaceholder(
     ) {
         Icon(
             imageVector = visuals.icon,
-            contentDescription = null,
+            contentDescription = contentDescription,
             tint = visuals.iconColor,
             modifier = Modifier.size(iconSize),
         )

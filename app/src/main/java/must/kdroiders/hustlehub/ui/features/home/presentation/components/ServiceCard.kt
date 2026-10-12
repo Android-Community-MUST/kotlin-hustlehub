@@ -31,6 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,6 +43,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
 import coil.size.Size
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
 import must.kdroiders.hustlehub.sharedComposables.CompactProBadge
 import must.kdroiders.hustlehub.sharedComposables.FeaturedBadge
@@ -64,7 +68,12 @@ fun ServiceCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .bouncyClickable(onClick = onClick)
+            .semantics(mergeDescendants = true) {}
+            .bouncyClickable(
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.chat_view_service),
+                onClick = onClick,
+            )
             .padding(bottom = 12.dp),
     ) {
         Box(

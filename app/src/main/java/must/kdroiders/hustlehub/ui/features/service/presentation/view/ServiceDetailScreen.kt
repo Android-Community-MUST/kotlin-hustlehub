@@ -510,6 +510,7 @@ private fun ServiceDetailContent(
                             .fillMaxSize()
                             .then(sharedModifier),
                         iconSize = 72.dp,
+                        contentDescription = stringResource(R.string.cd_service_hero_image),
                     )
                 }
 
@@ -541,6 +542,7 @@ private fun ServiceDetailContent(
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.semantics { heading() },
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -715,6 +717,7 @@ private fun ServiceDetailContent(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.semantics { heading() },
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
