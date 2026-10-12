@@ -522,6 +522,7 @@
     <string name="map_showing_providers_singular">Showing %1$d provider</string>
     <string name="map_showing_providers_plural">Showing %1$d providers</string>
     <string name="map_cd_reset_compass">Reset Compass to North</string>
+    <string name="map_cd_refresh_pins">Refresh Map Pins</string>
     <string name="map_cd_toggle_type">Toggle Map Type</string>
     <string name="map_cd_zoom_in">Zoom In</string>
     <string name="map_cd_zoom_out">Zoom Out</string>

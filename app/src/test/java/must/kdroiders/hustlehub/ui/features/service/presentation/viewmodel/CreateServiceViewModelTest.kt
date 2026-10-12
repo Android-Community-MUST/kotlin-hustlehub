@@ -17,6 +17,7 @@ import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.LocationDto
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
@@ -128,6 +129,31 @@ class CreateServiceViewModelTest {
         }
 
     @Test
+    fun `loadForEdit pre-fills location data from existing service`() =
+        runTest {
+            val existingService = Service(
+                id = "srv-101",
+                title = "Service with Custom Location",
+                category = ServiceCategory.CLEANING,
+                location = LocationDto(
+                    lat = 0.1500,
+                    lng = 37.7500,
+                    label = "West Gate Apartment",
+                ),
+            )
+
+            coEvery { getServiceById("srv-101") } returns Result.success(existingService)
+
+            viewModel.loadForEdit("srv-101")
+
+            val state = viewModel.uiState.value
+            assertEquals(0.1500, state.selectedLat)
+            assertEquals(37.7500, state.selectedLng)
+            assertEquals("West Gate Apartment", state.locationLabel)
+            assertEquals(LocationSelectionMode.MAP_PICKER, state.locationMode)
+        }
+
+    @Test
     fun `publish with valid data in create mode calls createService and emits Success`() =
         runTest {
             val created = Service(id = "srv-new", title = "Valid Title", category = ServiceCategory.TECH)
@@ -153,7 +179,7 @@ class CreateServiceViewModelTest {
 
             println("DEBUG TEST STATE: error=${viewModel.uiState.value.error}, loading=${viewModel.uiState.value.isLoading}, titleError=${viewModel.uiState.value.titleError}, event=$emittedEvent")
             assertTrue(emittedEvent is CreateServiceEvent.Success)
-            assertEquals("Service created successfully! 🎉", (emittedEvent as CreateServiceEvent.Success).message)
+            assertEquals("Service created successfully!", (emittedEvent as CreateServiceEvent.Success).message)
             assertFalse(viewModel.uiState.value.isLoading)
             assertNull(viewModel.uiState.value.error)
             job.cancel()

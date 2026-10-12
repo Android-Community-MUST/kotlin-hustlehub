@@ -79,18 +79,6 @@ private val bottomTabs = listOf(
     ),
 )
 
-/**
- * Navigation 3–aware bottom bar.
- *
- * Completely decoupled from [NavController]. It receives the active [currentKey]
- * directly from the inner back-stack and calls [onTabSelected] when a tab is tapped.
- * The hosting composable ([MainShellScreen]) is responsible for actually mutating
- * the back-stack.
- *
- * @param currentKey  the [NavKey] of the currently displayed tab.
- * @param onTabSelected  invoked with the [NavKey] of the tapped tab.
- * @param modifier  optional modifier forwarded to [NavigationBar].
- */
 @Composable
 fun HustleBottomBar(
     currentKey: NavKey,

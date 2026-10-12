@@ -121,6 +121,14 @@ class CreateServiceViewModel
         companion object {
             private const val MAX_PORTFOLIO_IMAGES_CREATE = 3
             private const val MAX_PORTFOLIO_IMAGES_EDIT = 6
+            private val CAMPUS_PRESETS = setOf(
+                "Nchiru",
+                "Main Gate",
+                "MUST Library",
+                "Student Center (STC)",
+                "Administration Block",
+                "Campus Hostels",
+            )
         }
 
         fun loadForEdit(serviceId: String) {
@@ -144,6 +152,17 @@ class CreateServiceViewModel
 
                         originalAvailability = service.availability
 
+                        val loc = service.location
+                        val lat = loc?.lat
+                        val lng = loc?.lng
+                        val label = loc?.label?.trim().orEmpty()
+                        val mode = when {
+                            CAMPUS_PRESETS.any { it.equals(label, ignoreCase = true) } -> LocationSelectionMode.CAMPUS_PRESET
+                            label.equals("Current Device Location", ignoreCase = true) -> LocationSelectionMode.CURRENT_GPS
+                            lat != null && lng != null -> LocationSelectionMode.MAP_PICKER
+                            else -> LocationSelectionMode.CAMPUS_PRESET
+                        }
+
                         _uiState.update {
                             it.copy(
                                 isLoadingExisting = false,
@@ -156,6 +175,10 @@ class CreateServiceViewModel
                                 openToBarter = service.openToBarter,
                                 existingPortfolioUrls = service.portfolio,
                                 availability = service.availability,
+                                selectedLat = lat ?: it.selectedLat,
+                                selectedLng = lng ?: it.selectedLng,
+                                locationLabel = if (label.isNotBlank()) label else it.locationLabel,
+                                locationMode = if (loc != null) mode else it.locationMode,
                             )
                         }
                     }.onFailure { e ->

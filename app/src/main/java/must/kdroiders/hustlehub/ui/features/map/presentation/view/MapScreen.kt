@@ -5,6 +5,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -40,6 +45,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
@@ -200,8 +206,8 @@ fun MapScreen(
         }
     }
 
-    // Check location permission on launch
     LaunchedEffect(Unit) {
+        mapViewModel.refreshPins()
         if (!isLocationPermissionGranted) {
             permissionLauncher.launch(
                 arrayOf(
@@ -575,7 +581,24 @@ fun MapScreen(
                 .padding(top = 180.dp, end = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // Interactive Compass Reset Button (rotates with camera bearing)
+            val refreshTransition = rememberInfiniteTransition(label = "map_refresh_spin")
+            val spinAngle by refreshTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 1000, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart,
+                ),
+                label = "map_refresh_angle",
+            )
+            val refreshRotation = if (uiState.isLoading) spinAngle else 0f
+            MapControlFloatingButton(
+                icon = Icons.Default.Refresh,
+                contentDescription = stringResource(R.string.map_cd_refresh_pins),
+                modifier = Modifier.rotate(refreshRotation),
+                onClick = { mapViewModel.refreshPins() },
+            )
+
             val currentBearing = cameraPositionState.position.bearing
             MapControlFloatingButton(
                 icon = Icons.Default.Explore,
@@ -595,7 +618,6 @@ fun MapScreen(
                 },
             )
 
-            // Map Type Toggle
             MapControlFloatingButton(
                 icon = Icons.Default.Layers,
                 contentDescription = stringResource(R.string.map_cd_toggle_type),
@@ -604,7 +626,6 @@ fun MapScreen(
                 },
             )
 
-            // Zoom Controls group
             Column(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
