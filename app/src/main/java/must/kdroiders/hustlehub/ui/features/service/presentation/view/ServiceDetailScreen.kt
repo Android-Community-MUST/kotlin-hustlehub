@@ -692,8 +692,7 @@ private fun ServiceDetailContent(
                             1.dp,
                             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
                             RoundedCornerShape(20.dp),
-                        )
-                        .padding(20.dp),
+                        ).padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Box(
