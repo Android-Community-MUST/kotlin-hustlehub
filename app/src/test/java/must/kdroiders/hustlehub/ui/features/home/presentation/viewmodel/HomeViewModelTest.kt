@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import must.kdroiders.hustlehub.core.api.PageResponse
 import must.kdroiders.hustlehub.core.auth.AuthManager
+import must.kdroiders.hustlehub.core.realtime.RealtimeSyncManager
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
@@ -38,6 +39,7 @@ class HomeViewModelTest {
     private val userRepository: UserRepository = mockk(relaxed = true)
     private val notificationRepository: NotificationRepository = mockk(relaxed = true)
     private val userPreferences: UserPreferences = mockk(relaxed = true)
+    private val realtimeSyncManager: RealtimeSyncManager = mockk(relaxed = true)
     private val getMyServicesUseCase: GetMyServicesUseCase = mockk(relaxed = true)
 
     private lateinit var viewModel: HomeViewModel
@@ -48,6 +50,7 @@ class HomeViewModelTest {
 
         every { userPreferences.cachedUser } returns flowOf(mockk(relaxed = true))
         every { userPreferences.isProviderBannerDismissed } returns flowOf(true)
+        every { realtimeSyncManager.events } returns kotlinx.coroutines.flow.MutableSharedFlow()
 
         coEvery { userRepository.getUserProfile(any()) } returns Result.success(User(name = "John Doe"))
         coEvery { notificationRepository.getNotifications(any(), any()) } returns Result.success(emptyList())
@@ -71,6 +74,7 @@ class HomeViewModelTest {
             userRepository = userRepository,
             notificationRepository = notificationRepository,
             userPreferences = userPreferences,
+            realtimeSyncManager = realtimeSyncManager,
             getMyServicesUseCase = getMyServicesUseCase,
         )
     }
@@ -225,6 +229,7 @@ class HomeViewModelTest {
                 userRepository = userRepository,
                 notificationRepository = notificationRepository,
                 userPreferences = userPreferences,
+                realtimeSyncManager = realtimeSyncManager,
                 getMyServicesUseCase = getMyServicesUseCase,
             )
 
@@ -243,6 +248,7 @@ class HomeViewModelTest {
                 userRepository = userRepository,
                 notificationRepository = notificationRepository,
                 userPreferences = userPreferences,
+                realtimeSyncManager = realtimeSyncManager,
                 getMyServicesUseCase = getMyServicesUseCase,
             )
 
@@ -272,6 +278,7 @@ class HomeViewModelTest {
                 userRepository = userRepository,
                 notificationRepository = notificationRepository,
                 userPreferences = userPreferences,
+                realtimeSyncManager = realtimeSyncManager,
                 getMyServicesUseCase = getMyServicesUseCase,
             )
 
@@ -293,6 +300,7 @@ class HomeViewModelTest {
                 userRepository = userRepository,
                 notificationRepository = notificationRepository,
                 userPreferences = userPreferences,
+                realtimeSyncManager = realtimeSyncManager,
                 getMyServicesUseCase = getMyServicesUseCase,
             )
 
