@@ -457,6 +457,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onNavigateToBlockedUsers = { backstack.add(BlockedUsers) },
                                 onNavigateToSubscription = { backstack.add(Subscription()) },
                                 onNavigateToHelp = { backstack.add(HelpFaq) },
+                                onNavigateToCreateService = { backstack.add(CreateService()) },
                                 onAccountDeleted = {
                                     backstack.clear()
                                     backstack.add(Onboarding)
@@ -700,6 +701,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                     backstack.add(PaymentStatus(checkoutRequestId = checkoutRequestId))
                                 },
                                 serviceId = key.serviceId,
+                                onCreateService = { backstack.add(CreateService()) },
                             )
                         }
 

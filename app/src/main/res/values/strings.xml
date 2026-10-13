@@ -41,6 +41,7 @@
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
     <string name="settings_section_account">ACCOUNT</string>
+    <string name="settings_section_preferences">PREFERENCES</string>
     <string name="settings_section_notifications">NOTIFICATIONS</string>
     <string name="settings_section_privacy">PRIVACY</string>
     <string name="settings_section_appearance">APPEARANCE</string>
@@ -54,6 +55,10 @@
     <string name="settings_not_verified">Not Verified</string>
     <string name="settings_subscription_billing">Subscription &amp; Billing</string>
     <string name="settings_subscription_subtitle">Manage HustleHub Pro</string>
+    <string name="settings_sub_education_title">HustleHub Pro for Providers</string>
+    <string name="settings_sub_education_message">HustleHub Pro is designed to help student service providers get more clients with priority search ranking, highlighted gold map pins, and up to 15 portfolio photos.\n\nWant to start offering your services on campus?</string>
+    <string name="settings_sub_education_create_service">Create a Service</string>
+    <string name="settings_sub_education_continue">Continue to Pro</string>
     <string name="settings_notification_preferences">Notification Preferences</string>
     <string name="settings_privacy_settings">Privacy Settings</string>
     <string name="settings_blocked_users">Blocked Users</string>
@@ -830,6 +835,9 @@
     <string name="sub_selected_service">Selected Service</string>
     <string name="sub_featuring_service">Featuring Service</string>
     <string name="sub_no_services_error">You do not have any active services. Please create a service first before boosting it.</string>
+    <string name="sub_no_services_banner_title">Grow your student business</string>
+    <string name="sub_no_services_banner_desc">HustleHub Pro is built for student service providers. You have no active listings yet. Create your first service to take full advantage of Pro visibility.</string>
+    <string name="sub_btn_create_service">Create a Service</string>
     <string name="sub_choose_service_to_boost">Choose service to boost:</string>
     <string name="sub_selected_cd">Selected</string>
     <string name="sub_pay_with_mpesa">Pay with M-Pesa</string>

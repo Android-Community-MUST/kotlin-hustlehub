@@ -17,13 +17,17 @@ import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
+import must.kdroiders.hustlehub.core.review.AppReviewManager
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.AppTheme
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.DeleteAccountUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignOutUseCase
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -34,24 +38,18 @@ enum class DeleteAccountStep {
 }
 
 data class SettingsUiState(
-    // User identity shown in the profile card
     val displayName: String = "",
     val username: String = "",
     val avatarUrl: String = "",
     val isVerified: Boolean = false,
-    val paymentMethod: String = "M-Pesa",
-
-    // Preferences & Appearance
+    val isProvider: Boolean = false,
+    val isProUser: Boolean = false,
     val isDarkMode: Boolean = true,
     val selectedTheme: AppTheme = AppTheme.SYSTEM,
-    val selectedLanguage: String = "English",
-
-    // App meta
     val appVersion: String = BuildConfig.VERSION_NAME,
     val buildNumber: String = BuildConfig.VERSION_CODE.toString(),
-
-    // Dialog & async states
     val showThemeDialog: Boolean = false,
+    val showProviderEducationDialog: Boolean = false,
     val deleteAccountStep: DeleteAccountStep = DeleteAccountStep.NONE,
     val deletePasswordInput: String = "",
     val deletePasswordError: String? = null,
@@ -62,8 +60,6 @@ data class SettingsUiState(
     val showDeleteAccountDialog: Boolean get() = deleteAccountStep != DeleteAccountStep.NONE
 }
 
-// One-shot navigation events
-
 sealed interface SettingsEvent {
     data object LoggedOut : SettingsEvent
     data object AccountDeleted : SettingsEvent
@@ -72,20 +68,15 @@ sealed interface SettingsEvent {
     data object NavigateToPrivacy : SettingsEvent
     data object NavigateToBlockedUsers : SettingsEvent
     data object NavigateToChangePassword : SettingsEvent
-    data object NavigateToVerification : SettingsEvent
-    data object NavigateToPayments : SettingsEvent
-    data object NavigateToLanguage : SettingsEvent
+    data object NavigateToSubscription : SettingsEvent
     data object NavigateToHelp : SettingsEvent
     data object NavigateToContactUs : SettingsEvent
     data object NavigateToReport : SettingsEvent
     data object NavigateToEditProfile : SettingsEvent
     data object NavigateToTerms : SettingsEvent
     data object NavigateToPrivacyPolicy : SettingsEvent
-    data object NavigateToLicenses : SettingsEvent
     data object TriggerRateApp : SettingsEvent
 }
-
-// ViewModel
 
 @HiltViewModel
 @Suppress("LongParameterList")
@@ -94,12 +85,13 @@ class SettingsViewModel
     constructor(
         private val authRepository: AuthRepository,
         private val signOutUseCase: SignOutUseCase,
-        private val deleteAccountUseCase: must.kdroiders.hustlehub.ui.features.auth.domain.usecase.DeleteAccountUseCase,
+        private val deleteAccountUseCase: DeleteAccountUseCase,
         private val userPreferences: UserPreferences,
         private val appDatabase: AppDatabase,
         private val chatRepository: ChatRepository,
         private val hustleCrashlytics: HustleCrashlytics,
-        private val appReviewManager: must.kdroiders.hustlehub.core.review.AppReviewManager,
+        private val appReviewManager: AppReviewManager,
+        private val getMyServicesUseCase: GetMyServicesUseCase,
     ) : ViewModel() {
         internal var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
@@ -117,6 +109,8 @@ class SettingsViewModel
             loadCurrentUser()
             observeCurrentUser()
             observeAppTheme()
+            observeProStatus()
+            checkServicesForProviderStatus()
         }
 
         private fun loadCurrentUser() {
@@ -147,6 +141,10 @@ class SettingsViewModel
                         .let { "@${it}_Hustler" }
                     val avatar = cached.profilePhotoUrl.ifBlank { firebaseUser?.photoUrl?.toString().orEmpty() }
                     val isVerified = firebaseUser?.isEmailVerified == true || AdminAuthUtils.isAuthorizedAdmin(firebaseUser?.email)
+                    val isProviderRole = cached.role == UserRole.ROLE_PROVIDER ||
+                        cached.role == UserRole.ROLE_BOTH ||
+                        cached.role == UserRole.ROLE_ADMIN ||
+                        cached.role == UserRole.ROLE_SUPER_ADMIN
 
                     _uiState.update {
                         it.copy(
@@ -154,6 +152,7 @@ class SettingsViewModel
                             username = handle,
                             avatarUrl = avatar,
                             isVerified = isVerified,
+                            isProvider = it.isProvider || isProviderRole,
                         )
                     }
                 }
@@ -173,7 +172,24 @@ class SettingsViewModel
             }
         }
 
-        // Preferences
+        private fun observeProStatus() {
+            viewModelScope.launch {
+                userPreferences.isProUser.collect { isPro ->
+                    _uiState.update { it.copy(isProUser = isPro) }
+                }
+            }
+        }
+
+        private fun checkServicesForProviderStatus() {
+            viewModelScope.launch {
+                runCatching {
+                    val services = getMyServicesUseCase().getOrNull().orEmpty()
+                    if (services.isNotEmpty()) {
+                        _uiState.update { it.copy(isProvider = true) }
+                    }
+                }
+            }
+        }
 
         fun onThemeClicked() {
             _uiState.update { it.copy(showThemeDialog = true) }
@@ -201,35 +217,40 @@ class SettingsViewModel
             onThemeSelected(newTheme)
         }
 
-        // Navigation triggers
+        fun onSubscriptionClicked() {
+            val state = _uiState.value
+            if (state.isProvider || state.isProUser) {
+                emit(SettingsEvent.NavigateToSubscription)
+            } else {
+                _uiState.update { it.copy(showProviderEducationDialog = true) }
+            }
+        }
+
+        fun onDismissProviderEducationDialog() {
+            _uiState.update { it.copy(showProviderEducationDialog = false) }
+        }
+
+        fun onContinueToSubscriptionFromDialog() {
+            _uiState.update { it.copy(showProviderEducationDialog = false) }
+            emit(SettingsEvent.NavigateToSubscription)
+        }
 
         fun onEditProfileClicked() = emit(SettingsEvent.NavigateToEditProfile)
-        fun onVerificationClicked() = emit(SettingsEvent.NavigateToVerification)
-        fun onPaymentMethodsClicked() = emit(SettingsEvent.NavigateToPayments)
         fun onNotificationsClicked() = emit(SettingsEvent.NavigateToNotifications)
         fun onPrivacyClicked() = emit(SettingsEvent.NavigateToPrivacy)
         fun onBlockedUsersClicked() = emit(SettingsEvent.NavigateToBlockedUsers)
         fun onChangePasswordClicked() = emit(SettingsEvent.NavigateToChangePassword)
-        fun onLanguageClicked() = emit(SettingsEvent.NavigateToLanguage)
         fun onHelpCenterClicked() = emit(SettingsEvent.NavigateToHelp)
         fun onContactUsClicked() = emit(SettingsEvent.NavigateToContactUs)
         fun onReportProblemClicked() = emit(SettingsEvent.NavigateToReport)
         fun onTermsOfServiceClicked() = emit(SettingsEvent.NavigateToTerms)
         fun onPrivacyPolicyClicked() = emit(SettingsEvent.NavigateToPrivacyPolicy)
-        fun onLicensesClicked() = emit(SettingsEvent.NavigateToLicenses)
         fun onRateAppClicked() = emit(SettingsEvent.TriggerRateApp)
 
         fun launchReviewFlow(activity: Activity) {
             appReviewManager.openPlayStorePage(activity)
         }
 
-        // Destructive actions
-
-        /**
-         * Signs the user out of Firebase Auth via [SignOutUseCase], clears the cached
-         * user from DataStore, disconnects active WebSockets, clears local Room database tables,
-         * and emits [SettingsEvent.LoggedOut] to trigger navigation back to the Login screen.
-         */
         fun onLogOutClicked() {
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoggingOut = true, error = null) }
@@ -342,8 +363,6 @@ class SettingsViewModel
                 )
             }
         }
-
-        // Helpers
 
         private fun emit(event: SettingsEvent) {
             viewModelScope.launch { _events.send(event) }
