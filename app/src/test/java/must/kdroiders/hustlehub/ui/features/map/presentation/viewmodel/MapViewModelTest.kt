@@ -241,7 +241,9 @@ class MapViewModelTest {
                 "isVerifiedPro": true
             }
         """.trimIndent()
-        val dto = com.google.gson.Gson().fromJson(json, must.kdroiders.hustlehub.ui.features.home.data.remote.MapPinResponseDto::class.java)
+        val dto = com.google.gson
+            .Gson()
+            .fromJson(json, must.kdroiders.hustlehub.ui.features.home.data.remote.MapPinResponseDto::class.java)
         assertEquals("s-1", dto.serviceId)
         assertEquals(true, dto.isPro)
     }

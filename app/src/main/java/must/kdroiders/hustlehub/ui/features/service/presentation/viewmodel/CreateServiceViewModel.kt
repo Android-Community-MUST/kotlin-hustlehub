@@ -404,7 +404,13 @@ class CreateServiceViewModel
                     it.copy(
                         isLoading = true,
                         error = null,
-                        loadingStage = if (state.portfolioUris.isNotEmpty()) "Preparing photos…" else if (state.isEditMode) "Saving changes…" else "Publishing service…",
+                        loadingStage = if (state.portfolioUris.isNotEmpty()) {
+                            "Preparing photos…"
+                        } else if (state.isEditMode) {
+                            "Saving changes…"
+                        } else {
+                            "Publishing service…"
+                        },
                         uploadProgress = 0f,
                     )
                 }
@@ -551,8 +557,7 @@ class CreateServiceViewModel
                         _uiState.update { it.copy(isLoading = false, loadingStage = null, uploadProgress = null) }
                         _events.emit(CreateServiceEvent.Success(successMsg))
                         resetForm()
-                    }
-                    .onFailure { e ->
+                    }.onFailure { e ->
                         Timber.e(e, "Failed to save service")
                         _uiState.update {
                             it.copy(

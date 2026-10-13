@@ -141,8 +141,7 @@ fun SettingsScreen(
                                 .fillMaxWidth()
                                 .clickable(role = Role.RadioButton) {
                                     settingsViewModel.onThemeSelected(theme)
-                                }
-                                .padding(vertical = 12.dp),
+                                }.padding(vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             RadioButton(
@@ -277,9 +276,9 @@ fun SettingsScreen(
                 modifier = Modifier
                     .background(
                         color = MaterialTheme.colorScheme.surface,
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                    )
-                    .padding(24.dp),
+                        shape = androidx.compose.foundation.shape
+                            .RoundedCornerShape(16.dp),
+                    ).padding(24.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {

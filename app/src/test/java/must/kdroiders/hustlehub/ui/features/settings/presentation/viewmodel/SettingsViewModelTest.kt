@@ -26,7 +26,6 @@ import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignOutUseCase
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
-import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import org.junit.After
 import org.junit.Assert.assertEquals

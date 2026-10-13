@@ -159,7 +159,17 @@ class CreateServiceViewModelTest {
             val created = Service(id = "srv-new", title = "Valid Title", category = ServiceCategory.TECH)
             coEvery {
                 serviceRepository.createService(
-                    any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
                 )
             } returns Result.success(created)
 

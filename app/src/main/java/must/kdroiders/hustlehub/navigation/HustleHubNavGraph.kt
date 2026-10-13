@@ -256,7 +256,6 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
         )
     }
 
-
     Box(modifier = Modifier.fillMaxSize()) {
         SharedTransitionLayout {
             CompositionLocalProvider(LocalSharedTransitionScope provides this) {
