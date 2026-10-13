@@ -161,7 +161,10 @@ class RealtimeSyncManager
             }
         }
 
-        private suspend fun subscribeToUser(session: StompSession, uid: String) {
+        private suspend fun subscribeToUser(
+            session: StompSession,
+            uid: String,
+        ) {
             val destination = "/topic/users/$uid"
             Timber.tag("REALTIME").d("Subscribing to $destination")
             try {

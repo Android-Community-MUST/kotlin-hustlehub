@@ -188,7 +188,10 @@ class HomeViewModel
         }
 
         // Fetch services — reset=true for fresh load or filter change, false for next page
-        fun fetchServices(reset: Boolean = false, silent: Boolean = false) {
+        fun fetchServices(
+            reset: Boolean = false,
+            silent: Boolean = false,
+        ) {
             val state = _uiState.value
             if (!reset && (!state.hasMorePages || state.isLoadingMore)) return
 
