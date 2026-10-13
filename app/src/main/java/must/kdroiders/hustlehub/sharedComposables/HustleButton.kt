@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -66,6 +68,11 @@ fun HustleButton(
     painter: Painter? = null,
     /** Size applied to both [icon] and [painter]. Defaults to 20dp. */
     iconSize: Dp = 20.dp,
+    contentPadding: PaddingValues = if (icon != null || painter != null) {
+        PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+    } else {
+        PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+    },
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -99,6 +106,7 @@ fun HustleButton(
                 enabled = isActive,
                 shape = ButtonShape,
                 interactionSource = interactionSource,
+                contentPadding = contentPadding,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -141,6 +149,7 @@ fun HustleButton(
                 enabled = isActive,
                 shape = ButtonShape,
                 interactionSource = interactionSource,
+                contentPadding = contentPadding,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -183,6 +192,7 @@ fun HustleButton(
                 enabled = isActive,
                 shape = ButtonShape,
                 interactionSource = interactionSource,
+                contentPadding = contentPadding,
                 border = BorderStroke(
                     width = 1.5.dp,
                     color = if (isActive) {
@@ -240,20 +250,22 @@ private fun ButtonContent(
                 contentDescription = null,
                 modifier = Modifier.size(iconSize),
             )
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(10.dp))
         } else if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(iconSize),
             )
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(6.dp))
         }
         Text(
             text = text,
             fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.3.sp,
+            letterSpacing = 0.2.sp,
             style = MaterialTheme.typography.labelLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

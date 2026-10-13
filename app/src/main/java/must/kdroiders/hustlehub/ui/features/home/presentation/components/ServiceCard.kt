@@ -31,6 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,8 +43,11 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
 import coil.size.Size
+import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.navigation.LocalSharedTransitionScope
+import must.kdroiders.hustlehub.sharedComposables.CompactProBadge
 import must.kdroiders.hustlehub.sharedComposables.FeaturedBadge
+import must.kdroiders.hustlehub.sharedComposables.ServiceImagePlaceholder
 import must.kdroiders.hustlehub.sharedComposables.bouncyClickable
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
@@ -62,8 +68,12 @@ fun ServiceCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .bouncyClickable(onClick = onClick)
-            .padding(bottom = 12.dp),
+            .semantics(mergeDescendants = true) {}
+            .bouncyClickable(
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.chat_view_service),
+                onClick = onClick,
+            ).padding(bottom = 12.dp),
     ) {
         Box(
             modifier = Modifier
@@ -71,13 +81,19 @@ fun ServiceCard(
                 .aspectRatio(4f / 3f)
                 .background(MaterialTheme.colorScheme.surfaceVariant),
         ) {
+            val sharedImageModifier = LocalSharedTransitionScope.current?.run {
+                Modifier.sharedElement(
+                    rememberSharedContentState(key = "service_image_${service.id}"),
+                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
+                )
+            } ?: Modifier
+
             val imageUrl = service.portfolio.firstOrNull() ?: service.iconUrl
             if (imageUrl.isNotBlank()) {
                 AsyncImage(
                     model = ImageRequest
                         .Builder(LocalContext.current)
                         .data(imageUrl)
-                        // Request exactly card-thumbnail resolution to avoid downloading full-res
                         .size(Size(360, 270))
                         .scale(Scale.FILL)
                         .crossfade(true)
@@ -86,14 +102,15 @@ fun ServiceCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
-                        .then(
-                            LocalSharedTransitionScope.current?.run {
-                                Modifier.sharedElement(
-                                    rememberSharedContentState(key = "service_image_${service.id}"),
-                                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
-                                )
-                            } ?: Modifier,
-                        ),
+                        .then(sharedImageModifier),
+                )
+            } else {
+                ServiceImagePlaceholder(
+                    category = service.category,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(sharedImageModifier),
+                    iconSize = 48.dp,
                 )
             }
 
@@ -109,6 +126,9 @@ fun ServiceCard(
                 )
                 if (service.isFeatured) {
                     FeaturedBadge()
+                }
+                if (service.providerIsVerifiedPro) {
+                    CompactProBadge()
                 }
             }
         }

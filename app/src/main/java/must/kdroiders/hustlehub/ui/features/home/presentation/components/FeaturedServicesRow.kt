@@ -33,6 +33,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.FeaturedBadge
+import must.kdroiders.hustlehub.sharedComposables.ServiceImagePlaceholder
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.theme.HustleWarningAmber
@@ -89,10 +92,13 @@ private fun FeaturedServiceCard(
             .height(220.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .clickable(onClick = onClick)
-            .testTag("featured_card_${service.id}"),
+            .semantics(mergeDescendants = true) {}
+            .clickable(
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.chat_view_service),
+                onClick = onClick,
+            ).testTag("featured_card_${service.id}"),
     ) {
-        // Hero image — gradient fallback when no portfolio image is available
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -127,9 +133,15 @@ private fun FeaturedServiceCard(
             if (imageUrl.isNotBlank()) {
                 AsyncImage(
                     model = imageUrl,
-                    contentDescription = service.title,
+                    contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                ServiceImagePlaceholder(
+                    category = service.category,
+                    modifier = Modifier.fillMaxSize(),
+                    iconSize = 52.dp,
                 )
             }
 
@@ -168,7 +180,6 @@ private fun FeaturedServiceCard(
             }
         }
 
-        // Bottom info section
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
