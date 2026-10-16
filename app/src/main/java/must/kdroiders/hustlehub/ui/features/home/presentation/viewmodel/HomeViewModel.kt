@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.auth.AuthManager
 import must.kdroiders.hustlehub.core.cache.LruServiceCache
+import must.kdroiders.hustlehub.core.realtime.RealtimeSyncManager
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
 import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao
@@ -55,6 +56,7 @@ class HomeViewModel
         private val userRepository: UserRepository,
         private val notificationRepository: NotificationRepository,
         private val userPreferences: UserPreferences,
+        private val realtimeSyncManager: RealtimeSyncManager,
         private val getMyServicesUseCase: GetMyServicesUseCase? = null,
         private val notificationDao: NotificationDao? = null,
     ) : ViewModel() {
@@ -78,6 +80,7 @@ class HomeViewModel
             loadNotificationCount()
             observeProviderBannerVisibility()
             observeUnreadNotifications()
+            observeRealtimeEvents()
         }
 
         private fun observeUnreadNotifications() {
@@ -85,6 +88,20 @@ class HomeViewModel
             viewModelScope.launch {
                 dao.getUnreadCountFlow().collect { unread ->
                     _uiState.update { it.copy(notificationCount = unread) }
+                }
+            }
+        }
+
+        private fun observeRealtimeEvents() {
+            viewModelScope.launch {
+                realtimeSyncManager.events.collect { event ->
+                    when (event.eventType) {
+                        "SERVICE_CREATED", "SERVICE_UPDATED", "SERVICE_DELETED" -> {
+                            Timber.tag("REALTIME_HOME").d("Service event received: ${event.eventType} — refreshing feed")
+                            // Silently refresh the first page in background (no loading spinner)
+                            fetchServices(reset = true, silent = true)
+                        }
+                    }
                 }
             }
         }
@@ -170,7 +187,11 @@ class HomeViewModel
             }
         }
 
-        fun fetchServices(reset: Boolean = false) {
+        // Fetch services — reset=true for fresh load or filter change, false for next page
+        fun fetchServices(
+            reset: Boolean = false,
+            silent: Boolean = false,
+        ) {
             val state = _uiState.value
             if (!reset && (!state.hasMorePages || state.isLoadingMore)) return
 
@@ -179,11 +200,13 @@ class HomeViewModel
             val query = state.searchQuery.trim().takeIf { it.isNotEmpty() }
 
             viewModelScope.launch {
-                _uiState.update {
-                    if (reset) {
-                        it.copy(isLoadingServices = true, error = null)
-                    } else {
-                        it.copy(isLoadingMore = true)
+                if (!silent) {
+                    _uiState.update {
+                        if (reset) {
+                            it.copy(isLoadingServices = true, error = null)
+                        } else {
+                            it.copy(isLoadingMore = true)
+                        }
                     }
                 }
 
@@ -214,7 +237,7 @@ class HomeViewModel
                                 isLoadingServices = false,
                                 isRefreshing = false,
                                 isLoadingMore = false,
-                                error = if (reset) "Could not load services. Showing cached data." else null,
+                                error = if (reset && !silent) "Could not load services. Showing cached data." else null,
                             )
                         }
                     }

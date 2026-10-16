@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.core.api.userFriendlyMessage
+import must.kdroiders.hustlehub.core.realtime.RealtimeSyncManager
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.UploadResult
@@ -34,6 +35,7 @@ class MyServicesViewModel
         private val storageRepository: StorageRepository,
         private val serviceRepository: ServiceRepository,
         private val userRepository: UserRepository,
+        private val realtimeSyncManager: RealtimeSyncManager,
         @ApplicationContext private val context: Context,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(MyServicesUiState())
@@ -41,6 +43,20 @@ class MyServicesViewModel
 
         init {
             loadServices()
+            observeRealtimeEvents()
+        }
+
+        private fun observeRealtimeEvents() {
+            viewModelScope.launch {
+                realtimeSyncManager.events.collect { event ->
+                    when (event.eventType) {
+                        "SERVICE_CREATED", "SERVICE_UPDATED", "SERVICE_DELETED" -> {
+                            Timber.tag("REALTIME_MY_SERVICES").d("Service event: ${event.eventType} — reloading my services")
+                            loadServices()
+                        }
+                    }
+                }
+            }
         }
 
         fun loadServices() {

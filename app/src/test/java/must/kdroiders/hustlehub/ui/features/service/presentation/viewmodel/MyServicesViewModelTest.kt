@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import must.kdroiders.hustlehub.core.realtime.RealtimeSyncManager
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
@@ -34,6 +35,7 @@ class MyServicesViewModelTest {
     private val storageRepository: StorageRepository = mockk(relaxed = true)
     private val serviceRepository: ServiceRepository = mockk(relaxed = true)
     private val userRepository: UserRepository = mockk(relaxed = true)
+    private val realtimeSyncManager: RealtimeSyncManager = mockk(relaxed = true)
     private val context: Context = mockk(relaxed = true)
 
     private lateinit var viewModel: MyServicesViewModel
@@ -47,6 +49,7 @@ class MyServicesViewModelTest {
             Service(id = "srv-2", title = "Haircut", availability = ServiceAvailability.BUSY),
         )
         coEvery { getMyServices() } returns Result.success(mockServices)
+        io.mockk.every { realtimeSyncManager.events } returns kotlinx.coroutines.flow.MutableSharedFlow()
 
         viewModel = MyServicesViewModel(
             getMyServices = getMyServices,
@@ -55,6 +58,7 @@ class MyServicesViewModelTest {
             storageRepository = storageRepository,
             serviceRepository = serviceRepository,
             userRepository = userRepository,
+            realtimeSyncManager = realtimeSyncManager,
             context = context,
         )
     }
