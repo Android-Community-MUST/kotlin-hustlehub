@@ -298,4 +298,75 @@ class WriteReviewViewModelTest {
             coVerify(exactly = 0) { submitReviewUseCase(any(), any(), any(), any()) }
             assertFalse(viewModel.uiState.value.submitSuccess)
         }
+
+    @Test
+    fun `initialize with different serviceId resets submitSuccess and form state`() =
+        runTest {
+            val service1 = Service(id = "srv-1", providerId = "prov-1", title = "Haircut")
+            val provider1 = User(id = "prov-1", name = "Barber Sam")
+            val createdReview = Review(
+                id = "rev-1",
+                serviceId = "srv-1",
+                providerId = "prov-1",
+                customerId = "cust-1",
+                customerName = "Customer",
+                customerAvatarUrl = "",
+                rating = 5,
+                comment = "Awesome cut!",
+                isAnonymous = false,
+                createdAt = 1000L,
+            )
+
+            val service2 = Service(id = "srv-2", providerId = "prov-2", title = "Plumbing")
+            val provider2 = User(id = "prov-2", name = "Plumber Bob")
+
+            coEvery { getServiceByIdUseCase("srv-1") } returns Result.success(service1)
+            coEvery { getProviderProfileUseCase("prov-1") } returns Result.success(provider1)
+            coEvery { checkDuplicateReviewUseCase("srv-1") } returns Result.success(false)
+            coEvery { submitReviewUseCase("srv-1", 5, "Awesome cut!", false) } returns Result.success(createdReview)
+
+            coEvery { getServiceByIdUseCase("srv-2") } returns Result.success(service2)
+            coEvery { getProviderProfileUseCase("prov-2") } returns Result.success(provider2)
+            coEvery { checkDuplicateReviewUseCase("srv-2") } returns Result.success(false)
+
+            // Submit review for service 1
+            viewModel.initialize("srv-1")
+            viewModel.onRatingChanged(5)
+            viewModel.onCommentChanged("Awesome cut!")
+            viewModel.submit()
+            assertTrue(viewModel.uiState.value.submitSuccess)
+
+            // Now navigate to service 2
+            viewModel.initialize("srv-2")
+            val state2 = viewModel.uiState.value
+
+            assertFalse("submitSuccess should be reset to false for new service", state2.submitSuccess)
+            assertEquals("Rating should be reset to 0 for new service", 0, state2.rating)
+            assertEquals("Comment should be reset to blank for new service", "", state2.comment)
+            assertEquals("Service should be srv-2", "srv-2", state2.service?.id)
+            assertEquals("Provider should be prov-2", "prov-2", state2.provider?.id)
+        }
+
+    @Test
+    fun `resetState resets uiState to initial default and clears serviceId`() =
+        runTest {
+            val mockService = Service(id = "srv-1", providerId = "prov-1", title = "Haircut")
+            val mockProvider = User(id = "prov-1", name = "Barber Sam")
+
+            coEvery { getServiceByIdUseCase("srv-1") } returns Result.success(mockService)
+            coEvery { getProviderProfileUseCase("prov-1") } returns Result.success(mockProvider)
+
+            viewModel.initialize("srv-1")
+            viewModel.onRatingChanged(4)
+            viewModel.onCommentChanged("Good job")
+
+            viewModel.resetState()
+
+            val state = viewModel.uiState.value
+            assertEquals(0, state.rating)
+            assertEquals("", state.comment)
+            assertFalse(state.submitSuccess)
+            assertEquals(null, state.service)
+            assertEquals(null, state.provider)
+        }
 }
