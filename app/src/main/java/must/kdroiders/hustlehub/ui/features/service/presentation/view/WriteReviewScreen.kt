@@ -257,7 +257,6 @@ fun WriteReviewScreen(
                 if (state.isLoadingInfo) {
                     CircularWavyProgressIndicator()
                 } else if (state.provider != null && state.service != null) {
-                    // Provider Info Card
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -277,7 +276,6 @@ fun WriteReviewScreen(
                                     .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentScale = ContentScale.Crop,
                             )
-                            // Online indicator (green dot)
                             Box(
                                 modifier = Modifier
                                     .size(14.dp)
@@ -644,7 +642,6 @@ fun WriteReviewScreen(
                 }
             }
 
-            // Animated Submission Success Overlay
             AnimatedVisibility(
                 visible = state.submitSuccess,
                 enter = fadeIn() + scaleIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)),

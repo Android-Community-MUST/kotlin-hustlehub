@@ -329,14 +329,12 @@ class WriteReviewViewModelTest {
             coEvery { getProviderProfileUseCase("prov-2") } returns Result.success(provider2)
             coEvery { checkDuplicateReviewUseCase("srv-2") } returns Result.success(false)
 
-            // Submit review for service 1
             viewModel.initialize("srv-1")
             viewModel.onRatingChanged(5)
             viewModel.onCommentChanged("Awesome cut!")
             viewModel.submit()
             assertTrue(viewModel.uiState.value.submitSuccess)
 
-            // Now navigate to service 2
             viewModel.initialize("srv-2")
             val state2 = viewModel.uiState.value
 
