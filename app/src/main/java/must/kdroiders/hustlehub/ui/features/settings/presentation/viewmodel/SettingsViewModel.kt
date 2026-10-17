@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.BuildConfig
 import must.kdroiders.hustlehub.core.api.userFriendlyMessage
-import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
 import must.kdroiders.hustlehub.core.review.AppReviewManager
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.data.local.AppDatabase
@@ -140,7 +139,6 @@ class SettingsViewModel
                         .replace(" ", "")
                         .let { "@${it}_Hustler" }
                     val avatar = cached.profilePhotoUrl.ifBlank { firebaseUser?.photoUrl?.toString().orEmpty() }
-                    val isVerified = firebaseUser?.isEmailVerified == true || AdminAuthUtils.isAuthorizedAdmin(firebaseUser?.email)
                     val isProviderRole = cached.role == UserRole.ROLE_PROVIDER ||
                         cached.role == UserRole.ROLE_BOTH ||
                         cached.role == UserRole.ROLE_ADMIN ||
