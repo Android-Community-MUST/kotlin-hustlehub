@@ -126,7 +126,7 @@ class SettingsViewModel
                     displayName = user.displayName ?: "Hustler",
                     username = handle,
                     avatarUrl = user.photoUrl?.toString() ?: "",
-                    isVerified = user.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(user.email),
+                    isVerified = user.isEmailVerified,
                 )
             }
         }
@@ -145,6 +145,7 @@ class SettingsViewModel
                         cached.role == UserRole.ROLE_BOTH ||
                         cached.role == UserRole.ROLE_ADMIN ||
                         cached.role == UserRole.ROLE_SUPER_ADMIN
+                    val isVerified = firebaseUser?.isEmailVerified == true
 
                     _uiState.update {
                         it.copy(

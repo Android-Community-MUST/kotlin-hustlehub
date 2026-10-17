@@ -40,6 +40,7 @@ class MyServicesViewModelTest {
     private val serviceRepository: ServiceRepository = mockk(relaxed = true)
     private val userRepository: UserRepository = mockk(relaxed = true)
     private val userPreferences: UserPreferences = mockk(relaxed = true)
+    private val realtimeSyncManager: RealtimeSyncManager = mockk(relaxed = true)
     private val context: Context = mockk(relaxed = true)
 
     private lateinit var viewModel: MyServicesViewModel
@@ -55,6 +56,7 @@ class MyServicesViewModelTest {
             Service(id = "srv-2", title = "Haircut", availability = ServiceAvailability.BUSY),
         )
         coEvery { getMyServices() } returns Result.success(mockServices)
+        io.mockk.every { realtimeSyncManager.events } returns kotlinx.coroutines.flow.MutableSharedFlow()
 
         viewModel = MyServicesViewModel(
             getMyServices = getMyServices,
@@ -64,6 +66,7 @@ class MyServicesViewModelTest {
             serviceRepository = serviceRepository,
             userRepository = userRepository,
             userPreferences = userPreferences,
+            realtimeSyncManager = realtimeSyncManager,
             context = context,
         )
     }

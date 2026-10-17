@@ -101,9 +101,13 @@ class UserRepositoryImpl
                     val errorBody = runCatching { e.response()?.errorBody()?.string() }.getOrNull()
                     Timber.w(e, "UserRepositoryImpl: register endpoint returned HTTP %d: %s", e.code(), errorBody)
 
+                    val serverMessage = errorBody?.let { body ->
+                        Regex("\"message\"\\s*:\\s*\"([^\"]+)\"").find(body)?.groupValues?.get(1)
+                    }
+
                     when (e.code()) {
-                        // 400 or 409: User already exists on backend or needs profile update
-                        400, 409 -> {
+                        // 409 Conflict: User already exists on backend, update existing record
+                        409 -> {
                             Timber.d("UserRepositoryImpl: attempting profile update via PUT users/me for user: %s", user.id)
                             val updateResult = updateProfile(
                                 name = user.name,
@@ -120,13 +124,17 @@ class UserRepositoryImpl
                             } else {
                                 val updateErr = updateResult.exceptionOrNull()
                                 Timber.e(updateErr, "UserRepositoryImpl: updateProfile fallback also failed")
-                                syncLocalUserState(user)
-                                user
+                                throw updateErr ?: Exception(serverMessage ?: "Failed to update profile")
                             }
                         }
                         else -> {
-                            Timber.e(e, "UserRepositoryImpl: failed to save profile (HTTP ${e.code()})")
-                            throw e
+                            val failureException = if (!serverMessage.isNullOrBlank()) {
+                                Exception(serverMessage)
+                            } else {
+                                e
+                            }
+                            Timber.e(failureException, "UserRepositoryImpl: failed to save profile (HTTP ${e.code()})")
+                            throw failureException
                         }
                     }
                 } else {
@@ -213,8 +221,11 @@ class UserRepositoryImpl
                     name = name,
                     bio = bio.takeIf { it.isNotBlank() },
                     avatarUrl = avatarUrl,
-                    phone = phone.takeIf { it.isNotBlank() },
-                    campusLocation = campusLocation.takeIf { it.isNotBlank() },
+                    // Always send phone and campusLocation — even if blank — so the backend
+                    // always stores them. Using takeIf{isNotBlank} caused null to be sent
+                    // when fields were empty, which the backend silently skipped.
+                    phone = phone.ifBlank { null },
+                    campusLocation = campusLocation.ifBlank { null },
                     allowCalls = allowCalls,
                 )
                 val response = userApiService.updateMe(request)
@@ -350,7 +361,12 @@ class UserRepositoryImpl
             runCatching {
                 val response = userApiService.deleteMe()
                 if (!response.isSuccessful) {
-                    throw Exception("Failed to delete account on backend: code ${response.code()}")
+                    val errorBody = runCatching { response.errorBody()?.string() }.getOrNull()
+                    Timber.e("UserRepositoryImpl: deleteMe failed with HTTP %d: %s", response.code(), errorBody)
+                    val serverMessage = errorBody?.let { body ->
+                        Regex("\"message\"\\s*:\\s*\"([^\"]+)\"").find(body)?.groupValues?.get(1)
+                    }
+                    throw Exception(serverMessage ?: "Failed to delete account on backend: code ${response.code()}")
                 }
             }.onFailure { e ->
                 Timber.e(e, "UserRepositoryImpl: failed to delete user account on backend")

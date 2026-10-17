@@ -6,6 +6,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import must.kdroiders.hustlehub.core.realtime.RealtimeSyncManager
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthState
 import javax.inject.Inject
 
@@ -17,12 +19,16 @@ import javax.inject.Inject
  *
  * The [authState] StateFlow starts in [AuthState.Loading] and transitions to
  * [AuthState.Authenticated] or [AuthState.Unauthenticated] as Firebase notifies the listener.
+ *
+ * Also manages the [RealtimeSyncManager] lifecycle — connecting when authenticated and
+ * disconnecting on sign-out so the STOMP session always mirrors the login state.
  */
 @HiltViewModel
 class AuthStateViewModel
     @Inject
     constructor(
         authManager: AuthManager,
+        private val realtimeSyncManager: RealtimeSyncManager,
     ) : ViewModel() {
         val authState: StateFlow<AuthState> = authManager.authState
             .stateIn(
@@ -30,4 +36,16 @@ class AuthStateViewModel
                 started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
                 initialValue = AuthState.Loading,
             )
+
+        init {
+            viewModelScope.launch {
+                authState.collect { state ->
+                    when (state) {
+                        is AuthState.Authenticated -> realtimeSyncManager.connect()
+                        AuthState.Unauthenticated -> realtimeSyncManager.disconnect()
+                        else -> Unit
+                    }
+                }
+            }
+        }
     }
