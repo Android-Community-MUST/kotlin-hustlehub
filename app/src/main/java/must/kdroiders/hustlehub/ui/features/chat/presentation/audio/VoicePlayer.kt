@@ -31,19 +31,36 @@ data class PlayerState(
     val playbackSpeed: Float = 1.0f,
 )
 
-/**
- * Manages a single ExoPlayer instance for voice-note playback.
- *
- * Features:
- * - Downloads remote URLs to local cache before playback (idempotent — skips download if cached).
- * - Automatic audio focus and AudioBecomingNoisy handling via [AudioAttributes] + handleAudioFocus.
- * - Playback-speed cycling: 1.0x → 1.5x → 2.0x → 1.0x.
- * - Singleton-safe: only one clip plays at a time; calling [play] with a different URL
- *   stops the current clip first.
- */
 class VoicePlayer(private val context: Context) {
     private val scope = CoroutineScope(Dispatchers.Main)
     private var updateJob: Job? = null
+
+    private val proximityAudioRouter = ProximityAudioRouter(
+        context = context,
+        onEarpieceModeChanged = { isEarpiece ->
+            scope.launch {
+                try {
+                    val player = exoPlayer ?: return@launch
+                    if (isEarpiece) {
+                        val currentPos = player.currentPosition
+                        val targetPos = if (currentPos < SMART_REWIND_THRESHOLD_MS) {
+                            0L
+                        } else {
+                            (currentPos - SMART_REWIND_DURATION_MS).coerceAtLeast(0L)
+                        }
+                        player.volume = 0f
+                        player.seekTo(targetPos)
+                        delay(TRANSITION_SETTLE_DELAY_MS)
+                        player.volume = 1f
+                    } else {
+                        pause()
+                    }
+                } catch (e: Throwable) {
+                    Timber.w(e, "VoicePlayer: Failed to handle proximity audio transition")
+                }
+            }
+        },
+    )
 
     private val _playerState = MutableStateFlow(PlayerState())
     val playerState: StateFlow<PlayerState> = _playerState.asStateFlow()
@@ -55,7 +72,6 @@ class VoicePlayer(private val context: Context) {
             .Builder(context)
             .build()
             .apply {
-                // Audio focus + BECOMING_NOISY — handled automatically by ExoPlayer
                 val audioAttributes = AudioAttributes
                     .Builder()
                     .setUsage(C.USAGE_MEDIA)
@@ -66,7 +82,11 @@ class VoicePlayer(private val context: Context) {
                 addListener(object : Player.Listener {
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
                         _playerState.update { it.copy(isPlaying = isPlaying) }
-                        if (isPlaying) startProgressUpdates() else stopProgressUpdates()
+                        if (isPlaying) {
+                            startProgressUpdates()
+                        } else {
+                            stopProgressUpdates()
+                        }
                     }
 
                     override fun onPlaybackStateChanged(state: Int) {
@@ -74,7 +94,6 @@ class VoicePlayer(private val context: Context) {
                         val ready = state == Player.STATE_READY
                         _playerState.update { it.copy(isBuffering = buffering) }
                         if (ready) {
-                            // Capture total duration once the player is prepared
                             val dur = duration.takeIf { it > 0L }?.toInt() ?: 0
                             _playerState.update { it.copy(durationMs = dur) }
                         }
@@ -94,7 +113,6 @@ class VoicePlayer(private val context: Context) {
 
     private val speedCycle = listOf(1.0f, 1.5f, 2.0f)
 
-    /** Toggle the current playback speed through the cycle [1.0x, 1.5x, 2.0x]. */
     fun toggleSpeed() {
         val current = _playerState.value.playbackSpeed
         val idx = speedCycle.indexOf(current)
@@ -103,13 +121,6 @@ class VoicePlayer(private val context: Context) {
         _playerState.update { it.copy(playbackSpeed = next) }
     }
 
-    /**
-     * Play or pause a voice note at [url].
-     *
-     * - If the same URL is already playing → pauses.
-     * - If the same URL is paused → resumes.
-     * - Otherwise → downloads (if needed), caches, and plays from scratch.
-     */
     fun play(url: String) {
         val current = _playerState.value
         if (current.playingUrl == url) {
@@ -117,7 +128,6 @@ class VoicePlayer(private val context: Context) {
             return
         }
 
-        // Stop any clip currently playing
         stopPlayback()
 
         _playerState.update { it.copy(playingUrl = url, isBuffering = true) }
@@ -126,32 +136,37 @@ class VoicePlayer(private val context: Context) {
             try {
                 val localUri = getOrDownload(url)
                 getOrCreatePlayer().apply {
-                    // Preserve current speed when switching tracks
                     val speed = _playerState.value.playbackSpeed
                     playbackParameters = PlaybackParameters(speed)
                     setMediaItem(MediaItem.fromUri(localUri))
                     prepare()
                     play()
                 }
+                proximityAudioRouter.start()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to play voice note: $url")
+                proximityAudioRouter.stop()
                 _playerState.update { it.copy(isBuffering = false, playingUrl = null) }
             }
         }
     }
 
     fun pause() {
+        proximityAudioRouter.stop()
+        exoPlayer?.volume = 1f
         exoPlayer?.pause()
         _playerState.update { it.copy(isPlaying = false) }
         stopProgressUpdates()
     }
 
     private fun resume() {
+        proximityAudioRouter.start()
         exoPlayer?.play()
         _playerState.update { it.copy(isPlaying = true) }
     }
 
     fun stop() {
+        proximityAudioRouter.stop()
         stopPlayback()
         _playerState.update {
             it.copy(
@@ -166,19 +181,21 @@ class VoicePlayer(private val context: Context) {
 
     fun release() {
         stopProgressUpdates()
+        proximityAudioRouter.release()
         try {
+            exoPlayer?.volume = 1f
             exoPlayer?.release()
             exoPlayer = null
         } catch (e: Throwable) {
-            // Ignored in unit test environments
+            Timber.w(e, "VoicePlayer: error releasing ExoPlayer")
         }
     }
 
-    // Private helpers
-
     private fun stopPlayback() {
         stopProgressUpdates()
+        proximityAudioRouter.stop()
         try {
+            exoPlayer?.volume = 1f
             exoPlayer?.stop()
             exoPlayer?.clearMediaItems()
         } catch (e: Exception) {
@@ -186,10 +203,6 @@ class VoicePlayer(private val context: Context) {
         }
     }
 
-    /**
-     * Returns a local [Uri] for [url]. Downloads and caches the file on first call;
-     * returns the cached file URI on subsequent calls (even across app restarts).
-     */
     private suspend fun getOrDownload(url: String): Uri =
         withContext(Dispatchers.IO) {
             val cacheDir = File(context.cacheDir, "voice_cache").also { it.mkdirs() }
@@ -225,7 +238,9 @@ class VoicePlayer(private val context: Context) {
     }
 
     private companion object {
-        /** How often (ms) to poll ExoPlayer's current position for the progress bar. */
         const val PROGRESS_UPDATE_INTERVAL_MS = 150L
+        const val SMART_REWIND_THRESHOLD_MS = 3000L
+        const val SMART_REWIND_DURATION_MS = 1800L
+        const val TRANSITION_SETTLE_DELAY_MS = 120L
     }
 }

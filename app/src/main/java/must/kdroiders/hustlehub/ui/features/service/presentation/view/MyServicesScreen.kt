@@ -55,6 +55,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.DeleteConfirmDialog
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.PortfolioSlots
+import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ProviderProBanner
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ServiceManagementCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.MyServicesViewModel
 
@@ -66,6 +67,7 @@ fun MyServicesScreen(
     onCreateService: () -> Unit,
     onEditService: (String) -> Unit,
     onBoostService: (String) -> Unit = {},
+    onNavigateToSubscription: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -76,7 +78,6 @@ fun MyServicesScreen(
         uri?.let { viewModel.onGalleryImageAdded(it) }
     }
 
-    // Show errors as snackbar
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar(it)
@@ -84,7 +85,6 @@ fun MyServicesScreen(
         }
     }
 
-    // Refresh list when navigating back from the edit screen
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -96,7 +96,6 @@ fun MyServicesScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Delete confirmation dialog
     val pendingDeleteId = state.pendingDeleteServiceId
     val defaultServiceTitle = stringResource(R.string.service_fallback_title)
     if (pendingDeleteId != null) {
@@ -110,7 +109,6 @@ fun MyServicesScreen(
         )
     }
 
-    // Gallery Bottom Sheet
     if (state.selectedServiceForGallery != null) {
         val selectedService = state.services.find { it.id == state.selectedServiceForGallery }
         if (selectedService != null) {
@@ -122,7 +120,7 @@ fun MyServicesScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .padding(bottom = 32.dp), // extra padding for bottom navigation
+                        .padding(bottom = 32.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.service_quick_gallery_title),
@@ -241,6 +239,16 @@ fun MyServicesScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxSize(),
                         ) {
+                            if (!state.isProBannerDismissed) {
+                                item(key = "provider_pro_banner") {
+                                    ProviderProBanner(
+                                        isProUser = state.isProUser,
+                                        onUpgradeClick = onNavigateToSubscription,
+                                        onDismiss = viewModel::dismissProBanner,
+                                    )
+                                }
+                            }
+
                             items(
                                 items = state.services,
                                 key = { it.id },

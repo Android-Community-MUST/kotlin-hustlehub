@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -17,6 +19,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import must.kdroiders.hustlehub.core.api.userFriendlyMessage
 import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
@@ -30,6 +34,8 @@ import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 enum class LocationSelectionMode {
@@ -55,24 +61,24 @@ data class CreateServiceUiState(
     val tags: List<String> = emptyList(),
     val tagError: String? = null,
     val openToBarter: Boolean = false,
-    // Operating Location
     val locationMode: LocationSelectionMode = LocationSelectionMode.CAMPUS_PRESET,
     val selectedLat: Double? = 0.12678026093702657,
     val selectedLng: Double? = 37.71798703306698,
     val locationLabel: String = "Nchiru",
-    // Portfolio
-    val portfolioUris: List<Uri> = emptyList(), // newly picked local images
-    val existingPortfolioUrls: List<String> = emptyList(), // loaded from server on edit
-    // Availability / Current Status
+    val portfolioUris: List<Uri> = emptyList(),
+    val existingPortfolioUrls: List<String> = emptyList(),
     val availability: ServiceAvailability = ServiceAvailability.AVAILABLE,
     val isLoading: Boolean = false,
+    val loadingStage: String? = null,
+    val uploadProgress: Float? = null,
     val error: String? = null,
 ) {
     val maxAllowedPhotos: Int get() = if (isProUser) 15 else 3
 }
 
 sealed class CreateServiceEvent {
-    data object Success : CreateServiceEvent()
+    data class Success(val message: String? = null) : CreateServiceEvent()
+    data class ShowSnackbar(val message: String) : CreateServiceEvent()
 }
 
 @HiltViewModel
@@ -90,10 +96,13 @@ class CreateServiceViewModel
         private var editServiceId: String? = null
         private var originalAvailability: ServiceAvailability = ServiceAvailability.AVAILABLE
 
+        private val precompressedCache = ConcurrentHashMap<Uri, ByteArray>()
+        private val compressionJobs = ConcurrentHashMap<Uri, Deferred<ByteArray?>>()
+
         private val _uiState = MutableStateFlow(CreateServiceUiState())
         val uiState: StateFlow<CreateServiceUiState> = _uiState.asStateFlow()
 
-        private val _events = MutableSharedFlow<CreateServiceEvent>()
+        private val _events = MutableSharedFlow<CreateServiceEvent>(extraBufferCapacity = 1)
         val events: SharedFlow<CreateServiceEvent> = _events.asSharedFlow()
 
         init {
@@ -112,12 +121,16 @@ class CreateServiceViewModel
         companion object {
             private const val MAX_PORTFOLIO_IMAGES_CREATE = 3
             private const val MAX_PORTFOLIO_IMAGES_EDIT = 6
+            private val CAMPUS_PRESETS = setOf(
+                "Nchiru",
+                "Main Gate",
+                "MUST Library",
+                "Student Center (STC)",
+                "Administration Block",
+                "Campus Hostels",
+            )
         }
 
-        /**
-         * Called by the screen when opened in edit mode.
-         * Guards against re-loading if already pre-filled.
-         */
         fun loadForEdit(serviceId: String) {
             if (_uiState.value.isEditMode) return
             editServiceId = serviceId
@@ -139,6 +152,17 @@ class CreateServiceViewModel
 
                         originalAvailability = service.availability
 
+                        val loc = service.location
+                        val lat = loc?.lat
+                        val lng = loc?.lng
+                        val label = loc?.label?.trim().orEmpty()
+                        val mode = when {
+                            CAMPUS_PRESETS.any { it.equals(label, ignoreCase = true) } -> LocationSelectionMode.CAMPUS_PRESET
+                            label.equals("Current Device Location", ignoreCase = true) -> LocationSelectionMode.CURRENT_GPS
+                            lat != null && lng != null -> LocationSelectionMode.MAP_PICKER
+                            else -> LocationSelectionMode.CAMPUS_PRESET
+                        }
+
                         _uiState.update {
                             it.copy(
                                 isLoadingExisting = false,
@@ -151,6 +175,10 @@ class CreateServiceViewModel
                                 openToBarter = service.openToBarter,
                                 existingPortfolioUrls = service.portfolio,
                                 availability = service.availability,
+                                selectedLat = lat ?: it.selectedLat,
+                                selectedLng = lng ?: it.selectedLng,
+                                locationLabel = if (label.isNotBlank()) label else it.locationLabel,
+                                locationMode = if (loc != null) mode else it.locationMode,
                             )
                         }
                     }.onFailure { e ->
@@ -218,8 +246,6 @@ class CreateServiceViewModel
             _uiState.update { it.copy(openToBarter = value) }
         }
 
-        // --- Portfolio ---
-
         fun onPortfolioImagesPicked(uris: List<Uri>) {
             val state = _uiState.value
             val currentTotal = state.portfolioUris.size + state.existingPortfolioUrls.size
@@ -237,6 +263,23 @@ class CreateServiceViewModel
             val toAdd = uris.take(availableSlots)
             _uiState.update { it.copy(portfolioUris = it.portfolioUris + toAdd) }
 
+            toAdd.forEach { uri ->
+                if (!precompressedCache.containsKey(uri) && !compressionJobs.containsKey(uri)) {
+                    compressionJobs[uri] = viewModelScope.async(Dispatchers.IO) {
+                        try {
+                            val bytes = ImageCompressor.compressImage(context, uri)
+                            if (bytes != null) {
+                                precompressedCache[uri] = bytes
+                            }
+                            bytes
+                        } catch (e: Exception) {
+                            Timber.w(e, "Pre-compression failed for uri: $uri")
+                            null
+                        }
+                    }
+                }
+            }
+
             if (uris.size > availableSlots) {
                 val msg = if (state.isProUser) {
                     "Added ${toAdd.size} photos. PRO limit is 15 photos max."
@@ -252,6 +295,11 @@ class CreateServiceViewModel
         }
 
         fun onPortfolioNewImageRemoved(index: Int) {
+            val uriToRemove = _uiState.value.portfolioUris.getOrNull(index)
+            if (uriToRemove != null) {
+                precompressedCache.remove(uriToRemove)
+                compressionJobs.remove(uriToRemove)?.cancel()
+            }
             _uiState.update {
                 it.copy(portfolioUris = it.portfolioUris.toMutableList().also { list -> list.removeAt(index) })
             }
@@ -263,8 +311,6 @@ class CreateServiceViewModel
             }
         }
 
-        // --- Availability / Status ---
-
         fun onAvailabilityChange(value: ServiceAvailability) {
             _uiState.update { it.copy(availability = value) }
         }
@@ -272,7 +318,17 @@ class CreateServiceViewModel
         private fun resetForm() {
             editServiceId = null
             originalAvailability = ServiceAvailability.AVAILABLE
+            precompressedCache.clear()
+            compressionJobs.values.forEach { it.cancel() }
+            compressionJobs.clear()
             _uiState.value = CreateServiceUiState()
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            precompressedCache.clear()
+            compressionJobs.values.forEach { it.cancel() }
+            compressionJobs.clear()
         }
 
         private fun showTemporaryError(message: String) {
@@ -282,8 +338,6 @@ class CreateServiceViewModel
                 _uiState.update { if (it.error == message) it.copy(error = null) else it }
             }
         }
-
-        // --- Location ---
 
         fun onLocationModeChange(mode: LocationSelectionMode) {
             _uiState.update { state ->
@@ -346,10 +400,97 @@ class CreateServiceViewModel
             val snapshot = editServiceId
 
             viewModelScope.launch {
-                _uiState.update { it.copy(isLoading = true, error = null) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = true,
+                        error = null,
+                        loadingStage = if (state.portfolioUris.isNotEmpty()) {
+                            "Preparing photos…"
+                        } else if (state.isEditMode) {
+                            "Saving changes…"
+                        } else {
+                            "Publishing service…"
+                        },
+                        uploadProgress = 0f,
+                    )
+                }
+
+                val newUrls = mutableListOf<String>()
+                if (state.portfolioUris.isNotEmpty()) {
+                    try {
+                        val totalImages = state.portfolioUris.size
+                        val uploadedCount = AtomicInteger(0)
+                        val uploadSemaphore = Semaphore(3)
+                        val entityId = snapshot ?: "portfolio"
+
+                        _uiState.update {
+                            it.copy(
+                                loadingStage = "Uploading photo 1 of $totalImages…",
+                                uploadProgress = 0f,
+                            )
+                        }
+
+                        val uploadDeferreds = state.portfolioUris.map { uri ->
+                            async(Dispatchers.IO) {
+                                uploadSemaphore.withPermit {
+                                    val bytes = precompressedCache[uri]
+                                        ?: compressionJobs[uri]?.await()
+                                        ?: ImageCompressor.compressImage(context, uri)
+
+                                    if (bytes == null) {
+                                        throw IllegalStateException("Failed to compress image")
+                                    }
+
+                                    var uploadedUrl: String? = null
+                                    storageRepository.uploadPortfolioImage(entityId, bytes).collect { uploadResult ->
+                                        when (uploadResult) {
+                                            is UploadResult.Success -> {
+                                                uploadedUrl = uploadResult.url
+                                            }
+                                            is UploadResult.Error -> {
+                                                throw IllegalStateException(uploadResult.message)
+                                            }
+                                            else -> Unit
+                                        }
+                                    }
+
+                                    val count = uploadedCount.incrementAndGet()
+                                    _uiState.update {
+                                        it.copy(
+                                            loadingStage = if (count < totalImages) "Uploading photo ${count + 1} of $totalImages…" else "Finalizing photos…",
+                                            uploadProgress = count.toFloat() / totalImages,
+                                        )
+                                    }
+
+                                    uploadedUrl ?: throw IllegalStateException("Upload succeeded without returning image URL")
+                                }
+                            }
+                        }
+
+                        newUrls.addAll(uploadDeferreds.awaitAll())
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to upload portfolio images")
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = e.userFriendlyMessage("Failed to upload portfolio images. Please try again."),
+                                loadingStage = null,
+                                uploadProgress = null,
+                            )
+                        }
+                        return@launch
+                    }
+                }
+
+                val combinedUrls = state.existingPortfolioUrls + newUrls
+                _uiState.update {
+                    it.copy(
+                        loadingStage = if (state.isEditMode) "Saving your changes…" else "Publishing your service…",
+                        uploadProgress = 1f,
+                    )
+                }
 
                 val result = if (state.isEditMode && snapshot != null) {
-                    // Update basic details first
                     serviceRepository.updateService(
                         serviceId = snapshot,
                         title = state.title.trim(),
@@ -359,6 +500,7 @@ class CreateServiceViewModel
                         maxPrice = maxPrice,
                         openToBarter = state.openToBarter,
                         tags = state.tags,
+                        portfolioUrls = combinedUrls,
                         lat = state.selectedLat,
                         lng = state.selectedLng,
                         locationLabel = state.locationLabel,
@@ -372,6 +514,7 @@ class CreateServiceViewModel
                         maxPrice = maxPrice,
                         openToBarter = state.openToBarter,
                         tags = state.tags,
+                        portfolioUrls = combinedUrls,
                         lat = state.selectedLat,
                         lng = state.selectedLng,
                         locationLabel = state.locationLabel,
@@ -380,76 +523,48 @@ class CreateServiceViewModel
 
                 result
                     .onSuccess { savedService ->
+                        val targetId = if (state.isEditMode && snapshot != null) snapshot else savedService.id
+
                         if (!state.isEditMode) {
                             hustleAnalytics.logServiceCreated(savedService.id, savedService.category.name)
                         }
-                        val targetId = if (state.isEditMode && snapshot != null) snapshot else savedService.id
 
-                        // Handle Portfolio Uploads if there are new images
-                        val newUrls = mutableListOf<String>()
-                        if (state.portfolioUris.isNotEmpty()) {
-                            try {
-                                val uploadDeferreds = state.portfolioUris.map { uri ->
-                                    async {
-                                        val bytes = ImageCompressor.compressImage(context, uri)
-                                        if (bytes != null) {
-                                            // Flow usually emits once then completes for single uploads, collect first result
-                                            var url: String? = null
-                                            storageRepository.uploadPortfolioImage(targetId, bytes).collect { result ->
-                                                if (result is UploadResult.Success) {
-                                                    url = result.url
-                                                }
-                                            }
-                                            url
-                                        } else {
-                                            null
-                                        }
-                                    }
-                                }
-                                newUrls.addAll(uploadDeferreds.awaitAll().filterNotNull())
-
-                                // Now update the service with the final combined portfolio URLs
-                                val combinedUrls = state.existingPortfolioUrls + newUrls
-                                serviceRepository.updateService(
-                                    serviceId = targetId,
-                                    portfolioUrls = combinedUrls,
-                                )
-                            } catch (e: Exception) {
-                                Timber.e(e, "Failed to upload portfolio images")
-                                _uiState.update {
-                                    it.copy(
-                                        isLoading = false,
-                                        error = "Failed to upload portfolio images. Please try again.",
-                                    )
-                                }
-                                return@launch
-                            }
-                        }
-
-                        val availResult = serviceRepository.updateAvailability(targetId, state.availability)
-
-                        if (availResult.isFailure) {
-                            _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    error = "Service saved, but failed to update status.",
-                                )
-                            }
+                        val availabilityNeedsUpdate = if (state.isEditMode) {
+                            state.availability != originalAvailability
                         } else {
-                            val user = userPreferences.cachedUser.firstOrNull()
-                            if (user != null && user.role == UserRole.ROLE_CUSTOMER) {
-                                userPreferences.writeUser(user.copy(role = UserRole.ROLE_PROVIDER))
-                            }
-                            userPreferences.dismissProviderBanner()
-                            resetForm()
-                            _events.emit(CreateServiceEvent.Success)
+                            state.availability != ServiceAvailability.AVAILABLE
                         }
+
+                        if (availabilityNeedsUpdate) {
+                            val availResult = serviceRepository.updateAvailability(targetId, state.availability)
+                            if (availResult.isFailure) {
+                                Timber.w("Service saved, but availability update failed")
+                            }
+                        }
+
+                        val user = userPreferences.cachedUser.firstOrNull()
+                        if (user != null && user.role == UserRole.ROLE_CUSTOMER) {
+                            userPreferences.writeUser(user.copy(role = UserRole.ROLE_PROVIDER))
+                        }
+                        userPreferences.dismissProviderBanner()
+
+                        val successMsg = if (state.isEditMode) {
+                            "Service updated successfully!"
+                        } else {
+                            "Service created successfully!"
+                        }
+
+                        _uiState.update { it.copy(isLoading = false, loadingStage = null, uploadProgress = null) }
+                        _events.emit(CreateServiceEvent.Success(successMsg))
+                        resetForm()
                     }.onFailure { e ->
                         Timber.e(e, "Failed to save service")
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
                                 error = e.userFriendlyMessage("Failed to save service. Please try again."),
+                                loadingStage = null,
+                                uploadProgress = null,
                             )
                         }
                     }

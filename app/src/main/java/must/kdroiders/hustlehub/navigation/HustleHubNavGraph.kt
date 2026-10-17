@@ -222,7 +222,6 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
 
     var showBookingGate by remember { mutableStateOf(false) }
     var pendingChatArgs by remember { mutableStateOf<ChatDetail?>(null) }
-    var showListingGate by remember { mutableStateOf(false) }
     var isSavingGate by remember { mutableStateOf(false) }
     var gateError by remember { mutableStateOf<String?>(null) }
 
@@ -251,37 +250,6 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         }.onFailure {
                             isSavingGate = false
                             gateError = "Could not save location. Please try again."
-                        }
-                }
-            },
-        )
-    }
-
-    if (showListingGate) {
-        ProfileGateBottomSheet(
-            gateType = ProfileGateType.LISTING,
-            initialCampusLocation = cachedUser.campusLocation,
-            initialPhone = cachedUser.phone,
-            initialBio = cachedUser.bio,
-            isSaving = isSavingGate,
-            errorMessage = gateError,
-            onDismiss = {
-                showListingGate = false
-                gateError = null
-            },
-            onSave = { campusLocation, phone, bio ->
-                isSavingGate = true
-                gateError = null
-                navScope.launch {
-                    profileGateViewModel
-                        .saveLocation(campusLocation, phone, bio)
-                        .onSuccess {
-                            isSavingGate = false
-                            showListingGate = false
-                            backstack.add(CreateService())
-                        }.onFailure {
-                            isSavingGate = false
-                            gateError = "Could not save profile. Please try again."
                         }
                 }
             },
@@ -451,13 +419,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             MainShellScreen(
                                 onNavigateToProfileSetup = { backstack.add(ProfileSetup) },
                                 onNavigateToSettings = { backstack.add(Settings) },
-                                onNavigateToCreateService = {
-                                    if (ProfileCompletenessChecker.needsProfileForListing(cachedUser)) {
-                                        showListingGate = true
-                                    } else {
-                                        backstack.add(CreateService())
-                                    }
-                                },
+                                onNavigateToCreateService = { backstack.add(CreateService()) },
                                 onNavigateToMyServices = { backstack.add(MyServices) },
                                 onNavigateToEditService = { serviceId ->
                                     backstack.add(
@@ -494,6 +456,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onNavigateToBlockedUsers = { backstack.add(BlockedUsers) },
                                 onNavigateToSubscription = { backstack.add(Subscription()) },
                                 onNavigateToHelp = { backstack.add(HelpFaq) },
+                                onNavigateToCreateService = { backstack.add(CreateService()) },
                                 onAccountDeleted = {
                                     backstack.clear()
                                     backstack.add(Onboarding)
@@ -541,13 +504,13 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             )
                         }
 
-                        // My services management
                         entry<MyServices> {
                             MyServicesScreen(
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                                 onCreateService = { backstack.add(CreateService()) },
                                 onEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
                                 onBoostService = { serviceId -> backstack.add(Subscription(serviceId = serviceId)) },
+                                onNavigateToSubscription = { backstack.add(Subscription()) },
                             )
                         }
 
@@ -737,6 +700,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                     backstack.add(PaymentStatus(checkoutRequestId = checkoutRequestId))
                                 },
                                 serviceId = key.serviceId,
+                                onCreateService = { backstack.add(CreateService()) },
                             )
                         }
 

@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import must.kdroiders.hustlehub.sharedComposables.CompactProBadge
 import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
 import kotlin.math.*
@@ -42,6 +43,11 @@ import kotlin.math.*
 fun ProviderMarkerContent(pin: MapPin) {
     val (icon, neonColor) = getCategoryIconAndColor(pin.category)
     val baseColor = neonColor
+
+    val proGoldColor = Color(0xFFFFB300)
+    val outerBorderColor = if (pin.isPro) proGoldColor.copy(alpha = 0.55f) else neonColor.copy(alpha = 0.35f)
+    val innerBorderColor = if (pin.isPro) proGoldColor else neonColor
+    val outerBorderWidth = if (pin.isPro) 4.dp else 3.dp
 
     val pillBgColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
     val titleTextColor = MaterialTheme.colorScheme.onSurface
@@ -54,15 +60,15 @@ fun ProviderMarkerContent(pin: MapPin) {
         Row(
             modifier = Modifier
                 .border(
-                    width = 3.dp,
-                    color = neonColor.copy(alpha = 0.35f),
+                    width = outerBorderWidth,
+                    color = outerBorderColor,
                     shape = RoundedCornerShape(26.dp),
                 ).background(
                     color = pillBgColor,
                     shape = RoundedCornerShape(24.dp),
                 ).border(
                     width = 1.5.dp,
-                    color = neonColor,
+                    color = innerBorderColor,
                     shape = RoundedCornerShape(24.dp),
                 ).padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -72,7 +78,7 @@ fun ProviderMarkerContent(pin: MapPin) {
                 modifier = Modifier
                     .size(24.dp)
                     .background(
-                        color = baseColor.copy(alpha = 0.25f),
+                        color = (if (pin.isPro) proGoldColor else baseColor).copy(alpha = 0.25f),
                         shape = CircleShape,
                     ),
                 contentAlignment = Alignment.Center,
@@ -80,7 +86,7 @@ fun ProviderMarkerContent(pin: MapPin) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = neonColor,
+                    tint = if (pin.isPro) proGoldColor else neonColor,
                     modifier = Modifier.size(14.dp),
                 )
             }
@@ -88,14 +94,22 @@ fun ProviderMarkerContent(pin: MapPin) {
             Column(
                 verticalArrangement = Arrangement.Center,
             ) {
-                Text(
-                    text = pin.providerName,
-                    color = titleTextColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    softWrap = false,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = pin.providerName,
+                        color = titleTextColor,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                    )
+                    if (pin.isPro) {
+                        CompactProBadge(isVisible = true)
+                    }
+                }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -135,7 +149,7 @@ fun ProviderMarkerContent(pin: MapPin) {
                 .background(pillBgColor)
                 .border(
                     width = 1.5.dp,
-                    color = neonColor,
+                    color = innerBorderColor,
                 ),
         )
     }
@@ -193,7 +207,7 @@ fun calculateDistanceMeters(
     lat2: Double,
     lng2: Double,
 ): Double {
-    val r = 6371000.0 // Earth's radius in meters
+    val r = 6371000.0
     val dLat = Math.toRadians(lat2 - lat1)
     val dLng = Math.toRadians(lng2 - lng1)
     val a = sin(dLat / 2).pow(2) +

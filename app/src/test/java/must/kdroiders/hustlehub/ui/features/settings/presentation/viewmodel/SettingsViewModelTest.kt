@@ -24,6 +24,9 @@ import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepositor
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.DeleteAccountUseCase
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.SignOutUseCase
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
+import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetMyServicesUseCase
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -42,6 +45,7 @@ class SettingsViewModelTest {
     private lateinit var appDatabase: AppDatabase
     private lateinit var chatRepository: ChatRepository
     private lateinit var appReviewManager: AppReviewManager
+    private lateinit var getMyServicesUseCase: GetMyServicesUseCase
 
     private lateinit var viewModel: SettingsViewModel
 
@@ -56,6 +60,7 @@ class SettingsViewModelTest {
         appDatabase = mockk(relaxed = true)
         chatRepository = mockk(relaxed = true)
         appReviewManager = mockk(relaxed = true)
+        getMyServicesUseCase = mockk(relaxed = true)
 
         val mockUserInfo: com.google.firebase.auth.UserInfo = mockk {
             every { providerId } returns "password"
@@ -69,6 +74,9 @@ class SettingsViewModelTest {
         }
         every { authRepository.getCurrentUser() } returns mockUser
         every { userPreferences.appTheme } returns flowOf(AppTheme.SYSTEM)
+        every { userPreferences.isProUser } returns flowOf(false)
+        every { userPreferences.cachedUser } returns flowOf(User(id = "uid-1", role = UserRole.ROLE_CUSTOMER))
+        coEvery { getMyServicesUseCase() } returns Result.success(emptyList())
 
         viewModel = SettingsViewModel(
             authRepository = authRepository,
@@ -79,6 +87,7 @@ class SettingsViewModelTest {
             chatRepository = chatRepository,
             hustleCrashlytics = HustleCrashlytics(null),
             appReviewManager = appReviewManager,
+            getMyServicesUseCase = getMyServicesUseCase,
         ).apply {
             ioDispatcher = testDispatcher
         }
@@ -117,12 +126,93 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `onSubscriptionClicked for customer with no services shows education dialog`() =
+        runTest {
+            viewModel.onSubscriptionClicked()
+
+            assertTrue(viewModel.uiState.value.showProviderEducationDialog)
+        }
+
+    @Test
+    fun `onSubscriptionClicked for provider emits NavigateToSubscription directly`() =
+        runTest {
+            every { userPreferences.cachedUser } returns flowOf(User(id = "uid-1", role = UserRole.ROLE_PROVIDER))
+            val providerViewModel = SettingsViewModel(
+                authRepository = authRepository,
+                signOutUseCase = signOutUseCase,
+                deleteAccountUseCase = deleteAccountUseCase,
+                userPreferences = userPreferences,
+                appDatabase = appDatabase,
+                chatRepository = chatRepository,
+                hustleCrashlytics = HustleCrashlytics(null),
+                appReviewManager = appReviewManager,
+                getMyServicesUseCase = getMyServicesUseCase,
+            ).apply {
+                ioDispatcher = testDispatcher
+            }
+
+            val eventDeferred = async { providerViewModel.events.first() }
+            providerViewModel.onSubscriptionClicked()
+
+            assertFalse(providerViewModel.uiState.value.showProviderEducationDialog)
+            assertEquals(SettingsEvent.NavigateToSubscription, eventDeferred.await())
+        }
+
+    @Test
+    fun `onSubscriptionClicked for pro user emits NavigateToSubscription directly`() =
+        runTest {
+            every { userPreferences.isProUser } returns flowOf(true)
+            val proViewModel = SettingsViewModel(
+                authRepository = authRepository,
+                signOutUseCase = signOutUseCase,
+                deleteAccountUseCase = deleteAccountUseCase,
+                userPreferences = userPreferences,
+                appDatabase = appDatabase,
+                chatRepository = chatRepository,
+                hustleCrashlytics = HustleCrashlytics(null),
+                appReviewManager = appReviewManager,
+                getMyServicesUseCase = getMyServicesUseCase,
+            ).apply {
+                ioDispatcher = testDispatcher
+            }
+
+            val eventDeferred = async { proViewModel.events.first() }
+            proViewModel.onSubscriptionClicked()
+
+            assertFalse(proViewModel.uiState.value.showProviderEducationDialog)
+            assertEquals(SettingsEvent.NavigateToSubscription, eventDeferred.await())
+        }
+
+    @Test
+    fun `onContinueToSubscriptionFromDialog dismisses dialog and emits NavigateToSubscription`() =
+        runTest {
+            viewModel.onSubscriptionClicked()
+            assertTrue(viewModel.uiState.value.showProviderEducationDialog)
+
+            val eventDeferred = async { viewModel.events.first() }
+            viewModel.onContinueToSubscriptionFromDialog()
+
+            assertFalse(viewModel.uiState.value.showProviderEducationDialog)
+            assertEquals(SettingsEvent.NavigateToSubscription, eventDeferred.await())
+        }
+
+    @Test
+    fun `onDismissProviderEducationDialog resets dialog visibility`() =
+        runTest {
+            viewModel.onSubscriptionClicked()
+            assertTrue(viewModel.uiState.value.showProviderEducationDialog)
+
+            viewModel.onDismissProviderEducationDialog()
+            assertFalse(viewModel.uiState.value.showProviderEducationDialog)
+        }
+
+    @Test
     fun `onDeleteAccountClicked sets deleteAccountStep to WARNING`() =
         runTest {
             viewModel.onDeleteAccountClicked()
 
             assertEquals(
-                must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.WARNING,
+                DeleteAccountStep.WARNING,
                 viewModel.uiState.value.deleteAccountStep,
             )
             assertTrue(viewModel.uiState.value.showDeleteAccountDialog)
@@ -135,7 +225,7 @@ class SettingsViewModelTest {
             viewModel.onDeleteWarningConfirmed()
 
             assertEquals(
-                must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.PASSWORD_INPUT,
+                DeleteAccountStep.PASSWORD_INPUT,
                 viewModel.uiState.value.deleteAccountStep,
             )
         }
@@ -147,7 +237,7 @@ class SettingsViewModelTest {
             viewModel.onDeleteAccountDismissed()
 
             assertEquals(
-                must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.NONE,
+                DeleteAccountStep.NONE,
                 viewModel.uiState.value.deleteAccountStep,
             )
             assertFalse(viewModel.uiState.value.showDeleteAccountDialog)
@@ -165,7 +255,6 @@ class SettingsViewModelTest {
             coVerify(exactly = 1) { userPreferences.clearUser() }
         }
 
-    // Sprint 5 — Scenario 11: delete account removes all data
     @Test
     fun `onDeleteAccountConfirmed executes DeleteAccountUseCase and emits AccountDeleted`() =
         runTest {
@@ -209,11 +298,10 @@ class SettingsViewModelTest {
             assertEquals(SettingsEvent.AccountDeleted, eventDeferred.await())
         }
 
-    // Sprint 5 — Scenario 7: dark mode toggles and persists
     @Test
     fun `onDarkModeToggled true saves DARK theme to DataStore`() =
         runTest {
-            val themeFlow = kotlinx.coroutines.flow.MutableStateFlow(must.kdroiders.hustlehub.datastore.AppTheme.SYSTEM)
+            val themeFlow = kotlinx.coroutines.flow.MutableStateFlow(AppTheme.SYSTEM)
             every { userPreferences.appTheme } returns themeFlow
             coEvery { userPreferences.saveTheme(any()) } answers {
                 themeFlow.value = firstArg()
@@ -224,11 +312,11 @@ class SettingsViewModelTest {
 
             assertTrue(viewModel.uiState.value.isDarkMode)
             assertEquals(
-                must.kdroiders.hustlehub.datastore.AppTheme.DARK,
+                AppTheme.DARK,
                 viewModel.uiState.value.selectedTheme,
             )
             coVerify(exactly = 1) {
-                userPreferences.saveTheme(must.kdroiders.hustlehub.datastore.AppTheme.DARK)
+                userPreferences.saveTheme(AppTheme.DARK)
             }
         }
 
@@ -245,7 +333,7 @@ class SettingsViewModelTest {
     @Test
     fun `launchReviewFlow delegates to appReviewManager openPlayStorePage`() {
         val mockActivity: android.app.Activity = mockk(relaxed = true)
-        io.mockk.every { appReviewManager.openPlayStorePage(mockActivity) } returns Unit
+        every { appReviewManager.openPlayStorePage(mockActivity) } returns Unit
 
         viewModel.launchReviewFlow(mockActivity)
 

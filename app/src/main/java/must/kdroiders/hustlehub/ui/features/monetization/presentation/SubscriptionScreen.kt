@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -74,6 +75,7 @@ fun SubscriptionScreen(
     onNavigateBack: () -> Unit,
     onNavigateToPaymentStatus: (checkoutRequestId: String) -> Unit,
     serviceId: String? = null,
+    onCreateService: () -> Unit = {},
     viewModel: MonetizationViewModel = hiltViewModel(),
 ) {
     val subscriptionState by viewModel.subscriptionState.collectAsState()
@@ -173,6 +175,41 @@ fun SubscriptionScreen(
                 ComparisonCard()
 
                 if (showPurchase) {
+                    if (userServices.isEmpty() && !hasActivePro) {
+                        HustleCard(variant = HustleCardVariant.Tonal) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.sub_no_services_banner_title),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
+                                Text(
+                                    text = stringResource(R.string.sub_no_services_banner_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                HustleButton(
+                                    text = stringResource(R.string.sub_btn_create_service),
+                                    onClick = onCreateService,
+                                    variant = HustleButtonVariant.Secondary,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+                        }
+                    }
+
                     SectionTitle(
                         text = if (hasActivePro) {
                             stringResource(R.string.sub_section_extend_plan)

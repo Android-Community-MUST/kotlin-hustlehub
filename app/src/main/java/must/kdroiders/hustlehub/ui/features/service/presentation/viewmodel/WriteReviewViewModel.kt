@@ -42,6 +42,7 @@ class WriteReviewViewModel
         private val appReviewManager: AppReviewManager,
     ) : ViewModel() {
         private var serviceId: String? = null
+        private var fetchJob: kotlinx.coroutines.Job? = null
 
         init {
             hustleCrashlytics.setScreen("WriteReviewScreen")
@@ -58,7 +59,21 @@ class WriteReviewViewModel
             initialIsAnonymous: Boolean? = null,
         ) {
             val isSameService = serviceId == id
-            serviceId = id
+            val wasCompleted = _uiState.value.submitSuccess || _uiState.value.deleteSuccess
+
+            if (!isSameService || wasCompleted) {
+                fetchJob?.cancel()
+                serviceId = id
+                _uiState.value = WriteReviewUiState(
+                    isEditMode = reviewId != null,
+                    existingReviewId = reviewId,
+                    rating = initialRating ?: 0,
+                    comment = initialComment ?: "",
+                    isAnonymous = initialIsAnonymous ?: false,
+                )
+                fetchDetails()
+                return
+            }
 
             if (reviewId != null || initialRating != null || initialComment != null || initialIsAnonymous != null) {
                 _uiState.update {
@@ -76,9 +91,16 @@ class WriteReviewViewModel
             fetchDetails()
         }
 
+        fun resetState() {
+            fetchJob?.cancel()
+            serviceId = null
+            _uiState.value = WriteReviewUiState()
+        }
+
         private fun fetchDetails() {
             val id = serviceId ?: return
-            viewModelScope.launch {
+            fetchJob?.cancel()
+            fetchJob = viewModelScope.launch {
                 _uiState.update { it.copy(isLoadingInfo = true, error = null) }
                 getServiceByIdUseCase(id)
                     .onSuccess { service ->

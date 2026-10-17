@@ -362,6 +362,7 @@ class ChatRepositoryImpl
                                 msgDto.authTag,
                             )
                             val entity = msgDto.toRoomEntity()
+                            decryptionCache.remove(entity.id)
                             Timber.tag("CHAT_RECEIVE").d(
                                 "[CHAT_RECEIVE] toRoomEntity: id=%s, isEncrypted=%b, iv=%s, tag=%s, content='%s'",
                                 entity.id,
@@ -371,6 +372,7 @@ class ChatRepositoryImpl
                                 entity.content,
                             )
                             var message = entity.toDecryptedDomain(keyExchangeHandler, cryptoManager)
+                            decryptionCache.put(entity.id, message)
                             if (entity.isEncrypted && message.content == entity.content) {
                                 Timber.tag("CHAT_RECEIVE").w("[CHAT_RECEIVE] Live message %s failed local decryption; force-refreshing peer keys...", msgDto.id)
                                 val cachedConv = conversationDao.getById(conversationId)
@@ -534,13 +536,7 @@ class ChatRepositoryImpl
             withContext(Dispatchers.IO) {
                 runCatching {
                     markMessageDeletedForMe(messageId)
-
-                    runCatching {
-                        conversationApiService.deleteMessageForMe(messageId)
-                    }.onFailure { e ->
-                        if (e is CancellationException) throw e
-                        Timber.w(e, "Remote deleteMessageForMe failed, treating as local-only success")
-                    }
+                    decryptionCache.remove(messageId)
 
                     val cached = messageDao.getById(messageId)
                     messageDao.deleteById(messageId)
@@ -557,9 +553,24 @@ class ChatRepositoryImpl
                                         lastMessageAt = decryptedLatest.timestamp,
                                     ),
                                 )
+                            } else {
+                                conversationDao.upsert(
+                                    conv.copy(
+                                        lastMessage = "",
+                                        lastMessageType = "TEXT",
+                                    ),
+                                )
                             }
                         }
                     }
+
+                    runCatching {
+                        conversationApiService.deleteMessageForMe(messageId)
+                    }.onFailure { e ->
+                        if (e is CancellationException) throw e
+                        Timber.w(e, "Remote deleteMessageForMe failed, treating as local-only success")
+                    }
+
                     Unit
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
@@ -570,13 +581,7 @@ class ChatRepositoryImpl
             withContext(Dispatchers.IO) {
                 runCatching {
                     markMessageDeletedForEveryone(messageId)
-
-                    runCatching {
-                        conversationApiService.deleteMessageForEveryone(messageId)
-                    }.onFailure { e ->
-                        if (e is CancellationException) throw e
-                        Timber.w(e, "Remote deleteMessageForEveryone failed, treating as local-only success")
-                    }
+                    decryptionCache.remove(messageId)
 
                     val cached = messageDao.getById(messageId)
                     if (cached != null) {
@@ -590,13 +595,24 @@ class ChatRepositoryImpl
                         }.getOrElse { JsonObject() }
 
                         metaObj.addProperty("isDeleted", true)
+                        metaObj.remove("encrypted")
+                        metaObj.remove("iv")
+                        metaObj.remove("authTag")
                         val updatedDomain = cached.toDecryptedDomain(keyExchangeHandler, cryptoManager).copy(
                             content = "This message was deleted",
                             mediaUrl = null,
                             thumbnailUrl = null,
                             metadata = gson.toJson(metaObj),
                         )
-                        messageDao.upsert(updatedDomain.toEncryptedEntity(cached.conversationId, keyExchangeHandler, cryptoManager))
+                        decryptionCache.put(messageId, updatedDomain)
+                        messageDao.upsert(
+                            updatedDomain.toEntity(
+                                cachedAt = System.currentTimeMillis(),
+                                isEncrypted = false,
+                                iv = null,
+                                authTag = null,
+                            ),
+                        )
 
                         val conv = conversationDao.getById(cached.conversationId)
                         if (conv != null && conv.lastMessageAt == cached.timestamp) {
@@ -608,6 +624,14 @@ class ChatRepositoryImpl
                             )
                         }
                     }
+
+                    runCatching {
+                        conversationApiService.deleteMessageForEveryone(messageId)
+                    }.onFailure { e ->
+                        if (e is CancellationException) throw e
+                        Timber.w(e, "Remote deleteMessageForEveryone failed, treating as local-only success")
+                    }
+
                     Unit
                 }.onFailure { e ->
                     if (e is CancellationException) throw e
@@ -785,13 +809,36 @@ private fun MessageResponse.toRoomEntity(): MessageEntity {
     var parsedAuthTag: String? = authTag
     var isEncryptedMsg = false
 
+    var isDeletedMsg = content == "This message was deleted"
     if (!metadata.isNullOrBlank()) {
         runCatching {
             val metaObj = gson.fromJson(metadata, JsonObject::class.java)
             if (metaObj.has("iv")) parsedIv = metaObj.get("iv").asString
             if (metaObj.has("authTag")) parsedAuthTag = metaObj.get("authTag").asString
             if (metaObj.has("encrypted")) isEncryptedMsg = metaObj.get("encrypted").asBoolean
+            if (metaObj.has("isDeleted")) isDeletedMsg = isDeletedMsg || metaObj.get("isDeleted").asBoolean
         }
+    }
+
+    if (isDeletedMsg) {
+        return MessageEntity(
+            id = id,
+            conversationId = conversationId,
+            senderId = senderId,
+            type = type,
+            content = "This message was deleted",
+            mediaUrl = null,
+            thumbnailUrl = null,
+            metadata = metadata,
+            timestamp = timestamp,
+            deliveredAt = deliveredAt,
+            readAt = readAt,
+            isSynced = true,
+            isFailed = false,
+            isEncrypted = false,
+            iv = null,
+            authTag = null,
+        )
     }
 
     val ciphertext = encryptedContent ?: if (isEncryptedMsg || !parsedIv.isNullOrBlank()) content else null

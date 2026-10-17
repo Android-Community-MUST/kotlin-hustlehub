@@ -7,6 +7,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -16,6 +17,7 @@ import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
+import must.kdroiders.hustlehub.ui.features.service.data.remote.dto.LocationDto
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
@@ -124,5 +126,100 @@ class CreateServiceViewModelTest {
             assertEquals("150", state.minPrice)
             assertEquals("300", state.maxPrice)
             assertEquals(listOf("salon", "haircut"), state.tags)
+        }
+
+    @Test
+    fun `loadForEdit pre-fills location data from existing service`() =
+        runTest {
+            val existingService = Service(
+                id = "srv-101",
+                title = "Service with Custom Location",
+                category = ServiceCategory.CLEANING,
+                location = LocationDto(
+                    lat = 0.1500,
+                    lng = 37.7500,
+                    label = "West Gate Apartment",
+                ),
+            )
+
+            coEvery { getServiceById("srv-101") } returns Result.success(existingService)
+
+            viewModel.loadForEdit("srv-101")
+
+            val state = viewModel.uiState.value
+            assertEquals(0.1500, state.selectedLat)
+            assertEquals(37.7500, state.selectedLng)
+            assertEquals("West Gate Apartment", state.locationLabel)
+            assertEquals(LocationSelectionMode.MAP_PICKER, state.locationMode)
+        }
+
+    @Test
+    fun `publish with valid data in create mode calls createService and emits Success`() =
+        runTest {
+            val created = Service(id = "srv-new", title = "Valid Title", category = ServiceCategory.TECH)
+            coEvery {
+                serviceRepository.createService(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns Result.success(created)
+
+            var emittedEvent: CreateServiceEvent? = null
+            val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                viewModel.events.collect { emittedEvent = it }
+            }
+
+            viewModel.onTitleChange("Valid Title")
+            viewModel.onCategoryChange(ServiceCategory.TECH)
+            viewModel.onDescriptionChange("Professional tech services")
+            viewModel.onMinPriceChange("200")
+            viewModel.onMaxPriceChange("500")
+
+            viewModel.publish()
+            testScheduler.advanceUntilIdle()
+
+            assertTrue(emittedEvent is CreateServiceEvent.Success)
+            assertEquals("Service created successfully!", (emittedEvent as CreateServiceEvent.Success).message)
+            assertFalse(viewModel.uiState.value.isLoading)
+            assertNull(viewModel.uiState.value.error)
+            job.cancel()
+        }
+
+    @Test
+    fun `publish with invalid data does not trigger network call and sets validation error`() =
+        runTest {
+            viewModel.onTitleChange("") // Blank title
+            viewModel.publish()
+
+            io.mockk.coVerify(exactly = 0) { serviceRepository.createService(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) }
+            assertEquals("Title is required", viewModel.uiState.value.titleError)
+        }
+
+    @Test
+    fun `publish failure sets userFriendly error in uiState`() =
+        runTest {
+            coEvery {
+                serviceRepository.createService(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+            } returns Result.failure(RuntimeException("Network timeout"))
+
+            viewModel.onTitleChange("Valid Title")
+            viewModel.onCategoryChange(ServiceCategory.TECH)
+            viewModel.onDescriptionChange("Professional tech services")
+            viewModel.onMinPriceChange("200")
+            viewModel.onMaxPriceChange("500")
+
+            viewModel.publish()
+
+            assertFalse(viewModel.uiState.value.isLoading)
+            assertEquals("Network timeout", viewModel.uiState.value.error)
         }
 }

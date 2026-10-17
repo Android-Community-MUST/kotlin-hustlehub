@@ -32,7 +32,7 @@ import must.kdroiders.hustlehub.ui.features.service.data.local.entity.ServiceEnt
         MapPinEntity::class,
         BookmarkEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -53,7 +53,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun bookmarkDao(): BookmarkDao
 
     companion object {
-        /** Migration 4 → 5: Add E2EE columns to messages table. */
         val MIGRATION_4_5 =
             object : Migration(4, 5) {
                 override fun migrate(db: SupportSQLiteDatabase) {
@@ -63,7 +62,6 @@ abstract class AppDatabase : RoomDatabase() {
                 }
             }
 
-        /** Migration 5 → 6: Add users, notifications, reviews, and map_pins tables for SSOT caching. */
         val MIGRATION_5_6 =
             object : Migration(5, 6) {
                 override fun migrate(db: SupportSQLiteDatabase) {
@@ -146,7 +144,6 @@ abstract class AppDatabase : RoomDatabase() {
                 }
             }
 
-        /** Migration 6 → 7: Add isArchived column to conversations table for local archiving. */
         val MIGRATION_6_7 =
             object : Migration(6, 7) {
                 override fun migrate(db: SupportSQLiteDatabase) {
@@ -154,7 +151,6 @@ abstract class AppDatabase : RoomDatabase() {
                 }
             }
 
-        /** Migration 7 → 8: Add bookmarks table for saving favorite services. */
         val MIGRATION_7_8 =
             object : Migration(7, 8) {
                 override fun migrate(db: SupportSQLiteDatabase) {
@@ -192,6 +188,12 @@ abstract class AppDatabase : RoomDatabase() {
             object : Migration(10, 11) {
                 override fun migrate(db: SupportSQLiteDatabase) {
                     db.execSQL("ALTER TABLE cached_services ADD COLUMN providerIsVerifiedPro INTEGER NOT NULL DEFAULT 0")
+                }
+            }
+        val MIGRATION_11_12 =
+            object : Migration(11, 12) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE map_pins ADD COLUMN isPro INTEGER NOT NULL DEFAULT 0")
                 }
             }
     }

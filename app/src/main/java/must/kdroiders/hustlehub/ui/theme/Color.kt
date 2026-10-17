@@ -62,13 +62,18 @@ val HustleDarkTertiary = Color(0xFF0097A7)
 val HustleDarkTertiaryContainer = Color(0xFF002B32)
 val HustleDarkOnTertiaryContainer = Color(0xFF80DEEA)
 
-// Badge chip backgrounds
 val HustleBadgeGold = Color(0xFF2E2510)
 val HustleBadgeGreen = Color(0xFF102E1A)
 val HustleBadgeBlue = Color(0xFF101A2E)
 val HustleActiveGreen = Color(0xFF4CAF50)
 val HustleOfflineGray = Color(0xFF6E6E8A)
 val HustleWarningAmber = Color(0xFFFFB300)
+val HustleGoldContainerLight = Color(0xFFFEF3C7)
+val HustleGoldContentLight = Color(0xFFB45309)
+val HustleGoldBorderLight = Color(0xFFF59E0B)
+val HustleGoldContainerDark = Color(0xFF2E2510)
+val HustleGoldContentDark = Color(0xFFFFC107)
+val HustleGoldBorderDark = Color(0xFFFFB300)
 
 // Category neon brand colors
 val CategoryNeonPurple = Color(0xFFB388FF) // SALON

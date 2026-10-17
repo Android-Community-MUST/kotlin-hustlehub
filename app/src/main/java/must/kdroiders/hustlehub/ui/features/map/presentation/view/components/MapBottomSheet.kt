@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.google.android.gms.maps.model.LatLng
 import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.sharedComposables.CompactProBadge
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
@@ -108,7 +109,9 @@ fun BottomSheetContent(
                             color = MaterialTheme.colorScheme.onSurface,
                         ),
                     )
-                    // Availability Dot & Text
+                    if (pin.isPro) {
+                        CompactProBadge(isVisible = true)
+                    }
                     val isAvailable = pin.availability == ServiceAvailability.AVAILABLE
                     Box(
                         modifier = Modifier

@@ -51,6 +51,18 @@ val ColorScheme.chatE2EeBannerContent: Color
     @Composable
     get() = if (LocalIsDarkTheme.current) HustleE2EeBannerContentDark else HustleE2EeBannerContentLight
 
+val ColorScheme.proBadgeContainer: Color
+    @Composable
+    get() = if (LocalIsDarkTheme.current) HustleGoldContainerDark else HustleGoldContainerLight
+
+val ColorScheme.proBadgeContent: Color
+    @Composable
+    get() = if (LocalIsDarkTheme.current) HustleGoldContentDark else HustleGoldContentLight
+
+val ColorScheme.proBadgeBorder: Color
+    @Composable
+    get() = if (LocalIsDarkTheme.current) HustleGoldBorderDark.copy(alpha = 0.5f) else HustleGoldBorderLight.copy(alpha = 0.5f)
+
 private val LightColorScheme = lightColorScheme(
     primary = HustlePrimaryBlue,
     onPrimary = HustleOnPrimary,

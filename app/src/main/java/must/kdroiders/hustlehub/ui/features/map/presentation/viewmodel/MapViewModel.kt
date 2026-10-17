@@ -56,7 +56,6 @@ class MapViewModel
 
         private var isPollingEnabled = true
 
-        // Secondary constructor for testing to prevent infinite loop under TestScope
         constructor(
             getMapPinsUseCase: GetMapPinsUseCase,
             userPreferences: UserPreferences,
@@ -153,6 +152,7 @@ class MapViewModel
 
         fun refreshPins() {
             viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true) }
                 fetchPins()
                 loadNotificationCount()
             }
@@ -175,7 +175,6 @@ class MapViewModel
             val userLoc = currentState.userLocation
             val lat = userLoc?.latitude
             val lng = userLoc?.longitude
-            // Use a 50 km radius when the user location is known to catch campus & nearby providers
             val radius = if (lat != null && lng != null) 50.0 else null
 
             getMapPinsUseCase(
@@ -203,11 +202,6 @@ class MapViewModel
             }
         }
 
-        /**
-         * Haversine formula: computes the great-circle distance (in metres) between two
-         * geographic coordinates. Kept in the ViewModel layer so sorting is testable
-         * without depending on any Android/Compose APIs.
-         */
         internal fun haversineDistance(
             lat1: Double,
             lng1: Double,

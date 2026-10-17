@@ -101,12 +101,12 @@ fun WriteReviewScreen(
     initialRating: Int? = null,
     initialComment: String? = null,
     initialIsAnonymous: Boolean? = null,
-    viewModel: WriteReviewViewModel = hiltViewModel(),
+    writeReviewViewModel: WriteReviewViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
     onSubmitSuccess: () -> Unit = {},
     onNavigateToChat: ((providerId: String, serviceId: String, title: String, category: String, priceRange: String, providerName: String) -> Unit)? = null,
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by writeReviewViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -115,7 +115,7 @@ fun WriteReviewScreen(
     val reviewDeletedMsg = stringResource(R.string.review_deleted_snackbar)
 
     LaunchedEffect(serviceId, reviewId) {
-        viewModel.initialize(
+        writeReviewViewModel.initialize(
             id = serviceId,
             reviewId = reviewId,
             initialRating = initialRating,
@@ -132,8 +132,9 @@ fun WriteReviewScreen(
             snackbarHostState.showSnackbar(msg)
             delay(1200)
             (context as? Activity ?: context.findActivity())?.let { activity ->
-                viewModel.launchReviewIfEligible(activity)
+                writeReviewViewModel.launchReviewIfEligible(activity)
             }
+            writeReviewViewModel.resetState()
             onSubmitSuccess()
         }
     }
@@ -142,6 +143,7 @@ fun WriteReviewScreen(
         if (state.deleteSuccess) {
             snackbarHostState.showSnackbar(reviewDeletedMsg)
             delay(1000)
+            writeReviewViewModel.resetState()
             onBack()
         }
     }
@@ -149,7 +151,7 @@ fun WriteReviewScreen(
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.clearError()
+            writeReviewViewModel.clearError()
         }
     }
 
@@ -174,7 +176,7 @@ fun WriteReviewScreen(
                 TextButton(
                     onClick = {
                         showDeleteDialog = false
-                        viewModel.deleteReview()
+                        writeReviewViewModel.deleteReview()
                     },
                 ) {
                     Text(
@@ -210,7 +212,12 @@ fun WriteReviewScreen(
                     )
                 },
                 navigationIcon = {
-                    HustleBackButton(onClick = onBack)
+                    HustleBackButton(
+                        onClick = {
+                            writeReviewViewModel.resetState()
+                            onBack()
+                        },
+                    )
                 },
                 actions = {
                     if (state.isEditMode) {
@@ -250,7 +257,6 @@ fun WriteReviewScreen(
                 if (state.isLoadingInfo) {
                     CircularWavyProgressIndicator()
                 } else if (state.provider != null && state.service != null) {
-                    // Provider Info Card
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -270,7 +276,6 @@ fun WriteReviewScreen(
                                     .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentScale = ContentScale.Crop,
                             )
-                            // Online indicator (green dot)
                             Box(
                                 modifier = Modifier
                                     .size(14.dp)
@@ -430,7 +435,7 @@ fun WriteReviewScreen(
                     StarRatingBar(
                         rating = state.rating,
                         starSize = 44.dp,
-                        onRatingChanged = viewModel::onRatingChanged,
+                        onRatingChanged = writeReviewViewModel::onRatingChanged,
                         modifier = Modifier.testTag(TestTags.REVIEW_RATING_BAR),
                     )
 
@@ -473,7 +478,7 @@ fun WriteReviewScreen(
 
                     HustleTextField(
                         value = state.comment,
-                        onValueChange = viewModel::onCommentChanged,
+                        onValueChange = writeReviewViewModel::onCommentChanged,
                         placeholder = stringResource(R.string.review_comment_placeholder, providerFirstName),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -521,7 +526,7 @@ fun WriteReviewScreen(
                                         width = 1.dp,
                                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                                         shape = RoundedCornerShape(20.dp),
-                                    ).clickable { viewModel.onTagToggled(tag) }
+                                    ).clickable { writeReviewViewModel.onTagToggled(tag) }
                                     .semantics {
                                         role = Role.Checkbox
                                         selected = isSelected
@@ -544,7 +549,7 @@ fun WriteReviewScreen(
                     ) {
                         Checkbox(
                             checked = state.isAnonymous,
-                            onCheckedChange = viewModel::onAnonymousToggled,
+                            onCheckedChange = writeReviewViewModel::onAnonymousToggled,
                         )
                         Text(
                             text = stringResource(R.string.review_post_anonymously),
@@ -556,7 +561,7 @@ fun WriteReviewScreen(
                     Spacer(Modifier.height(32.dp))
 
                     Button(
-                        onClick = viewModel::submit,
+                        onClick = writeReviewViewModel::submit,
                         enabled = state.canSubmit,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -637,7 +642,6 @@ fun WriteReviewScreen(
                 }
             }
 
-            // Animated Submission Success Overlay
             AnimatedVisibility(
                 visible = state.submitSuccess,
                 enter = fadeIn() + scaleIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)),

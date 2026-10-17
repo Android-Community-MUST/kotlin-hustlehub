@@ -41,6 +41,7 @@
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
     <string name="settings_section_account">ACCOUNT</string>
+    <string name="settings_section_preferences">PREFERENCES</string>
     <string name="settings_section_notifications">NOTIFICATIONS</string>
     <string name="settings_section_privacy">PRIVACY</string>
     <string name="settings_section_appearance">APPEARANCE</string>
@@ -54,6 +55,10 @@
     <string name="settings_not_verified">Not Verified</string>
     <string name="settings_subscription_billing">Subscription &amp; Billing</string>
     <string name="settings_subscription_subtitle">Manage HustleHub Pro</string>
+    <string name="settings_sub_education_title">HustleHub Pro for Providers</string>
+    <string name="settings_sub_education_message">HustleHub Pro is designed to help student service providers get more clients with priority search ranking, highlighted gold map pins, and up to 15 portfolio photos.\n\nWant to start offering your services on campus?</string>
+    <string name="settings_sub_education_create_service">Create a Service</string>
+    <string name="settings_sub_education_continue">Continue to Pro</string>
     <string name="settings_notification_preferences">Notification Preferences</string>
     <string name="settings_privacy_settings">Privacy Settings</string>
     <string name="settings_blocked_users">Blocked Users</string>
@@ -481,6 +486,12 @@
     <string name="service_current_status_label">Current Status</string>
     <string name="service_publishing">Publishing…</string>
     <string name="service_publish_button">Publish Service</string>
+    <string name="service_created_success">Service created successfully!</string>
+    <string name="service_updated_success">Service updated successfully!</string>
+    <string name="service_stage_preparing_images">Preparing photos…</string>
+    <string name="service_stage_uploading_images_format">Uploading photo %1$d of %2$d…</string>
+    <string name="service_stage_saving">Publishing your service…</string>
+    <string name="service_stage_saving_changes">Saving your changes…</string>
     <string name="service_fallback_title">this service</string>
     <string name="service_quick_gallery_title">Quick Gallery</string>
     <string name="service_manage_photos_format">Manage photos for %1$s</string>
@@ -516,6 +527,7 @@
     <string name="map_showing_providers_singular">Showing %1$d provider</string>
     <string name="map_showing_providers_plural">Showing %1$d providers</string>
     <string name="map_cd_reset_compass">Reset Compass to North</string>
+    <string name="map_cd_refresh_pins">Refresh Map Pins</string>
     <string name="map_cd_toggle_type">Toggle Map Type</string>
     <string name="map_cd_zoom_in">Zoom In</string>
     <string name="map_cd_zoom_out">Zoom Out</string>
@@ -823,6 +835,9 @@
     <string name="sub_selected_service">Selected Service</string>
     <string name="sub_featuring_service">Featuring Service</string>
     <string name="sub_no_services_error">You do not have any active services. Please create a service first before boosting it.</string>
+    <string name="sub_no_services_banner_title">Grow your student business</string>
+    <string name="sub_no_services_banner_desc">HustleHub Pro is built for student service providers. You have no active listings yet. Create your first service to take full advantage of Pro visibility.</string>
+    <string name="sub_btn_create_service">Create a Service</string>
     <string name="sub_choose_service_to_boost">Choose service to boost:</string>
     <string name="sub_selected_cd">Selected</string>
     <string name="sub_pay_with_mpesa">Pay with M-Pesa</string>
@@ -844,4 +859,12 @@
     <string name="sub_day_plural">days</string>
     <string name="sub_hour_singular">hour</string>
     <string name="sub_hour_plural">hours</string>
+
+    <string name="pro_banner_title">Boost Your Campus Visibility</string>
+    <string name="pro_banner_desc">Pro providers get priority campus search ranking, up to 15 portfolio photos, and a highlighted map pin.</string>
+    <string name="pro_banner_upgrade_btn">Upgrade to Pro — KES 150/mo</string>
+    <string name="pro_banner_active_title">HustleHub Pro Active</string>
+    <string name="pro_banner_active_desc">Your services enjoy top priority ranking and a verified provider badge on campus.</string>
+    <string name="pro_banner_manage_btn">Manage Subscription</string>
+    <string name="pro_banner_dismiss_cd">Dismiss Pro banner</string>
 </resources>
