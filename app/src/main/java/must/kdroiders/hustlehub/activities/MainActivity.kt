@@ -160,7 +160,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        val uri = intent?.data ?: return
+        val uri = intent?.data ?: run {
+            val deepLinkStr = intent?.getStringExtra("deepLink") ?: intent?.getStringExtra("targetUri")
+            val conversationId = intent?.getStringExtra("conversationId")
+            when {
+                !deepLinkStr.isNullOrBlank() -> android.net.Uri.parse(deepLinkStr)
+                !conversationId.isNullOrBlank() -> android.net.Uri.parse("hustlehub://chat/$conversationId")
+                else -> null
+            }
+        } ?: return
         val scheme = uri.scheme ?: return
         val host = uri.host ?: return
 
