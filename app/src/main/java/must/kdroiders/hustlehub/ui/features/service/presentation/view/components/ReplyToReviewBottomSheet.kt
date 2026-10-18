@@ -25,6 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.R
@@ -63,6 +66,7 @@ fun ReplyToReviewBottomSheet(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.semantics { heading() },
             )
             Spacer(Modifier.height(12.dp))
 
@@ -85,10 +89,14 @@ fun ReplyToReviewBottomSheet(
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
+                        val ratingDescription = stringResource(R.string.review_rated_stars_plural, review.rating)
                         StarRatingBar(
                             rating = review.rating,
                             onRatingChanged = {},
                             starSize = 14.dp,
+                            modifier = Modifier.semantics {
+                                contentDescription = ratingDescription
+                            },
                         )
                     }
                     if (!review.comment.isNullOrBlank()) {
