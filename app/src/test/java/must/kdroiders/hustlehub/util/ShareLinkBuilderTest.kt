@@ -4,7 +4,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ShareLinkBuilderTest {
-
     @Test
     fun `buildProfileShareLink formats profile deep link correctly`() {
         val link = ShareLinkBuilder.buildProfileShareLink("test-uuid-123")
