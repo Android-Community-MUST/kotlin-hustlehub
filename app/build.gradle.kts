@@ -31,8 +31,8 @@ android {
         applicationId = "must.kdroiders.hustlehub"
         minSdk = 24
         targetSdk = 37
-        versionCode = 7
-        versionName = "1.0.3"
+        versionCode = 8
+        versionName = "1.0.4"
 
         testInstrumentationRunner = "must.kdroiders.hustlehub.HiltTestRunner"
         vectorDrawables {
