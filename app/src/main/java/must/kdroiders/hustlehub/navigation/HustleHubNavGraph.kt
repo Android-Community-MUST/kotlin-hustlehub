@@ -196,6 +196,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
         val action = when (target) {
             "profile" -> DeepLinkAction.OpenProviderProfile(id)
             "service" -> DeepLinkAction.OpenServiceDetail(id)
+            "chat" -> DeepLinkAction.OpenChat(id)
             else -> {
                 timber.log.Timber
                     .tag("SHARE_LINK")
