@@ -51,6 +51,11 @@ interface ServiceApiService {
     @GET("services/me")
     suspend fun getMyServices(): ApiResponse<List<ServiceResponse>>
 
+    @GET("services/provider/{providerId}")
+    suspend fun getServicesByProvider(
+        @Path("providerId") providerId: String,
+    ): ApiResponse<List<ServiceResponse>>
+
     @GET("discovery/services")
     suspend fun browseServices(
         @Query("page") page: Int = 0,
