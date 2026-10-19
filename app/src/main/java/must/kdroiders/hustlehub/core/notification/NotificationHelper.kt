@@ -109,6 +109,8 @@ object NotificationHelper {
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 data = Uri.parse("hustlehub://chat/$conversationId")
+                putExtra("conversationId", conversationId)
+                putExtra("deepLink", "hustlehub://chat/$conversationId")
             }
             val pendingIntent = PendingIntent.getActivity(
                 context,

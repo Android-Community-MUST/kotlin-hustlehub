@@ -16,4 +16,9 @@ object ShareLinkBuilder {
         Timber.tag("SHARE_LINK").d("[SHARE_LINK] Built service share link: serviceId=%s -> %s", serviceId, url)
         return url
     }
+
+    fun buildAppInviteLink(): String {
+        Timber.tag("SHARE_LINK").d("[SHARE_LINK] Built app invite link: %s", DEEP_LINK_BASE)
+        return DEEP_LINK_BASE
+    }
 }

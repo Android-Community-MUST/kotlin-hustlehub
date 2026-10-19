@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -70,7 +71,7 @@ fun ReviewItem(
             if (!review.customerAvatarUrl.isNullOrBlank()) {
                 AsyncImage(
                     model = review.customerAvatarUrl,
-                    contentDescription = review.customerName,
+                    contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(40.dp)
@@ -82,7 +83,8 @@ fun ReviewItem(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .clearAndSetSemantics {},
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -112,7 +114,7 @@ fun ReviewItem(
                     if (review.isVerified) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Verified Hustle",
+                            contentDescription = null,
                             tint = HustleSuccess,
                             modifier = Modifier.size(14.dp),
                         )

@@ -135,24 +135,44 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
 
     LaunchedEffect(mainNavigationViewModel) {
         mainNavigationViewModel?.deepLinkEvent?.collect { action ->
+            val currentTop = backstack.lastOrNull()
+            val isAuthOrSplash = currentTop is Splash ||
+                currentTop is Login ||
+                currentTop is SignUp ||
+                currentTop is EmailVerification ||
+                currentTop is Onboarding ||
+                currentTop is ProfileSetup
+            if (isAuthOrSplash) {
+                return@collect
+            }
+
             if (backstack.none { it is MainShell }) {
                 backstack.clear()
                 backstack.add(MainShell)
             }
             when (action) {
                 is DeepLinkAction.OpenChat -> {
-                    val currentTop = backstack.lastOrNull()
-                    if (currentTop is ChatDetail && currentTop.chatId == action.conversationId) return@collect
+                    val top = backstack.lastOrNull()
+                    if (top is ChatDetail && top.chatId == action.conversationId) {
+                        mainNavigationViewModel.consumeReplay()
+                        return@collect
+                    }
                     backstack.add(ChatDetail(chatId = action.conversationId))
                 }
                 is DeepLinkAction.OpenServiceDetail -> {
-                    val currentTop = backstack.lastOrNull()
-                    if (currentTop is ServiceDetail && currentTop.serviceId == action.serviceId) return@collect
+                    val top = backstack.lastOrNull()
+                    if (top is ServiceDetail && top.serviceId == action.serviceId) {
+                        mainNavigationViewModel.consumeReplay()
+                        return@collect
+                    }
                     backstack.add(ServiceDetail(serviceId = action.serviceId))
                 }
                 is DeepLinkAction.OpenProviderProfile -> {
-                    val currentTop = backstack.lastOrNull()
-                    if (currentTop is ProviderProfile && currentTop.providerId == action.providerId) return@collect
+                    val top = backstack.lastOrNull()
+                    if (top is ProviderProfile && top.providerId == action.providerId) {
+                        mainNavigationViewModel.consumeReplay()
+                        return@collect
+                    }
                     backstack.add(ProviderProfile(providerId = action.providerId))
                 }
                 is DeepLinkAction.OpenWriteReview -> {
@@ -172,6 +192,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     }
                 }
             }
+            mainNavigationViewModel.consumeReplay()
         }
     }
 
@@ -196,6 +217,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
         val action = when (target) {
             "profile" -> DeepLinkAction.OpenProviderProfile(id)
             "service" -> DeepLinkAction.OpenServiceDetail(id)
+            "chat" -> DeepLinkAction.OpenChat(id)
             else -> {
                 timber.log.Timber
                     .tag("SHARE_LINK")

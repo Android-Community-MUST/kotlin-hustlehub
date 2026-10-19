@@ -1,7 +1,9 @@
 package must.kdroiders.hustlehub.core.realtime
 
+import androidx.annotation.Keep
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -13,6 +15,11 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.BuildConfig
+import must.kdroiders.hustlehub.core.notification.ActiveConversationTracker
+import must.kdroiders.hustlehub.core.notification.InAppBannerData
+import must.kdroiders.hustlehub.core.notification.InAppBannerManager
+import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
+import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationEntity
 import must.kdroiders.hustlehub.ui.features.service.data.local.dao.ServiceDao
 import okhttp3.OkHttpClient
 import org.hildan.krossbow.stomp.StompClient
@@ -26,12 +33,13 @@ import javax.inject.Singleton
 /**
  * Data class mirroring the backend RealtimeEvent payload.
  */
+@Keep
 data class RealtimeEvent(
-    val eventType: String = "",
-    val entityId: String = "",
-    val userId: String? = null,
-    val timestamp: Long = 0L,
-    val payload: Map<String, Any?>? = null,
+    @SerializedName("eventType") val eventType: String = "",
+    @SerializedName("entityId") val entityId: String = "",
+    @SerializedName("userId") val userId: String? = null,
+    @SerializedName("timestamp") val timestamp: Long = 0L,
+    @SerializedName("payload") val payload: Map<String, Any?>? = null,
 )
 
 /**
@@ -40,7 +48,7 @@ data class RealtimeEvent(
  *
  * Subscriptions:
  *  - /topic/services         – global service mutations (create / update / delete)
- *  - /topic/users/{uid}      – per-user events (profile update, suspension, account deletion)
+ *  - /topic/users/{uid}      – per-user events (profile update, suspension, account deletion, messages)
  *
  * Consumers collect [events] in their ViewModel's viewModelScope.
  */
@@ -51,6 +59,7 @@ class RealtimeSyncManager
         private val okHttpClient: OkHttpClient,
         private val firebaseAuth: FirebaseAuth?,
         private val serviceDao: ServiceDao,
+        private val conversationDao: ConversationDao,
     ) {
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         private val gson = Gson()
@@ -121,10 +130,9 @@ class RealtimeSyncManager
                     stompSession = session
                     Timber.tag("REALTIME").i("Realtime STOMP connected ✓")
 
-                    // Subscribe to global services topic and per-user topic in parallel
                     scope.launch { subscribeToServices(session) }
                     scope.launch { subscribeToUser(session, user.uid) }
-                    return // success — exit retry loop
+                    return
                 } catch (e: Exception) {
                     attempt++
                     Timber.tag("REALTIME").w(e, "Realtime connect failed (attempt $attempt/$MAX_RECONNECT_ATTEMPTS)")
@@ -147,7 +155,6 @@ class RealtimeSyncManager
 
                     Timber.tag("REALTIME").d("Service event: ${event.eventType} id=${event.entityId}")
 
-                    // Update Room cache immediately for delete events
                     when (event.eventType) {
                         "SERVICE_DELETED" -> {
                             runCatching { serviceDao.deleteById(event.entityId) }
@@ -174,6 +181,59 @@ class RealtimeSyncManager
                     }.getOrNull() ?: return@collect
 
                     Timber.tag("REALTIME").d("User event: ${event.eventType} uid=${event.userId}")
+
+                    when (event.eventType) {
+                        "NEW_MESSAGE" -> {
+                            val convId = event.payload?.get("conversationId") as? String ?: event.entityId
+                            if (convId.isNotBlank() && convId != ActiveConversationTracker.activeConversationId) {
+                                val cachedConv = conversationDao.getById(convId)
+                                val senderName = event.payload?.get("senderName") as? String ?: "New message"
+                                val content = event.payload?.get("lastMessage") as? String ?: ""
+                                val senderPhotoUrl = event.payload?.get("senderPhotoUrl") as? String
+                                val senderId = event.payload?.get("senderId") as? String ?: ""
+                                val timestamp = event.payload?.get("timestamp") as? String ?: java.time.Instant
+                                    .now()
+                                    .toString()
+                                val newUnread = (cachedConv?.unreadCount ?: 0) + 1
+
+                                if (cachedConv != null) {
+                                    conversationDao.upsert(
+                                        cachedConv.copy(
+                                            lastMessage = content,
+                                            lastMessageAt = timestamp,
+                                            unreadCount = newUnread,
+                                        ),
+                                    )
+                                } else {
+                                    conversationDao.upsert(
+                                        ConversationEntity(
+                                            id = convId,
+                                            otherUserId = senderId,
+                                            otherUserName = senderName,
+                                            otherUserAvatar = senderPhotoUrl,
+                                            serviceId = null,
+                                            lastMessage = content,
+                                            lastMessageType = "TEXT",
+                                            lastMessageAt = timestamp,
+                                            unreadCount = newUnread,
+                                            createdAt = timestamp,
+                                        ),
+                                    )
+                                }
+
+                                InAppBannerManager.postBanner(
+                                    InAppBannerData(
+                                        title = senderName,
+                                        body = content,
+                                        senderPhotoUrl = senderPhotoUrl,
+                                        conversationId = convId,
+                                        deepLinkUri = "hustlehub://chat/$convId",
+                                    ),
+                                )
+                            }
+                        }
+                    }
+
                     _events.emit(event)
                 }
             } catch (e: Exception) {

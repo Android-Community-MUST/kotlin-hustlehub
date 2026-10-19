@@ -160,7 +160,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        val uri = intent?.data ?: return
+        val uri = intent?.data ?: run {
+            val deepLinkStr = intent?.getStringExtra("deepLink") ?: intent?.getStringExtra("targetUri")
+            val conversationId = intent?.getStringExtra("conversationId")
+            when {
+                !deepLinkStr.isNullOrBlank() -> android.net.Uri.parse(deepLinkStr)
+                !conversationId.isNullOrBlank() -> android.net.Uri.parse("hustlehub://chat/$conversationId")
+                else -> null
+            }
+        } ?: return
         val scheme = uri.scheme ?: return
         val host = uri.host ?: return
 
@@ -190,13 +198,34 @@ class MainActivity : ComponentActivity() {
                 when (host) {
                     "chat" -> {
                         val conversationId = lastSegment ?: uri.getQueryParameter("conversationId")
-                        if (!conversationId.isNullOrBlank()) DeepLinkAction.OpenChat(conversationId) else null
+                        if (!conversationId.isNullOrBlank()) {
+                            lifecycleScope.launch {
+                                userPreferences.savePendingDeepLink("chat", conversationId)
+                            }
+                            DeepLinkAction.OpenChat(conversationId)
+                        } else {
+                            null
+                        }
                     }
                     "service" -> {
-                        if (!lastSegment.isNullOrBlank()) DeepLinkAction.OpenServiceDetail(lastSegment) else null
+                        if (!lastSegment.isNullOrBlank()) {
+                            lifecycleScope.launch {
+                                userPreferences.savePendingDeepLink("service", lastSegment)
+                            }
+                            DeepLinkAction.OpenServiceDetail(lastSegment)
+                        } else {
+                            null
+                        }
                     }
                     "profile" -> {
-                        if (!lastSegment.isNullOrBlank()) DeepLinkAction.OpenProviderProfile(lastSegment) else null
+                        if (!lastSegment.isNullOrBlank()) {
+                            lifecycleScope.launch {
+                                userPreferences.savePendingDeepLink("profile", lastSegment)
+                            }
+                            DeepLinkAction.OpenProviderProfile(lastSegment)
+                        } else {
+                            null
+                        }
                     }
                     "review" -> {
                         val serviceId = lastSegment
@@ -208,7 +237,14 @@ class MainActivity : ComponentActivity() {
                         when {
                             uri.path?.contains("chat") == true -> {
                                 val conversationId = uri.getQueryParameter("conversationId")
-                                if (!conversationId.isNullOrBlank()) DeepLinkAction.OpenChat(conversationId) else null
+                                if (!conversationId.isNullOrBlank()) {
+                                    lifecycleScope.launch {
+                                        userPreferences.savePendingDeepLink("chat", conversationId)
+                                    }
+                                    DeepLinkAction.OpenChat(conversationId)
+                                } else {
+                                    null
+                                }
                             }
                             uri.path?.contains("profile") == true -> DeepLinkAction.OpenProfile
                             uri.path?.contains("inquiries") == true -> DeepLinkAction.OpenChatList

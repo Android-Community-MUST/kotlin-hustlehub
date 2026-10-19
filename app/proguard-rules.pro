@@ -270,6 +270,14 @@
 -dontwarn me.leolin.shortcutbadger.**
 
 # =============================================================================
+# REALTIME & NOTIFICATION CORE MODELS
+# =============================================================================
+-keep class must.kdroiders.hustlehub.core.realtime.** { *; }
+-keepclassmembers class must.kdroiders.hustlehub.core.realtime.** { *; }
+-keep class must.kdroiders.hustlehub.core.notification.** { *; }
+-keepclassmembers class must.kdroiders.hustlehub.core.notification.** { *; }
+
+# =============================================================================
 # TIMBER (Strip Debug & Verbose Logging in Release)
 # =============================================================================
 -dontwarn timber.log.**

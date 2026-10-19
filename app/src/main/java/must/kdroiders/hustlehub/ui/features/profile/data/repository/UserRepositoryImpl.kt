@@ -195,7 +195,11 @@ class UserRepositoryImpl
 
         override suspend fun getServicesByProvider(providerId: String): Result<List<Service>> =
             runCatching {
-                // Uses the browse endpoint filtered by providerId until a dedicated endpoint exists.
+                val directResponse = runCatching { serviceApiService.getServicesByProvider(providerId) }.getOrNull()
+                if (directResponse != null && directResponse.success && directResponse.data != null) {
+                    return@runCatching directResponse.data.map { it.toDomainService() }
+                }
+
                 val response = serviceApiService.browseServices(size = 50)
                 if (response.success && response.data != null) {
                     response.data.content

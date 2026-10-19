@@ -73,6 +73,11 @@
                 <data android:scheme="hustlehub" />
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="must.kdroiders.hustlehub.CHAT_CLICK" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
             <!-- Android App Links: verified HTTPS domain -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />

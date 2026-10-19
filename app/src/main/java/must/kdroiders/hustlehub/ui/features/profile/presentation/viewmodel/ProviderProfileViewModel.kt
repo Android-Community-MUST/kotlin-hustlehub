@@ -3,7 +3,6 @@ package must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,15 +57,12 @@ class ProviderProfileViewModel
 
                 val currentUid = authRepository.getCurrentUser()?.uid
 
-                val profileDeferred = async { getProviderProfileUseCase(id) }
-                val servicesDeferred = async { getServicesByProviderUseCase(id) }
-
-                val profileResult = profileDeferred.await()
-                val servicesResult = servicesDeferred.await()
+                val profileResult = getProviderProfileUseCase(id)
 
                 profileResult
                     .onSuccess { provider ->
-                        val services = servicesResult.getOrElse { emptyList() }
+                        val providerUuid = provider?.uuid?.ifBlank { null } ?: id
+                        val services = getServicesByProviderUseCase(providerUuid).getOrElse { emptyList() }
                         val totalReviews = services.sumOf { it.reviewCount }
                         val avgRating = if (services.isNotEmpty()) services.map { it.averageRating }.average().toFloat() else 0f
 
