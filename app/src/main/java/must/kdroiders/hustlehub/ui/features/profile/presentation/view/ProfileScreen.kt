@@ -92,22 +92,33 @@ fun ProfileScreen(
                             .w("[SHARE_LINK] Profile share clicked but user is null")
                         return@ProfileHeader
                     }
-                    timber.log.Timber
-                        .tag("SHARE_LINK")
-                        .d("[SHARE_LINK] Profile share clicked for userId=%s, name=%s", user.id, user.name)
-                    val shareLink = ShareLinkBuilder.buildProfileShareLink(user.id)
-                    val shareText = resources.getString(
-                        R.string.profile_share_text_format,
-                        user.name,
-                        shareLink,
-                    )
-                    val shareSubject = resources.getString(
-                        R.string.profile_share_subject,
-                        user.name,
-                    )
-                    timber.log.Timber
-                        .tag("SHARE_LINK")
-                        .d("[SHARE_LINK] Launching profile share sheet with link=%s", shareLink)
+                    val isProvider = user.role == UserRole.ROLE_PROVIDER ||
+                        user.role == UserRole.ROLE_BOTH ||
+                        state.services.isNotEmpty()
+
+                    val (shareText, shareSubject, chooserTitle) = if (isProvider) {
+                        val providerIdentifier = user.uuid.ifBlank { user.id }
+                        timber.log.Timber
+                            .tag("SHARE_LINK")
+                            .d("[SHARE_LINK] Profile share clicked for providerId=%s, name=%s", providerIdentifier, user.name)
+                        val shareLink = ShareLinkBuilder.buildProfileShareLink(providerIdentifier)
+                        Triple(
+                            resources.getString(R.string.profile_share_text_format, user.name, shareLink),
+                            resources.getString(R.string.profile_share_subject, user.name),
+                            shareChooserTitle,
+                        )
+                    } else {
+                        val appLink = ShareLinkBuilder.buildAppInviteLink()
+                        timber.log.Timber
+                            .tag("SHARE_LINK")
+                            .d("[SHARE_LINK] App invite share clicked by customer=%s", user.name)
+                        Triple(
+                            resources.getString(R.string.customer_share_text_format, appLink),
+                            resources.getString(R.string.customer_share_subject),
+                            resources.getString(R.string.customer_share_chooser_title),
+                        )
+                    }
+
                     try {
                         context.startActivity(
                             Intent.createChooser(
@@ -116,16 +127,16 @@ fun ProfileScreen(
                                     putExtra(Intent.EXTRA_SUBJECT, shareSubject)
                                     putExtra(Intent.EXTRA_TEXT, shareText)
                                 },
-                                shareChooserTitle,
+                                chooserTitle,
                             ),
                         )
                         timber.log.Timber
                             .tag("SHARE_LINK")
-                            .d("[SHARE_LINK] Profile share chooser launched successfully")
+                            .d("[SHARE_LINK] Share chooser launched successfully")
                     } catch (e: Exception) {
                         timber.log.Timber
                             .tag("SHARE_LINK")
-                            .e(e, "[SHARE_LINK] Failed to launch profile share chooser")
+                            .e(e, "[SHARE_LINK] Failed to launch share chooser")
                     }
                 },
             )
