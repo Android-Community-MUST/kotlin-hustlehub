@@ -19,6 +19,7 @@ data class MapPinEntity(
     val lat: Double,
     val lng: Double,
     val distanceMeters: Double?,
+    val isPro: Boolean = false,
     val cachedAt: Long = System.currentTimeMillis(),
 )
 
@@ -35,6 +36,7 @@ fun MapPinEntity.toDomain(): MapPin =
         lat = lat,
         lng = lng,
         distanceMeters = distanceMeters,
+        isPro = isPro,
     )
 
 fun MapPin.toEntity(cachedAt: Long = System.currentTimeMillis()): MapPinEntity =
@@ -50,5 +52,6 @@ fun MapPin.toEntity(cachedAt: Long = System.currentTimeMillis()): MapPinEntity =
         lat = lat,
         lng = lng,
         distanceMeters = distanceMeters,
+        isPro = isPro,
         cachedAt = cachedAt,
     )

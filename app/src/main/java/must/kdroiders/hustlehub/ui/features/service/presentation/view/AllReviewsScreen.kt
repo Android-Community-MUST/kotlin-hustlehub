@@ -2,6 +2,7 @@ package must.kdroiders.hustlehub.ui.features.service.presentation.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,13 +16,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -29,6 +33,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -62,11 +68,11 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.AllReviewsViewModel
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ReviewSortOption
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AllReviewsScreen(
     serviceId: String,
-    viewModel: AllReviewsViewModel = hiltViewModel(),
+    allReviewsViewModel: AllReviewsViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
     onNavigateToWriteReview: (
         serviceId: String,
@@ -77,19 +83,19 @@ fun AllReviewsScreen(
         initialIsAnonymous: Boolean?,
     ) -> Unit = { _, _, _, _, _, _ -> },
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by allReviewsViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
     var reviewToDelete by remember { mutableStateOf<Review?>(null) }
 
     LaunchedEffect(serviceId) {
-        viewModel.initialize(serviceId)
+        allReviewsViewModel.initialize(serviceId)
     }
 
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.clearError()
+            allReviewsViewModel.clearError()
         }
     }
 
@@ -105,7 +111,7 @@ fun AllReviewsScreen(
 
     LaunchedEffect(shouldLoadMore.value) {
         if (shouldLoadMore.value && state.hasMore && !state.isLoadingMore && !state.isLoading) {
-            viewModel.loadNextPage()
+            allReviewsViewModel.loadNextPage()
         }
     }
 
@@ -142,7 +148,7 @@ fun AllReviewsScreen(
     ) { innerPadding ->
         HustlePullToRefreshBox(
             isRefreshing = state.isRefreshing,
-            onRefresh = viewModel::refresh,
+            onRefresh = allReviewsViewModel::refresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -206,6 +212,8 @@ fun AllReviewsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
+                                .selectableGroup()
                                 .padding(vertical = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -214,11 +222,14 @@ fun AllReviewsScreen(
                                 text = stringResource(R.string.reviews_sort_by),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                softWrap = false,
                             )
                             ReviewSortOption.entries.forEach { option ->
                                 val isSelected = option == state.sortOption
                                 Box(
                                     modifier = Modifier
+                                        .minimumInteractiveComponentSize()
                                         .clip(RoundedCornerShape(20.dp))
                                         .background(
                                             if (isSelected) {
@@ -226,7 +237,7 @@ fun AllReviewsScreen(
                                             } else {
                                                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                             },
-                                        ).clickable { viewModel.onSortOptionSelected(option) }
+                                        ).clickable { allReviewsViewModel.onSortOptionSelected(option) }
                                         .semantics {
                                             role = Role.RadioButton
                                             selected = isSelected
@@ -241,6 +252,8 @@ fun AllReviewsScreen(
                                         } else {
                                             MaterialTheme.colorScheme.onSurfaceVariant
                                         },
+                                        maxLines = 1,
+                                        softWrap = false,
                                     )
                                 }
                             }
@@ -261,7 +274,7 @@ fun AllReviewsScreen(
                             canReply = state.isOwnService,
                             providerName = state.service?.title,
                             isAuthor = isAuthor,
-                            onReplyClick = { viewModel.onReplyClicked(review) },
+                            onReplyClick = { allReviewsViewModel.onReplyClicked(review) },
                             onEditClick = {
                                 onNavigateToWriteReview(
                                     review.serviceId,
@@ -279,16 +292,19 @@ fun AllReviewsScreen(
                     }
 
                     if (state.isLoadingMore) {
-                        item {
+                        item(key = "loading_more") {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(16.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    strokeWidth = 2.dp,
+                                CircularWavyProgressIndicator(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .semantics {
+                                            contentDescription = "Loading more reviews"
+                                        },
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                             }
@@ -322,7 +338,7 @@ fun AllReviewsScreen(
                         val id = reviewToDelete?.id
                         reviewToDelete = null
                         if (id != null) {
-                            viewModel.deleteReview(id)
+                            allReviewsViewModel.deleteReview(id)
                         }
                     },
                 ) {
@@ -345,9 +361,9 @@ fun AllReviewsScreen(
         ReplyToReviewBottomSheet(
             review = review,
             isSubmitting = state.isSubmittingReply,
-            onDismiss = viewModel::onDismissReplyDialog,
+            onDismiss = allReviewsViewModel::onDismissReplyDialog,
             onSubmitReply = { replyText ->
-                viewModel.submitReply(review.id, replyText)
+                allReviewsViewModel.submitReply(review.id, replyText)
             },
         )
     }

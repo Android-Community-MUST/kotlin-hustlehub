@@ -26,7 +26,6 @@ import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** 30-minute cache TTL before cache entries are considered stale. */
 private const val CACHE_TTL_MS = 30 * 60 * 1000L
 
 @Singleton
@@ -335,7 +334,6 @@ class ServiceRepositoryImpl
             }
     }
 
-// DTO → Domain mapper (private to this file)
 private fun ServiceResponse.toDomainModel(): Service =
     Service(
         id = serviceId,
@@ -352,6 +350,7 @@ private fun ServiceResponse.toDomainModel(): Service =
         reviewCount = reviewCount,
         openToBarter = openToBarter,
         isFeatured = isFeatured ?: false,
+        providerIsVerifiedPro = providerIsVerifiedPro ?: false,
         tags = tags ?: emptyList(),
         createdAt = runCatching { Instant.parse(createdAt).toEpochMilli() }.getOrDefault(0L),
         updatedAt = runCatching { Instant.parse(updatedAt).toEpochMilli() }.getOrDefault(0L),

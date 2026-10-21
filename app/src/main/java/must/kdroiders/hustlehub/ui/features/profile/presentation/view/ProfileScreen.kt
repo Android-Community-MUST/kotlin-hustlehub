@@ -30,11 +30,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
+import must.kdroiders.hustlehub.sharedComposables.ErrorView
 import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.HustleButtonVariant
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
@@ -56,10 +58,12 @@ import must.kdroiders.hustlehub.ui.features.profile.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileUiState
 import must.kdroiders.hustlehub.ui.features.profile.presentation.viewmodel.ProfileViewModel
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
+import must.kdroiders.hustlehub.util.ShareLinkBuilder
 
 @Composable
 fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
+    onNavigateToProfileSetup: () -> Unit = {},
     onEditClick: () -> Unit = {},
     onAddNewServiceClick: () -> Unit = {},
     onServiceClick: (serviceId: String) -> Unit = {},
@@ -72,8 +76,7 @@ fun ProfileScreen(
     val state by profileViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    val shareSubject = stringResource(R.string.profile_share_subject)
-    val shareTextFormat = stringResource(R.string.profile_share_text_format)
+    val resources = LocalResources.current
     val shareChooserTitle = stringResource(R.string.profile_share_chooser_title)
     val defaultErrorMsg = stringResource(R.string.error_default_title)
 
@@ -82,16 +85,59 @@ fun ProfileScreen(
             ProfileHeader(
                 onSettingsClick = onSettingsClick,
                 onShareClick = {
-                    val userId = state.user?.id.orEmpty()
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_SUBJECT, shareSubject)
-                        putExtra(
-                            Intent.EXTRA_TEXT,
-                            String.format(shareTextFormat, userId),
+                    val user = state.user
+                    if (user == null) {
+                        timber.log.Timber
+                            .tag("SHARE_LINK")
+                            .w("[SHARE_LINK] Profile share clicked but user is null")
+                        return@ProfileHeader
+                    }
+                    val isProvider = user.role == UserRole.ROLE_PROVIDER ||
+                        user.role == UserRole.ROLE_BOTH ||
+                        state.services.isNotEmpty()
+
+                    val (shareText, shareSubject, chooserTitle) = if (isProvider) {
+                        val providerIdentifier = user.uuid.ifBlank { user.id }
+                        timber.log.Timber
+                            .tag("SHARE_LINK")
+                            .d("[SHARE_LINK] Profile share clicked for providerId=%s, name=%s", providerIdentifier, user.name)
+                        val shareLink = ShareLinkBuilder.buildProfileShareLink(providerIdentifier)
+                        Triple(
+                            resources.getString(R.string.profile_share_text_format, user.name, shareLink),
+                            resources.getString(R.string.profile_share_subject, user.name),
+                            shareChooserTitle,
+                        )
+                    } else {
+                        val appLink = ShareLinkBuilder.buildAppInviteLink()
+                        timber.log.Timber
+                            .tag("SHARE_LINK")
+                            .d("[SHARE_LINK] App invite share clicked by customer=%s", user.name)
+                        Triple(
+                            resources.getString(R.string.customer_share_text_format, appLink),
+                            resources.getString(R.string.customer_share_subject),
+                            resources.getString(R.string.customer_share_chooser_title),
                         )
                     }
-                    context.startActivity(Intent.createChooser(shareIntent, shareChooserTitle))
+
+                    try {
+                        context.startActivity(
+                            Intent.createChooser(
+                                Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_SUBJECT, shareSubject)
+                                    putExtra(Intent.EXTRA_TEXT, shareText)
+                                },
+                                chooserTitle,
+                            ),
+                        )
+                        timber.log.Timber
+                            .tag("SHARE_LINK")
+                            .d("[SHARE_LINK] Share chooser launched successfully")
+                    } catch (e: Exception) {
+                        timber.log.Timber
+                            .tag("SHARE_LINK")
+                            .e(e, "[SHARE_LINK] Failed to launch share chooser")
+                    }
                 },
             )
         },
@@ -103,6 +149,12 @@ fun ProfileScreen(
         Box(modifier = Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding())) {
             when {
                 state.isLoading && !state.isRefreshing -> LoadingState()
+                state.needsProfileSetup -> ErrorView(
+                    title = stringResource(R.string.profile_incomplete_title),
+                    message = stringResource(R.string.profile_incomplete_message),
+                    actionText = stringResource(R.string.profile_incomplete_action),
+                    onRetry = onNavigateToProfileSetup,
+                )
                 state.error != null -> ErrorState(
                     message = state.error ?: defaultErrorMsg,
                     onRetry = profileViewModel::retry,
@@ -194,11 +246,13 @@ private fun ProfileContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = horizontalPadding),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     HustleButton(
                         text = stringResource(R.string.profile_edit_button),
                         icon = Icons.Default.Edit,
+                        iconSize = 18.dp,
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                         variant = HustleButtonVariant.Secondary,
                         onClick = onEditClick,
                         modifier = Modifier.weight(1f),
@@ -206,6 +260,8 @@ private fun ProfileContent(
                     HustleButton(
                         text = stringResource(R.string.action_add_service),
                         icon = Icons.Default.Add,
+                        iconSize = 18.dp,
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                         variant = HustleButtonVariant.Primary,
                         onClick = onAddNewServiceClick,
                         modifier = Modifier.weight(1f),

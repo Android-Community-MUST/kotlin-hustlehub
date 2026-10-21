@@ -178,6 +178,7 @@ fun MainShellScreen(
                 }
                 entry<BottomProfile> {
                     ProfileScreen(
+                        onNavigateToProfileSetup = onNavigateToProfileSetup,
                         onEditClick = onNavigateToEditProfile,
                         onAddNewServiceClick = onNavigateToCreateService,
                         onServiceClick = onNavigateToEditService,

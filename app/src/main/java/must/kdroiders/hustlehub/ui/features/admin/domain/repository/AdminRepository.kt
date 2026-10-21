@@ -50,7 +50,7 @@ interface AdminRepository {
         reason: String,
     ): Result<Unit>
     suspend fun getAuditLogs(
-        targetType: String,
-        targetId: String,
+        targetType: String? = null,
+        targetId: String? = null,
     ): Result<List<AdminAuditLogItem>>
 }

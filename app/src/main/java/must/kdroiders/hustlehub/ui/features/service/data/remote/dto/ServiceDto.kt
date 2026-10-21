@@ -29,6 +29,8 @@ data class ServiceResponse(
     val openToBarter: Boolean,
     @SerializedName("isFeatured", alternate = ["featured", "is_featured"])
     val isFeatured: Boolean? = false,
+    @SerializedName("providerIsVerifiedPro", alternate = ["isVerifiedPro", "providerPro", "is_verified_pro"])
+    val providerIsVerifiedPro: Boolean? = false,
     @SerializedName("tags")
     val tags: List<String>?,
     @SerializedName("location")

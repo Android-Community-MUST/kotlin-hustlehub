@@ -2,8 +2,12 @@ package must.kdroiders.hustlehub.ui.features.profile.data.repository
 
 import android.content.Context
 import android.net.Uri
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.tasks.await
 import must.kdroiders.hustlehub.core.utils.ImageCompressor
+import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.AuthApiService
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.RegisterRequest
 import must.kdroiders.hustlehub.ui.features.auth.data.remote.UserResponseDto
@@ -47,6 +51,8 @@ class UserRepositoryImpl
         private val mediaApiService: MediaApiService,
         private val serviceApiService: ServiceApiService,
         private val userDao: UserDao,
+        private val userPreferences: UserPreferences? = null,
+        private val firebaseAuth: FirebaseAuth? = null,
     ) : UserRepository {
         override suspend fun uploadProfilePhoto(
             userId: String,
@@ -84,21 +90,51 @@ class UserRepositoryImpl
                 )
                 val response = authApiService.register(request)
                 if (response.success && response.data != null) {
-                    response.data.toDomain()
+                    val savedUser = response.data.toDomain()
+                    syncLocalUserState(savedUser)
+                    savedUser
                 } else {
                     throw Exception(response.message)
                 }
             }.recoverCatching { e ->
                 if (e is retrofit2.HttpException) {
+                    val errorBody = runCatching { e.response()?.errorBody()?.string() }.getOrNull()
+                    Timber.w(e, "UserRepositoryImpl: register endpoint returned HTTP %d: %s", e.code(), errorBody)
+
+                    val serverMessage = errorBody?.let { body ->
+                        Regex("\"message\"\\s*:\\s*\"([^\"]+)\"").find(body)?.groupValues?.get(1)
+                    }
+
                     when (e.code()) {
-                        // 409 Conflict = user already exists → treat as success
+                        // 409 Conflict: User already exists on backend, update existing record
                         409 -> {
-                            Timber.d("UserRepositoryImpl: user already registered (HTTP 409) — treating as success")
-                            user
+                            Timber.d("UserRepositoryImpl: attempting profile update via PUT users/me for user: %s", user.id)
+                            val updateResult = updateProfile(
+                                name = user.name,
+                                bio = user.bio,
+                                phone = user.phone,
+                                campusLocation = user.campusLocation,
+                                avatarUrl = user.profilePhotoUrl.takeIf { it.isNotBlank() },
+                                allowCalls = user.allowCalls,
+                            )
+                            if (updateResult.isSuccess) {
+                                val updated = updateResult.getOrThrow()
+                                syncLocalUserState(updated)
+                                updated
+                            } else {
+                                val updateErr = updateResult.exceptionOrNull()
+                                Timber.e(updateErr, "UserRepositoryImpl: updateProfile fallback also failed")
+                                throw updateErr ?: Exception(serverMessage ?: "Failed to update profile")
+                            }
                         }
                         else -> {
-                            Timber.e(e, "UserRepositoryImpl: failed to save profile (HTTP ${e.code()})")
-                            throw e
+                            val failureException = if (!serverMessage.isNullOrBlank()) {
+                                Exception(serverMessage)
+                            } else {
+                                e
+                            }
+                            Timber.e(failureException, "UserRepositoryImpl: failed to save profile (HTTP ${e.code()})")
+                            throw failureException
                         }
                     }
                 } else {
@@ -112,20 +148,33 @@ class UserRepositoryImpl
                 val response = userApiService.getMe()
                 if (response.success && response.data != null) {
                     val user = response.data.toDomain()
-                    userDao.upsert(user.toEntity())
+                    syncLocalUserState(user)
                     user
                 } else {
-                    userDao.getUserById(userId)?.toDomain()
+                    val localUser = userDao.getUserById(userId)?.toDomain()
+                    localUser?.let { syncLocalUserState(it) }
+                    localUser
                 }
             }.recoverCatching { e ->
-                Timber.w(e, "UserRepositoryImpl: network miss, checking Room cache for user: %s", userId)
-                userDao.getUserById(userId)?.toDomain() ?: throw e
+                // Do NOT fall back to Room for auth errors — these must propagate so the
+                // splash screen correctly routes the user to ProfileSetup or Login.
+                if (e is retrofit2.HttpException && (e.code() == 404 || e.code() == 403 || e.code() == 401)) {
+                    Timber.w(e, "UserRepositoryImpl: HTTP ${e.code()} for user profile — not falling back to cache")
+                    throw e
+                }
+                Timber.w(e, "UserRepositoryImpl: transient network miss, checking Room cache for user: %s", userId)
+                val localUser = userDao.getUserById(userId)?.toDomain()
+                localUser?.let { syncLocalUserState(it) }
+                localUser ?: throw e
             }
 
         override suspend fun hasUserProfile(userId: String): Result<Boolean> =
             runCatching {
                 val response = userApiService.getMe()
-                response.success && response.data != null
+                response.success &&
+                    response.data != null &&
+                    !response.data.campusLocation.isNullOrBlank() &&
+                    !response.data.phone.isNullOrBlank()
             }.recoverCatching { e ->
                 if (e is retrofit2.HttpException && (e.code() == 403 || e.code() == 404)) {
                     Timber.d("UserRepositoryImpl: no backend profile found (HTTP ${e.code()}) — assuming new user")
@@ -146,7 +195,11 @@ class UserRepositoryImpl
 
         override suspend fun getServicesByProvider(providerId: String): Result<List<Service>> =
             runCatching {
-                // Uses the browse endpoint filtered by providerId until a dedicated endpoint exists.
+                val directResponse = runCatching { serviceApiService.getServicesByProvider(providerId) }.getOrNull()
+                if (directResponse != null && directResponse.success && directResponse.data != null) {
+                    return@runCatching directResponse.data.map { it.toDomainService() }
+                }
+
                 val response = serviceApiService.browseServices(size = 50)
                 if (response.success && response.data != null) {
                     response.data.content
@@ -172,19 +225,50 @@ class UserRepositoryImpl
                     name = name,
                     bio = bio.takeIf { it.isNotBlank() },
                     avatarUrl = avatarUrl,
-                    phone = phone.takeIf { it.isNotBlank() },
-                    campusLocation = campusLocation.takeIf { it.isNotBlank() },
+                    // Always send phone and campusLocation — even if blank — so the backend
+                    // always stores them. Using takeIf{isNotBlank} caused null to be sent
+                    // when fields were empty, which the backend silently skipped.
+                    phone = phone.ifBlank { null },
+                    campusLocation = campusLocation.ifBlank { null },
                     allowCalls = allowCalls,
                 )
                 val response = userApiService.updateMe(request)
                 if (response.success && response.data != null) {
-                    response.data.toDomain()
+                    val updatedUser = response.data.toDomain()
+                    syncLocalUserState(updatedUser)
+                    updatedUser
                 } else {
                     throw Exception(response.message)
                 }
             }.onFailure { e ->
                 Timber.e(e, "UserRepositoryImpl: failed to update profile")
             }
+
+        private suspend fun syncLocalUserState(user: User) {
+            runCatching {
+                userDao.upsert(user.toEntity())
+            }.onFailure { Timber.w(it, "UserRepositoryImpl: failed to upsert user to Room") }
+
+            runCatching {
+                userPreferences?.writeUser(user)
+            }.onFailure { Timber.w(it, "UserRepositoryImpl: failed to write user to DataStore") }
+
+            runCatching {
+                val currentUser = firebaseAuth?.currentUser
+                if (currentUser != null && user.name.isNotBlank()) {
+                    val profileUpdates = UserProfileChangeRequest
+                        .Builder()
+                        .setDisplayName(user.name)
+                        .apply {
+                            if (user.profilePhotoUrl.isNotBlank()) {
+                                setPhotoUri(Uri.parse(user.profilePhotoUrl))
+                            }
+                        }.build()
+                    currentUser.updateProfile(profileUpdates).await()
+                    Timber.d("UserRepositoryImpl: synced display name '%s' to Firebase Auth", user.name)
+                }
+            }.onFailure { Timber.w(it, "UserRepositoryImpl: failed to sync profile to Firebase Auth") }
+        }
 
         override suspend fun updateFcmToken(token: String): Result<Unit> =
             runCatching {
@@ -281,7 +365,12 @@ class UserRepositoryImpl
             runCatching {
                 val response = userApiService.deleteMe()
                 if (!response.isSuccessful) {
-                    throw Exception("Failed to delete account on backend: code ${response.code()}")
+                    val errorBody = runCatching { response.errorBody()?.string() }.getOrNull()
+                    Timber.e("UserRepositoryImpl: deleteMe failed with HTTP %d: %s", response.code(), errorBody)
+                    val serverMessage = errorBody?.let { body ->
+                        Regex("\"message\"\\s*:\\s*\"([^\"]+)\"").find(body)?.groupValues?.get(1)
+                    }
+                    throw Exception(serverMessage ?: "Failed to delete account on backend: code ${response.code()}")
                 }
             }.onFailure { e ->
                 Timber.e(e, "UserRepositoryImpl: failed to delete user account on backend")

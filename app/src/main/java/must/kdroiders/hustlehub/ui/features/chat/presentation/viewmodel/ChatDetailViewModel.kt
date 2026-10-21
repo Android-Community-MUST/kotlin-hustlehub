@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
@@ -200,11 +201,21 @@ class ChatDetailViewModel
 
                 // 1. Resolve conversation ID FIRST (the input could be a conversation ID or a provider/user ID)
                 val cached = withContext(ioDispatcher) { conversationDao.getById(conversationId) }
+                var resolvedTargetUserId: String = conversationId
                 val resolvedId = if (cached != null) {
                     conversationId
                 } else {
+                    val isUuid = conversationId.matches(Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"))
+                    val targetUserId = if (isUuid) {
+                        conversationId
+                    } else {
+                        val profile = userRepository.getProviderProfile(conversationId).getOrNull()
+                        profile?.uuid?.ifBlank { null } ?: conversationId
+                    }
+                    resolvedTargetUserId = targetUserId
+
                     val result = chatRepository.getOrCreateConversation(
-                        otherUserId = conversationId,
+                        otherUserId = targetUserId,
                         serviceId = serviceId,
                     )
                     result.fold(
@@ -252,7 +263,7 @@ class ChatDetailViewModel
                     }
                     _uiState.update {
                         it.copy(
-                            otherUserId = conversationId,
+                            otherUserId = resolvedTargetUserId,
                             otherUserName = providerName ?: "User",
                             otherUserAvatar = null,
                             isCurrentUserProvider = isProvider,
@@ -262,7 +273,7 @@ class ChatDetailViewModel
 
                 val otherUid = finalCached?.otherUserId
                     ?: _uiState.value.otherUserId.takeIf { it.isNotBlank() }
-                    ?: if (resolvedId != conversationId) conversationId else null
+                    ?: if (resolvedId != conversationId) resolvedTargetUserId else null
 
                 // 3. Initiate E2EE key exchange AFTER resolving real conversation ID and other user ID
                 val secretKey = keyExchangeHandler.ensureKeysExchanged(resolvedId, otherUid)
@@ -464,6 +475,9 @@ class ChatDetailViewModel
         }
 
         fun deleteMessageForMe(messageId: String) {
+            _uiState.update { state ->
+                state.copy(messages = state.messages.filterNot { it.id == messageId })
+            }
             viewModelScope.launch {
                 chatRepository
                     .deleteMessageForMe(messageId)
@@ -474,6 +488,31 @@ class ChatDetailViewModel
         }
 
         fun deleteMessageForEveryone(messageId: String) {
+            val gson = Gson()
+            _uiState.update { state ->
+                state.copy(
+                    messages = state.messages.map { msg ->
+                        if (msg.id == messageId) {
+                            val metaObj = runCatching {
+                                if (!msg.metadata.isNullOrBlank()) {
+                                    gson.fromJson(msg.metadata, JsonObject::class.java)
+                                } else {
+                                    JsonObject()
+                                }
+                            }.getOrElse { JsonObject() }
+                            metaObj.addProperty("isDeleted", true)
+                            msg.copy(
+                                content = "This message was deleted",
+                                mediaUrl = null,
+                                thumbnailUrl = null,
+                                metadata = gson.toJson(metaObj),
+                            )
+                        } else {
+                            msg
+                        }
+                    },
+                )
+            }
             viewModelScope.launch {
                 chatRepository
                     .deleteMessageForEveryone(messageId)

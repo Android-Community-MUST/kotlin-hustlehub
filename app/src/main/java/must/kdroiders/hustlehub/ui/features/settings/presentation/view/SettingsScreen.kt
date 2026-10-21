@@ -1,7 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.settings.presentation.view
 
 import android.app.Activity
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -19,17 +18,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -44,9 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -57,6 +53,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.core.review.findActivity
@@ -72,9 +69,9 @@ import must.kdroiders.hustlehub.ui.features.settings.presentation.components.Set
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsGroup
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsRowNavigate
 import must.kdroiders.hustlehub.ui.features.settings.presentation.components.SettingsSectionLabel
+import must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep
 import must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.SettingsEvent
 import must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.SettingsViewModel
-import must.kdroiders.hustlehub.ui.theme.HustleActiveGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,17 +84,14 @@ fun SettingsScreen(
     onNavigateToBlockedUsers: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
     onNavigateToHelp: () -> Unit = {},
+    onNavigateToCreateService: () -> Unit = {},
     onAccountDeleted: () -> Unit = onBack,
     settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by settingsViewModel.uiState.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val featureComingSoonToast = stringResource(R.string.toast_feature_coming_soon)
-    var showLicensesDialog by remember { mutableStateOf(false) }
-    var showVersionDialog by remember { mutableStateOf(false) }
 
-    // Consume navigation events
     LaunchedEffect(Unit) {
         settingsViewModel.events.collect { event ->
             when (event) {
@@ -114,26 +108,22 @@ fun SettingsScreen(
                 is SettingsEvent.NavigateToEditProfile -> onNavigateToEditProfile()
                 is SettingsEvent.NavigateToPrivacy -> onNavigateToPrivacy()
                 is SettingsEvent.NavigateToBlockedUsers -> onNavigateToBlockedUsers()
+                is SettingsEvent.NavigateToSubscription -> onNavigateToSubscription()
                 is SettingsEvent.NavigateToHelp,
                 is SettingsEvent.NavigateToTerms,
                 is SettingsEvent.NavigateToPrivacyPolicy,
                 is SettingsEvent.NavigateToContactUs,
                 is SettingsEvent.NavigateToReport,
                 -> onNavigateToHelp()
-                is SettingsEvent.NavigateToLicenses -> showLicensesDialog = true
                 is SettingsEvent.TriggerRateApp -> {
                     (context as? Activity ?: context.findActivity())?.let { activity ->
                         settingsViewModel.launchReviewFlow(activity)
                     }
                 }
-                else -> {
-                    Toast.makeText(context, featureComingSoonToast, Toast.LENGTH_SHORT).show()
-                }
             }
         }
     }
 
-    // Theme selection dialog
     if (state.showThemeDialog) {
         AlertDialog(
             onDismissRequest = settingsViewModel::onThemeDismissed,
@@ -173,9 +163,42 @@ fun SettingsScreen(
         )
     }
 
-    // Delete Account 2-Step Confirmation Dialog
+    if (state.showProviderEducationDialog) {
+        AlertDialog(
+            onDismissRequest = settingsViewModel::onDismissProviderEducationDialog,
+            title = { Text(stringResource(R.string.settings_sub_education_title)) },
+            text = {
+                Text(
+                    text = stringResource(R.string.settings_sub_education_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        settingsViewModel.onDismissProviderEducationDialog()
+                        onNavigateToCreateService()
+                    },
+                ) {
+                    Text(stringResource(R.string.settings_sub_education_create_service))
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = settingsViewModel::onDismissProviderEducationDialog) {
+                        Text(stringResource(R.string.action_cancel))
+                    }
+                    Spacer(Modifier.width(4.dp))
+                    TextButton(onClick = settingsViewModel::onContinueToSubscriptionFromDialog) {
+                        Text(stringResource(R.string.settings_sub_education_continue))
+                    }
+                }
+            },
+        )
+    }
+
     when (state.deleteAccountStep) {
-        must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.WARNING -> {
+        DeleteAccountStep.WARNING -> {
             AlertDialog(
                 onDismissRequest = settingsViewModel::onDeleteAccountDismissed,
                 title = { Text(stringResource(R.string.settings_delete_account_title)) },
@@ -190,7 +213,7 @@ fun SettingsScreen(
                         Text(
                             stringResource(R.string.action_continue),
                             color = MaterialTheme.colorScheme.error,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            fontWeight = FontWeight.Bold,
                         )
                     }
                 },
@@ -202,7 +225,7 @@ fun SettingsScreen(
             )
         }
 
-        must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.PASSWORD_INPUT -> {
+        DeleteAccountStep.PASSWORD_INPUT -> {
             AlertDialog(
                 onDismissRequest = settingsViewModel::onDeleteAccountDismissed,
                 title = { Text(stringResource(R.string.settings_delete_confirm_password_title)) },
@@ -227,9 +250,9 @@ fun SettingsScreen(
                     }
                 },
                 confirmButton = {
-                    androidx.compose.material3.Button(
+                    Button(
                         onClick = settingsViewModel::onDeleteAccountConfirmed,
-                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error,
                         ),
                     ) {
@@ -244,12 +267,11 @@ fun SettingsScreen(
             )
         }
 
-        must.kdroiders.hustlehub.ui.features.settings.presentation.viewmodel.DeleteAccountStep.NONE -> {}
+        DeleteAccountStep.NONE -> {}
     }
 
-    // Loading overlay during deletion
     if (state.isDeletingAccount) {
-        androidx.compose.ui.window.Dialog(onDismissRequest = {}) {
+        Dialog(onDismissRequest = {}) {
             Box(
                 modifier = Modifier
                     .background(
@@ -260,7 +282,7 @@ fun SettingsScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    androidx.compose.material3.CircularWavyProgressIndicator(
+                    CircularWavyProgressIndicator(
                         modifier = Modifier.size(44.dp),
                         color = MaterialTheme.colorScheme.error,
                     )
@@ -268,109 +290,11 @@ fun SettingsScreen(
                     Text(
                         text = stringResource(R.string.settings_deleting_account_progress),
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                        fontWeight = FontWeight.Medium,
                     )
                 }
             }
         }
-    }
-
-    // Open Source Licenses dialog
-    if (showLicensesDialog) {
-        AlertDialog(
-            onDismissRequest = { showLicensesDialog = false },
-            title = { Text(stringResource(R.string.settings_licenses_dialog_title)) },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .padding(vertical = 4.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.settings_licenses_dialog_subtitle),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    val libraries = listOf(
-                        "AndroidX & Jetpack Compose" to "Apache License 2.0",
-                        "Kotlin & Coroutines" to "Apache License 2.0",
-                        "Hilt / Dagger" to "Apache License 2.0",
-                        "Firebase Android SDK" to "Apache License 2.0",
-                        "Room Database" to "Apache License 2.0",
-                        "Retrofit & OkHttp" to "Apache License 2.0",
-                        "Coil" to "Apache License 2.0",
-                        "Timber" to "Apache License 2.0",
-                    )
-                    libraries.forEach { (lib, license) ->
-                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                            Text(
-                                text = lib,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            Text(
-                                text = license,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showLicensesDialog = false }) {
-                    Text(stringResource(R.string.action_close))
-                }
-            },
-        )
-    }
-
-    // App Version Info dialog
-    if (showVersionDialog) {
-        AlertDialog(
-            onDismissRequest = { showVersionDialog = false },
-            title = { Text(stringResource(R.string.settings_about_dialog_title)) },
-            text = {
-                Column {
-                    Text(
-                        text = stringResource(R.string.settings_about_dialog_subtitle),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.settings_about_version_format, state.appVersion),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = stringResource(R.string.settings_about_build_format, state.buildNumber),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.settings_about_status),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = HustleActiveGreen,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Spacer(Modifier.height(14.dp))
-                    Text(
-                        text = stringResource(R.string.settings_about_copyright),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showVersionDialog = false }) {
-                    Text(stringResource(R.string.action_ok))
-                }
-            },
-        )
     }
 
     HustleScaffold(
@@ -405,7 +329,6 @@ fun SettingsScreen(
         ) {
             Spacer(Modifier.height(16.dp))
 
-            // Profile identity card
             ProfileIdentityCard(
                 displayName = state.displayName,
                 username = state.username,
@@ -414,7 +337,6 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(28.dp))
 
-            // ACCOUNT section
             SettingsSectionLabel(stringResource(R.string.settings_section_account))
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
@@ -431,27 +353,29 @@ fun SettingsScreen(
                 )
                 SettingsDivider()
                 SettingsRowNavigate(
-                    icon = Icons.Default.VerifiedUser,
-                    label = stringResource(R.string.settings_verify_student_id),
-                    subtitle = if (state.isVerified) stringResource(R.string.settings_verified_student) else stringResource(R.string.settings_not_verified),
-                    subtitleColor = if (state.isVerified) HustleActiveGreen else MaterialTheme.colorScheme.error,
-                    onClick = settingsViewModel::onVerificationClicked,
-                )
-                SettingsDivider()
-                SettingsRowNavigate(
                     icon = Icons.Default.Star,
                     label = stringResource(R.string.settings_subscription_billing),
                     subtitle = stringResource(R.string.settings_subscription_subtitle),
-                    onClick = onNavigateToSubscription,
+                    onClick = settingsViewModel::onSubscriptionClicked,
                 )
             }
 
             Spacer(Modifier.height(24.dp))
 
-            // NOTIFICATIONS section
-            SettingsSectionLabel(stringResource(R.string.settings_section_notifications))
+            SettingsSectionLabel(stringResource(R.string.settings_section_preferences))
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
+                SettingsRowNavigate(
+                    icon = Icons.Default.DarkMode,
+                    label = stringResource(R.string.settings_theme),
+                    trailing = when (state.selectedTheme) {
+                        AppTheme.SYSTEM -> stringResource(R.string.settings_theme_system)
+                        AppTheme.LIGHT -> stringResource(R.string.settings_theme_light)
+                        AppTheme.DARK -> stringResource(R.string.settings_theme_dark)
+                    },
+                    onClick = settingsViewModel::onThemeClicked,
+                )
+                SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.Notifications,
                     label = stringResource(R.string.settings_notification_preferences),
@@ -461,7 +385,6 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // PRIVACY section
             SettingsSectionLabel(stringResource(R.string.settings_section_privacy))
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
@@ -480,32 +403,6 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // APPEARANCE section
-            SettingsSectionLabel(stringResource(R.string.settings_section_appearance))
-            Spacer(Modifier.height(8.dp))
-            SettingsGroup {
-                SettingsRowNavigate(
-                    icon = Icons.Default.DarkMode,
-                    label = stringResource(R.string.settings_theme),
-                    trailing = when (state.selectedTheme) {
-                        AppTheme.SYSTEM -> stringResource(R.string.settings_theme_system)
-                        AppTheme.LIGHT -> stringResource(R.string.settings_theme_light)
-                        AppTheme.DARK -> stringResource(R.string.settings_theme_dark)
-                    },
-                    onClick = settingsViewModel::onThemeClicked,
-                )
-                SettingsDivider()
-                SettingsRowNavigate(
-                    icon = Icons.Default.Language,
-                    label = stringResource(R.string.settings_language),
-                    trailing = state.selectedLanguage,
-                    onClick = settingsViewModel::onLanguageClicked,
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            // SUPPORT & LEGAL section
             SettingsSectionLabel(stringResource(R.string.settings_section_support_legal))
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
@@ -515,20 +412,6 @@ fun SettingsScreen(
                     subtitle = stringResource(R.string.settings_help_faq_subtitle),
                     onClick = settingsViewModel::onHelpCenterClicked,
                 )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            // ABOUT section
-            SettingsSectionLabel(stringResource(R.string.settings_section_about))
-            Spacer(Modifier.height(8.dp))
-            SettingsGroup {
-                SettingsRowNavigate(
-                    icon = Icons.Default.Info,
-                    label = stringResource(R.string.settings_app_version),
-                    trailing = stringResource(R.string.version_prefix_format, state.appVersion),
-                    onClick = { showVersionDialog = true },
-                )
                 SettingsDivider()
                 SettingsRowNavigate(
                     icon = Icons.Default.Star,
@@ -536,17 +419,10 @@ fun SettingsScreen(
                     subtitle = stringResource(R.string.settings_rate_app_subtitle),
                     onClick = settingsViewModel::onRateAppClicked,
                 )
-                SettingsDivider()
-                SettingsRowNavigate(
-                    icon = Icons.Default.Code,
-                    label = stringResource(R.string.settings_open_source_licenses),
-                    onClick = settingsViewModel::onLicensesClicked,
-                )
             }
 
             Spacer(Modifier.height(32.dp))
 
-            // Log Out button (destructive red)
             LogOutButton(
                 isLoading = state.isLoggingOut,
                 onClick = settingsViewModel::onLogOutClicked,
@@ -554,7 +430,6 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // Delete Account button (destructive outlined HustleButton)
             HustleButton(
                 text = stringResource(R.string.settings_delete_account_title),
                 onClick = settingsViewModel::onDeleteAccountClicked,
@@ -566,7 +441,6 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // App version footer
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center,

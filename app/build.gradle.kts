@@ -31,8 +31,8 @@ android {
         applicationId = "must.kdroiders.hustlehub"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 8
+        versionName = "1.0.4"
 
         testInstrumentationRunner = "must.kdroiders.hustlehub.HiltTestRunner"
         vectorDrawables {
@@ -238,4 +238,7 @@ dependencies {
     // Google Play In-App Review
     implementation(libs.play.review)
     implementation(libs.play.review.ktx)
+
+    // Google Play Install Referrer — deferred deep linking
+    implementation("com.android.installreferrer:installreferrer:2.2")
 }

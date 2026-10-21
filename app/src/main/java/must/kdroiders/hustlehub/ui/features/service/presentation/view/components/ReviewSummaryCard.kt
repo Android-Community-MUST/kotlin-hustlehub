@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.R
@@ -48,9 +51,14 @@ fun ReviewSummaryCard(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         // Left side: Large Rating
+        val summaryDescription = "Average rating %.1f out of 5 stars, %d reviews".format(averageRating, totalReviews)
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.weight(0.4f),
+            modifier = Modifier
+                .weight(0.4f)
+                .semantics(mergeDescendants = true) {
+                    contentDescription = summaryDescription
+                },
         ) {
             Text(
                 text = "%.1f".format(averageRating),
@@ -76,16 +84,22 @@ fun ReviewSummaryCard(
         ) {
             // 5 stars to 1 star
             for (stars in 5 downTo 1) {
-                val ratio = if (totalReviews == 0) 0f else distribution[stars - 1] / totalReviews.toFloat()
+                val count = if (stars - 1 in distribution.indices) distribution[stars - 1] else 0
+                val ratio = if (totalReviews == 0) 0f else count / totalReviews.toFloat()
+                val barDescription = "$stars stars, $count reviews"
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics(mergeDescendants = true) {
+                            contentDescription = barDescription
+                        },
                 ) {
                     Text(
                         text = "$stars",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.width(12.dp),
+                        modifier = Modifier.widthIn(min = 14.dp),
                     )
                     Spacer(Modifier.width(8.dp))
                     Box(

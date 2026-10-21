@@ -21,16 +21,21 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import must.kdroiders.hustlehub.R
+import must.kdroiders.hustlehub.sharedComposables.ServiceImagePlaceholder
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
 
 @Composable
@@ -43,11 +48,13 @@ fun SearchServiceRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp, horizontal = 16.dp),
+            .clickable(
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.chat_view_service),
+                onClick = onClick,
+            ).padding(vertical = 12.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Thumbnail image
         Box(
             modifier = Modifier
                 .size(64.dp)
@@ -58,20 +65,24 @@ fun SearchServiceRow(
             if (imageUrl.isNotBlank()) {
                 AsyncImage(
                     model = imageUrl,
-                    contentDescription = service.title,
+                    contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                ServiceImagePlaceholder(
+                    category = service.category,
+                    modifier = Modifier.fillMaxSize(),
+                    iconSize = 28.dp,
                 )
             }
         }
 
         Spacer(Modifier.width(16.dp))
 
-        // Center content
         Column(
             modifier = Modifier.weight(1f),
         ) {
-            // Title
             Text(
                 text = service.title,
                 style = MaterialTheme.typography.titleMedium,
@@ -83,8 +94,6 @@ fun SearchServiceRow(
 
             Spacer(Modifier.height(4.dp))
 
-            // Subtitle
-            // Use the first tag or "Provider" if tags are empty. We could also pass provider name if available.
             val subtitleText = service.tags.firstOrNull() ?: "Independent Provider"
             Text(
                 text = subtitleText,
@@ -96,7 +105,6 @@ fun SearchServiceRow(
 
             Spacer(Modifier.height(8.dp))
 
-            // Rating + review count
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Star,
@@ -120,13 +128,11 @@ fun SearchServiceRow(
 
         Spacer(Modifier.width(8.dp))
 
-        // Right content
         Column(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.height(64.dp), // Match image height to push components apart
+            modifier = Modifier.height(64.dp),
         ) {
-            // Price range
             Text(
                 text = service.priceRange,
                 style = MaterialTheme.typography.labelMedium,
@@ -136,13 +142,16 @@ fun SearchServiceRow(
 
             Spacer(Modifier.weight(1f))
 
-            // Chat Button
             Row(
                 modifier = Modifier
+                    .minimumInteractiveComponentSize()
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                    .clickable(onClick = onChatClick)
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = stringResource(R.string.chat_messages_title),
+                        onClick = onChatClick,
+                    ).padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {

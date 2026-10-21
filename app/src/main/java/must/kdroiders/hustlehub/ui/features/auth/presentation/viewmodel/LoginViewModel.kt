@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import must.kdroiders.hustlehub.core.api.userFriendlyMessage
-import must.kdroiders.hustlehub.core.auth.AdminAuthUtils
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.auth.domain.usecase.CheckUserProfileUseCase
@@ -99,6 +98,9 @@ class LoginViewModel
                     profilePhotoUrl = firebaseUser.photoUrl?.toString() ?: "",
                 )
                 userPreferences.writeUser(userToSave)
+                if (userToSave.role == UserRole.ROLE_PROVIDER || userToSave.role == UserRole.ROLE_BOTH) {
+                    userPreferences.dismissProviderBanner()
+                }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to persist user to DataStore after login")
             }
@@ -131,7 +133,7 @@ class LoginViewModel
                     password = _uiState.value.password,
                 ).fold(
                     onSuccess = { result ->
-                        val isVerified = result.isEmailVerified || AdminAuthUtils.isAuthorizedAdmin(result.user.email)
+                        val isVerified = result.isEmailVerified
                         if (isVerified) {
                             val hasProfile = hasProfile(result.user)
                             persistUser(result.user)

@@ -17,6 +17,7 @@ data class MapPin(
     val lat: Double,
     val lng: Double,
     val distanceMeters: Double? = null,
+    val isPro: Boolean = false,
 ) : ClusterItem {
     override val position: LatLng
         get() = LatLng(lat, lng)
@@ -25,5 +26,5 @@ data class MapPin(
     override val snippet: String
         get() = providerName
     override val zIndex: Float?
-        get() = null
+        get() = if (isPro) 100f else 0f
 }

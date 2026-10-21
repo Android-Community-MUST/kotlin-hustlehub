@@ -1,5 +1,6 @@
 package must.kdroiders.hustlehub.ui.features.service.presentation.view
 
+import android.content.Intent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -30,6 +31,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.MoreVert
@@ -37,6 +39,7 @@ import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -65,11 +68,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -88,6 +94,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustleButton
 import must.kdroiders.hustlehub.sharedComposables.LoadingIndicator
 import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
 import must.kdroiders.hustlehub.sharedComposables.SectionHeader
+import must.kdroiders.hustlehub.sharedComposables.ServiceImagePlaceholder
 import must.kdroiders.hustlehub.sharedComposables.ServiceProviderBadge
 import must.kdroiders.hustlehub.ui.features.report.presentation.ReportDialog
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.AvailabilityBadge
@@ -98,6 +105,7 @@ import must.kdroiders.hustlehub.ui.features.service.presentation.view.components
 import must.kdroiders.hustlehub.ui.features.service.presentation.view.components.ReviewSummaryCard
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailUiState
 import must.kdroiders.hustlehub.ui.features.service.presentation.viewmodel.ServiceDetailViewModel
+import must.kdroiders.hustlehub.util.ShareLinkBuilder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -216,10 +224,10 @@ fun ServiceDetailScreen(
                     onNavigateToWriteReview = onNavigateToWriteReview,
                     onNavigateToAllReviews = onNavigateToAllReviews,
                     onNavigateToChat = onNavigateToChat,
+                    onNavigateToEditService = onNavigateToEditService,
                 )
             }
 
-            // Top Action Buttons overlaid on image
             if (!state.isLoading && state.error == null) {
                 Column(
                     modifier = Modifier
@@ -237,23 +245,69 @@ fun ServiceDetailScreen(
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        // Back Button
                         HustleBackButton(
                             onClick = onBack,
                             style = HustleBackButtonStyle.Overlay(),
                         )
 
-                        // Share, Bookmark and More
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            val shareComingSoonMsg = stringResource(R.string.service_share_coming_soon)
-                            val bookmarkSavedMsg = stringResource(R.string.bookmark_saved)
-                            val bookmarkRemovedMsg = stringResource(R.string.bookmark_removed)
-
+                            val context = LocalContext.current
+                            val resources = LocalResources.current
+                            val shareChooserTitle = stringResource(R.string.service_share_chooser_title)
                             IconButton(
-                                onClick = { scope.launch { snackbarHostState.showSnackbar(shareComingSoonMsg) } },
+                                onClick = {
+                                    val service = state.service
+                                    if (service == null) {
+                                        timber.log.Timber
+                                            .tag("SHARE_LINK")
+                                            .w("[SHARE_LINK] Share clicked but service is null")
+                                        return@IconButton
+                                    }
+                                    timber.log.Timber
+                                        .tag("SHARE_LINK")
+                                        .d("[SHARE_LINK] Share clicked for serviceId=%s, title=%s", service.id, service.title)
+                                    val providerName = state.provider?.name
+                                    val shareLink = ShareLinkBuilder.buildServiceShareLink(service.id)
+                                    val shareText = if (!providerName.isNullOrBlank()) {
+                                        resources.getString(
+                                            R.string.service_share_text_with_provider,
+                                            service.title,
+                                            providerName,
+                                            shareLink,
+                                        )
+                                    } else {
+                                        resources.getString(
+                                            R.string.service_share_text,
+                                            service.title,
+                                            shareLink,
+                                        )
+                                    }
+                                    timber.log.Timber
+                                        .tag("SHARE_LINK")
+                                        .d("[SHARE_LINK] Launching share sheet with link=%s", shareLink)
+                                    try {
+                                        context.startActivity(
+                                            Intent.createChooser(
+                                                Intent(Intent.ACTION_SEND).apply {
+                                                    type = "text/plain"
+                                                    putExtra(Intent.EXTRA_SUBJECT, service.title)
+                                                    putExtra(Intent.EXTRA_TEXT, shareText)
+                                                },
+                                                shareChooserTitle,
+                                            ),
+                                        )
+                                        timber.log.Timber
+                                            .tag("SHARE_LINK")
+                                            .d("[SHARE_LINK] Share chooser launched successfully")
+                                    } catch (e: Exception) {
+                                        timber.log.Timber
+                                            .tag("SHARE_LINK")
+                                            .e(e, "[SHARE_LINK] Failed to launch share chooser")
+                                    }
+                                },
                                 modifier = Modifier
                                     .size(44.dp)
                                     .clip(CircleShape)
@@ -371,6 +425,7 @@ private fun ServiceDetailContent(
         servicePriceRange: String,
         providerName: String,
     ) -> Unit,
+    onNavigateToEditService: (serviceId: String) -> Unit = {},
 ) {
     val service = state.service ?: return
     val provider = state.provider
@@ -380,7 +435,6 @@ private fun ServiceDetailContent(
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        // Hero Image Header
         item(key = "hero_image") {
             Box(
                 modifier = Modifier
@@ -388,6 +442,14 @@ private fun ServiceDetailContent(
                     .height(350.dp)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             ) {
+                val sharedModifier = LocalSharedTransitionScope.current?.run {
+                    @OptIn(ExperimentalSharedTransitionApi::class)
+                    Modifier.sharedElement(
+                        rememberSharedContentState(key = "service_image_${service.id}"),
+                        animatedVisibilityScope = LocalNavAnimatedContentScope.current,
+                    )
+                } ?: Modifier
+
                 if (service.portfolio.isNotEmpty()) {
                     val pagerState = rememberPagerState(pageCount = { service.portfolio.size })
 
@@ -395,17 +457,7 @@ private fun ServiceDetailContent(
                         state = pagerState,
                         modifier = Modifier.fillMaxSize(),
                     ) { page ->
-                        val sharedModifier = if (page == 0) {
-                            LocalSharedTransitionScope.current?.run {
-                                @OptIn(ExperimentalSharedTransitionApi::class)
-                                Modifier.sharedElement(
-                                    rememberSharedContentState(key = "service_image_${service.id}"),
-                                    animatedVisibilityScope = LocalNavAnimatedContentScope.current,
-                                )
-                            } ?: Modifier
-                        } else {
-                            Modifier
-                        }
+                        val pageModifier = if (page == 0) sharedModifier else Modifier
 
                         AsyncImage(
                             model = service.portfolio[page],
@@ -413,17 +465,16 @@ private fun ServiceDetailContent(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .then(sharedModifier)
+                                .then(pageModifier)
                                 .clickable { onImageClick(page) },
                         )
                     }
 
-                    // Pager Indicators
                     if (service.portfolio.size > 1) {
                         Row(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
-                                .padding(bottom = 32.dp), // Padding to keep above the curved bottom
+                                .padding(bottom = 32.dp),
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             repeat(service.portfolio.size) { iteration ->
@@ -448,11 +499,21 @@ private fun ServiceDetailContent(
                         model = service.iconUrl,
                         contentDescription = stringResource(R.string.cd_service_hero_image),
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(sharedModifier),
+                    )
+                } else {
+                    ServiceImagePlaceholder(
+                        category = service.category,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(sharedModifier),
+                        iconSize = 72.dp,
+                        contentDescription = stringResource(R.string.cd_service_hero_image),
                     )
                 }
 
-                // Curved shape at the bottom to create a bottom-sheet effect
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -464,7 +525,6 @@ private fun ServiceDetailContent(
             }
         }
 
-        // Title and Header Badges
         item(key = "header_info") {
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                 Row(
@@ -482,6 +542,7 @@ private fun ServiceDetailContent(
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.semantics { heading() },
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -503,7 +564,6 @@ private fun ServiceDetailContent(
             }
         }
 
-        // Provider Card
         item(key = "provider_card") {
             Row(
                 modifier = Modifier
@@ -518,7 +578,6 @@ private fun ServiceDetailContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                // Avatar with Verified badge
                 Box(contentAlignment = Alignment.BottomEnd) {
                     AsyncImage(
                         model = provider?.profilePhotoUrl,
@@ -562,7 +621,6 @@ private fun ServiceDetailContent(
                     }
                 }
 
-                // Mini stats block
                 Column(horizontalAlignment = Alignment.End) {
                     Row(
                         modifier = Modifier
@@ -594,7 +652,6 @@ private fun ServiceDetailContent(
             }
         }
 
-        // About section
         if (service.description.isNotBlank()) {
             item(key = "about_section") {
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
@@ -610,7 +667,6 @@ private fun ServiceDetailContent(
             }
         }
 
-        // Portfolio
         if (service.portfolio.isNotEmpty()) {
             item(key = "portfolio_section") {
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
@@ -626,9 +682,71 @@ private fun ServiceDetailContent(
                     )
                 }
             }
+        } else if (state.isOwnService) {
+            item(key = "portfolio_empty_owner") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                            RoundedCornerShape(20.dp),
+                        ).padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.PhotoLibrary,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(26.dp),
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.service_portfolio_empty_owner_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = stringResource(R.string.service_portfolio_empty_owner_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    OutlinedButton(
+                        onClick = { onNavigateToEditService(service.id) },
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.service_portfolio_add_photos),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
         }
 
-        // Reviews section
         item(key = "reviews_section") {
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                 Row(

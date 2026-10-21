@@ -11,13 +11,14 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-    <!-- Notifications (FCM) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
 
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-feature
@@ -70,6 +71,34 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="hustlehub" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="must.kdroiders.hustlehub.CHAT_CLICK" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <!-- Android App Links: verified HTTPS domain -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="hustlehub-8367.web.app"
+                    android:pathPrefix="/profile" />
+                <data
+                    android:scheme="https"
+                    android:host="hustlehub-8367.web.app"
+                    android:pathPrefix="/service" />
+                <data
+                    android:scheme="https"
+                    android:host="hustlehub-8367.firebaseapp.com"
+                    android:pathPrefix="/profile" />
+                <data
+                    android:scheme="https"
+                    android:host="hustlehub-8367.firebaseapp.com"
+                    android:pathPrefix="/service" />
             </intent-filter>
         </activity>
 

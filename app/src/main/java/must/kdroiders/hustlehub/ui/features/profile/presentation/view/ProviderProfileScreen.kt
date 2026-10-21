@@ -74,7 +74,7 @@ fun ProviderProfileScreen(
     providerId: String,
     providerProfileViewModel: ProviderProfileViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
-    onNavigateToChat: (providerId: String) -> Unit = {},
+    onNavigateToChat: (providerId: String, providerName: String?) -> Unit = { _, _ -> },
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToMyServices: () -> Unit = {},
     onNavigateToServiceDetail: (serviceId: String) -> Unit = {},
@@ -186,17 +186,19 @@ fun ProviderProfileScreen(
                         if (state.isOwnProfile) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 HustleButton(
                                     text = stringResource(R.string.profile_edit_button),
                                     variant = HustleButtonVariant.Secondary,
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                                     onClick = onNavigateToEditProfile,
                                     modifier = Modifier.weight(1f),
                                 )
                                 HustleButton(
                                     text = stringResource(R.string.action_manage_services),
                                     variant = HustleButtonVariant.Primary,
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                                     onClick = onNavigateToMyServices,
                                     modifier = Modifier.weight(1f),
                                 )
@@ -208,12 +210,14 @@ fun ProviderProfileScreen(
                             if (canCall) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
                                     HustleButton(
                                         text = stringResource(R.string.action_call),
                                         variant = HustleButtonVariant.Secondary,
                                         icon = Icons.Default.Call,
+                                        iconSize = 18.dp,
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                                         onClick = {
                                             val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${provider.phone}"))
                                             context.startActivity(intent)
@@ -223,8 +227,10 @@ fun ProviderProfileScreen(
                                     HustleButton(
                                         text = stringResource(R.string.action_message),
                                         variant = HustleButtonVariant.Primary,
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                                         onClick = {
-                                            onNavigateToChat(provider.id)
+                                            val targetId = provider.uuid.ifBlank { provider.id }
+                                            onNavigateToChat(targetId, provider.name)
                                         },
                                         modifier = Modifier.weight(1f),
                                     )
@@ -233,7 +239,11 @@ fun ProviderProfileScreen(
                                 HustleButton(
                                     text = stringResource(R.string.action_message),
                                     onClick = {
-                                        state.provider?.id?.let { onNavigateToChat(it) }
+                                        val p = state.provider
+                                        val targetId = p?.uuid?.ifBlank { p.id }
+                                        if (!targetId.isNullOrBlank()) {
+                                            onNavigateToChat(targetId, p.name)
+                                        }
                                     },
                                     modifier = Modifier.fillMaxWidth(),
                                 )

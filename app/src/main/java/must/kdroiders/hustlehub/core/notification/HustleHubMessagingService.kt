@@ -137,17 +137,34 @@ class HustleHubMessagingService : FirebaseMessagingService() {
                         val payloadUnread = remoteMessage.data["unreadCount"]?.toIntOrNull()
                         val newUnread = payloadUnread ?: ((cachedConv?.unreadCount ?: 0) + 1)
 
+                        val msgTimestamp = remoteMessage.data["timestamp"]
+                            ?: remoteMessage.data["createdAt"]
+                            ?: java.time.Instant
+                                .now()
+                                .toString()
+
                         if (cachedConv != null) {
-                            val msgTimestamp = remoteMessage.data["timestamp"]
-                                ?: remoteMessage.data["createdAt"]
-                                ?: java.time.Instant
-                                    .now()
-                                    .toString()
                             conversationDao.upsert(
                                 cachedConv.copy(
                                     lastMessage = content,
                                     lastMessageAt = msgTimestamp,
                                     unreadCount = newUnread,
+                                ),
+                            )
+                        } else {
+                            conversationDao.upsert(
+                                must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationEntity(
+                                    id = conversationId,
+                                    otherUserId = remoteMessage.data["senderId"] ?: remoteMessage.data["otherUserId"] ?: "",
+                                    otherUserName = senderName,
+                                    otherUserAvatar = remoteMessage.data["senderPhotoUrl"],
+                                    serviceId = remoteMessage.data["serviceId"],
+                                    lastMessage = content,
+                                    lastMessageType = "TEXT",
+                                    lastMessageAt = msgTimestamp,
+                                    unreadCount = newUnread,
+                                    createdAt = msgTimestamp,
+                                    isArchived = false,
                                 ),
                             )
                         }

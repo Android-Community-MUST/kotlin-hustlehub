@@ -17,26 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Celebration
-import androidx.compose.material.icons.filled.Checkroom
-import androidx.compose.material.icons.filled.CleaningServices
-import androidx.compose.material.icons.filled.Computer
-import androidx.compose.material.icons.filled.ContentCut
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.LocalGasStation
-import androidx.compose.material.icons.filled.LocalMall
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Print
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.ShoppingBag
-import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material.icons.filled.TwoWheeler
-import androidx.compose.material.icons.filled.Weekend
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,32 +34,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import must.kdroiders.hustlehub.sharedComposables.CompactProBadge
 import must.kdroiders.hustlehub.ui.features.map.domain.model.MapPin
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceCategory
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonAmber
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonBlue
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonBrightCyan
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonCoral
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonCyan
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonDefault
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonGreen
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonIndigo
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonLime
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonMint
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonOrange
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonPink
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonPurple
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonRose
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonTeal
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonViolet
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonWarmAmber
-import must.kdroiders.hustlehub.ui.theme.CategoryNeonYellow
 import kotlin.math.*
 
 @Composable
 fun ProviderMarkerContent(pin: MapPin) {
     val (icon, neonColor) = getCategoryIconAndColor(pin.category)
     val baseColor = neonColor
+
+    val proGoldColor = Color(0xFFFFB300)
+    val outerBorderColor = if (pin.isPro) proGoldColor.copy(alpha = 0.55f) else neonColor.copy(alpha = 0.35f)
+    val innerBorderColor = if (pin.isPro) proGoldColor else neonColor
+    val outerBorderWidth = if (pin.isPro) 4.dp else 3.dp
 
     val pillBgColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
     val titleTextColor = MaterialTheme.colorScheme.onSurface
@@ -88,30 +57,28 @@ fun ProviderMarkerContent(pin: MapPin) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(IntrinsicSize.Max),
     ) {
-        // Pill Layout with Glowing Neon Outer Halo
         Row(
             modifier = Modifier
                 .border(
-                    width = 3.dp,
-                    color = neonColor.copy(alpha = 0.35f),
+                    width = outerBorderWidth,
+                    color = outerBorderColor,
                     shape = RoundedCornerShape(26.dp),
                 ).background(
                     color = pillBgColor,
                     shape = RoundedCornerShape(24.dp),
                 ).border(
                     width = 1.5.dp,
-                    color = neonColor,
+                    color = innerBorderColor,
                     shape = RoundedCornerShape(24.dp),
                 ).padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Icon Badge
             Box(
                 modifier = Modifier
                     .size(24.dp)
                     .background(
-                        color = baseColor.copy(alpha = 0.25f),
+                        color = (if (pin.isPro) proGoldColor else baseColor).copy(alpha = 0.25f),
                         shape = CircleShape,
                     ),
                 contentAlignment = Alignment.Center,
@@ -119,23 +86,30 @@ fun ProviderMarkerContent(pin: MapPin) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = neonColor,
+                    tint = if (pin.isPro) proGoldColor else neonColor,
                     modifier = Modifier.size(14.dp),
                 )
             }
 
-            // Info Column
             Column(
                 verticalArrangement = Arrangement.Center,
             ) {
-                Text(
-                    text = pin.providerName,
-                    color = titleTextColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    softWrap = false,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = pin.providerName,
+                        color = titleTextColor,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                    )
+                    if (pin.isPro) {
+                        CompactProBadge(isVisible = true)
+                    }
+                }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -167,7 +141,6 @@ fun ProviderMarkerContent(pin: MapPin) {
             }
         }
 
-        // Pointer Triangle — downward caret below the pill
         Box(
             modifier = Modifier
                 .offset(y = (-2).dp)
@@ -176,35 +149,15 @@ fun ProviderMarkerContent(pin: MapPin) {
                 .background(pillBgColor)
                 .border(
                     width = 1.5.dp,
-                    color = neonColor,
+                    color = innerBorderColor,
                 ),
         )
     }
 }
 
-@Composable
 fun getCategoryIconAndColor(category: ServiceCategory): Pair<androidx.compose.ui.graphics.vector.ImageVector, Color> {
-    return when (category) {
-        ServiceCategory.TECH -> Icons.Default.Computer to CategoryNeonBrightCyan
-        ServiceCategory.PRINTING -> Icons.Default.Print to CategoryNeonIndigo
-        ServiceCategory.DESIGN -> Icons.Default.Palette to CategoryNeonViolet
-        ServiceCategory.TUTORING -> Icons.Default.School to CategoryNeonGreen
-        ServiceCategory.PHOTOGRAPHY -> Icons.Default.PhotoCamera to CategoryNeonPink
-        ServiceCategory.RENTALS -> Icons.Default.DirectionsCar to CategoryNeonTeal
-        ServiceCategory.GAS_CYLINDER -> Icons.Default.LocalGasStation to CategoryNeonOrange
-        ServiceCategory.FOOD -> Icons.Default.Restaurant to CategoryNeonAmber
-        ServiceCategory.TUCK_SHOP -> Icons.Default.Storefront to CategoryNeonWarmAmber
-        ServiceCategory.DELIVERY -> Icons.Default.TwoWheeler to CategoryNeonYellow
-        ServiceCategory.SALON -> Icons.Default.ContentCut to CategoryNeonPurple
-        ServiceCategory.BEAUTY -> Icons.Default.Spa to CategoryNeonRose
-        ServiceCategory.FASHION -> Icons.Default.Checkroom to CategoryNeonBlue
-        ServiceCategory.DECOR -> Icons.Default.Weekend to CategoryNeonGreen
-        ServiceCategory.CLEANING -> Icons.Default.CleaningServices to CategoryNeonMint
-        ServiceCategory.LAUNDRY -> Icons.Default.LocalMall to CategoryNeonCyan
-        ServiceCategory.MARKETPLACE -> Icons.Default.ShoppingBag to CategoryNeonCoral
-        ServiceCategory.EVENTS -> Icons.Default.Celebration to CategoryNeonLime
-        else -> Icons.Default.Place to CategoryNeonDefault
-    }
+    return must.kdroiders.hustlehub.sharedComposables
+        .getCategoryIconAndColor(category)
 }
 
 @Composable
@@ -254,7 +207,7 @@ fun calculateDistanceMeters(
     lat2: Double,
     lng2: Double,
 ): Double {
-    val r = 6371000.0 // Earth's radius in meters
+    val r = 6371000.0
     val dLat = Math.toRadians(lat2 - lat1)
     val dLng = Math.toRadians(lng2 - lng1)
     val a = sin(dLat / 2).pow(2) +

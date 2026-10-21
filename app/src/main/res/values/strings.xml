@@ -41,6 +41,7 @@
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
     <string name="settings_section_account">ACCOUNT</string>
+    <string name="settings_section_preferences">PREFERENCES</string>
     <string name="settings_section_notifications">NOTIFICATIONS</string>
     <string name="settings_section_privacy">PRIVACY</string>
     <string name="settings_section_appearance">APPEARANCE</string>
@@ -54,6 +55,10 @@
     <string name="settings_not_verified">Not Verified</string>
     <string name="settings_subscription_billing">Subscription &amp; Billing</string>
     <string name="settings_subscription_subtitle">Manage HustleHub Pro</string>
+    <string name="settings_sub_education_title">HustleHub Pro for Providers</string>
+    <string name="settings_sub_education_message">HustleHub Pro is designed to help student service providers get more clients with priority search ranking, highlighted gold map pins, and up to 15 portfolio photos.\n\nWant to start offering your services on campus?</string>
+    <string name="settings_sub_education_create_service">Create a Service</string>
+    <string name="settings_sub_education_continue">Continue to Pro</string>
     <string name="settings_notification_preferences">Notification Preferences</string>
     <string name="settings_privacy_settings">Privacy Settings</string>
     <string name="settings_blocked_users">Blocked Users</string>
@@ -117,7 +122,7 @@
 
     <!-- Services FAQs -->
     <string name="faq_qs_manage_service">How do I edit or delete a service?</string>
-    <string name="faq_ans_manage_service">Go to Profile → My Services, tap the service you want to manage, then choose Edit or Delete from the options.</string>
+    <string name="faq_ans_manage_service">Go to Profile -> My Services, tap the service you want to manage, then choose Edit or Delete from the options.</string>
     <string name="faq_qs_service_removed">Why was my service removed?</string>
     <string name="faq_ans_service_removed">Services that violate our community guidelines are removed by moderators. Check your registered email for details and contact support if you believe this was in error.</string>
 
@@ -240,6 +245,12 @@
     <string name="auth_btn_verifying">Verifying…</string>
     <string name="auth_resend_cooldown_format">Resend email in %1$ds</string>
     <string name="auth_btn_resend_email">Resend Verification Email</string>
+    <string name="auth_btn_open_email_app">Open Email App</string>
+    <string name="auth_btn_change_account">Use a different email / Back to Login</string>
+    <string name="auth_email_app_not_found">No email app found on this device.</string>
+    <string name="auth_verify_complete_title">Verification Complete</string>
+    <string name="auth_verify_complete_desc">Your email has been successfully verified! Taking you to profile setup…</string>
+    <string name="auth_btn_continue_to_profile">Continue to Profile Setup</string>
     <string name="auth_change_password_title">Change Password</string>
     <string name="auth_secure_account_title">Secure your account</string>
     <string name="auth_change_password_desc">Enter your current password to verify your identity, then choose a new strong password.</string>
@@ -425,7 +436,9 @@
     <string name="service_price_starting_format">KES %1$s +</string>
     <string name="action_edit_service">Edit Service</string>
     <string name="action_dm_provider">DM Provider</string>
-    <string name="service_share_coming_soon">Share feature coming soon!</string>
+    <string name="service_share_chooser_title">Share Service</string>
+    <string name="service_share_text_with_provider">%1$s by %2$s on HustleHub\nBook here: %3$s</string>
+    <string name="service_share_text">%1$s on HustleHub\nBook here: %2$s</string>
     <string name="action_share">Share</string>
     <string name="bookmark_saved">Saved!</string>
     <string name="bookmark_removed">Removed from saved</string>
@@ -436,6 +449,9 @@
     <string name="service_jobs_done_format">%1$d jobs done</string>
     <string name="service_about_title">About Service</string>
     <string name="service_portfolio_title">Portfolio</string>
+    <string name="service_portfolio_empty_owner_title">Showcase your work</string>
+    <string name="service_portfolio_empty_owner_desc">Add portfolio photos to attract more clients and build trust.</string>
+    <string name="service_portfolio_add_photos">Add Photos</string>
     <string name="service_reviews_title">Reviews</string>
     <string name="service_see_all_reviews_format">See all %1$d reviews</string>
     <string name="service_edit_service">Edit Service</string>
@@ -470,6 +486,12 @@
     <string name="service_current_status_label">Current Status</string>
     <string name="service_publishing">Publishing…</string>
     <string name="service_publish_button">Publish Service</string>
+    <string name="service_created_success">Service created successfully!</string>
+    <string name="service_updated_success">Service updated successfully!</string>
+    <string name="service_stage_preparing_images">Preparing photos…</string>
+    <string name="service_stage_uploading_images_format">Uploading photo %1$d of %2$d…</string>
+    <string name="service_stage_saving">Publishing your service…</string>
+    <string name="service_stage_saving_changes">Saving your changes…</string>
     <string name="service_fallback_title">this service</string>
     <string name="service_quick_gallery_title">Quick Gallery</string>
     <string name="service_manage_photos_format">Manage photos for %1$s</string>
@@ -505,6 +527,7 @@
     <string name="map_showing_providers_singular">Showing %1$d provider</string>
     <string name="map_showing_providers_plural">Showing %1$d providers</string>
     <string name="map_cd_reset_compass">Reset Compass to North</string>
+    <string name="map_cd_refresh_pins">Refresh Map Pins</string>
     <string name="map_cd_toggle_type">Toggle Map Type</string>
     <string name="map_cd_zoom_in">Zoom In</string>
     <string name="map_cd_zoom_out">Zoom Out</string>
@@ -551,9 +574,12 @@
 
     <!-- Phase 6: Profile, Reviews & Settings -->
     <!-- Profile -->
-    <string name="profile_share_subject">Check out my profile on HustleHub</string>
-    <string name="profile_share_text_format">Check out my profile on HustleHub: https://hustlehub.must.ac.ke/profile/%1$s</string>
+    <string name="profile_share_subject">Check out %1$s on HustleHub</string>
+    <string name="profile_share_text_format">Connect with %1$s on HustleHub the MUST campus marketplace!\n%2$s</string>
     <string name="profile_share_chooser_title">Share Profile</string>
+    <string name="customer_share_subject">Join HustleHub MUST Campus Marketplace</string>
+    <string name="customer_share_text_format">Discover and book trusted student services on HustleHub the MUST campus marketplace!\n%1$s</string>
+    <string name="customer_share_chooser_title">Invite friends to HustleHub</string>
     <string name="cd_add_new_service">Add New Service</string>
     <string name="profile_edit_button">Edit Profile</string>
     <string name="profile_edit_title">Edit Profile</string>
@@ -604,6 +630,9 @@
     <string name="profile_tab_analytics">Analytics</string>
     <string name="profile_tab_earnings">Earnings</string>
     <string name="cd_tab_format">%1$s tab</string>
+    <string name="profile_incomplete_title">Profile Incomplete</string>
+    <string name="profile_incomplete_message">Your profile is not yet set up on the server. Please complete your profile to continue.</string>
+    <string name="profile_incomplete_action">Complete Profile</string>
 
     <!-- Reviews -->
     <string name="reviews_sort_by">Sort by:</string>
@@ -809,6 +838,9 @@
     <string name="sub_selected_service">Selected Service</string>
     <string name="sub_featuring_service">Featuring Service</string>
     <string name="sub_no_services_error">You do not have any active services. Please create a service first before boosting it.</string>
+    <string name="sub_no_services_banner_title">Grow your student business</string>
+    <string name="sub_no_services_banner_desc">HustleHub Pro is built for student service providers. You have no active listings yet. Create your first service to take full advantage of Pro visibility.</string>
+    <string name="sub_btn_create_service">Create a Service</string>
     <string name="sub_choose_service_to_boost">Choose service to boost:</string>
     <string name="sub_selected_cd">Selected</string>
     <string name="sub_pay_with_mpesa">Pay with M-Pesa</string>
@@ -830,4 +862,12 @@
     <string name="sub_day_plural">days</string>
     <string name="sub_hour_singular">hour</string>
     <string name="sub_hour_plural">hours</string>
+
+    <string name="pro_banner_title">Boost Your Campus Visibility</string>
+    <string name="pro_banner_desc">Pro providers get priority campus search ranking, up to 15 portfolio photos, and a highlighted map pin.</string>
+    <string name="pro_banner_upgrade_btn">Upgrade to Pro — KES 150/mo</string>
+    <string name="pro_banner_active_title">HustleHub Pro Active</string>
+    <string name="pro_banner_active_desc">Your services enjoy top priority ranking and a verified provider badge on campus.</string>
+    <string name="pro_banner_manage_btn">Manage Subscription</string>
+    <string name="pro_banner_dismiss_cd">Dismiss Pro banner</string>
 </resources>

@@ -117,7 +117,8 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                 currentTop is Login ||
                 currentTop is SignUp ||
                 currentTop is EmailVerification ||
-                currentTop is Onboarding
+                currentTop is Onboarding ||
+                currentTop is ProfileSetup
 
             if (authState == AuthState.Unauthenticated && !isInAuthFlow) {
                 backstack.clear()
@@ -134,24 +135,44 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
 
     LaunchedEffect(mainNavigationViewModel) {
         mainNavigationViewModel?.deepLinkEvent?.collect { action ->
+            val currentTop = backstack.lastOrNull()
+            val isAuthOrSplash = currentTop is Splash ||
+                currentTop is Login ||
+                currentTop is SignUp ||
+                currentTop is EmailVerification ||
+                currentTop is Onboarding ||
+                currentTop is ProfileSetup
+            if (isAuthOrSplash) {
+                return@collect
+            }
+
             if (backstack.none { it is MainShell }) {
                 backstack.clear()
                 backstack.add(MainShell)
             }
             when (action) {
                 is DeepLinkAction.OpenChat -> {
-                    val currentTop = backstack.lastOrNull()
-                    if (currentTop is ChatDetail && currentTop.chatId == action.conversationId) return@collect
+                    val top = backstack.lastOrNull()
+                    if (top is ChatDetail && top.chatId == action.conversationId) {
+                        mainNavigationViewModel.consumeReplay()
+                        return@collect
+                    }
                     backstack.add(ChatDetail(chatId = action.conversationId))
                 }
                 is DeepLinkAction.OpenServiceDetail -> {
-                    val currentTop = backstack.lastOrNull()
-                    if (currentTop is ServiceDetail && currentTop.serviceId == action.serviceId) return@collect
+                    val top = backstack.lastOrNull()
+                    if (top is ServiceDetail && top.serviceId == action.serviceId) {
+                        mainNavigationViewModel.consumeReplay()
+                        return@collect
+                    }
                     backstack.add(ServiceDetail(serviceId = action.serviceId))
                 }
                 is DeepLinkAction.OpenProviderProfile -> {
-                    val currentTop = backstack.lastOrNull()
-                    if (currentTop is ProviderProfile && currentTop.providerId == action.providerId) return@collect
+                    val top = backstack.lastOrNull()
+                    if (top is ProviderProfile && top.providerId == action.providerId) {
+                        mainNavigationViewModel.consumeReplay()
+                        return@collect
+                    }
                     backstack.add(ProviderProfile(providerId = action.providerId))
                 }
                 is DeepLinkAction.OpenWriteReview -> {
@@ -171,7 +192,44 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                     }
                 }
             }
+            mainNavigationViewModel.consumeReplay()
         }
+    }
+
+    val pendingDeepLinkViewModel: PendingDeepLinkViewModel = if (activity != null) {
+        hiltViewModel<PendingDeepLinkViewModel>(viewModelStoreOwner = activity)
+    } else {
+        hiltViewModel()
+    }
+    val pendingLink by pendingDeepLinkViewModel.pendingLink.collectAsState()
+    LaunchedEffect(pendingLink, backstack.lastOrNull()) {
+        val link = pendingLink ?: return@LaunchedEffect
+        if (backstack.none { it is MainShell }) {
+            timber.log.Timber
+                .tag("SHARE_LINK")
+                .d("[SHARE_LINK] Deferred link waiting for MainShell in backstack: %s", link)
+            return@LaunchedEffect
+        }
+        val (target, id) = link
+        timber.log.Timber
+            .tag("SHARE_LINK")
+            .d("[SHARE_LINK] Routing deferred deep link: target=%s, id=%s", target, id)
+        val action = when (target) {
+            "profile" -> DeepLinkAction.OpenProviderProfile(id)
+            "service" -> DeepLinkAction.OpenServiceDetail(id)
+            "chat" -> DeepLinkAction.OpenChat(id)
+            else -> {
+                timber.log.Timber
+                    .tag("SHARE_LINK")
+                    .w("[SHARE_LINK] Unknown target in deferred deep link: %s", target)
+                return@LaunchedEffect
+            }
+        }
+        pendingDeepLinkViewModel.consume()
+        timber.log.Timber
+            .tag("SHARE_LINK")
+            .d("[SHARE_LINK] Consumed pending link and triggering navigation action: %s", action)
+        mainNavigationViewModel?.triggerDeepLink(action)
     }
 
     val activeBanner by InAppBannerManager.activeBanner.collectAsState()
@@ -186,7 +244,6 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
 
     var showBookingGate by remember { mutableStateOf(false) }
     var pendingChatArgs by remember { mutableStateOf<ChatDetail?>(null) }
-    var showListingGate by remember { mutableStateOf(false) }
     var isSavingGate by remember { mutableStateOf(false) }
     var gateError by remember { mutableStateOf<String?>(null) }
 
@@ -221,37 +278,6 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
         )
     }
 
-    if (showListingGate) {
-        ProfileGateBottomSheet(
-            gateType = ProfileGateType.LISTING,
-            initialCampusLocation = cachedUser.campusLocation,
-            initialPhone = cachedUser.phone,
-            initialBio = cachedUser.bio,
-            isSaving = isSavingGate,
-            errorMessage = gateError,
-            onDismiss = {
-                showListingGate = false
-                gateError = null
-            },
-            onSave = { campusLocation, phone, bio ->
-                isSavingGate = true
-                gateError = null
-                navScope.launch {
-                    profileGateViewModel
-                        .saveLocation(campusLocation, phone, bio)
-                        .onSuccess {
-                            isSavingGate = false
-                            showListingGate = false
-                            backstack.add(CreateService())
-                        }.onFailure {
-                            isSavingGate = false
-                            gateError = "Could not save profile. Please try again."
-                        }
-                }
-            },
-        )
-    }
-
     Box(modifier = Modifier.fillMaxSize()) {
         SharedTransitionLayout {
             CompositionLocalProvider(LocalSharedTransitionScope provides this) {
@@ -275,6 +301,8 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                         SplashDestination.Home -> MainShell
                                         SplashDestination.Login -> Login()
                                         SplashDestination.Onboarding -> Onboarding
+                                        SplashDestination.ProfileSetup -> ProfileSetup
+                                        is SplashDestination.EmailVerification -> EmailVerification(email = destination.email)
                                         is SplashDestination.AccountSuspended -> AccountSuspendedKey(
                                             reason = destination.reason,
                                             suspendedUntil = destination.suspendedUntil,
@@ -334,12 +362,36 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 email = key.email,
                                 onVerified = {
                                     backstack.clear()
-                                    backstack.add(MainShell)
+                                    backstack.add(ProfileSetup)
+                                },
+                                onNavigateToLogin = {
+                                    backstack.clear()
+                                    backstack.add(Login())
                                 },
                             )
                         }
 
                         entry<SignUp> {
+                            val context = LocalContext.current
+                            val activity = context as? ComponentActivity
+                            val loginViewModel: LoginViewModel = if (activity != null) {
+                                hiltViewModel(viewModelStoreOwner = activity)
+                            } else {
+                                hiltViewModel()
+                            }
+
+                            // Observe Google sign-in navigation events from the shared ViewModel
+                            LaunchedEffect(loginViewModel) {
+                                loginViewModel.navigateToHome.collect { hasProfile ->
+                                    backstack.clear()
+                                    if (hasProfile) {
+                                        backstack.add(MainShell)
+                                    } else {
+                                        backstack.add(ProfileSetup)
+                                    }
+                                }
+                            }
+
                             SignUpScreen(
                                 onNavigateToLogin = { email ->
                                     if (backstack.isNotEmpty()) backstack.remove(backstack.last())
@@ -389,13 +441,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             MainShellScreen(
                                 onNavigateToProfileSetup = { backstack.add(ProfileSetup) },
                                 onNavigateToSettings = { backstack.add(Settings) },
-                                onNavigateToCreateService = {
-                                    if (ProfileCompletenessChecker.needsProfileForListing(cachedUser)) {
-                                        showListingGate = true
-                                    } else {
-                                        backstack.add(CreateService())
-                                    }
-                                },
+                                onNavigateToCreateService = { backstack.add(CreateService()) },
                                 onNavigateToMyServices = { backstack.add(MyServices) },
                                 onNavigateToEditService = { serviceId ->
                                     backstack.add(
@@ -432,6 +478,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onNavigateToBlockedUsers = { backstack.add(BlockedUsers) },
                                 onNavigateToSubscription = { backstack.add(Subscription()) },
                                 onNavigateToHelp = { backstack.add(HelpFaq) },
+                                onNavigateToCreateService = { backstack.add(CreateService()) },
                                 onAccountDeleted = {
                                     backstack.clear()
                                     backstack.add(Onboarding)
@@ -479,13 +526,13 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             )
                         }
 
-                        // My services management
                         entry<MyServices> {
                             MyServicesScreen(
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                                 onCreateService = { backstack.add(CreateService()) },
                                 onEditService = { serviceId -> backstack.add(CreateService(serviceId = serviceId)) },
                                 onBoostService = { serviceId -> backstack.add(Subscription(serviceId = serviceId)) },
+                                onNavigateToSubscription = { backstack.add(Subscription()) },
                             )
                         }
 
@@ -584,7 +631,14 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             ProviderProfileScreen(
                                 providerId = key.providerId,
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
-                                onNavigateToChat = { providerId -> backstack.add(ChatDetail(chatId = providerId)) },
+                                onNavigateToChat = { providerId, providerName ->
+                                    backstack.add(
+                                        ChatDetail(
+                                            chatId = providerId,
+                                            providerName = providerName,
+                                        ),
+                                    )
+                                },
                                 onNavigateToEditProfile = { backstack.add(EditProfile) },
                                 onNavigateToMyServices = { backstack.add(MyServices) },
                                 onNavigateToServiceDetail = { serviceId ->
@@ -675,6 +729,7 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                     backstack.add(PaymentStatus(checkoutRequestId = checkoutRequestId))
                                 },
                                 serviceId = key.serviceId,
+                                onCreateService = { backstack.add(CreateService()) },
                             )
                         }
 

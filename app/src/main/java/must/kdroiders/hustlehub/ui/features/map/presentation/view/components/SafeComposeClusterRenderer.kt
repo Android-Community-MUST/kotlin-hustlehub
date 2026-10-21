@@ -50,6 +50,7 @@ class SafeComposeClusterRenderer<T : ClusterItem>(
         item: T,
         options: MarkerOptions,
     ) {
+        item.zIndex?.let { options.zIndex(it) }
         if (clusterItemContent != null) {
             val descriptor = renderComposableToBitmapDescriptor { clusterItemContent.invoke(item) }
             if (descriptor != null) {
