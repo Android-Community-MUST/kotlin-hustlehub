@@ -453,6 +453,7 @@ For privacy when listening to voice notes in public campus settings:
 ---
 
 **See also:**
+- [Mini-Apps & Super App Architecture Guide](../miniapps/README.md)
 - [API Reference](API.md)
 - [Setup Guide](SETUP.md)
 - [Troubleshooting](TROUBLESHOOTING.md)
