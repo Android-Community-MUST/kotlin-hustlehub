@@ -42,7 +42,7 @@ Before creating any release build, bump the version in `app/build.gradle.kts`:
 ```kotlin
 defaultConfig {
     // ...
-    versionCode = 8          // Increment monotonically by +1 for every release
+    versionCode = 9          // Increment monotonically by +1 for every release
     versionName = "1.0.4"    // Semantic version: MAJOR.MINOR.PATCH
 }
 ```
