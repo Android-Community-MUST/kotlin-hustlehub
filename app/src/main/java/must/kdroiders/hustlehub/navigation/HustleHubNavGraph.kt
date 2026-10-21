@@ -631,7 +631,14 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             ProviderProfileScreen(
                                 providerId = key.providerId,
                                 onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
-                                onNavigateToChat = { providerId -> backstack.add(ChatDetail(chatId = providerId)) },
+                                onNavigateToChat = { providerId, providerName ->
+                                    backstack.add(
+                                        ChatDetail(
+                                            chatId = providerId,
+                                            providerName = providerName,
+                                        ),
+                                    )
+                                },
                                 onNavigateToEditProfile = { backstack.add(EditProfile) },
                                 onNavigateToMyServices = { backstack.add(MyServices) },
                                 onNavigateToServiceDetail = { serviceId ->

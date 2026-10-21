@@ -20,8 +20,10 @@ import must.kdroiders.hustlehub.core.telemetry.HustleAnalytics
 import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.chat.data.local.dao.ConversationDao
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.ChatWebSocketService
+import must.kdroiders.hustlehub.ui.features.chat.domain.model.Conversation
 import must.kdroiders.hustlehub.ui.features.chat.domain.repository.ChatRepository
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.repository.ServiceRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.CheckDuplicateReviewUseCase
@@ -216,5 +218,41 @@ class ChatDetailViewModelTest {
                 )
             }
             assertTrue(viewModel.uiState.value.isServiceCompleted)
+        }
+
+    @Test
+    fun `initialize with firebaseUid resolves backend user UUID before calling getOrCreateConversation`() =
+        runTest {
+            val firebaseUid = "firebase-user-abc-123"
+            val resolvedUuid = "123e4567-e89b-12d3-a456-426614174000"
+            val mockUser = User(
+                id = firebaseUid,
+                uuid = resolvedUuid,
+                name = "Test Provider",
+            )
+            val mockConversation = Conversation(
+                id = "conv-resolved-123",
+                otherUserId = resolvedUuid,
+                otherUserName = "Test Provider",
+                otherUserAvatar = null,
+                serviceId = null,
+                lastMessage = null,
+                lastMessageType = null,
+                lastMessageAt = null,
+                unreadCount = 0,
+                createdAt = "2026-10-19T00:00:00Z",
+            )
+
+            coEvery { conversationDao.getById(firebaseUid) } returns null
+            coEvery { conversationDao.getById("conv-resolved-123") } returns null
+            coEvery { userRepository.getProviderProfile(firebaseUid) } returns Result.success(mockUser)
+            coEvery { chatRepository.getOrCreateConversation(resolvedUuid, null) } returns Result.success(mockConversation)
+
+            viewModel.initialize(conversationId = firebaseUid)
+            testScheduler.advanceUntilIdle()
+
+            coVerify(exactly = 1) { userRepository.getProviderProfile(firebaseUid) }
+            coVerify(exactly = 1) { chatRepository.getOrCreateConversation(resolvedUuid, null) }
+            assertEquals(resolvedUuid, viewModel.uiState.value.otherUserId)
         }
 }

@@ -591,10 +591,12 @@ Returns a sorted list of conversations (newest activity first).
 ### Get or Create Conversation
 `POST /api/v1/conversations`
 
+Initiates or retrieves an existing conversation. The `otherUserId` parameter accepts **either a PostgreSQL database UUID or a Firebase Auth UID string** (the backend automatically resolves both):
+
 **Request:**
 ```json
 {
-  "otherUserId": "89fa88c2-321a-45be-12c6-3d88c75dfb3f",
+  "otherUserId": "89fa88c2-321a-45be-12c6-3d88c75dfb3f", // or "firebase_uid_string"
   "serviceId": "aa1c969d-210d-45be-91c6-1c88c75dfb3f"
 }
 ```
@@ -883,3 +885,216 @@ Include Firebase ID token as a handshake query parameter or STOMP connect header
 `PUT /api/v1/notifications/read-all`
 
 **Response `200 OK`:** Confirmation wrapped in `ApiResponse`.
+
+---
+
+## Bookmarks Endpoints
+
+### Get User Bookmarks
+`GET /api/v1/bookmarks?page=0&size=20`
+
+Returns the authenticated user's saved service listings.
+
+**Response `200 OK`:** Paginated list of `ServiceResponse` objects wrapped in `ApiResponse`.
+
+---
+
+### Save a Service Bookmark
+`POST /api/v1/bookmarks/{serviceId}`
+
+Adds a service to the user's bookmarks list.
+
+**Response `200 OK` / `201 Created`:** Confirmation wrapped in `ApiResponse`.
+
+---
+
+### Remove a Service Bookmark
+`DELETE /api/v1/bookmarks/{serviceId}`
+
+Removes a service from the user's saved list.
+
+**Response `200 OK`:** Confirmation wrapped in `ApiResponse`.
+
+---
+
+## Payments & Monetization Endpoints
+
+### Initiate M-Pesa STK Push
+`POST /api/v1/payments/stk-push`
+
+Triggers an M-Pesa Express STK push prompt to the user's phone for subscription upgrade (`PRO`) or service boost (`FEATURED`).
+
+**Request:**
+```json
+{
+  "phoneNumber": "254712345678",
+  "planType": "PRO",
+  "serviceId": null
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "STK Push initiated",
+  "data": {
+    "checkoutRequestId": "ws_CO_21022026112000123456",
+    "responseDescription": "Success. Request accepted for processing"
+  }
+}
+```
+
+---
+
+### Check Payment Status
+`GET /api/v1/payments/status/{checkoutRequestId}`
+
+Polls the status of an ongoing M-Pesa transaction.
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "data": {
+    "status": "COMPLETED", // PENDING, COMPLETED, FAILED
+    "mpesaReceiptNumber": "NLJ7RT61SV"
+  }
+}
+```
+
+---
+
+### Get My Subscription
+`GET /api/v1/subscriptions/me`
+
+Retrieves active subscription status and expiry dates for the current user.
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "data": {
+    "planType": "PRO",
+    "status": "ACTIVE",
+    "startDate": "2026-10-01T00:00:00Z",
+    "endDate": "2026-11-01T00:00:00Z",
+    "isActive": true
+  }
+}
+```
+
+---
+
+## Privacy & Account Endpoints
+
+### Export My Data
+`GET /api/v1/privacy/export`
+
+Returns a complete archive of the user's profile, listings, and activity.
+
+**Response `200 OK`:** Data export payload wrapped in `ApiResponse`.
+
+---
+
+### Delete Account
+`DELETE /api/v1/privacy/account`
+
+Permanently deletes the user account, services, and associated records from the PostgreSQL database.
+
+**Response `200 OK`:** Confirmation wrapped in `ApiResponse`.
+
+---
+
+## Safety & Reporting Endpoints
+
+### Submit Safety Report
+`POST /api/v1/reports`
+
+Allows students to report abusive users, fraud, or inappropriate listings for moderation.
+
+**Request:**
+```json
+{
+  "reportedUserId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+  "serviceId": null,
+  "reason": "FRAUD", // FRAUD, INAPPROPRIATE, HARASSMENT, OTHER
+  "details": "Provider did not show up after receiving upfront deposit"
+}
+```
+
+**Response `201 Created`:** Confirmation wrapped in `ApiResponse`.
+
+---
+
+## End-to-End Encryption (E2EE) Key Exchange Endpoints
+
+### Upload Identity Public Key
+`POST /api/v1/keys/identity`
+
+Uploads the device's NIST P-256 public identity key for ECDH key agreement.
+
+**Request:**
+```json
+{
+  "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE..."
+}
+```
+
+**Response `200 OK`:** Confirmation wrapped in `ApiResponse`.
+
+---
+
+### Get User Identity Public Key
+`GET /api/v1/keys/identity/{userId}`
+
+Retrieves the public key for another participant to derive the shared AES-256-GCM secret.
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "data": {
+    "userId": "78e9069d-210d-45be-91c6-1c88c75dfb3f",
+    "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE..."
+  }
+}
+```
+
+---
+
+## In-App Admin Endpoints (`ROLE_ADMIN` Only)
+
+### Platform Statistics
+`GET /api/v1/admin/stats`
+
+**Response `200 OK`:** Active users, total services, ongoing chats, and subscription revenue summary.
+
+---
+
+### Manage Users
+`GET /api/v1/admin/users?page=0&size=20`
+
+Returns a list of all registered users with status and role indicators.
+
+---
+
+### Suspend / Reinstate User
+`POST /api/v1/admin/users/{userId}/suspend`
+
+**Request:**
+```json
+{
+  "suspended": true,
+  "reason": "Violation of community standards",
+  "suspendedUntil": "2026-11-01T00:00:00Z"
+}
+```
+
+**Response `200 OK`:** Confirmation wrapped in `ApiResponse`.
+
+---
+
+### Review Reports & Audit Logs
+- `GET /api/v1/admin/reports`: List pending safety reports for review and resolution.
+- `GET /api/v1/admin/audit-logs`: Chronological log of administrative actions.

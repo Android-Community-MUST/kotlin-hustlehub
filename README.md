@@ -41,25 +41,28 @@ HustleHub organizes this economy into a structured, trustworthy platform with:
 
 ### Core Features (v1.0)
 
-**Authentication**: Student email signup (@must.ac.ke), email OTP verification, Google Sign-In, role selection (Provider / Customer / Both)
+**Authentication & Onboarding**: Student email signup (@must.ac.ke), email verification, Google Sign-In, zero-friction customer browsing, and provider profile setup.
 
-**Service Management**: Create and edit listings with portfolio images, category selection, price range, availability toggle (Available / Busy / Offline)
+**Service Management**: Create and edit listings with portfolio images, category selection, price range, availability toggle (Available / Busy / Offline), and verified Pro provider badges.
 
-**Discovery**: Browse by category, text search, **AI-powered natural language search** via Gemini, sort by relevance / rating / distance
+**Discovery & Bookmarks**: Browse by category, instant text search, **AI-powered natural language search** via Gemini, sort by relevance / rating / distance, and save favorite services in the dedicated **Saved** tab.
 
-**Messaging**: Real-time 1-on-1 chat, voice notes with waveform, image sharing, location sharing, Service Request Cards, read receipts, push notifications (FCM)
+**Encrypted Messaging**: Real-time 1-on-1 end-to-end encrypted (E2EE) chat (ECDH + AES-256-GCM), voice notes with waveform and proximity earpiece routing, image sharing, location sharing, Service Request Cards, typing indicators, read receipts, and FCM push notifications.
 
-**Campus Map**: Google Maps with provider pins color-coded by category, distance-based discovery, quick actions from map
+**Campus Map**: Google Maps with provider pins color-coded by category, pin clustering, distance-based discovery, and quick-action bottom sheets.
 
-**Ratings & Reviews**: 5-star rating, written reviews, moderation, auto-prompt after service
+**Ratings & Reviews**: 5-star ratings, written reviews with image attachments, moderation reporting, and post-service prompts.
 
-### Future Features (Roadmap)
+**Monetization & Pro Tiers**: HustleHub Pro provider subscriptions and featured listing boosts via M-Pesa STK Push.
 
-- 📞 Voice/video calls (WebRTC)
-- 💰 M-Pesa payment integration
+**Administration & Safety**: Native in-app Admin Dashboard with platform telemetry, report resolution, and user suspension controls.
+
+### Future Features (Post-MVP Roadmap)
+
+- 📞 In-app voice/video calls (WebRTC)
 - 🏆 Gamified Hustle Score, badges, leaderboards
-- 🏫 Multi-campus support (Kenyatta, UoN, etc.)
-- 📈 Provider analytics dashboard
+- 🏫 Multi-campus expansion (Kenyatta, UoN, etc.)
+- 🔄 Service swap / barter matching
 
 ---
 
@@ -110,20 +113,32 @@ Firebase (Auth + FCM only)
 ### Package Structure
 ```
 must.kdroiders.hustlehub/
-├── core/                    # Shared: ApiClient, AuthInterceptor, theme, utils
-├── di/                      # Hilt: NetworkModule, FirebaseModule, RepositoryModule
-├── navigation/              # Navigation 3 NavKeys + NavGraph
-├── local/                   # Room: DAOs, entities (offline cache)
-└── feature/
-    ├── auth/                # Firebase Auth → POST /api/v1/auth/register
-    ├── profile/             # GET/PUT /api/v1/users/me
-    ├── services/            # CRUD /api/v1/services
-    ├── discovery/           # /api/v1/discovery/* (browse, search, AI, map pins)
-    ├── chat/                # REST history + WebSocket real-time
-    ├── map/                 # Google Maps + provider pins
-    ├── reviews/             # POST /api/v1/reviews
-    ├── notifications/       # FCM service + notification center
-    └── media/               # POST /api/v1/media/upload
+├── activities/              # MainActivity (hosts HustleHubNav & deep links)
+├── appHilt/                 # HustleHubApp (@HiltAndroidApp)
+├── core/                    # Cross-cutting: api, auth, cache, crypto, deeplink, realtime, telemetry, worker
+├── data/local/              # Room database, DAOs, entities (offline cache)
+├── datastore/               # DataStore preferences (user role, first launch, auth state)
+├── di/                      # Hilt DI modules (NetworkModule, FirebaseModule, RepositoryModule, CoilModule)
+├── navigation/              # Navigation 3 (NavKeys, HustleHubNavGraph, 5 bottom tabs, MainScaffold)
+├── onboarding/              # First-launch onboarding carousel
+├── sharedComposables/       # Design system library (HustleButton, HustleCard, HustleTextField, ...)
+├── splash/                  # Auth-gate splash screen
+└── ui/features/             # Clean Architecture feature slices (data/, domain/, presentation/)
+    ├── admin/               # Mobile admin dashboard, moderation & audit logs
+    ├── analytics/           # Service & search performance telemetry
+    ├── auth/                # Email/password signup, OTP verification, Google Sign-In
+    ├── bookmarks/           # Saved services (BottomBookmarks tab)
+    ├── chat/                # Real-time E2EE messaging, audio routing & STOMP sync
+    ├── help/                # Campus FAQs & student support guides
+    ├── home/                # Discovery feed, AI natural language search, categories
+    ├── map/                 # Campus map with clustered provider pins
+    ├── media/               # Multi-part image & voice uploads
+    ├── monetization/        # HustleHub Pro subscriptions & M-Pesa STK push
+    ├── notification/        # FCM push notifications & in-app alerts
+    ├── privacy/             # Data export & account deletion
+    ├── profile/             # User & provider profiles, reviews, settings
+    ├── report/              # User/service safety reports
+    └── service/             # Service CRUD & availability toggle
 ```
 
 See [ARCHITECTURE.md](docs/dev/ARCHITECTURE.md) for full detail.
@@ -212,29 +227,32 @@ See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for full guidelines.
 
 ---
 
-## 📅 Roadmap
+## 📅 Roadmap & Current Status
 
-### ✅ Phase 1: MVP (Months 1–3) — In Progress
-- [x] Authentication & profile setup
-- [x] Design system + shared composables
-- [ ] Service creation & discovery feed
-- [ ] AI-powered search
-- [x] Real-time messaging (WebSocket)
-- [ ] Campus map with provider pins
-- [ ] Ratings & reviews
-- [ ] Beta launch (500 users)
+### ✅ Phase 1: MVP — Complete (Ready for Production)
+- [x] Authentication & profile setup (Firebase Auth + Spring Boot backend sync)
+- [x] Design system & shared composables (Material 3 Expressive)
+- [x] Service creation & discovery feed (categories, filtering, search)
+- [x] AI-powered natural language search (Gemini API)
+- [x] End-to-end encrypted messaging (ECDH + AES-256-GCM over STOMP WebSocket)
+- [x] Voice notes with waveform and proximity earpiece audio routing
+- [x] Campus map with color-coded provider pins and clustering
+- [x] Ratings & reviews system with post-service prompt
+- [x] Deep linking & profile sharing
+- [x] Closed testing track completed (20+ active testers for 17+ days)
+- [x] Production application submitted to Google Play Console (`v1.0.4`, Build 8)
 
-### 🚧 Phase 2: Growth (Months 4–6)
-- [ ] In-app voice/video calls
-- [ ] M-Pesa payment integration
+### 🚀 Phase 2: Growth & Monetization (Shipped & Active)
+- [x] In-app M-Pesa STK Push integration & subscription tier (`HustleHub Pro`)
+- [x] Provider & platform analytics dashboard
+- [x] Native in-app Admin moderation & user management center
+- [ ] In-app voice/video calls (WebRTC)
 - [ ] Gamification (Hustle Score, badges, leaderboards)
-- [ ] Provider analytics dashboard
 
-### 🔮 Phase 3: Scale (Months 7–12)
-- [ ] Multi-campus support
+### 🔮 Phase 3: Scale (Post-Launch)
+- [ ] Multi-campus expansion (Kenyatta University, UoN, etc.)
 - [ ] Service swap / barter matching
 - [ ] Emergency request broadcasts
-- [ ] Web admin panel
 
 ---
 
