@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.4] — 2026-10-20 (Google Play Production Candidate)
+
+### Added
+- **Real-Time STOMP Event Sync (`RealtimeSyncManager`)**:
+  - Live WebSocket subscriptions for home and map service feeds.
+  - In-app notification banner alerts when new messages arrive while browsing.
+- **Hardware Proximity Audio Routing (`ProximityAudioRouter`)**:
+  - Auto-switches voice message playback between loudspeaker and earpiece when held to the ear.
+  - Smart 200 ms rewind on earpiece engagement.
+- **Deep Linking & Sharing**:
+  - Android App Links for provider profiles, services, and student invite links (`ShareLinkBuilder`).
+  - Cold-start deep link persistence in `MainActivity` and `PendingDeepLinkViewModel`.
+- **In-App Admin Moderation Dashboard**:
+  - Mobile moderation center for campus administrators under `ROLE_ADMIN`.
+  - Platform metrics, user suspension, and safety report review.
+- **M-Pesa Express & HustleHub Pro Subscriptions**:
+  - STK Push payment flow for provider subscriptions and featured listings.
+
+### Fixed
+- **Profile-to-Chat Flow (HTTP 400 Resolution)**:
+  - Resolved conversation creation failure on shared provider profiles by mapping database UUIDs.
+  - Added dual-identifier lookup on backend (accepting both UUID and Firebase UID).
+  - Forwarded provider name during direct navigation into chat.
+- **Form Validation & PUT Persistence**:
+  - Fixed phone number and campus location persistence in edit profile requests.
+  - Added submission loading dialogs on service creation to eliminate duplicate taps.
+
+---
+
 ## [1.0.0-rc1] — 2026-08-15
 
 ### Added

@@ -89,21 +89,19 @@ Every screen must handle all three `UiState` branches.
 
 ```
 must.kdroiders.hustlehub/
-├── activities/          # MainActivity — hosts HustleHubNav
+├── activities/          # MainActivity — hosts HustleHubNav & deep link handling
 ├── appHilt/             # HustleHubApp (@HiltAndroidApp)
-├── core/                # Shared: ApiClient, AuthInterceptor, Gzip, theme, crypto
-├── data/                # Shared models + repository interfaces/impls
+├── core/                # Cross-cutting: api, auth, cache, crypto, deeplink, realtime, telemetry, worker
+├── data/local/          # Room database, DAOs, and entities (offline cache)
 ├── datastore/           # UserPreferences (DataStore)
 ├── di/                  # Hilt modules (AppModule, NetworkModule, CoilModule, etc.)
-├── local/               # Room database, DAOs, and entities (offline cache)
 ├── navigation/          # Navigation 3 — NavKeys + NavGraph + MainScaffold
 ├── onboarding/          # OnboardingScreen + OnboardingViewModel
 ├── sharedComposables/   # Design-system components (HustleButton, HustleCard, …)
 ├── splash/              # SplashScreen + SplashViewModel (auth gate)
 ├── ui/
-│   ├── auth/            # Login, SignUp, EmailVerification screens + ViewModels
-│   └── features/        # Feature slices: admin, analytics, chat, home, map, media, monetization, notification, profile, report, service
-│       └── <feature>/   # Full Clean Architecture sub-split: data/, domain/, presentation/
+│   └── features/        # Feature slices: admin, analytics, auth, bookmarks, chat, help, home, map, media, monetization, notification, privacy, profile, profilesetup, report, service, settings
+│       └── <feature>/   # Clean Architecture sub-split: data/, domain/, presentation/
 └── util/                # ImageUtils
 ```
 
@@ -117,7 +115,7 @@ Uses **Navigation 3** (`androidx.navigation3`) exclusively — no legacy `NavCon
 
 - All routes are `@Serializable` `NavKey` objects defined in `navigation/HustleNavKeys.kt` — add every new destination there.
 - Root backstack starts at `Splash`; `SplashViewModel` gates auth and routes to `Onboarding`, `Login`, `ProfileSetup`, or `MainShell`.
-- `MainShell` hosts a nested `NavDisplay` for the four bottom-tab destinations (`BottomHome`, `BottomMap`, `BottomChat`, `BottomProfile`).
+- `MainShell` hosts a nested `NavDisplay` for the five bottom-tab destinations (`BottomHome`, `BottomMap`, `BottomChat`, `BottomBookmarks`, `BottomProfile`).
 - Never pass complex objects as NavKey arguments — pass IDs only, load data in the destination ViewModel.
 
 ---

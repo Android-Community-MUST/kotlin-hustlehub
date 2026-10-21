@@ -38,77 +38,69 @@ HustleHub follows **MVVM + Clean Architecture** with a feature-based package str
 must.kdroiders.hustlehub/
 │
 ├── 📁 activities/
-│   └── MainActivity.kt                    # @AndroidEntryPoint, single activity
+│   └── MainActivity.kt                    # @AndroidEntryPoint, single activity + deep link handling
 │
 ├── 📁 appHilt/
-│   └── HustleHubApp.kt                    # @HiltAndroidApp, Firebase init, FCM channels
+│   └── HustleHubApp.kt                    # @HiltAndroidApp, Firebase init, FCM channels, Crashlytics
 │
-├── 📁 core/                               # Shared across all features
-│   ├── 📁 api/
-│   │   ├── ApiClient.kt                   # Retrofit + OkHttp singleton
-│   │   ├── AuthInterceptor.kt             # Attaches Firebase ID token to every request
-│   │   ├── TokenAuthenticator.kt          # Auto-refreshes token on 401
-│   │   └── ApiResponse.kt                 # Sealed: Success / HttpError / NetworkError
-│   ├── 📁 ui/                             # Shared composables (design system)
-│   │   ├── HustleButton.kt
-│   │   ├── HustleCard.kt
-│   │   ├── HustleTextField.kt
-│   │   ├── LoadingIndicator.kt
-│   │   ├── EmptyStateView.kt
-│   │   ├── ErrorView.kt
-│   │   └── RatingBar.kt
-│   ├── 📁 theme/
-│   │   ├── Color.kt
-│   │   ├── Type.kt
-│   │   ├── Shape.kt
-│   │   └── Theme.kt
-│   └── 📁 util/
-│       ├── Extensions.kt
-│       └── ImageUtils.kt
+├── 📁 core/                               # Cross-cutting infrastructure
+│   ├── 📁 api/                            # ApiClient, AuthInterceptor, TokenAuthenticator, ApiResponse
+│   ├── 📁 auth/                           # AdminAuthUtils, session gates
+│   ├── 📁 cache/                          # CacheManager, TTL invalidation
+│   ├── 📁 crypto/ & security/             # CryptoManager, KeyExchangeHandler, ChatEncryptionBanner
+│   ├── 📁 deeplink/                       # ShareLinkBuilder, DeepLinkParser, deferred links
+│   ├── 📁 network/                        # GzipRequestInterceptor, ConnectivityObserver
+│   ├── 📁 notification/                   # NotificationHelper, FCM payload parsers
+│   ├── 📁 realtime/                       # RealtimeSyncManager (STOMP events)
+│   ├── 📁 telemetry/                      # HustleAnalytics, HustleCrashlytics
+│   └── 📁 worker/                         # MediaUploadWorker, UploadManager
 │
-├── 📁 di/
-│   ├── AppModule.kt                       # DataStore, UserPreferences
-│   ├── NetworkModule.kt                   # Retrofit, OkHttp, interceptors
-│   ├── FirebaseModule.kt                  # FirebaseAuth, FirebaseMessaging
-│   └── RepositoryModule.kt               # Binds interfaces to implementations
-│
-├── 📁 navigation/
-│   ├── HustleNavKeys.kt                   # All NavKey data objects/classes
-│   ├── HustleHubNavGraph.kt               # Root NavDisplay
-│   ├── BottomNavigationBar.kt
-│   └── MainScaffold.kt
+├── 📁 data/
+│   └── 📁 local/                          # Room offline database
+│       ├── HustleDatabase.kt
+│       ├── 📁 dao/                        # ServiceDao, MessageDao, ConversationDao, BookmarkDao
+│       └── 📁 entity/                     # CachedService, CachedMessage, CachedConversation
 │
 ├── 📁 datastore/
-│   └── UserPreferences.kt                 # DataStore: first-launch, uid, role
+│   └── UserPreferences.kt                 # DataStore: first-launch, uid, role, verified_pro
 │
-├── 📁 local/                              # Room offline cache
-│   ├── HustleDatabase.kt
-│   ├── 📁 dao/
-│   │   ├── ServiceDao.kt
-│   │   ├── MessageDao.kt
-│   │   └── ConversationDao.kt
-│   └── 📁 entity/
-│       ├── CachedService.kt
-│       ├── CachedMessage.kt
-│       └── CachedConversation.kt
+├── 📁 di/                                 # Hilt modules
+│   ├── AppModule.kt                       # DataStore, dispatchers
+│   ├── NetworkModule.kt                   # Retrofit, OkHttp, interceptors, certificate pinning
+│   ├── FirebaseModule.kt                  # FirebaseAuth, FirebaseMessaging
+│   ├── RepositoryModule.kt                # Interface-to-implementation bindings
+│   └── CoilModule.kt                      # ImageLoader cache configuration
+│
+├── 📁 navigation/
+│   ├── HustleNavKeys.kt                   # All NavKey definitions
+│   ├── HustleHubNavGraph.kt               # Root NavDisplay & route resolvers
+│   ├── BottomNavigationBar.kt             # 5 bottom-tab items & bar UI
+│   └── MainScaffold.kt                    # Bottom bar container scaffold
+│
+├── 📁 sharedComposables/                  # Reusable design system composables
+│   ├── HustleButton.kt, HustleCard.kt, HustleTextField.kt
+│   ├── LoadingIndicator.kt, EmptyStateView.kt, ErrorView.kt, RatingBar.kt
+│   └── OfflineBanner.kt, ProximityAudioRouter.kt
 │
 └── 📁 ui/
-    ├── 📁 auth/                           # Login, SignUp, EmailVerification
-    └── 📁 features/                       # Canonical feature slices
-        ├── 📁 admin/                      # Admin dashboard & moderation
-        ├── 📁 analytics/                  # Search and service telemetry
-        ├── 📁 chat/                       # REST history + WebSocket real-time
-        │   ├── 📁 data/
-        │   ├── 📁 domain/
-        │   └── 📁 presentation/
-        ├── 📁 home/                       # Home feed & service listings
-        ├── 📁 map/                        # Campus map + provider pins
-        ├── 📁 media/                      # Image & voice upload
-        ├── 📁 monetization/               # M-Pesa STK push & subscriptions
-        ├── 📁 notification/               # FCM push & notification history
-        ├── 📁 profile/                    # User profile & settings
-        ├── 📁 report/                     # Student report submission
-        └── 📁 service/                    # Service CRUD & availability
+    └── 📁 features/                       # Clean Architecture feature slices
+        ├── 📁 admin/                      # Moderation, platform metrics, user management, audit logs
+        ├── 📁 analytics/                  # Search & service analytics
+        ├── 📁 auth/                       # Login, SignUp, EmailVerification, AccountSuspended
+        ├── 📁 bookmarks/                  # Saved services (BottomBookmarks tab)
+        ├── 📁 chat/                       # E2EE messaging, STOMP WebSocket, voice note player
+        ├── 📁 help/                       # Campus FAQs & safety instructions
+        ├── 📁 home/                       # Discovery feed, categories, AI natural language search
+        ├── 📁 map/                        # Campus map + clustered provider pins
+        ├── 📁 media/                      # Image & audio uploads
+        ├── 📁 monetization/               # M-Pesa STK push & HustleHub Pro subscriptions
+        ├── 📁 notification/               # FCM push notifications & notification center
+        ├── 📁 privacy/                    # Data export & account deletion
+        ├── 📁 profile/                    # User & provider profiles, reviews
+        ├── 📁 profilesetup/               # First-time profile creation wizard
+        ├── 📁 report/                     # Safety reports submission
+        ├── 📁 service/                    # Service CRUD, availability toggle, provider services
+        └── 📁 settings/                   # App preferences, cache management, about
 ```
 
 ---
@@ -399,23 +391,52 @@ object FirebaseModule {
 
 ## Navigation (Navigation 3)
 
-```kotlin
-// HustleNavKeys.kt — central route registry
-@Serializable data object Splash          : NavKey
-@Serializable data object Onboarding      : NavKey
-@Serializable data object Login           : NavKey
-@Serializable data object SignUp          : NavKey
-@Serializable data object ProfileSetup    : NavKey
-@Serializable data object MainShell       : NavKey
-@Serializable data object HomeScreen      : NavKey
-@Serializable data object MapScreen       : NavKey
-@Serializable data object ChatListScreen  : NavKey
-@Serializable data object ProfileScreen   : NavKey
+The application uses **Navigation 3** (`androidx.navigation3`) exclusively with type-safe `@Serializable` keys defined in `HustleNavKeys.kt`:
 
-@Serializable data class ServiceDetailScreen(val serviceId: String)  : NavKey
-@Serializable data class ChatDetailScreen(val conversationId: String) : NavKey
-@Serializable data class ProviderProfileScreen(val userId: String)    : NavKey
+```kotlin
+// Root flow keys
+@Serializable data object Splash                                           : NavKey
+@Serializable data object Onboarding                                       : NavKey
+@Serializable data class Login(val email: String = "")                     : NavKey
+@Serializable data object SignUp                                           : NavKey
+@Serializable data class EmailVerification(val email: String)              : NavKey
+@Serializable data object ProfileSetup                                     : NavKey
+@Serializable data object MainShell                                        : NavKey
+
+// 5 Bottom-tab destinations (nested in MainShell)
+@Serializable data object BottomHome                                       : NavKey
+@Serializable data object BottomMap                                        : NavKey
+@Serializable data object BottomChat                                       : NavKey
+@Serializable data object BottomBookmarks                                  : NavKey
+@Serializable data object BottomProfile                                    : NavKey
+
+// Feature detail routes
+@Serializable data class ServiceDetail(val serviceId: String)              : NavKey
+@Serializable data class ChatDetail(
+    val chatId: String,
+    val providerName: String? = null,
+    val serviceId: String? = null,
+)                                                                          : NavKey
+@Serializable data class ProviderProfile(val providerId: String)           : NavKey
+@Serializable data class WriteReview(val serviceId: String, val providerName: String) : NavKey
+@Serializable data object Subscription                                     : NavKey
+@Serializable data object AdminDashboard                                   : NavKey
 ```
+
+---
+
+## ⚡ Real-Time Sync & Audio Architecture
+
+### Real-Time Event Sync (`RealtimeSyncManager`)
+Rather than periodic HTTP polling, HustleHub listens to STOMP WebSocket topics via `RealtimeSyncManager`:
+- `/topic/services`: New/updated service listings dynamically update the Home and Map feeds.
+- `/topic/user/{userId}/notifications`: In-app banner alerts and badge increments.
+- Automatic reconnection with exponential backoff guarantees sync resilience across network switches.
+
+### Smart Audio Proximity Routing (`ProximityAudioRouter`)
+For privacy when listening to voice notes in public campus settings:
+- Utilizes Android's hardware `Sensor.TYPE_PROXIMITY`.
+- Automatically toggles audio routing from `AudioManager.STREAM_MUSIC` (loudspeaker) to the ear-speaker when held to the ear, with a subtle 200ms rewind for natural listening continuity.
 
 ---
 
