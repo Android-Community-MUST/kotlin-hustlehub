@@ -817,6 +817,7 @@ private fun ServiceDetailContent(
                 ReviewSummaryCard(
                     averageRating = service.averageRating,
                     totalReviews = state.totalReviewCount,
+                    ratingDistribution = state.ratingDistribution,
                 )
             }
         }
