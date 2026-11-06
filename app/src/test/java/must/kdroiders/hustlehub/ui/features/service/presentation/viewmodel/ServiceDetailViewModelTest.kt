@@ -15,9 +15,11 @@ import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepositor
 import must.kdroiders.hustlehub.ui.features.bookmarks.domain.repository.BookmarkRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
+import must.kdroiders.hustlehub.ui.features.service.domain.model.RatingDistribution
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ReviewEligibility
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
+import must.kdroiders.hustlehub.ui.features.service.domain.repository.ReviewRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetReviewEligibilityUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceReviewsUseCase
@@ -37,6 +39,7 @@ class ServiceDetailViewModelTest {
     private val getProviderProfileUseCase: GetProviderProfileUseCase = mockk(relaxed = true)
     private val getServiceReviewsUseCase: GetServiceReviewsUseCase = mockk(relaxed = true)
     private val getReviewEligibilityUseCase: GetReviewEligibilityUseCase = mockk(relaxed = true)
+    private val reviewRepository: ReviewRepository = mockk(relaxed = true)
     private val authRepository: AuthRepository = mockk(relaxed = true)
     private val bookmarkRepository: BookmarkRepository = mockk(relaxed = true)
     private val hustleAnalytics: HustleAnalytics = mockk(relaxed = true)
@@ -51,12 +54,14 @@ class ServiceDetailViewModelTest {
         coEvery { getReviewEligibilityUseCase(any()) } returns Result.success(
             ReviewEligibility(canReview = true, reason = "ELIGIBLE", isVerified = true),
         )
+        coEvery { reviewRepository.getRatingDistribution(any()) } returns Result.success(RatingDistribution())
 
         viewModel = ServiceDetailViewModel(
             getServiceByIdUseCase = getServiceByIdUseCase,
             getProviderProfileUseCase = getProviderProfileUseCase,
             getServiceReviewsUseCase = getServiceReviewsUseCase,
             getReviewEligibilityUseCase = getReviewEligibilityUseCase,
+            reviewRepository = reviewRepository,
             authRepository = authRepository,
             bookmarkRepository = bookmarkRepository,
             hustleAnalytics = hustleAnalytics,
@@ -117,6 +122,8 @@ class ServiceDetailViewModelTest {
             assertEquals("Prof. John", state.provider?.name)
             assertEquals(1, state.reviews.size)
             assertEquals("Great tutor!", state.reviews[0].comment)
+            assertEquals(1, state.ratingDistribution[4]) // 5-star review counted
+            assertEquals(0, state.ratingDistribution[0]) // 1-star is 0
         }
 
     @Test
