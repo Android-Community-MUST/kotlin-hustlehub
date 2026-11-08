@@ -12,6 +12,8 @@ import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.ConversationE
 import must.kdroiders.hustlehub.ui.features.chat.data.local.entity.MessageEntity
 import must.kdroiders.hustlehub.ui.features.map.data.local.dao.MapPinDao
 import must.kdroiders.hustlehub.ui.features.map.data.local.entity.MapPinEntity
+import must.kdroiders.hustlehub.ui.features.miniapp.data.local.dao.MiniAppDao
+import must.kdroiders.hustlehub.ui.features.miniapp.data.local.entity.MiniAppLocalEntity
 import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao
 import must.kdroiders.hustlehub.ui.features.notification.data.local.entity.NotificationEntity
 import must.kdroiders.hustlehub.ui.features.profile.data.local.dao.UserDao
@@ -31,8 +33,9 @@ import must.kdroiders.hustlehub.ui.features.service.data.local.entity.ServiceEnt
         ReviewEntity::class,
         MapPinEntity::class,
         BookmarkEntity::class,
+        MiniAppLocalEntity::class,
     ],
-    version = 12,
+    version = 13,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -51,6 +54,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun mapPinDao(): MapPinDao
 
     abstract fun bookmarkDao(): BookmarkDao
+
+    abstract fun miniAppDao(): MiniAppDao
 
     companion object {
         val MIGRATION_4_5 =

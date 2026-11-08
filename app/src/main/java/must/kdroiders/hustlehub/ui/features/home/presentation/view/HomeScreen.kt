@@ -55,6 +55,7 @@ import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
 import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
+import must.kdroiders.hustlehub.ui.features.home.presentation.components.CampusMiniAppsRow
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.CategoryChipRow
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.EmptyServicesView
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.FeaturedServicesRow
@@ -64,9 +65,9 @@ import must.kdroiders.hustlehub.ui.features.home.presentation.components.HomeTop
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ProviderBannerCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCardShimmer
+import must.kdroiders.hustlehub.ui.features.home.presentation.components.defaultCampusMiniApps
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.HomeViewModel
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
-import must.kdroiders.hustlehub.ui.features.home.presentation.components.CampusMiniAppsRow
 
 /** Number of shimmer placeholders shown while the initial page loads. */
 private const val SHIMMER_COUNT = 6
@@ -215,6 +216,7 @@ fun HomeScreen(
 
                     item(key = "campus_miniapps", span = { GridItemSpan(maxLineSpan) }) {
                         CampusMiniAppsRow(
+                            items = state.miniApps.ifEmpty { defaultCampusMiniApps },
                             onMiniAppClick = onNavigateToMiniApp,
                         )
                     }

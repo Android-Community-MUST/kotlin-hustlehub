@@ -210,7 +210,7 @@ fun MiniAppContainerScreen(
                         webView = wv,
                         callbackId = request.callbackId,
                         success = false,
-                        errorMessage = "Payment cancelled by student"
+                        errorMessage = "Payment cancelled by student",
                     )
                 }
                 pendingPayment = null
@@ -270,7 +270,7 @@ fun MiniAppContainerScreen(
                                 webView = wv,
                                 callbackId = request.callbackId,
                                 success = false,
-                                errorMessage = "User cancelled payment"
+                                errorMessage = "User cancelled payment",
                             )
                         }
                         pendingPayment = null

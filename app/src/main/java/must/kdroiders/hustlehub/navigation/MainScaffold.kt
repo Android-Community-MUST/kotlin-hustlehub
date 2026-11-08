@@ -70,7 +70,6 @@ fun MainShellScreen(
     onNavigateToAdminDashboard: () -> Unit = {},
     modifier: Modifier = Modifier,
     onNavigateToMiniApp: (appId: String, title: String, url: String) -> Unit = { _, _, _ -> },
-
 ) {
     val innerBackstack = rememberNavBackStack(BottomHome)
 

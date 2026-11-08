@@ -21,8 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.ConfirmationNumber
-import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -33,11 +33,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.material.icons.filled.Storefront
 import coil.compose.AsyncImage
 
 /**
@@ -60,7 +59,7 @@ val defaultCampusMiniApps = listOf(
         description = "Student Thrift & Wear",
         url = "https://example.com",
         coverPhotoUrl = "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=400", // Sample clothes cover
-        iconUrl = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=100",        // Sample logo
+        iconUrl = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=100", // Sample logo
     ),
     CampusMiniAppItem(
         appId = "must-canteen",
@@ -147,7 +146,6 @@ fun CampusMiniAppsRow(
                                     .height(75.dp),
                             )
                         }
-
 
                         Column(
                             modifier = Modifier.padding(12.dp),

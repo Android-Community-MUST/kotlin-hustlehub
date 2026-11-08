@@ -18,6 +18,7 @@ import must.kdroiders.hustlehub.ui.features.chat.data.remote.ConversationApiServ
 import must.kdroiders.hustlehub.ui.features.chat.data.remote.KeyExchangeApiService
 import must.kdroiders.hustlehub.ui.features.home.data.remote.DiscoveryApiService
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
+import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.MiniAppApiService
 import must.kdroiders.hustlehub.ui.features.monetization.data.remote.PaymentApiService
 import must.kdroiders.hustlehub.ui.features.notification.data.remote.NotificationApiService
 import must.kdroiders.hustlehub.ui.features.privacy.data.remote.PrivacyApiService
@@ -189,4 +190,8 @@ object NetworkModule {
     fun provideBookmarkApiService(retrofit: Retrofit): BookmarkApiService {
         return retrofit.create(BookmarkApiService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideMiniAppApiService(retrofit: Retrofit): MiniAppApiService = retrofit.create(MiniAppApiService::class.java)
 }
