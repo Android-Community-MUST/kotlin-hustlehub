@@ -5,7 +5,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ReviewSummaryCardTest {
-
     @Test
     fun `calculateDummyDistribution with total 0 returns all zeros`() {
         val result = calculateDummyDistribution(average = 5.0f, total = 0)
@@ -52,4 +51,3 @@ class ReviewSummaryCardTest {
         }
     }
 }
-

@@ -1,6 +1,5 @@
 package must.kdroiders.hustlehub.ui.features.home.presentation.view
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -68,6 +66,7 @@ import must.kdroiders.hustlehub.ui.features.home.presentation.components.Service
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCardShimmer
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.HomeViewModel
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
+import must.kdroiders.hustlehub.ui.features.home.presentation.components.CampusMiniAppsRow
 
 /** Number of shimmer placeholders shown while the initial page loads. */
 private const val SHIMMER_COUNT = 6
@@ -91,6 +90,7 @@ fun HomeScreen(
     onNavigateToAiSearch: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToCreateService: () -> Unit = {},
+    onNavigateToMiniApp: (appId: String, title: String, url: String) -> Unit = { _, _, _ -> },
 ) {
     val state by homeViewModel.uiState.collectAsState()
     val gridState = rememberLazyGridState()
@@ -210,6 +210,12 @@ fun HomeScreen(
                             selected = state.selectedCategory,
                             onSelected = homeViewModel::onCategorySelected,
                             modifier = Modifier.testTag(TestTags.CATEGORY_CHIPS),
+                        )
+                    }
+
+                    item(key = "campus_miniapps", span = { GridItemSpan(maxLineSpan) }) {
+                        CampusMiniAppsRow(
+                            onMiniAppClick = onNavigateToMiniApp,
                         )
                     }
 

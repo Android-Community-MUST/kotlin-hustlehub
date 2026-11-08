@@ -24,9 +24,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kotlin.math.roundToInt
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.RatingBar
+import kotlin.math.roundToInt
 
 @Composable
 fun ReviewSummaryCard(

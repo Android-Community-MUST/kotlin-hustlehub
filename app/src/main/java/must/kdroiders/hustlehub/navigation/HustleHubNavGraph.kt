@@ -55,6 +55,7 @@ import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatDetailScr
 import must.kdroiders.hustlehub.ui.features.help.presentation.view.HelpScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.AiSearchScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.SearchScreen
+import must.kdroiders.hustlehub.ui.features.miniapp.presentation.view.MiniAppContainerScreen
 import must.kdroiders.hustlehub.ui.features.monetization.presentation.PaymentStatusScreen
 import must.kdroiders.hustlehub.ui.features.monetization.presentation.SubscriptionScreen
 import must.kdroiders.hustlehub.ui.features.notification.presentation.view.NotificationPreferencesScreen
@@ -465,6 +466,9 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onNavigateToSubscription = { backstack.add(Subscription()) },
                                 onNavigateToAnalytics = { tab -> backstack.add(Analytics(initialTab = tab)) },
                                 onNavigateToAdminDashboard = { backstack.add(AdminDashboard) },
+                                onNavigateToMiniApp = { appId, title, url ->
+                                    backstack.add(MiniApp(appId = appId, title = title, url = url))
+                                },
                             )
                         }
 
@@ -772,6 +776,15 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                         entry<AdminDashboard> {
                             AdminDashboardScreen(
                                 onNavigateBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                            )
+                        }
+
+                        entry<MiniApp> { key ->
+                            MiniAppContainerScreen(
+                                appId = key.appId,
+                                title = key.title,
+                                url = key.url,
+                                onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
                             )
                         }
                     },
