@@ -35,6 +35,7 @@ import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.HustleScaffold
 import must.kdroiders.hustlehub.ui.features.admin.presentation.view.components.AdminActionDialog
 import must.kdroiders.hustlehub.ui.features.admin.presentation.view.components.AdminAuditLogsTab
+import must.kdroiders.hustlehub.ui.features.admin.presentation.view.components.AdminMiniAppsTab
 import must.kdroiders.hustlehub.ui.features.admin.presentation.view.components.AdminOverviewTab
 import must.kdroiders.hustlehub.ui.features.admin.presentation.view.components.AdminReportsTab
 import must.kdroiders.hustlehub.ui.features.admin.presentation.view.components.AdminServicesTab
@@ -47,6 +48,7 @@ import must.kdroiders.hustlehub.ui.features.admin.presentation.viewmodel.AdminVi
 fun AdminDashboardScreen(
     viewModel: AdminViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit = {},
+    onNavigateToMiniApp: (appId: String, title: String, url: String) -> Unit = { _, _, _ -> },
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -109,6 +111,11 @@ fun AdminDashboardScreen(
                 AdminTab.USERS to stringResource(R.string.admin_tab_users),
                 AdminTab.SERVICES to stringResource(R.string.admin_tab_services),
                 AdminTab.AUDIT_LOGS to stringResource(R.string.admin_tab_audit_logs),
+                AdminTab.MINI_APPS to if (state.pendingMiniApps.isNotEmpty()) {
+                    "Mini-Apps (${state.pendingMiniApps.size})"
+                } else {
+                    "Mini-Apps"
+                },
             )
 
             PrimaryScrollableTabRow(
@@ -157,6 +164,13 @@ fun AdminDashboardScreen(
                         )
                         AdminTab.AUDIT_LOGS -> AdminAuditLogsTab(
                             logs = state.auditLogs,
+                        )
+                        AdminTab.MINI_APPS -> AdminMiniAppsTab(
+                            pendingMiniApps = state.pendingMiniApps,
+                            isLoading = state.isActionLoading,
+                            onPreviewMiniApp = onNavigateToMiniApp,
+                            onApprove = viewModel::approveMiniApp,
+                            onReject = viewModel::rejectMiniApp,
                         )
                     }
                 }

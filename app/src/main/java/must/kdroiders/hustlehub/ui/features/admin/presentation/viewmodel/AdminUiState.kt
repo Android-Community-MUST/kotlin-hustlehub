@@ -4,6 +4,7 @@ import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminAnalytics
 import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminAuditLogItem
 import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminReportItem
 import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminUserItem
+import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.MiniAppRemoteDto
 
 enum class AdminTab {
     OVERVIEW,
@@ -11,6 +12,7 @@ enum class AdminTab {
     USERS,
     SERVICES,
     AUDIT_LOGS,
+    MINI_APPS,
 }
 
 enum class AdminUserFilter {
@@ -44,6 +46,7 @@ data class AdminUiState(
     val reports: List<AdminReportItem> = emptyList(),
     val reportStatusFilter: String? = null,
     val auditLogs: List<AdminAuditLogItem> = emptyList(),
+    val pendingMiniApps: List<MiniAppRemoteDto> = emptyList(),
     val activeActionTarget: AdminActionTarget? = null,
     val isActionLoading: Boolean = false,
 )

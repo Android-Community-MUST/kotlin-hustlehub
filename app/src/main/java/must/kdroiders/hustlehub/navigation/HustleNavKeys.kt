@@ -212,3 +212,6 @@ data class MiniApp(
     val url: String,
     val iconUrl: String? = null,
 ) : NavKey
+
+@Serializable
+data object SubmitMiniApp : NavKey

@@ -7,6 +7,8 @@ import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminAuditLogItem
 import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminReportItem
 import must.kdroiders.hustlehub.ui.features.admin.domain.model.AdminUserItem
 import must.kdroiders.hustlehub.ui.features.admin.domain.repository.AdminRepository
+import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.MiniAppRemoteDto
+import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.ReviewMiniAppRequestDto
 import javax.inject.Inject
 
 class AdminRepositoryImpl
@@ -164,5 +166,28 @@ class AdminRepositoryImpl
                         createdAt = dto.createdAt,
                     )
                 }
+            }
+
+        override suspend fun getPendingMiniApps(
+            page: Int,
+            size: Int,
+        ): Result<List<MiniAppRemoteDto>> =
+            runCatching {
+                val response = apiService.getPendingMiniApps(page = page, size = size)
+                val data = response.data ?: throw IllegalStateException(response.message)
+                data.content
+            }
+
+        override suspend fun reviewMiniApp(
+            id: String,
+            status: String,
+            adminNotes: String?,
+        ): Result<MiniAppRemoteDto> =
+            runCatching {
+                val response = apiService.reviewMiniApp(
+                    id = id,
+                    body = ReviewMiniAppRequestDto(status = status, adminNotes = adminNotes),
+                )
+                response.data ?: throw IllegalStateException(response.message)
             }
     }

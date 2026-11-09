@@ -92,6 +92,7 @@ fun HomeScreen(
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToCreateService: () -> Unit = {},
     onNavigateToMiniApp: (appId: String, title: String, url: String) -> Unit = { _, _, _ -> },
+    onNavigateToSubmitMiniApp: () -> Unit = {},
 ) {
     val state by homeViewModel.uiState.collectAsState()
     val gridState = rememberLazyGridState()
@@ -218,6 +219,7 @@ fun HomeScreen(
                         CampusMiniAppsRow(
                             items = state.miniApps.ifEmpty { defaultCampusMiniApps },
                             onMiniAppClick = onNavigateToMiniApp,
+                            onApplyClick = onNavigateToSubmitMiniApp,
                         )
                     }
 

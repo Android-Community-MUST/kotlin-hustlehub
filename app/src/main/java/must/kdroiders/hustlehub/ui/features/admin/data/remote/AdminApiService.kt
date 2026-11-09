@@ -7,8 +7,11 @@ import must.kdroiders.hustlehub.ui.features.admin.data.remote.dto.AdminAnalytics
 import must.kdroiders.hustlehub.ui.features.admin.data.remote.dto.AuditLogResponseDto
 import must.kdroiders.hustlehub.ui.features.admin.data.remote.dto.ReportResponseDto
 import must.kdroiders.hustlehub.ui.features.admin.data.remote.dto.UserAdminViewDto
+import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.MiniAppRemoteDto
+import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.ReviewMiniAppRequestDto
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -90,4 +93,16 @@ interface AdminApiService {
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 50,
     ): ApiResponse<PageResponse<AuditLogResponseDto>>
+
+    @GET("/api/v1/admin/miniapps/pending")
+    suspend fun getPendingMiniApps(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 50,
+    ): ApiResponse<PageResponse<MiniAppRemoteDto>>
+
+    @PATCH("/api/v1/admin/miniapps/{id}/review")
+    suspend fun reviewMiniApp(
+        @Path("id") id: String,
+        @Body body: ReviewMiniAppRequestDto,
+    ): ApiResponse<MiniAppRemoteDto>
 }
