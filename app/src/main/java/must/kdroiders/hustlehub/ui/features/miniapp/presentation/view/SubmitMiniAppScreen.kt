@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddBusiness
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Category
@@ -152,6 +153,7 @@ private val MINI_APP_CATEGORIES = listOf(
 fun SubmitMiniAppScreen(
     onBack: () -> Unit,
     onSubmitSuccess: () -> Unit,
+    editAppId: String? = null,
     viewModel: SubmitMiniAppViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -163,6 +165,12 @@ fun SubmitMiniAppScreen(
     val selectedCategoryOption = remember(state.category) {
         MINI_APP_CATEGORIES.firstOrNull { it.id == state.category }
             ?: MINI_APP_CATEGORIES.first()
+    }
+
+    LaunchedEffect(editAppId) {
+        if (!editAppId.isNullOrBlank()) {
+            viewModel.loadForEdit(editAppId)
+        }
     }
 
     LaunchedEffect(state.error) {
@@ -177,13 +185,17 @@ fun SubmitMiniAppScreen(
             onDismissRequest = onSubmitSuccess,
             title = {
                 Text(
-                    text = "Application Submitted!",
+                    text = if (state.isEditMode) "Changes Saved!" else "Application Submitted!",
                     fontWeight = FontWeight.Bold,
                 )
             },
             text = {
                 Text(
-                    text = "Your mini-app has been submitted to the HustleHub admin team. Once approved, it will go live dynamically on the campus feed.",
+                    text = if (state.isEditMode) {
+                        "Your mini-app has been updated successfully."
+                    } else {
+                        "Your mini-app has been submitted to the HustleHub admin team. Once approved, it will go live dynamically on the campus feed."
+                    },
                 )
             },
             confirmButton = {
@@ -350,7 +362,7 @@ fun SubmitMiniAppScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "List Your App",
+                        text = if (state.isEditMode) "Edit Mini-App" else "List Your App",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                     )
@@ -387,7 +399,7 @@ fun SubmitMiniAppScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
-                        imageVector = Icons.Default.AddBusiness,
+                        imageVector = if (state.isEditMode) Icons.Default.Edit else Icons.Default.AddBusiness,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(36.dp),
@@ -395,14 +407,18 @@ fun SubmitMiniAppScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text(
-                            text = "HustleHub Mini-App Platform",
+                            text = if (state.isEditMode) "Update Your Mini-App" else "HustleHub Mini-App Platform",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Deploy your website and let thousands of students access it instantly with seamless native M-Pesa payments.",
+                            text = if (state.isEditMode) {
+                                "Note: Changing your website URL will require re-verification by campus admins."
+                            } else {
+                                "Deploy your website and let thousands of students access it instantly with seamless native M-Pesa payments."
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -432,6 +448,7 @@ fun SubmitMiniAppScreen(
                     value = state.appId,
                     onValueChange = viewModel::onAppIdChange,
                     placeholder = "e.g. must-canteen",
+                    enabled = !state.isEditMode,
                     isError = state.appIdError != null,
                     errorText = state.appIdError,
                     keyboardOptions = KeyboardOptions(
@@ -574,7 +591,7 @@ fun SubmitMiniAppScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             HustleButton(
-                text = "Submit Application",
+                text = if (state.isEditMode) "Save Changes" else "Submit Application",
                 onClick = viewModel::submit,
                 loading = state.isLoading,
                 enabled = state.isFormValid && !state.isLoading,

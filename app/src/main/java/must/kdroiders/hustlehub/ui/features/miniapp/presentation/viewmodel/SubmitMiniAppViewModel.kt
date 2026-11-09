@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.MiniAppApiService
 import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.CreateMiniAppRequestDto
+import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.UpdateMiniAppRequestDto
 import javax.inject.Inject
 
 data class SubmitMiniAppUiState(
@@ -27,6 +28,8 @@ data class SubmitMiniAppUiState(
     val coverPhotoUrl: String = "",
     val coverPhotoUrlError: String? = null,
     val isAppIdManuallyEdited: Boolean = false,
+    val isEditMode: Boolean = false,
+    val editingId: String? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
     val isSuccess: Boolean = false,
@@ -52,6 +55,47 @@ class SubmitMiniAppViewModel
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SubmitMiniAppUiState())
         val uiState: StateFlow<SubmitMiniAppUiState> = _uiState.asStateFlow()
+
+        fun loadForEdit(appId: String) {
+            _uiState.update { it.copy(isLoading = true, isEditMode = true, error = null) }
+            viewModelScope.launch {
+                try {
+                    val response = apiService.getMiniApp(appId)
+                    val data = response.data
+                    if (response.success && data != null) {
+                        _uiState.update {
+                            it.copy(
+                                title = data.title,
+                                appId = data.appId,
+                                entryUrl = data.entryUrl,
+                                description = data.description,
+                                category = data.category,
+                                iconUrl = data.iconUrl.orEmpty(),
+                                coverPhotoUrl = data.coverPhotoUrl.orEmpty(),
+                                isAppIdManuallyEdited = true,
+                                isEditMode = true,
+                                editingId = data.id,
+                                isLoading = false,
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = response.message.ifBlank { "Could not load mini-app" },
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = e.localizedMessage ?: "Network error loading mini-app",
+                        )
+                    }
+                }
+            }
+        }
 
         fun onTitleChange(newTitle: String) {
             if (newTitle.length > 50) return
@@ -82,7 +126,7 @@ class SubmitMiniAppViewModel
         }
 
         fun onAppIdChange(newAppId: String) {
-            if (newAppId.length > 40) return
+            if (_uiState.value.isEditMode || newAppId.length > 40) return
             val sanitized = newAppId.lowercase().replace(" ", "-")
             _uiState.update { current ->
                 current.copy(
@@ -203,24 +247,46 @@ class SubmitMiniAppViewModel
 
             viewModelScope.launch {
                 try {
-                    val request = CreateMiniAppRequestDto(
-                        appId = trimmedAppId,
-                        title = trimmedTitle,
-                        description = trimmedDesc,
-                        entryUrl = trimmedUrl,
-                        iconUrl = state.iconUrl.trim().ifBlank { null },
-                        coverPhotoUrl = state.coverPhotoUrl.trim().ifBlank { null },
-                        category = state.category,
-                    )
-                    val response = apiService.applyForMiniApp(request)
-                    if (response.success && response.data != null) {
-                        _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                    if (state.isEditMode && state.editingId != null) {
+                        val updateRequest = UpdateMiniAppRequestDto(
+                            title = trimmedTitle,
+                            description = trimmedDesc,
+                            entryUrl = trimmedUrl,
+                            iconUrl = state.iconUrl.trim().ifBlank { null },
+                            coverPhotoUrl = state.coverPhotoUrl.trim().ifBlank { null },
+                            category = state.category,
+                        )
+                        val response = apiService.updateMiniApp(state.editingId, updateRequest)
+                        if (response.success && response.data != null) {
+                            _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                        } else {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    error = response.message.ifBlank { "Failed to update mini-app" },
+                                )
+                            }
+                        }
                     } else {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                error = response.message.ifBlank { "Failed to submit mini-app" },
-                            )
+                        val request = CreateMiniAppRequestDto(
+                            appId = trimmedAppId,
+                            title = trimmedTitle,
+                            description = trimmedDesc,
+                            entryUrl = trimmedUrl,
+                            iconUrl = state.iconUrl.trim().ifBlank { null },
+                            coverPhotoUrl = state.coverPhotoUrl.trim().ifBlank { null },
+                            category = state.category,
+                        )
+                        val response = apiService.applyForMiniApp(request)
+                        if (response.success && response.data != null) {
+                            _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                        } else {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    error = response.message.ifBlank { "Failed to submit mini-app" },
+                                )
+                            }
                         }
                     }
                 } catch (e: Exception) {

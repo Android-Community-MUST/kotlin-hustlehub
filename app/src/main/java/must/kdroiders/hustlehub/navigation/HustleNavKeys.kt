@@ -214,4 +214,7 @@ data class MiniApp(
 ) : NavKey
 
 @Serializable
-data object SubmitMiniApp : NavKey
+data class SubmitMiniApp(val editAppId: String? = null) : NavKey
+
+@Serializable
+data object MyMiniApps : NavKey

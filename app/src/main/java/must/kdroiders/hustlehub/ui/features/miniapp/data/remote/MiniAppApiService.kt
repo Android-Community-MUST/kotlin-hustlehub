@@ -3,9 +3,12 @@ package must.kdroiders.hustlehub.ui.features.miniapp.data.remote
 import must.kdroiders.hustlehub.core.api.ApiResponse
 import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.CreateMiniAppRequestDto
 import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.MiniAppRemoteDto
+import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.UpdateMiniAppRequestDto
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface MiniAppApiService {
@@ -24,4 +27,15 @@ interface MiniAppApiService {
 
     @GET("miniapps/my")
     suspend fun getMyMiniApps(): ApiResponse<List<MiniAppRemoteDto>>
+
+    @PUT("miniapps/{id}")
+    suspend fun updateMiniApp(
+        @Path("id") id: String,
+        @Body request: UpdateMiniAppRequestDto,
+    ): ApiResponse<MiniAppRemoteDto>
+
+    @DELETE("miniapps/{id}")
+    suspend fun deleteMiniApp(
+        @Path("id") id: String,
+    ): ApiResponse<Unit>
 }

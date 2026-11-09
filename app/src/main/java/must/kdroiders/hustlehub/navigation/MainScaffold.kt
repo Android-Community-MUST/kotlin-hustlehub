@@ -71,6 +71,7 @@ fun MainShellScreen(
     modifier: Modifier = Modifier,
     onNavigateToMiniApp: (appId: String, title: String, url: String) -> Unit = { _, _, _ -> },
     onNavigateToSubmitMiniApp: () -> Unit = {},
+    onNavigateToMyMiniApps: () -> Unit = {},
 ) {
     val innerBackstack = rememberNavBackStack(BottomHome)
 
@@ -191,6 +192,7 @@ fun MainShellScreen(
                         onNavigateToSubscription = onNavigateToSubscription,
                         onNavigateToAnalytics = onNavigateToAnalytics,
                         onNavigateToAdminDashboard = onNavigateToAdminDashboard,
+                        onNavigateToMyMiniApps = onNavigateToMyMiniApps,
                     )
                 }
                 entry<BottomBookmarks> {

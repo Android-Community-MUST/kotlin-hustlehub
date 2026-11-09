@@ -9,6 +9,8 @@ import must.kdroiders.hustlehub.ui.features.home.presentation.components.default
 import must.kdroiders.hustlehub.ui.features.miniapp.data.local.dao.MiniAppDao
 import must.kdroiders.hustlehub.ui.features.miniapp.data.local.entity.MiniAppLocalEntity
 import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.MiniAppApiService
+import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.MiniAppRemoteDto
+import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.UpdateMiniAppRequestDto
 import must.kdroiders.hustlehub.ui.features.miniapp.domain.repository.MiniAppRepository
 import timber.log.Timber
 import javax.inject.Inject
@@ -64,5 +66,36 @@ class MiniAppRepositoryImpl
                 }.onFailure { e ->
                     Timber.w(e, "Failed to refresh mini-apps from backend; continuing with cache")
                 }
+            }
+
+        override suspend fun getMyMiniApps(): Result<List<MiniAppRemoteDto>> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = miniAppApiService.getMyMiniApps()
+                    response.data ?: emptyList()
+                }
+            }
+
+        override suspend fun updateMiniApp(
+            id: String,
+            request: UpdateMiniAppRequestDto,
+        ): Result<MiniAppRemoteDto> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = miniAppApiService.updateMiniApp(id, request)
+                    val data = response.data ?: throw IllegalStateException(response.message)
+                    refreshMiniApps()
+                    data
+                }
+            }
+
+        override suspend fun deleteMiniApp(id: String): Result<Unit> =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val response = miniAppApiService.deleteMiniApp(id)
+                    if (!response.success) {
+                        throw IllegalStateException(response.message)
+                    }
+                }.also { refreshMiniApps() }
             }
     }
