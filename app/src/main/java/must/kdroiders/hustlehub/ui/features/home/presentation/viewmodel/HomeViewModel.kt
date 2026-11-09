@@ -281,7 +281,7 @@ class HomeViewModel
             fetchServices(reset = true)
             loadNotificationCount()
             viewModelScope.launch {
-                miniAppRepository?.refreshMiniApps() // <-- ADD THIS LINE
+                miniAppRepository?.refreshMiniApps()
             }
         }
 

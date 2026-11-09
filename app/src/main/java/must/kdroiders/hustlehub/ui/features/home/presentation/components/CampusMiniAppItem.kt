@@ -1,6 +1,8 @@
 package must.kdroiders.hustlehub.ui.features.home.presentation.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -40,9 +44,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 
-/**
- * Data item representing a discoverable campus mini-app.
- */
 data class CampusMiniAppItem(
     val appId: String,
     val title: String,
@@ -57,23 +58,25 @@ val defaultCampusMiniApps = listOf(
     CampusMiniAppItem(
         appId = "thrift-drip",
         title = "MUST Drip & Fits",
-        description = "Student Thrift & Wear",
+        description = "Thrift & Wear",
         url = "https://example.com",
-        coverPhotoUrl = "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=400", // Sample clothes cover
-        iconUrl = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=100", // Sample logo
+        coverPhotoUrl = "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=400",
+        iconUrl = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=100",
     ),
     CampusMiniAppItem(
         appId = "must-canteen",
         title = "MUST Canteen",
-        description = "Meals & Drinks",
+        description = "Food & Drinks",
         url = "file:///android_asset/miniapps/canteen/index.html",
+        coverPhotoUrl = "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400",
         icon = Icons.Default.Restaurant,
     ),
     CampusMiniAppItem(
         appId = "mabby-food",
         title = "Mabby",
-        description = "Tasty Food",
+        description = "Meals & Treats",
         url = "https://mabby.co.ke",
+        coverPhotoUrl = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400",
         icon = Icons.Default.Cake,
     ),
     CampusMiniAppItem(
@@ -81,13 +84,11 @@ val defaultCampusMiniApps = listOf(
         title = "Campus Passes",
         description = "Tickets & Entry",
         url = "https://events.must.ac.ke",
+        coverPhotoUrl = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400",
         icon = Icons.Default.ConfirmationNumber,
     ),
 )
 
-/**
- * Horizontal row displaying quick-access campus mini-apps on the Home discovery tab.
- */
 @Composable
 fun CampusMiniAppsRow(
     onMiniAppClick: (appId: String, title: String, url: String) -> Unit,
@@ -98,27 +99,20 @@ fun CampusMiniAppsRow(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 2.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 4.dp, vertical = 4.dp),
+                .padding(horizontal = 4.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column {
-                Text(
-                    text = "Campus Mini-Apps",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = "Instant services & campus tools",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Text(
+                text = "Campus Mini-Apps",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -130,52 +124,95 @@ fun CampusMiniAppsRow(
             items(items, key = { it.appId }) { item ->
                 Card(
                     modifier = Modifier
-                        .width(160.dp)
-                        .clickable { onMiniAppClick(item.appId, item.title, item.url) },
+                        .width(136.dp)
+                        .clickable {
+                            onMiniAppClick(item.appId, item.title, item.url)
+                        },
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface,
                     ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    ),
                 ) {
-                    Column {
-                        if (!item.coverPhotoUrl.isNullOrBlank()) {
-                            AsyncImage(
-                                model = item.coverPhotoUrl,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(75.dp),
-                            )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                        ) {
+                            if (!item.coverPhotoUrl.isNullOrBlank()) {
+                                AsyncImage(
+                                    model = item.coverPhotoUrl,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(
+                                            Brush.horizontalGradient(
+                                                listOf(
+                                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
+                                                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                                                ),
+                                            ),
+                                        ),
+                                )
+                            }
                         }
 
-                        Column(
-                            modifier = Modifier.padding(12.dp),
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 10.dp)
+                                .offset(y = (-18).dp),
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(38.dp)
+                                    .size(36.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                if (!item.iconUrl.isNullOrBlank()) {
-                                    AsyncImage(
-                                        model = item.iconUrl,
-                                        contentDescription = item.title,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize(),
-                                    )
-                                } else {
-                                    Icon(
-                                        imageVector = item.icon ?: Icons.Default.Storefront,
-                                        contentDescription = item.title,
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        modifier = Modifier.size(20.dp),
-                                    )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (!item.iconUrl.isNullOrBlank()) {
+                                        AsyncImage(
+                                            model = item.iconUrl,
+                                            contentDescription = item.title,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = item.icon ?: Icons.Default.Storefront,
+                                            contentDescription = item.title,
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                    }
                                 }
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                                .offset(y = (-10).dp),
+                        ) {
                             Text(
                                 text = item.title,
                                 style = MaterialTheme.typography.titleSmall,
@@ -183,9 +220,10 @@ fun CampusMiniAppsRow(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = item.description,
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
@@ -198,45 +236,87 @@ fun CampusMiniAppsRow(
             item(key = "apply_miniapp") {
                 Card(
                     modifier = Modifier
-                        .width(150.dp)
+                        .width(136.dp)
                         .clickable { onApplyClick() },
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
                     ),
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center,
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                        ),
+                                    ),
+                                ),
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 10.dp)
+                                .offset(y = (-18).dp),
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.AddBusiness,
-                                contentDescription = "Host Your App",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(20.dp),
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AddBusiness,
+                                        contentDescription = "Host Your App",
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                }
+                            }
+                        }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                                .offset(y = (-10).dp),
+                        ) {
+                            Text(
+                                text = "Host Your App",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Launch on campus",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Host Your App",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                        )
-                        Text(
-                            text = "Sell to students",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                        )
                     }
                 }
             }

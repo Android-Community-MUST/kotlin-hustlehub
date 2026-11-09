@@ -14,17 +14,35 @@ import javax.inject.Inject
 
 data class SubmitMiniAppUiState(
     val title: String = "",
+    val titleError: String? = null,
     val appId: String = "",
+    val appIdError: String? = null,
     val entryUrl: String = "",
+    val entryUrlError: String? = null,
     val description: String = "",
+    val descriptionError: String? = null,
     val category: String = "SERVICES",
     val iconUrl: String = "",
+    val iconUrlError: String? = null,
     val coverPhotoUrl: String = "",
+    val coverPhotoUrlError: String? = null,
     val isAppIdManuallyEdited: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
     val isSuccess: Boolean = false,
-)
+) {
+    val isFormValid: Boolean
+        get() = title.trim().length >= 2 &&
+            titleError == null &&
+            appId.trim().matches(Regex("^[a-z0-9-]+$")) &&
+            appIdError == null &&
+            entryUrl.trim().startsWith("https://") &&
+            entryUrlError == null &&
+            description.trim().length >= 10 &&
+            descriptionError == null &&
+            iconUrlError == null &&
+            coverPhotoUrlError == null
+}
 
 @HiltViewModel
 class SubmitMiniAppViewModel
@@ -36,24 +54,40 @@ class SubmitMiniAppViewModel
         val uiState: StateFlow<SubmitMiniAppUiState> = _uiState.asStateFlow()
 
         fun onTitleChange(newTitle: String) {
+            if (newTitle.length > 50) return
             _uiState.update { current ->
                 val updatedAppId = if (!current.isAppIdManuallyEdited) {
                     slugify(newTitle)
                 } else {
                     current.appId
                 }
+                val titleErr = when {
+                    newTitle.isBlank() -> null
+                    newTitle.trim().length < 2 -> "Name must be at least 2 characters"
+                    else -> null
+                }
+                val appIdErr = if (!current.isAppIdManuallyEdited && updatedAppId.isNotEmpty()) {
+                    validateAppId(updatedAppId)
+                } else {
+                    current.appIdError
+                }
                 current.copy(
                     title = newTitle,
+                    titleError = titleErr,
                     appId = updatedAppId,
+                    appIdError = appIdErr,
                     error = null,
                 )
             }
         }
 
         fun onAppIdChange(newAppId: String) {
+            if (newAppId.length > 40) return
+            val sanitized = newAppId.lowercase().replace(" ", "-")
             _uiState.update { current ->
                 current.copy(
-                    appId = newAppId.lowercase().replace(" ", "-"),
+                    appId = sanitized,
+                    appIdError = validateAppId(sanitized),
                     isAppIdManuallyEdited = true,
                     error = null,
                 )
@@ -61,11 +95,35 @@ class SubmitMiniAppViewModel
         }
 
         fun onEntryUrlChange(newUrl: String) {
-            _uiState.update { it.copy(entryUrl = newUrl, error = null) }
+            _uiState.update { current ->
+                val urlErr = when {
+                    newUrl.isBlank() -> null
+                    !newUrl.startsWith("https://") -> "Must be a secure HTTPS URL (https://...)"
+                    newUrl.length < 10 -> "Please enter a valid URL"
+                    else -> null
+                }
+                current.copy(
+                    entryUrl = newUrl,
+                    entryUrlError = urlErr,
+                    error = null,
+                )
+            }
         }
 
         fun onDescriptionChange(newDescription: String) {
-            _uiState.update { it.copy(description = newDescription, error = null) }
+            if (newDescription.length > 300) return
+            _uiState.update { current ->
+                val descErr = when {
+                    newDescription.isBlank() -> null
+                    newDescription.trim().length < 10 -> "Description must be at least 10 characters"
+                    else -> null
+                }
+                current.copy(
+                    description = newDescription,
+                    descriptionError = descErr,
+                    error = null,
+                )
+            }
         }
 
         fun onCategoryChange(newCategory: String) {
@@ -73,11 +131,31 @@ class SubmitMiniAppViewModel
         }
 
         fun onIconUrlChange(newIconUrl: String) {
-            _uiState.update { it.copy(iconUrl = newIconUrl) }
+            _uiState.update { current ->
+                val iconErr = when {
+                    newIconUrl.isBlank() -> null
+                    !newIconUrl.startsWith("http://") && !newIconUrl.startsWith("https://") -> "Must be a valid image URL"
+                    else -> null
+                }
+                current.copy(
+                    iconUrl = newIconUrl,
+                    iconUrlError = iconErr,
+                )
+            }
         }
 
         fun onCoverPhotoUrlChange(newCoverUrl: String) {
-            _uiState.update { it.copy(coverPhotoUrl = newCoverUrl) }
+            _uiState.update { current ->
+                val coverErr = when {
+                    newCoverUrl.isBlank() -> null
+                    !newCoverUrl.startsWith("http://") && !newCoverUrl.startsWith("https://") -> "Must be a valid image URL"
+                    else -> null
+                }
+                current.copy(
+                    coverPhotoUrl = newCoverUrl,
+                    coverPhotoUrlError = coverErr,
+                )
+            }
         }
 
         fun clearError() {
@@ -91,23 +169,33 @@ class SubmitMiniAppViewModel
             val trimmedUrl = state.entryUrl.trim()
             val trimmedDesc = state.description.trim()
 
-            if (trimmedTitle.length < 2) {
-                _uiState.update { it.copy(error = "Title must be at least 2 characters") }
-                return
+            val titleErr = when {
+                trimmedTitle.isBlank() -> "Mini-app name is required"
+                trimmedTitle.length < 2 -> "Name must be at least 2 characters"
+                else -> null
+            }
+            val appIdErr = validateAppId(trimmedAppId)
+            val urlErr = when {
+                trimmedUrl.isBlank() -> "Website URL is required"
+                !trimmedUrl.startsWith("https://") -> "Must be a secure HTTPS URL (https://...)"
+                trimmedUrl.length < 10 -> "Please enter a valid URL"
+                else -> null
+            }
+            val descErr = when {
+                trimmedDesc.isBlank() -> "Description is required"
+                trimmedDesc.length < 10 -> "Description must be at least 10 characters"
+                else -> null
             }
 
-            if (!trimmedAppId.matches(Regex("^[a-z0-9-]+$"))) {
-                _uiState.update { it.copy(error = "App ID can only contain lowercase letters, numbers, and hyphens") }
-                return
-            }
-
-            if (!trimmedUrl.startsWith("https://")) {
-                _uiState.update { it.copy(error = "Entry URL must be a valid secure HTTPS link (https://...)") }
-                return
-            }
-
-            if (trimmedDesc.isBlank()) {
-                _uiState.update { it.copy(error = "Description cannot be empty") }
+            if (titleErr != null || appIdErr != null || urlErr != null || descErr != null) {
+                _uiState.update {
+                    it.copy(
+                        titleError = titleErr,
+                        appIdError = appIdErr,
+                        entryUrlError = urlErr,
+                        descriptionError = descErr,
+                    )
+                }
                 return
             }
 
@@ -143,6 +231,15 @@ class SubmitMiniAppViewModel
                         )
                     }
                 }
+            }
+        }
+
+        private fun validateAppId(id: String): String? {
+            return when {
+                id.isBlank() -> "Unique App ID is required"
+                id.length < 2 -> "App ID must be at least 2 characters"
+                !id.matches(Regex("^[a-z0-9-]+$")) -> "Only lowercase letters, numbers, and hyphens allowed"
+                else -> null
             }
         }
 
