@@ -285,16 +285,18 @@ private fun ProfileContent(
                     )
                 }
 
-                Spacer(Modifier.height(10.dp))
-                HustleButton(
-                    text = "My Mini-Apps",
-                    icon = Icons.Default.Widgets,
-                    variant = HustleButtonVariant.Secondary,
-                    onClick = onNavigateToMyMiniApps,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = horizontalPadding),
-                )
+                if (state.hasMiniApps) {
+                    Spacer(Modifier.height(10.dp))
+                    HustleButton(
+                        text = "My Mini-Apps",
+                        icon = Icons.Default.Widgets,
+                        variant = HustleButtonVariant.Secondary,
+                        onClick = onNavigateToMyMiniApps,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = horizontalPadding),
+                    )
+                }
             }
         }
 

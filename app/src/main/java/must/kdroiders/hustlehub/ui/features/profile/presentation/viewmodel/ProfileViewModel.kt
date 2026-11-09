@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.miniapp.domain.repository.MiniAppRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.util.HustleScoreCalculator
 import must.kdroiders.hustlehub.ui.features.service.domain.model.ServiceAvailability
@@ -27,6 +28,7 @@ class ProfileViewModel
         private val userRepository: UserRepository,
         private val getMyServicesUseCase: GetMyServicesUseCase,
         private val updateAvailabilityUseCase: UpdateAvailabilityUseCase,
+        private val miniAppRepository: MiniAppRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ProfileUiState())
         val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
@@ -46,6 +48,7 @@ class ProfileViewModel
 
                 val userResult = userRepository.getUserProfile(firebaseUser.uid)
                 val servicesResult = getMyServicesUseCase()
+                val miniAppsResult = miniAppRepository.getMyMiniApps()
 
                 userResult
                     .onSuccess { user ->
@@ -92,6 +95,7 @@ class ProfileViewModel
                                 isLoading = false,
                                 error = null,
                                 needsProfileSetup = false,
+                                hasMiniApps = miniAppsResult.getOrElse { emptyList() }.isNotEmpty(),
                             )
                         }
                     }.onFailure { e ->
