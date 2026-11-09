@@ -196,3 +196,25 @@ data class Analytics(val initialTab: String = "OVERVIEW") : NavKey
 /** In-app Admin Dashboard screen for authorized campus administrators. */
 @Serializable
 data object AdminDashboard : NavKey
+
+/**
+ * Launches a sandboxed mini-app inside the WebView container.
+ *
+ * [appId]   - Unique identifier for the mini-app (e.g. "must-canteen").
+ * [title]   - Human-readable name shown in the top app bar.
+ * [url]     - HTTPS entry-point URL (or local asset path) for the mini-app.
+ * [iconUrl] - Optional icon shown in the discovery grid on HomeScreen.
+ */
+@Serializable
+data class MiniApp(
+    val appId: String,
+    val title: String,
+    val url: String,
+    val iconUrl: String? = null,
+) : NavKey
+
+@Serializable
+data class SubmitMiniApp(val editAppId: String? = null) : NavKey
+
+@Serializable
+data object MyMiniApps : NavKey

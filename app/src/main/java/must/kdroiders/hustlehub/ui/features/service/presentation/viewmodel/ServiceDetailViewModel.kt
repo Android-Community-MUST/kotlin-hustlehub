@@ -14,7 +14,7 @@ import must.kdroiders.hustlehub.core.telemetry.HustleCrashlytics
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
 import must.kdroiders.hustlehub.ui.features.bookmarks.domain.repository.BookmarkRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.usecase.GetProviderProfileUseCase
-import must.kdroiders.hustlehub.ui.features.service.domain.model.Review
+import must.kdroiders.hustlehub.ui.features.service.domain.repository.ReviewRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetReviewEligibilityUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceByIdUseCase
 import must.kdroiders.hustlehub.ui.features.service.domain.usecase.GetServiceReviewsUseCase
@@ -30,6 +30,7 @@ class ServiceDetailViewModel
         private val getProviderProfileUseCase: GetProviderProfileUseCase,
         private val getServiceReviewsUseCase: GetServiceReviewsUseCase,
         private val getReviewEligibilityUseCase: GetReviewEligibilityUseCase,
+        private val reviewRepository: ReviewRepository,
         private val authRepository: AuthRepository,
         private val bookmarkRepository: BookmarkRepository,
         private val hustleAnalytics: HustleAnalytics,
@@ -93,25 +94,38 @@ class ServiceDetailViewModel
                 val serviceDeferred = async { getServiceByIdUseCase(id) }
                 val reviewsDeferred = async { getServiceReviewsUseCase(id, page = 0, size = 5) }
                 val eligibilityDeferred = async { runCatching { getReviewEligibilityUseCase(id).getOrNull() }.getOrNull() }
+                val distDeferred = async { runCatching { reviewRepository.getRatingDistribution(id).getOrNull() }.getOrNull() }
 
                 val serviceResult = serviceDeferred.await()
                 val reviewsResult = reviewsDeferred.await()
                 val eligibility = eligibilityDeferred.await()
+                val dist = distDeferred.await()
 
                 serviceResult
                     .onSuccess { service ->
                         hustleAnalytics.logServiceViewed(service.id, service.category.name)
                         val providerResult = getProviderProfileUseCase(service.providerId)
                         val provider = providerResult.getOrNull()
-                        val reviews = reviewsResult.getOrElse { emptyList<Review>().let { it } }
                         val reviewPage = reviewsResult.getOrNull()
+                        val reviewsList = reviewPage?.content ?: emptyList()
+                        val distribution = if (dist != null && (dist.count1Stars + dist.count2Stars + dist.count3Stars + dist.count4Stars + dist.count5Stars) > 0) {
+                            intArrayOf(dist.count1Stars, dist.count2Stars, dist.count3Stars, dist.count4Stars, dist.count5Stars)
+                        } else {
+                            val counts = IntArray(5)
+                            for (r in reviewsList) {
+                                val star = r.rating.coerceIn(1, 5)
+                                counts[star - 1]++
+                            }
+                            counts
+                        }
 
                         _uiState.update {
                             it.copy(
                                 service = service,
                                 provider = provider,
-                                reviews = reviewPage?.content ?: emptyList(),
+                                reviews = reviewsList,
                                 totalReviewCount = reviewPage?.totalElements?.toInt() ?: service.reviewCount,
+                                ratingDistribution = distribution,
                                 isOwnService = currentUid != null && provider != null && (currentUid == provider.id || currentUid == provider.uuid),
                                 reviewEligibility = eligibility,
                                 isLoading = false,

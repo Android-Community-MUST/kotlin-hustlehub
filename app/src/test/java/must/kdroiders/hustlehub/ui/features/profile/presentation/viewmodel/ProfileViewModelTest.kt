@@ -12,6 +12,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import must.kdroiders.hustlehub.ui.features.auth.domain.repository.AuthRepository
+import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto.MiniAppRemoteDto
+import must.kdroiders.hustlehub.ui.features.miniapp.domain.repository.MiniAppRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.User
 import must.kdroiders.hustlehub.ui.features.profile.domain.repository.UserRepository
 import must.kdroiders.hustlehub.ui.features.service.domain.model.Service
@@ -24,6 +26,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -35,6 +38,7 @@ class ProfileViewModelTest {
     private val userRepository: UserRepository = mockk(relaxed = true)
     private val getMyServicesUseCase: GetMyServicesUseCase = mockk(relaxed = true)
     private val updateAvailabilityUseCase: UpdateAvailabilityUseCase = mockk(relaxed = true)
+    private val miniAppRepository: MiniAppRepository = mockk(relaxed = true)
 
     private lateinit var viewModel: ProfileViewModel
 
@@ -59,12 +63,14 @@ class ProfileViewModelTest {
 
         coEvery { userRepository.getUserProfile("uid-100") } returns Result.success(user)
         coEvery { getMyServicesUseCase() } returns Result.success(services)
+        coEvery { miniAppRepository.getMyMiniApps() } returns Result.success(emptyList())
 
         viewModel = ProfileViewModel(
             authRepository = authRepository,
             userRepository = userRepository,
             getMyServicesUseCase = getMyServicesUseCase,
             updateAvailabilityUseCase = updateAvailabilityUseCase,
+            miniAppRepository = miniAppRepository,
         )
     }
 
@@ -191,5 +197,38 @@ class ProfileViewModelTest {
             assertEquals(true, state.needsProfileSetup)
             assertEquals("Profile not found", state.error)
             assertEquals(false, state.isLoading)
+        }
+
+    @Test
+    fun `loadProfile sets hasMiniApps true when user has mini apps`() =
+        runTest {
+            val miniApp = MiniAppRemoteDto(
+                id = "app-1",
+                appId = "hustle-store",
+                title = "Hustle Store",
+                description = "Campus store",
+                entryUrl = "https://example.com",
+                category = "UTILITY",
+                status = "ACTIVE",
+                developerId = "uid-100",
+                createdAt = "2026-01-01T00:00:00Z",
+            )
+            coEvery { miniAppRepository.getMyMiniApps() } returns Result.success(listOf(miniApp))
+
+            viewModel.loadProfile()
+
+            val state = viewModel.uiState.value
+            assertTrue(state.hasMiniApps)
+        }
+
+    @Test
+    fun `loadProfile sets hasMiniApps false when user has no mini apps`() =
+        runTest {
+            coEvery { miniAppRepository.getMyMiniApps() } returns Result.success(emptyList())
+
+            viewModel.loadProfile()
+
+            val state = viewModel.uiState.value
+            assertFalse(state.hasMiniApps)
         }
 }

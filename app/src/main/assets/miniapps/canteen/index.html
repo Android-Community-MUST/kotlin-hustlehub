@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUST Canteen & Mess</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: #f8fafc; color: #0f172a; padding: 16px; }
+        .header { background: #15803d; color: white; padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+        .header h1 { font-size: 20px; font-weight: 700; }
+        .header p { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+        .student-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px; font-size: 12px; margin-top: 8px; }
+        .section-title { font-size: 16px; font-weight: 700; margin: 16px 0 12px; color: #334155; }
+        .menu-item { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .item-info h3 { font-size: 15px; font-weight: 600; color: #1e293b; }
+        .item-info p { font-size: 13px; color: #64748b; margin-top: 2px; }
+        .item-price { font-size: 15px; font-weight: 700; color: #15803d; }
+        .btn-pay { background: #15803d; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
+        .btn-pay:active { opacity: 0.8; }
+        .receipt-box { display: none; background: #ecfdf5; border: 1px solid #10b981; border-radius: 12px; padding: 16px; margin-top: 16px; text-align: center; }
+        .receipt-box h4 { color: #065f46; font-size: 16px; }
+        .receipt-box p { font-size: 13px; color: #047857; margin-top: 4px; word-break: break-all; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>MUST Canteen & Mess</h1>
+    <p>Meru University Student Catering Services</p>
+    <div class="student-badge" id="studentGreeting">Loading student info...</div>
+</div>
+
+<div class="section-title">Today's Specials</div>
+
+<div class="menu-item">
+    <div class="item-info">
+        <h3>Special Beef Pilau</h3>
+        <p>Served with kachumbari & banana</p>
+        <div class="item-price">KES 120.00</div>
+    </div>
+    <button class="btn-pay" onclick="orderFood(120, 'Beef Pilau Special')">Order</button>
+</div>
+
+<div class="menu-item">
+    <div class="item-info">
+        <h3>Chapati & Ndengu (2 pcs)</h3>
+        <p>Fresh whole-wheat chapatis with green grams</p>
+        <div class="item-price">KES 70.00</div>
+    </div>
+    <button class="btn-pay" onclick="orderFood(70, 'Chapati & Ndengu')">Order</button>
+</div>
+
+<div class="menu-item">
+    <div class="item-info">
+        <h3>Fresh Tropical Fruit Juice</h3>
+        <p>Mango, Passion & Pineapple blend (500ml)</p>
+        <div class="item-price">KES 50.00</div>
+    </div>
+    <button class="btn-pay" onclick="orderFood(50, 'Tropical Fruit Juice')">Order</button>
+</div>
+
+<div class="receipt-box" id="receiptBox">
+    <h4>Payment Confirmed!</h4>
+    <p id="receiptDetails"></p>
+</div>
+
+<script>
+    // 1. Fetch authenticated student profile from native Host
+    window.onload = function() {
+      if (window.HustleBridge && window.HustleBridge.getStudentProfile) {
+        try {
+          const profile = JSON.parse(window.HustleBridge.getStudentProfile());
+          document.getElementById('studentGreeting').innerText = "Logged in: " + (profile.appId || "MUST Student");
+        } catch(e) {
+          document.getElementById('studentGreeting').innerText = "Logged in via HustleHub";
+        }
+      } else {
+        document.getElementById('studentGreeting').innerText = "Browser Preview Mode";
+      }
+    };
+
+    // 2. Trigger native M-Pesa payment
+    function orderFood(amount, itemName) {
+      if (!window.HustleBridge) {
+        alert("HustleBridge not found (open inside HustleHub app)");
+        return;
+      }
+
+      const callbackId = "order_" + Date.now();
+
+      // Listen for result event from native host
+      window.addEventListener("HustlePaymentComplete", function onResult(e) {
+        if (e.detail && e.detail.callbackId === callbackId) {
+          window.removeEventListener("HustlePaymentComplete", onResult);
+          const box = document.getElementById('receiptBox');
+          const details = document.getElementById('receiptDetails');
+          box.style.display = 'block';
+
+          if (e.detail.success) {
+            details.innerText = "Order for " + itemName + " successful! Receipt: " + e.detail.receipt;
+          } else {
+            details.innerText = "Payment cancelled or failed: " + (e.detail.errorMessage || "Unknown error");
+          }
+        }
+      });
+
+      // Call Kotlin native bridge
+      window.HustleBridge.requestPayment(amount, itemName, "REF-" + Date.now(), callbackId);
+    }
+</script>
+</body>
+</html>

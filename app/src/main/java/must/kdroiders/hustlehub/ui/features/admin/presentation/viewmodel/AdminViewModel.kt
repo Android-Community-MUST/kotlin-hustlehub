@@ -30,8 +30,9 @@ class AdminViewModel
                 AdminTab.OVERVIEW -> loadAnalytics()
                 AdminTab.REPORTS -> loadReports()
                 AdminTab.USERS -> loadUsers()
-                AdminTab.SERVICES -> { /* services loaded through search/filters */ }
+                AdminTab.SERVICES -> { }
                 AdminTab.AUDIT_LOGS -> loadAuditLogs()
+                AdminTab.MINI_APPS -> loadPendingMiniApps()
             }
         }
 
@@ -42,8 +43,9 @@ class AdminViewModel
                     AdminTab.OVERVIEW -> loadAnalytics()
                     AdminTab.REPORTS -> loadReports()
                     AdminTab.USERS -> loadUsers()
-                    AdminTab.SERVICES -> { /* refresh */ }
+                    AdminTab.SERVICES -> { }
                     AdminTab.AUDIT_LOGS -> loadAuditLogs()
+                    AdminTab.MINI_APPS -> loadPendingMiniApps()
                 }
                 _uiState.update { it.copy(isRefreshing = false) }
             }
@@ -102,7 +104,6 @@ class AdminViewModel
                                 successMessage = "Action completed successfully.",
                             )
                         }
-                        // Refresh current tab data
                         when (_uiState.value.selectedTab) {
                             AdminTab.USERS -> loadUsers()
                             AdminTab.REPORTS -> loadReports()
@@ -122,6 +123,76 @@ class AdminViewModel
             }
         }
 
+        fun loadPendingMiniApps() {
+            viewModelScope.launch {
+                adminRepository.getPendingMiniApps().fold(
+                    onSuccess = { list ->
+                        _uiState.update { it.copy(pendingMiniApps = list) }
+                    },
+                    onFailure = { err ->
+                        _uiState.update { it.copy(error = err.message) }
+                    },
+                )
+            }
+        }
+
+        fun approveMiniApp(id: String) {
+            _uiState.update { it.copy(isActionLoading = true, error = null) }
+            viewModelScope.launch {
+                adminRepository.reviewMiniApp(id = id, status = "ACTIVE").fold(
+                    onSuccess = {
+                        _uiState.update {
+                            it.copy(
+                                isActionLoading = false,
+                                successMessage = "Mini-app approved and published successfully.",
+                            )
+                        }
+                        loadPendingMiniApps()
+                    },
+                    onFailure = { err ->
+                        _uiState.update {
+                            it.copy(
+                                isActionLoading = false,
+                                error = err.message ?: "Failed to approve mini-app",
+                            )
+                        }
+                    },
+                )
+            }
+        }
+
+        fun rejectMiniApp(
+            id: String,
+            reason: String,
+        ) {
+            if (reason.isBlank()) {
+                _uiState.update { it.copy(error = "Feedback or reason is required to reject a mini-app.") }
+                return
+            }
+            _uiState.update { it.copy(isActionLoading = true, error = null) }
+            viewModelScope.launch {
+                adminRepository.reviewMiniApp(id = id, status = "REJECTED", adminNotes = reason).fold(
+                    onSuccess = {
+                        _uiState.update {
+                            it.copy(
+                                isActionLoading = false,
+                                successMessage = "Mini-app rejected.",
+                            )
+                        }
+                        loadPendingMiniApps()
+                    },
+                    onFailure = { err ->
+                        _uiState.update {
+                            it.copy(
+                                isActionLoading = false,
+                                error = err.message ?: "Failed to reject mini-app",
+                            )
+                        }
+                    },
+                )
+            }
+        }
+
         fun clearMessages() {
             _uiState.update { it.copy(error = null, successMessage = null) }
         }
@@ -130,6 +201,7 @@ class AdminViewModel
             loadAnalytics()
             loadReports()
             loadUsers()
+            loadPendingMiniApps()
         }
 
         private fun loadAnalytics() {

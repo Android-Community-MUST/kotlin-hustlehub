@@ -1,6 +1,5 @@
 package must.kdroiders.hustlehub.ui.features.home.presentation.view
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -57,6 +55,7 @@ import must.kdroiders.hustlehub.core.network.ConnectivityViewModel
 import must.kdroiders.hustlehub.core.ui.TestTags
 import must.kdroiders.hustlehub.sharedComposables.HustlePullToRefreshBox
 import must.kdroiders.hustlehub.sharedComposables.OfflineBanner
+import must.kdroiders.hustlehub.ui.features.home.presentation.components.CampusMiniAppsRow
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.CategoryChipRow
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.EmptyServicesView
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.FeaturedServicesRow
@@ -66,6 +65,7 @@ import must.kdroiders.hustlehub.ui.features.home.presentation.components.HomeTop
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ProviderBannerCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCard
 import must.kdroiders.hustlehub.ui.features.home.presentation.components.ServiceCardShimmer
+import must.kdroiders.hustlehub.ui.features.home.presentation.components.defaultCampusMiniApps
 import must.kdroiders.hustlehub.ui.features.home.presentation.viewmodel.HomeViewModel
 import must.kdroiders.hustlehub.ui.theme.LocalDimensions
 
@@ -91,6 +91,8 @@ fun HomeScreen(
     onNavigateToAiSearch: () -> Unit = {},
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToCreateService: () -> Unit = {},
+    onNavigateToMiniApp: (appId: String, title: String, url: String) -> Unit = { _, _, _ -> },
+    onNavigateToSubmitMiniApp: () -> Unit = {},
 ) {
     val state by homeViewModel.uiState.collectAsState()
     val gridState = rememberLazyGridState()
@@ -210,6 +212,14 @@ fun HomeScreen(
                             selected = state.selectedCategory,
                             onSelected = homeViewModel::onCategorySelected,
                             modifier = Modifier.testTag(TestTags.CATEGORY_CHIPS),
+                        )
+                    }
+
+                    item(key = "campus_miniapps", span = { GridItemSpan(maxLineSpan) }) {
+                        CampusMiniAppsRow(
+                            items = state.miniApps.ifEmpty { defaultCampusMiniApps },
+                            onMiniAppClick = onNavigateToMiniApp,
+                            onApplyClick = onNavigateToSubmitMiniApp,
                         )
                     }
 

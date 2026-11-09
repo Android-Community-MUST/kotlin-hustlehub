@@ -16,6 +16,9 @@ import must.kdroiders.hustlehub.core.security.KeyExchangeHandler
 import must.kdroiders.hustlehub.data.local.AppDatabase
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.datastore.dataStore
+import must.kdroiders.hustlehub.ui.features.admin.data.remote.AdminApiService
+import must.kdroiders.hustlehub.ui.features.admin.data.repository.AdminRepositoryImpl
+import must.kdroiders.hustlehub.ui.features.admin.domain.repository.AdminRepository
 import must.kdroiders.hustlehub.ui.features.analytics.data.remote.AnalyticsApiService
 import must.kdroiders.hustlehub.ui.features.analytics.data.repository.AnalyticsRepository
 import must.kdroiders.hustlehub.ui.features.analytics.data.repository.AnalyticsRepositoryImpl
@@ -42,6 +45,10 @@ import must.kdroiders.hustlehub.ui.features.map.domain.repository.MapRepository
 import must.kdroiders.hustlehub.ui.features.media.data.remote.MediaApiService
 import must.kdroiders.hustlehub.ui.features.media.data.repository.StorageRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.media.domain.repository.StorageRepository
+import must.kdroiders.hustlehub.ui.features.miniapp.data.local.dao.MiniAppDao
+import must.kdroiders.hustlehub.ui.features.miniapp.data.remote.MiniAppApiService
+import must.kdroiders.hustlehub.ui.features.miniapp.data.repository.MiniAppRepositoryImpl
+import must.kdroiders.hustlehub.ui.features.miniapp.domain.repository.MiniAppRepository
 import must.kdroiders.hustlehub.ui.features.monetization.data.remote.PaymentApiService
 import must.kdroiders.hustlehub.ui.features.monetization.data.repository.PaymentRepositoryImpl
 import must.kdroiders.hustlehub.ui.features.monetization.domain.repository.PaymentRepository
@@ -279,9 +286,18 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAdminRepository(adminApiService: must.kdroiders.hustlehub.ui.features.admin.data.remote.AdminApiService): must.kdroiders.hustlehub.ui.features.admin.domain.repository.AdminRepository =
-        must.kdroiders.hustlehub.ui.features.admin.data.repository
-            .AdminRepositoryImpl(adminApiService)
+    fun provideAdminRepository(adminApiService: AdminApiService): AdminRepository = AdminRepositoryImpl(adminApiService)
+
+    @Provides
+    @Singleton
+    fun provideMiniAppDao(db: AppDatabase): MiniAppDao = db.miniAppDao()
+
+    @Provides
+    @Singleton
+    fun provideMiniAppRepository(
+        miniAppDao: MiniAppDao,
+        miniAppApiService: MiniAppApiService,
+    ): MiniAppRepository = MiniAppRepositoryImpl(miniAppDao, miniAppApiService)
 }
 
 private class NoopAuthRepository : AuthRepository {

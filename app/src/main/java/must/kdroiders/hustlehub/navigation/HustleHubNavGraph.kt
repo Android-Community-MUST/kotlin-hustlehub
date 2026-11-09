@@ -55,6 +55,9 @@ import must.kdroiders.hustlehub.ui.features.chat.presentation.view.ChatDetailScr
 import must.kdroiders.hustlehub.ui.features.help.presentation.view.HelpScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.AiSearchScreen
 import must.kdroiders.hustlehub.ui.features.home.presentation.view.SearchScreen
+import must.kdroiders.hustlehub.ui.features.miniapp.presentation.view.MiniAppContainerScreen
+import must.kdroiders.hustlehub.ui.features.miniapp.presentation.view.MyMiniAppsScreen
+import must.kdroiders.hustlehub.ui.features.miniapp.presentation.view.SubmitMiniAppScreen
 import must.kdroiders.hustlehub.ui.features.monetization.presentation.PaymentStatusScreen
 import must.kdroiders.hustlehub.ui.features.monetization.presentation.SubscriptionScreen
 import must.kdroiders.hustlehub.ui.features.notification.presentation.view.NotificationPreferencesScreen
@@ -465,6 +468,11 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                                 onNavigateToSubscription = { backstack.add(Subscription()) },
                                 onNavigateToAnalytics = { tab -> backstack.add(Analytics(initialTab = tab)) },
                                 onNavigateToAdminDashboard = { backstack.add(AdminDashboard) },
+                                onNavigateToMiniApp = { appId, title, url ->
+                                    backstack.add(MiniApp(appId = appId, title = title, url = url))
+                                },
+                                onNavigateToSubmitMiniApp = { backstack.add(SubmitMiniApp()) },
+                                onNavigateToMyMiniApps = { backstack.add(MyMiniApps) },
                             )
                         }
 
@@ -768,10 +776,40 @@ fun HustleHubNav(onGoogleSignInClick: () -> Unit) {
                             )
                         }
 
-                        // In-app Admin Dashboard
                         entry<AdminDashboard> {
                             AdminDashboardScreen(
                                 onNavigateBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                                onNavigateToMiniApp = { appId, title, url ->
+                                    backstack.add(MiniApp(appId = appId, title = title, url = url))
+                                },
+                            )
+                        }
+
+                        entry<MiniApp> { key ->
+                            MiniAppContainerScreen(
+                                appId = key.appId,
+                                title = key.title,
+                                url = key.url,
+                                onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                            )
+                        }
+
+                        entry<SubmitMiniApp> { key ->
+                            SubmitMiniAppScreen(
+                                editAppId = key.editAppId,
+                                onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                                onSubmitSuccess = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                            )
+                        }
+
+                        entry<MyMiniApps> {
+                            MyMiniAppsScreen(
+                                onBack = { if (backstack.size > 1) backstack.remove(backstack.last()) },
+                                onAddNewApp = { backstack.add(SubmitMiniApp()) },
+                                onEditApp = { appId -> backstack.add(SubmitMiniApp(editAppId = appId)) },
+                                onPreviewApp = { appId, title, url ->
+                                    backstack.add(MiniApp(appId = appId, title = title, url = url))
+                                },
                             )
                         }
                     },

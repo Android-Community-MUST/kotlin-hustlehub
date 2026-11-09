@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import must.kdroiders.hustlehub.R
 import must.kdroiders.hustlehub.sharedComposables.RatingBar
+import kotlin.math.roundToInt
 
 @Composable
 fun ReviewSummaryCard(
@@ -123,41 +124,60 @@ fun ReviewSummaryCard(
     }
 }
 
-private fun calculateDummyDistribution(
+internal fun calculateDummyDistribution(
     average: Float,
     total: Int,
 ): IntArray {
-    if (total == 0) return intArrayOf(0, 0, 0, 0, 0)
+    if (total <= 0) return intArrayOf(0, 0, 0, 0, 0)
+    if (total == 1) {
+        val dist = IntArray(5)
+        val starIndex = average.roundToInt().coerceIn(1, 5) - 1
+        dist[starIndex] = 1
+        return dist
+    }
+    if (average >= 5.0f) {
+        return intArrayOf(0, 0, 0, 0, total)
+    }
+    if (average <= 1.0f) {
+        return intArrayOf(total, 0, 0, 0, 0)
+    }
 
     val dist = IntArray(5)
     when {
         average >= 4.5f -> {
-            dist[4] = (total * 0.75).toInt()
             dist[3] = (total * 0.15).toInt()
             dist[2] = (total * 0.05).toInt()
             dist[1] = (total * 0.03).toInt()
-            dist[0] = total - dist.sum()
+            dist[0] = (total * 0.02).toInt()
+            dist[4] = (total - (dist[3] + dist[2] + dist[1] + dist[0])).coerceAtLeast(0)
         }
         average >= 3.5f -> {
-            dist[4] = (total * 0.40).toInt()
-            dist[3] = (total * 0.40).toInt()
+            dist[4] = (total * 0.35).toInt()
             dist[2] = (total * 0.10).toInt()
             dist[1] = (total * 0.05).toInt()
-            dist[0] = total - dist.sum()
+            dist[0] = (total * 0.02).toInt()
+            dist[3] = (total - (dist[4] + dist[2] + dist[1] + dist[0])).coerceAtLeast(0)
         }
         average >= 2.5f -> {
             dist[4] = (total * 0.10).toInt()
             dist[3] = (total * 0.20).toInt()
-            dist[2] = (total * 0.40).toInt()
             dist[1] = (total * 0.20).toInt()
-            dist[0] = total - dist.sum()
+            dist[0] = (total * 0.10).toInt()
+            dist[2] = (total - (dist[4] + dist[3] + dist[1] + dist[0])).coerceAtLeast(0)
         }
-        else -> {
+        average >= 1.5f -> {
             dist[4] = (total * 0.05).toInt()
             dist[3] = (total * 0.10).toInt()
             dist[2] = (total * 0.20).toInt()
-            dist[1] = (total * 0.30).toInt()
-            dist[0] = total - dist.sum()
+            dist[0] = (total * 0.20).toInt()
+            dist[1] = (total - (dist[4] + dist[3] + dist[2] + dist[0])).coerceAtLeast(0)
+        }
+        else -> {
+            dist[4] = (total * 0.02).toInt()
+            dist[3] = (total * 0.03).toInt()
+            dist[2] = (total * 0.10).toInt()
+            dist[1] = (total * 0.25).toInt()
+            dist[0] = (total - (dist[4] + dist[3] + dist[2] + dist[1])).coerceAtLeast(0)
         }
     }
     return dist

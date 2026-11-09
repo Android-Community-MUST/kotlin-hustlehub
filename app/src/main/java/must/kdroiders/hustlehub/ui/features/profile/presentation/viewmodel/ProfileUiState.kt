@@ -17,6 +17,7 @@ data class ProfileUiState(
     val isRefreshing: Boolean = false,
     val error: String? = null,
     val needsProfileSetup: Boolean = false,
+    val hasMiniApps: Boolean = false,
 )
 
 /**

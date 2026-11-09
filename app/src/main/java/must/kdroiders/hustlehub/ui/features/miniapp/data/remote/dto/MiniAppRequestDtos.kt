@@ -1,0 +1,46 @@
+package must.kdroiders.hustlehub.ui.features.miniapp.data.remote.dto
+
+import androidx.annotation.Keep
+import com.google.gson.annotations.SerializedName
+
+@Keep
+data class CreateMiniAppRequestDto(
+    @SerializedName("appId")
+    val appId: String,
+    @SerializedName("title")
+    val title: String,
+    @SerializedName("description")
+    val description: String,
+    @SerializedName("entryUrl")
+    val entryUrl: String,
+    @SerializedName("iconUrl")
+    val iconUrl: String? = null,
+    @SerializedName("coverPhotoUrl")
+    val coverPhotoUrl: String? = null,
+    @SerializedName("category")
+    val category: String = "SERVICES",
+)
+
+@Keep
+data class ReviewMiniAppRequestDto(
+    @SerializedName("status")
+    val status: String,
+    @SerializedName("adminNotes")
+    val adminNotes: String? = null,
+)
+
+@Keep
+data class UpdateMiniAppRequestDto(
+    @SerializedName("title")
+    val title: String,
+    @SerializedName("description")
+    val description: String,
+    @SerializedName("entryUrl")
+    val entryUrl: String,
+    @SerializedName("iconUrl")
+    val iconUrl: String? = null,
+    @SerializedName("coverPhotoUrl")
+    val coverPhotoUrl: String? = null,
+    @SerializedName("category")
+    val category: String = "SERVICES",
+)

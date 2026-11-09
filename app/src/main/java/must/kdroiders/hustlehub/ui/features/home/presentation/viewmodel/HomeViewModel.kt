@@ -16,6 +16,8 @@ import must.kdroiders.hustlehub.core.cache.LruServiceCache
 import must.kdroiders.hustlehub.core.realtime.RealtimeSyncManager
 import must.kdroiders.hustlehub.datastore.UserPreferences
 import must.kdroiders.hustlehub.ui.features.home.domain.usecase.BrowseServicesUseCase
+import must.kdroiders.hustlehub.ui.features.home.presentation.components.CampusMiniAppItem
+import must.kdroiders.hustlehub.ui.features.miniapp.domain.repository.MiniAppRepository
 import must.kdroiders.hustlehub.ui.features.notification.data.local.dao.NotificationDao
 import must.kdroiders.hustlehub.ui.features.notification.domain.repository.NotificationRepository
 import must.kdroiders.hustlehub.ui.features.profile.domain.model.UserRole
@@ -37,6 +39,7 @@ data class HomeUiState(
     val notificationCount: Int = 0,
     val services: List<Service> = emptyList(),
     val featuredServices: List<Service> = emptyList(),
+    val miniApps: List<CampusMiniAppItem> = emptyList(),
     val isLoadingServices: Boolean = false,
     val isRefreshing: Boolean = false,
     val isLoadingMore: Boolean = false,
@@ -59,6 +62,7 @@ class HomeViewModel
         private val realtimeSyncManager: RealtimeSyncManager,
         private val getMyServicesUseCase: GetMyServicesUseCase? = null,
         private val notificationDao: NotificationDao? = null,
+        private val miniAppRepository: MiniAppRepository? = null,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(HomeUiState())
         val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -81,6 +85,7 @@ class HomeViewModel
             observeProviderBannerVisibility()
             observeUnreadNotifications()
             observeRealtimeEvents()
+            observeMiniApps()
         }
 
         private fun observeUnreadNotifications() {
@@ -103,6 +108,18 @@ class HomeViewModel
                         }
                     }
                 }
+            }
+        }
+
+        private fun observeMiniApps() {
+            val repo = miniAppRepository ?: return
+            viewModelScope.launch {
+                repo.getActiveMiniAppsFlow().collect { apps ->
+                    _uiState.update { it.copy(miniApps = apps) }
+                }
+            }
+            viewModelScope.launch {
+                repo.refreshMiniApps()
             }
         }
 
@@ -263,6 +280,9 @@ class HomeViewModel
             _uiState.update { it.copy(isRefreshing = true) }
             fetchServices(reset = true)
             loadNotificationCount()
+            viewModelScope.launch {
+                miniAppRepository?.refreshMiniApps()
+            }
         }
 
         fun loadNextPage() {

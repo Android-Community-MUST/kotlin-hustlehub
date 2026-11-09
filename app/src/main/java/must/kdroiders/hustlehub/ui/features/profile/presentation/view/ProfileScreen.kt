@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -72,6 +73,7 @@ fun ProfileScreen(
     onNavigateToSubscription: () -> Unit = {},
     onNavigateToAnalytics: (tab: String) -> Unit = {},
     onNavigateToAdminDashboard: () -> Unit = {},
+    onNavigateToMyMiniApps: () -> Unit = {},
 ) {
     val state by profileViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -177,6 +179,7 @@ fun ProfileScreen(
                             onNavigateToSubscription = onNavigateToSubscription,
                             onNavigateToAnalytics = onNavigateToAnalytics,
                             onNavigateToAdminDashboard = onNavigateToAdminDashboard,
+                            onNavigateToMyMiniApps = onNavigateToMyMiniApps,
                         )
                     }
                 }
@@ -198,6 +201,7 @@ private fun ProfileContent(
     onNavigateToSubscription: () -> Unit = {},
     onNavigateToAnalytics: (tab: String) -> Unit = {},
     onNavigateToAdminDashboard: () -> Unit = {},
+    onNavigateToMyMiniApps: () -> Unit = {},
 ) {
     val user = state.user ?: return
     val horizontalPadding = LocalDimensions.current.horizontalPadding
@@ -275,6 +279,19 @@ private fun ProfileContent(
                         icon = Icons.Default.AdminPanelSettings,
                         variant = HustleButtonVariant.Primary,
                         onClick = onNavigateToAdminDashboard,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = horizontalPadding),
+                    )
+                }
+
+                if (state.hasMiniApps) {
+                    Spacer(Modifier.height(10.dp))
+                    HustleButton(
+                        text = "My Mini-Apps",
+                        icon = Icons.Default.Widgets,
+                        variant = HustleButtonVariant.Secondary,
+                        onClick = onNavigateToMyMiniApps,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = horizontalPadding),
